@@ -1,0 +1,851 @@
+Update:: /home/hoseung/Work/data/DMO_000/snapshots/
+Loading INFO
+Update:: /home/hoseung/Work/data/DMO_000/snapshots/
+Loading INFO
+1 0
+1 0
+1 0
+[4;33mReloaded modules[24m: Cython.Compiler.Interpreter, tree.tmtree, Cython.Compiler.TreeFragment, Cython.Tempita.compat3, Cython.Compiler.DebugFlags, utils.util, Cython.Compiler.Nodes, load.info, Cython.Compiler.Annotate, Cython.Compiler.Options, utils.prettyplot, Cython.Plex.Transitions, Cython.Compiler.Visitor, Cython.Plex.Scanners, Cython.Compiler.Future, load.utils, utils.sampling, Cython.Tempita._tempita, Cython.Compiler.Scanning, Cython.Compiler.TypeSlots, Cython.Debugging, Cython.Compiler.Parsing, Cython.Plex.Regexps, utils, Cython.Compiler.CythonScope, Cython.Compiler, Cython.Compiler.StringEncoding, Cython.Plex.Machines, Cython.Compiler.Main, Cython.Plex, cython, Cython.Compiler.UtilNodes, Cython.Plex.Errors, Cython.Compiler.Builtin, tree.treeutils, load.hydro, Cython.Compiler.ModuleNode, tree.halo, utils.array, Cython.Shadow, draw.pp, Cython.Compiler.Errors, tree.treeplots, Cython.Compiler.ExprNodes, Cython.Compiler.UtilityCode, Cython.Compiler.Naming, Cython.Utils, tree, draw.img_obj, Cython, Cython.Compiler.Version, draw, load.sim, Cython.Compiler.ParseTreeTransforms, Cython.Compiler.Buffer, tree.hmutil, tree.rshalo, utils.custom_utils, load.amr, Cython.Compiler.PyrexTypes, pyximport, load, Cython.Compiler.Code, Cython.Plex.Lexicons, Cython.Tempita._looper, Cython.Plex.Actions, load.part, Cython.Compiler.MemoryView, Cython.Compiler.Symtab, Cython.Tempita, Cython.Plex.DFA, pyximport.pyximport, Cython.StringIOTree, Cython.Compiler.Lexicon, Cython.Compiler.Optimize, Cython.Compiler.Pipeline[0m
+Update:: /home/hoseung/Work/data/DMO_000/snapshots/
+Loading INFO
+Update:: /home/hoseung/Work/data/DMO_000/snapshots/
+Loading INFO
+Loading INFO
+Cannot specify a file to read
+trying to read /home/hoseung/Work/data/DMO_000/halo/halo080.sav
++++++++++++++++++++++++
+Update:: /home/hoseung/Work/data/DMO_000/snapshots/
+Loading INFO
+Loading INFO
+setting the base(working) directory to : /home/hoseung/Work/data/DMO_000/
+/home/hoseung/Work/data/DMO_000/
+Update:: /home/hoseung/Work/data/DMO_000/snapshots/
+Loading INFO
+Update:: /home/hoseung/Work/data/DMO_000/snapshots/
+Ranges = [[0.0, 1.0], [0.0, 1.0], [0.0, 1.0]]
+
+An AMR instance is created
+
+ >>> working resolution (lmax) = 16
+Updating info.cpus
+An AMR instance is created
+
+ >>> working resolution (lmax) = 16
+Updating info.cpus
+ 
+Types of particles you want to load are:  ['dm mass id pos']
+A particle instance is created
+
+Use part.load() to load particle
+Ranges = [[0.2, 0.8], [0.2, 0.8], [0.2, 0.8]]
+
+ >>> working resolution (lmax) = 16
+Updating info.cpus
+Ranges = [[0.2, 0.8], [0.2, 0.8], [0.2, 0.8]]
+
+[[0.2, 0.8], [0.2, 0.8], [0.2, 0.8]]
+Loading particle... 
+ ranges: [[0.2, 0.8], [0.2, 0.8], [0.2, 0.8]]
+[  1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17  18
+  19  20  21  22  23  24  25  26  27  28  29  30  31  32  33  34  35  36
+  37  38  39  40  41  42  43  44  45  46  47  48  49  50  51  52  53  54
+  55  56  57  58  59  60  61  62  63  64  65  66  67  68  69  70  71  72
+  73  74  75  76  77  78  79  80  81  82  83  84  85  86  87  88  89  90
+  91  92  93  94  95  96  97  98  99 100 101 102 103 104 105 106 107 108
+ 109 110 111 112 113 114 115 116 117 118 119 120 121 122 123 124 125 126
+ 127 128 129 130 131 132 133 134 135 136 137 138 139 140 141 142 143 144
+ 145 146 147 148 149 150 151 152 153 154 155 156 157 158 159 160 161 162
+ 163 164 165 166 167 168 169 170 171 172 173 174 175 176 177 178 179 180
+ 181 182 183 184 185 186 187 188 189 190 191 192 193 194 195 196 197 198
+ 199 200 201 202 203 204 205 206 207 208 209 210 211 212 213 214 215 216
+ 217 218 219 220 221 222 223 224 225 226 227 228 229 230 231 232 233 234
+ 235 236 237 238 239 240]
+npart_arr: [566481, 552387, 534199, 539572, 558990, 549370, 536476, 573661, 550729, 602674, 605011, 600527, 577110, 553877, 526481, 585851, 554578, 558406, 597139, 617428, 602542, 530797, 574718, 536790, 534716, 557179, 558675, 520565, 589715, 565207, 608831, 584032, 558659, 565967, 545849, 575593, 549619, 535191, 605232, 562749, 486154, 490866, 511896, 585042, 597943, 620255, 596358, 508657, 543194, 503900, 529383, 557173, 584199, 572139, 580805, 580466, 555904, 580414, 589160, 552342, 547173, 601882, 544752, 526437, 587765, 578224, 520943, 538856, 528221, 552250, 523516, 566243, 565952, 631451, 575589, 551458, 516379, 524151, 607335, 543086, 615614, 540262, 562704, 558372, 547859, 534497, 494893, 526401, 538855, 546313, 537716, 595828, 553723, 537181, 510113, 551545, 547788, 580041, 514996, 546431, 552829, 579695, 553106, 598273, 534101, 527139, 561812, 559514, 590960, 530320, 603104, 584856, 574498, 559474, 542583, 532098, 550371, 561782, 559333, 543853, 560711, 552017, 554710, 552788, 532673, 549336, 528147, 591451, 599548, 551342, 549597, 581479, 606400, 551984, 561750, 494332, 516649, 617452, 521796, 593990, 542194, 535515, 623161, 591201, 613424, 566590, 590499, 593080, 544623, 526763, 519299, 528225, 583870, 593991, 596764, 543120, 584395, 554212, 555494, 554125, 507623, 572525, 528096, 548703, 561318, 547362, 536806, 523745, 539172, 640913, 554478, 527809, 558675, 557454, 603582, 614078, 601660, 525577, 509687, 529515, 553919, 606047, 488655, 541627, 519407, 569915, 497249, 565350, 531479, 576644, 595694, 534708, 544394, 553820, 562011, 523707, 565692, 597775, 513868, 584701, 604194, 585151, 555373, 549289, 581651, 565234, 590373, 515560, 570808, 543067, 581160, 592312, 594230, 569035, 582629, 558283, 534018, 544702, 501963, 639944, 670830, 557759, 650848, 525236, 594085, 586605, 624928, 515534, 574028, 511628, 518292, 529441, 577255, 547348, 594103, 501048, 491220, 562695, 509533, 589880]
+Updating data
+Resampling 28811157 values to a 800 by 800 by 1 grid
+Updating field vals
+Updating field vals
+Updating field vals
+Updating field vals
+minmax field 22995125123.9 4.11268319935e+13
+Updating data
+[4;33mReloaded modules[24m: Cython.Compiler.Interpreter, tree.tmtree, Cython.Compiler.TypeInference, Cython.Compiler.DebugFlags, utils.util, Cython.Compiler.Nodes, load.info, Cython.Compiler.Annotate, Cython.Compiler.Options, utils.prettyplot, Cython.Compiler.TreeFragment, assign, Cython.Compiler.Visitor, Cython.Distutils.extension, Cython.Compiler.Future, load.utils, Cython.Compiler.AutoDocTransforms, utils.sampling, Cython.Compiler.Scanning, Cython.Compiler.TypeSlots, Cython.Debugging, Cython.Compiler.Parsing, utils, Cython.Compiler.CythonScope, Cython.Compiler, Cython.Compiler.StringEncoding, Cython.Compiler.Main, draw.pp, cython, Cython.Compiler.UtilNodes, Cython.Compiler.Builtin, tree.treeutils, Cython.Compiler.AnalysedTreeTransforms, load.hydro, Cython.Compiler.ModuleNode, tree.halo, utils.array, Cython.Shadow, Cython.Tempita._tempita, Cython.Compiler.Errors, tree.treeplots, Cython.Compiler.ExprNodes, Cython.Compiler.UtilityCode, Cython.Compiler.Naming, Cython.Utils, tree, draw.img_obj, Cython, Cython.Compiler.Version, draw, load.sim, Cython.Compiler.ParseTreeTransforms, Cython.Compiler.Buffer, tree.hmutil, tree.rshalo, utils.custom_utils, load.amr, Cython.Compiler.PyrexTypes, pyximport, Cython.Compiler.FlowControl, load, Cython.Compiler.Code, load.part, Cython.Compiler.MemoryView, Cython.Compiler.Symtab, Cython.Distutils, Cython.Tempita, Cython.Distutils.build_ext, pyximport.pyximport, pyximport.pyxbuild, utils.assign, Cython.Compiler.Optimize, Cython.Compiler.Pipeline[0m
+Update:: /home/hoseung/Work/data/DMO_000/snapshots/
+Loading INFO
+Loading INFO
+setting the base(working) directory to : /home/hoseung/Work/data/DMO_000/
+/home/hoseung/Work/data/DMO_000/
+Update:: /home/hoseung/Work/data/DMO_000/snapshots/
+Loading INFO
+Update:: /home/hoseung/Work/data/DMO_000/snapshots/
+Ranges = [[0.0, 1.0], [0.0, 1.0], [0.0, 1.0]]
+
+An AMR instance is created
+
+ >>> working resolution (lmax) = 16
+Updating info.cpus
+An AMR instance is created
+
+ >>> working resolution (lmax) = 16
+Updating info.cpus
+ 
+Types of particles you want to load are:  ['dm mass id pos']
+A particle instance is created
+
+Use part.load() to load particle
+Ranges = [[0.2, 0.8], [0.2, 0.8], [0.2, 0.8]]
+
+ >>> working resolution (lmax) = 16
+Updating info.cpus
+Ranges = [[0.2, 0.8], [0.2, 0.8], [0.2, 0.8]]
+
+[[0.2, 0.8], [0.2, 0.8], [0.2, 0.8]]
+Loading particle... 
+ ranges: [[0.2, 0.8], [0.2, 0.8], [0.2, 0.8]]
+[  1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17  18
+  19  20  21  22  23  24  25  26  27  28  29  30  31  32  33  34  35  36
+  37  38  39  40  41  42  43  44  45  46  47  48  49  50  51  52  53  54
+  55  56  57  58  59  60  61  62  63  64  65  66  67  68  69  70  71  72
+  73  74  75  76  77  78  79  80  81  82  83  84  85  86  87  88  89  90
+  91  92  93  94  95  96  97  98  99 100 101 102 103 104 105 106 107 108
+ 109 110 111 112 113 114 115 116 117 118 119 120 121 122 123 124 125 126
+ 127 128 129 130 131 132 133 134 135 136 137 138 139 140 141 142 143 144
+ 145 146 147 148 149 150 151 152 153 154 155 156 157 158 159 160 161 162
+ 163 164 165 166 167 168 169 170 171 172 173 174 175 176 177 178 179 180
+ 181 182 183 184 185 186 187 188 189 190 191 192 193 194 195 196 197 198
+ 199 200 201 202 203 204 205 206 207 208 209 210 211 212 213 214 215 216
+ 217 218 219 220 221 222 223 224 225 226 227 228 229 230 231 232 233 234
+ 235 236 237 238 239 240]
+npart_arr: [566481, 552387, 534199, 539572, 558990, 549370, 536476, 573661, 550729, 602674, 605011, 600527, 577110, 553877, 526481, 585851, 554578, 558406, 597139, 617428, 602542, 530797, 574718, 536790, 534716, 557179, 558675, 520565, 589715, 565207, 608831, 584032, 558659, 565967, 545849, 575593, 549619, 535191, 605232, 562749, 486154, 490866, 511896, 585042, 597943, 620255, 596358, 508657, 543194, 503900, 529383, 557173, 584199, 572139, 580805, 580466, 555904, 580414, 589160, 552342, 547173, 601882, 544752, 526437, 587765, 578224, 520943, 538856, 528221, 552250, 523516, 566243, 565952, 631451, 575589, 551458, 516379, 524151, 607335, 543086, 615614, 540262, 562704, 558372, 547859, 534497, 494893, 526401, 538855, 546313, 537716, 595828, 553723, 537181, 510113, 551545, 547788, 580041, 514996, 546431, 552829, 579695, 553106, 598273, 534101, 527139, 561812, 559514, 590960, 530320, 603104, 584856, 574498, 559474, 542583, 532098, 550371, 561782, 559333, 543853, 560711, 552017, 554710, 552788, 532673, 549336, 528147, 591451, 599548, 551342, 549597, 581479, 606400, 551984, 561750, 494332, 516649, 617452, 521796, 593990, 542194, 535515, 623161, 591201, 613424, 566590, 590499, 593080, 544623, 526763, 519299, 528225, 583870, 593991, 596764, 543120, 584395, 554212, 555494, 554125, 507623, 572525, 528096, 548703, 561318, 547362, 536806, 523745, 539172, 640913, 554478, 527809, 558675, 557454, 603582, 614078, 601660, 525577, 509687, 529515, 553919, 606047, 488655, 541627, 519407, 569915, 497249, 565350, 531479, 576644, 595694, 534708, 544394, 553820, 562011, 523707, 565692, 597775, 513868, 584701, 604194, 585151, 555373, 549289, 581651, 565234, 590373, 515560, 570808, 543067, 581160, 592312, 594230, 569035, 582629, 558283, 534018, 544702, 501963, 639944, 670830, 557759, 650848, 525236, 594085, 586605, 624928, 515534, 574028, 511628, 518292, 529441, 577255, 547348, 594103, 501048, 491220, 562695, 509533, 589880]
+[4;33mReloaded modules[24m: Cython.Compiler.Interpreter, tree.tmtree, Cython.Compiler.TypeInference, Cython.Compiler.DebugFlags, utils.util, Cython.Compiler.Nodes, load.info, Cython.Compiler.Annotate, Cython.Compiler.Options, utils.prettyplot, Cython.Compiler.TreeFragment, Cython.Compiler.Visitor, Cython.Distutils.extension, Cython.Compiler.Future, load.utils, Cython.Compiler.AutoDocTransforms, utils.sampling, Cython.Compiler.Scanning, Cython.Compiler.TypeSlots, Cython.Debugging, Cython.Compiler.Parsing, utils, Cython.Compiler.CythonScope, Cython.Compiler, Cython.Compiler.StringEncoding, Cython.Compiler.Main, draw.pp, cython, Cython.Compiler.UtilNodes, Cython.Compiler.Builtin, tree.treeutils, Cython.Compiler.AnalysedTreeTransforms, load.hydro, Cython.Compiler.ModuleNode, tree.halo, utils.array, Cython.Shadow, Cython.Tempita._tempita, Cython.Compiler.Errors, tree.treeplots, Cython.Compiler.ExprNodes, Cython.Compiler.UtilityCode, Cython.Compiler.Naming, Cython.Utils, tree, draw.img_obj, Cython, Cython.Compiler.Version, draw, load.sim, Cython.Compiler.ParseTreeTransforms, Cython.Compiler.Buffer, tree.hmutil, tree.rshalo, utils.custom_utils, load.amr, Cython.Compiler.PyrexTypes, pyximport, Cython.Compiler.FlowControl, load, Cython.Compiler.Code, load.part, Cython.Compiler.MemoryView, Cython.Compiler.Symtab, Cython.Distutils, Cython.Tempita, Cython.Distutils.build_ext, pyximport.pyximport, pyximport.pyxbuild, utils.assign, Cython.Compiler.Optimize, Cython.Compiler.Pipeline[0m
+Update:: /home/hoseung/Work/data/DMO_000/snapshots/
+Loading INFO
+Loading INFO
+setting the base(working) directory to : /home/hoseung/Work/data/DMO_000/
+/home/hoseung/Work/data/DMO_000/
+Update:: /home/hoseung/Work/data/DMO_000/snapshots/
+Loading INFO
+Update:: /home/hoseung/Work/data/DMO_000/snapshots/
+Ranges = [[0.0, 1.0], [0.0, 1.0], [0.0, 1.0]]
+
+An AMR instance is created
+
+ >>> working resolution (lmax) = 16
+Updating info.cpus
+An AMR instance is created
+
+ >>> working resolution (lmax) = 16
+Updating info.cpus
+ 
+Types of particles you want to load are:  ['dm mass id pos']
+A particle instance is created
+
+Use part.load() to load particle
+Ranges = [[0.2, 0.8], [0.2, 0.8], [0.2, 0.8]]
+
+ >>> working resolution (lmax) = 16
+Updating info.cpus
+Ranges = [[0.2, 0.8], [0.2, 0.8], [0.2, 0.8]]
+
+[[0.2, 0.8], [0.2, 0.8], [0.2, 0.8]]
+Loading particle... 
+ ranges: [[0.2, 0.8], [0.2, 0.8], [0.2, 0.8]]
+[  1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17  18
+  19  20  21  22  23  24  25  26  27  28  29  30  31  32  33  34  35  36
+  37  38  39  40  41  42  43  44  45  46  47  48  49  50  51  52  53  54
+  55  56  57  58  59  60  61  62  63  64  65  66  67  68  69  70  71  72
+  73  74  75  76  77  78  79  80  81  82  83  84  85  86  87  88  89  90
+  91  92  93  94  95  96  97  98  99 100 101 102 103 104 105 106 107 108
+ 109 110 111 112 113 114 115 116 117 118 119 120 121 122 123 124 125 126
+ 127 128 129 130 131 132 133 134 135 136 137 138 139 140 141 142 143 144
+ 145 146 147 148 149 150 151 152 153 154 155 156 157 158 159 160 161 162
+ 163 164 165 166 167 168 169 170 171 172 173 174 175 176 177 178 179 180
+ 181 182 183 184 185 186 187 188 189 190 191 192 193 194 195 196 197 198
+ 199 200 201 202 203 204 205 206 207 208 209 210 211 212 213 214 215 216
+ 217 218 219 220 221 222 223 224 225 226 227 228 229 230 231 232 233 234
+ 235 236 237 238 239 240]
+npart_arr: [566481, 552387, 534199, 539572, 558990, 549370, 536476, 573661, 550729, 602674, 605011, 600527, 577110, 553877, 526481, 585851, 554578, 558406, 597139, 617428, 602542, 530797, 574718, 536790, 534716, 557179, 558675, 520565, 589715, 565207, 608831, 584032, 558659, 565967, 545849, 575593, 549619, 535191, 605232, 562749, 486154, 490866, 511896, 585042, 597943, 620255, 596358, 508657, 543194, 503900, 529383, 557173, 584199, 572139, 580805, 580466, 555904, 580414, 589160, 552342, 547173, 601882, 544752, 526437, 587765, 578224, 520943, 538856, 528221, 552250, 523516, 566243, 565952, 631451, 575589, 551458, 516379, 524151, 607335, 543086, 615614, 540262, 562704, 558372, 547859, 534497, 494893, 526401, 538855, 546313, 537716, 595828, 553723, 537181, 510113, 551545, 547788, 580041, 514996, 546431, 552829, 579695, 553106, 598273, 534101, 527139, 561812, 559514, 590960, 530320, 603104, 584856, 574498, 559474, 542583, 532098, 550371, 561782, 559333, 543853, 560711, 552017, 554710, 552788, 532673, 549336, 528147, 591451, 599548, 551342, 549597, 581479, 606400, 551984, 561750, 494332, 516649, 617452, 521796, 593990, 542194, 535515, 623161, 591201, 613424, 566590, 590499, 593080, 544623, 526763, 519299, 528225, 583870, 593991, 596764, 543120, 584395, 554212, 555494, 554125, 507623, 572525, 528096, 548703, 561318, 547362, 536806, 523745, 539172, 640913, 554478, 527809, 558675, 557454, 603582, 614078, 601660, 525577, 509687, 529515, 553919, 606047, 488655, 541627, 519407, 569915, 497249, 565350, 531479, 576644, 595694, 534708, 544394, 553820, 562011, 523707, 565692, 597775, 513868, 584701, 604194, 585151, 555373, 549289, 581651, 565234, 590373, 515560, 570808, 543067, 581160, 592312, 594230, 569035, 582629, 558283, 534018, 544702, 501963, 639944, 670830, 557759, 650848, 525236, 594085, 586605, 624928, 515534, 574028, 511628, 518292, 529441, 577255, 547348, 594103, 501048, 491220, 562695, 509533, 589880]
+Updating data
+Resampling 28811157 values to a 800 by 800 by 1 grid
+Updating field vals
+Updating field vals
+Updating field vals
+Updating field vals
+minmax field 22995125123.9 4.11268319935e+13
+Updating data
+170.454697615
+5.68182325384
+50
+4
+170.454697615
+5.68182325384
+50
+4
+Expected # of particles: 6269751
+# part in this halo 13638
+23793 6269751
+# part in this halo 34350
+77224 6269751
+# part in this halo 60638
+178269 6269751
+# part in this halo 29091
+231940 6269751
+# part in this halo 32281
+287836 6269751
+# part in this halo 10327
+311107 6269751
+# part in this halo 16245
+335544 6269751
+# part in this halo 10803
+355956 6269751
+# part in this halo 19204
+389103 6269751
+# part in this halo 56130
+511922 6269751
+# part in this halo 10291
+531832 6269751
+# part in this halo 29170
+591401 6269751
+# part in this halo 43309
+686775 6269751
+# part in this halo 13301
+713397 6269751
+# part in this halo 9772
+729689 6269751
+# part in this halo 13673
+754333 6269751
+# part in this halo 13413
+775289 6269751
+# part in this halo 51448
+847741 6269751
+# part in this halo 10630
+875780 6269751
+# part in this halo 12370
+899159 6269751
+# part in this halo 12443
+920585 6269751
+# part in this halo 37978
+980866 6269751
+# part in this halo 10091
+998337 6269751
+# part in this halo 23642
+1046856 6269751
+# part in this halo 12802
+1069924 6269751
+# part in this halo 25361
+1117126 6269751
+# part in this halo 38989
+1183218 6269751
+# part in this halo 10660
+1201878 6269751
+# part in this halo 16867
+1238804 6269751
+# part in this halo 14653
+1259957 6269751
+# part in this halo 8474
+1271355 6269751
+# part in this halo 37395
+1348148 6269751
+# part in this halo 58366
+1447137 6269751
+# part in this halo 11933
+1468856 6269751
+# part in this halo 11234
+1496259 6269751
+# part in this halo 10066
+1512826 6269751
+# part in this halo 17402
+1544214 6269751
+# part in this halo 19610
+1585762 6269751
+# part in this halo 11652
+1610804 6269751
+# part in this halo 9934
+1628971 6269751
+# part in this halo 8733
+1641541 6269751
+# part in this halo 22751
+1688190 6269751
+# part in this halo 13849
+1717136 6269751
+# part in this halo 33074
+1771737 6269751
+# part in this halo 10460
+1786800 6269751
+# part in this halo 14853
+1814916 6269751
+# part in this halo 67809
+1938555 6269751
+# part in this halo 19653
+1972791 6269751
+# part in this halo 11090
+1990761 6269751
+# part in this halo 9827
+2009286 6269751
+# part in this halo 8832
+2023808 6269751
+# part in this halo 9627
+2038983 6269751
+# part in this halo 14500
+2060013 6269751
+# part in this halo 50530
+2134667 6269751
+# part in this halo 29729
+2182982 6269751
+# part in this halo 12182
+2196713 6269751
+# part in this halo 18215
+2227370 6269751
+# part in this halo 24167
+2271933 6269751
+# part in this halo 16753
+2302463 6269751
+# part in this halo 8827
+2316817 6269751
+# part in this halo 12372
+2336365 6269751
+# part in this halo 48823
+2435174 6269751
+# part in this halo 22348
+2472046 6269751
+# part in this halo 11400
+2500346 6269751
+# part in this halo 8914
+2512668 6269751
+# part in this halo 25089
+2549386 6269751
+# part in this halo 38189
+2614133 6269751
+# part in this halo 17572
+2644588 6269751
+# part in this halo 41202
+2721142 6269751
+# part in this halo 76850
+2842921 6269751
+# part in this halo 11327
+2860093 6269751
+# part in this halo 13521
+2880709 6269751
+# part in this halo 18410
+2917217 6269751
+# part in this halo 9148
+2941629 6269751
+# part in this halo 61663
+3054467 6269751
+# part in this halo 14141
+3082964 6269751
+# part in this halo 21959
+3126124 6269751
+# part in this halo 235840
+3642384 6269751
+# part in this halo 9957
+3660150 6269751
+# part in this halo 50914
+3755859 6269751
+# part in this halo 30016
+3805359 6269751
+# part in this halo 57486
+3915032 6269751
+# part in this halo 12531
+3939729 6269751
+# part in this halo 28476
+3999478 6269751
+# part in this halo 29349
+4056324 6269751
+# part in this halo 14918
+4089326 6269751
+# part in this halo 22208
+4136459 6269751
+# part in this halo 25548
+4214420 6269751
+# part in this halo 15532
+4243572 6269751
+# part in this halo 13351
+4259051 6269751
+# part in this halo 28243
+4317967 6269751
+# part in this halo 18101
+4342575 6269751
+# part in this halo 9238
+4356864 6269751
+# part in this halo 9740
+4375996 6269751
+# part in this halo 10794
+4399311 6269751
+# part in this halo 10013
+4420175 6269751
+# part in this halo 10010
+4438988 6269751
+# part in this halo 11488
+4461591 6269751
+# part in this halo 18294
+4493946 6269751
+# part in this halo 8838
+4507038 6269751
+# part in this halo 13915
+4531931 6269751
+# part in this halo 8136
+4544788 6269751
+# part in this halo 30299
+4591372 6269751
+# part in this halo 123677
+4819214 6269751
+# part in this halo 11096
+4838035 6269751
+# part in this halo 17084
+4869174 6269751
+# part in this halo 29648
+4909468 6269751
+# part in this halo 17175
+4938182 6269751
+# part in this halo 9385
+4951903 6269751
+# part in this halo 60081
+5060684 6269751
+# part in this halo 32071
+5119158 6269751
+# part in this halo 11902
+5141307 6269751
+# part in this halo 52998
+5242005 6269751
+# part in this halo 28227
+[4;33mReloaded modules[24m: Cython.Compiler.Interpreter, tree.tmtree, Cython.Compiler.TypeInference, Cython.Compiler.DebugFlags, utils.util, Cython.Compiler.Nodes, load.info, Cython.Compiler.Annotate, Cython.Compiler.Options, utils.prettyplot, Cython.Compiler.TreeFragment, Cython.Compiler.Visitor, Cython.Distutils.extension, Cython.Compiler.Future, load.utils, Cython.Compiler.AutoDocTransforms, utils.sampling, Cython.Compiler.Scanning, Cython.Compiler.TypeSlots, Cython.Debugging, Cython.Compiler.Parsing, utils, Cython.Compiler.CythonScope, Cython.Compiler, Cython.Compiler.StringEncoding, Cython.Compiler.Main, draw.pp, cython, Cython.Compiler.UtilNodes, Cython.Compiler.Builtin, tree.treeutils, Cython.Compiler.AnalysedTreeTransforms, load.hydro, Cython.Compiler.ModuleNode, zmq.utils.garbage, tree.halo, utils.array, Cython.Shadow, Cython.Tempita._tempita, Cython.Compiler.Errors, tree.treeplots, Cython.Compiler.ExprNodes, Cython.Compiler.UtilityCode, Cython.Compiler.Naming, Cython.Utils, tree, draw.img_obj, Cython, Cython.Compiler.Version, draw, load.sim, Cython.Compiler.ParseTreeTransforms, Cython.Compiler.Buffer, tree.hmutil, tree.rshalo, utils.custom_utils, load.amr, Cython.Compiler.PyrexTypes, pyximport, Cython.Compiler.FlowControl, load, Cython.Compiler.Code, load.part, Cython.Compiler.MemoryView, Cython.Compiler.Symtab, Cython.Distutils, Cython.Tempita, Cython.Distutils.build_ext, pyximport.pyximport, pyximport.pyxbuild, utils.assign, Cython.Compiler.Optimize, Cython.Compiler.Pipeline[0m
+Update:: /home/hoseung/Work/data/DMO_000/snapshots/
+Loading INFO
+Loading INFO
+setting the base(working) directory to : /home/hoseung/Work/data/DMO_000/
+/home/hoseung/Work/data/DMO_000/
+Update:: /home/hoseung/Work/data/DMO_000/snapshots/
+Loading INFO
+Update:: /home/hoseung/Work/data/DMO_000/snapshots/
+Ranges = [[0.0, 1.0], [0.0, 1.0], [0.0, 1.0]]
+
+An AMR instance is created
+
+ >>> working resolution (lmax) = 16
+Updating info.cpus
+An AMR instance is created
+
+ >>> working resolution (lmax) = 16
+Updating info.cpus
+ 
+Types of particles you want to load are:  ['dm mass id pos']
+A particle instance is created
+
+Use part.load() to load particle
+Ranges = [[0.3, 0.7], [0.3, 0.7], [0.3, 0.7]]
+
+ >>> working resolution (lmax) = 16
+Updating info.cpus
+Ranges = [[0.3, 0.7], [0.3, 0.7], [0.3, 0.7]]
+
+[[0.3, 0.7], [0.3, 0.7], [0.3, 0.7]]
+Loading particle... 
+ ranges: [[0.3, 0.7], [0.3, 0.7], [0.3, 0.7]]
+[  1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17  18
+  19  20  21  22  23  24  25  26  27  28  29  30  31  32  33  34  35  36
+  37  38  39  40  41  42  43  44  45  46  47  48  49  50  51  52  53  54
+  55  56  57  58  59  60  61  62  63  64  65  66  67  68  69  70  71  72
+  73  74  75  76  77  78  79  80  81  82  83  84  85  86  87  88  89  90
+  91  92  93  94  95  96  97  98  99 100 101 102 103 104 105 106 107 108
+ 109 110 111 112 113 114 115 116 117 118 119 120 121 122 123 124 125 126
+ 127 128 129 130 131 132 133 134 135 136 137 138 139 140 141 142 143 144
+ 145 146 147 148 149 150 151 152 153 154 155 156 157 158 159 160 161 162
+ 163 164 165 166 167 168 169 170 171 172 173 174 175 176 177 178 179 180
+ 181 182 183 184 185 186 187 188 189 190 191 192 193 194 195 196 197 198
+ 199 200 201 202 203 204 205 206 207 208 209 210 211 212 213 214 215 216
+ 217 218 219 220 221 222 223 224 225 226 227 228 229 230 231 232 233 234
+ 235 236 237 238 239 240]
+npart_arr: [566481, 552387, 534199, 539572, 558990, 549370, 536476, 573661, 550729, 602674, 605011, 600527, 577110, 553877, 526481, 585851, 554578, 558406, 597139, 617428, 602542, 530797, 574718, 536790, 534716, 557179, 558675, 520565, 589715, 565207, 608831, 584032, 558659, 565967, 545849, 575593, 549619, 535191, 605232, 562749, 486154, 490866, 511896, 585042, 597943, 620255, 596358, 508657, 543194, 503900, 529383, 557173, 584199, 572139, 580805, 580466, 555904, 580414, 589160, 552342, 547173, 601882, 544752, 526437, 587765, 578224, 520943, 538856, 528221, 552250, 523516, 566243, 565952, 631451, 575589, 551458, 516379, 524151, 607335, 543086, 615614, 540262, 562704, 558372, 547859, 534497, 494893, 526401, 538855, 546313, 537716, 595828, 553723, 537181, 510113, 551545, 547788, 580041, 514996, 546431, 552829, 579695, 553106, 598273, 534101, 527139, 561812, 559514, 590960, 530320, 603104, 584856, 574498, 559474, 542583, 532098, 550371, 561782, 559333, 543853, 560711, 552017, 554710, 552788, 532673, 549336, 528147, 591451, 599548, 551342, 549597, 581479, 606400, 551984, 561750, 494332, 516649, 617452, 521796, 593990, 542194, 535515, 623161, 591201, 613424, 566590, 590499, 593080, 544623, 526763, 519299, 528225, 583870, 593991, 596764, 543120, 584395, 554212, 555494, 554125, 507623, 572525, 528096, 548703, 561318, 547362, 536806, 523745, 539172, 640913, 554478, 527809, 558675, 557454, 603582, 614078, 601660, 525577, 509687, 529515, 553919, 606047, 488655, 541627, 519407, 569915, 497249, 565350, 531479, 576644, 595694, 534708, 544394, 553820, 562011, 523707, 565692, 597775, 513868, 584701, 604194, 585151, 555373, 549289, 581651, 565234, 590373, 515560, 570808, 543067, 581160, 592312, 594230, 569035, 582629, 558283, 534018, 544702, 501963, 639944, 670830, 557759, 650848, 525236, 594085, 586605, 624928, 515534, 574028, 511628, 518292, 529441, 577255, 547348, 594103, 501048, 491220, 562695, 509533, 589880]
+Updating data
+Resampling 8815325 values to a 800 by 800 by 1 grid
+Updating field vals
+Updating field vals
+Updating field vals
+Updating field vals
+minmax field 1246924116.36 2.52861588727e+13
+Updating data
+113.636465077
+3.78788216923
+30
+6
+113.636465077
+3.78788216923
+30
+6
+Expected # of particles: 2166800
+# part in this halo 10803
+20412 2166800
+# part in this halo 56130
+143231 2166800
+# part in this halo 10291
+163141 2166800
+# part in this halo 29170
+222710 2166800
+# part in this halo 43309
+318084 2166800
+# part in this halo 13301
+341628 2166800
+# part in this halo 9772
+357920 2166800
+# part in this halo 13413
+378876 2166800
+# part in this halo 11234
+406279 2166800
+# part in this halo 10066
+418300 2166800
+# part in this halo 19610
+459848 2166800
+# part in this halo 9934
+478015 2166800
+# part in this halo 8733
+490585 2166800
+# part in this halo 9827
+507393 2166800
+# part in this halo 9627
+522568 2166800
+# part in this halo 14500
+543598 2166800
+# part in this halo 50530
+618252 2166800
+# part in this halo 16753
+631217 2166800
+# part in this halo 12372
+650765 2166800
+# part in this halo 61663
+763603 2166800
+# part in this halo 14141
+792100 2166800
+# part in this halo 21959
+835260 2166800
+# part in this halo 235840
+1351520 2166800
+# part in this halo 9957
+1369286 2166800
+# part in this halo 25548
+1447247 2166800
+# part in this halo 10010
+1466060 2166800
+# part in this halo 11488
+1488663 2166800
+# part in this halo 18294
+1521018 2166800
+# part in this halo 13915
+1545911 2166800
+# part in this halo 30299
+1592495 2166800
+# part in this halo 123677
+1820337 2166800
+# part in this halo 11096
+1839158 2166800
+# part in this halo 18309
+1869400 2166800
+# part in this halo 31868
+1972136 2166800
+# part in this halo 16797
+2050821 2166800
+# part in this halo 10887
+2103480 2166800
+# part in this halo 17379
+increase the array size by 71960 from 2166800
+2238760 2238760
+Expected # of particles: 2166800
+# part in this halo 10803
+20412 2166800
+# part in this halo 56130
+143231 2166800
+# part in this halo 10291
+163141 2166800
+# part in this halo 29170
+222710 2166800
+# part in this halo 43309
+318084 2166800
+# part in this halo 13301
+341628 2166800
+# part in this halo 9772
+357920 2166800
+# part in this halo 13413
+378876 2166800
+# part in this halo 11234
+406279 2166800
+# part in this halo 10066
+418300 2166800
+# part in this halo 19610
+459848 2166800
+# part in this halo 9934
+478015 2166800
+# part in this halo 8733
+490585 2166800
+# part in this halo 9827
+507393 2166800
+# part in this halo 9627
+522568 2166800
+# part in this halo 14500
+543598 2166800
+# part in this halo 50530
+618252 2166800
+# part in this halo 16753
+631217 2166800
+# part in this halo 12372
+650765 2166800
+# part in this halo 61663
+763603 2166800
+# part in this halo 14141
+792100 2166800
+# part in this halo 21959
+835260 2166800
+# part in this halo 235840
+1351520 2166800
+# part in this halo 9957
+1369286 2166800
+# part in this halo 25548
+1447247 2166800
+# part in this halo 10010
+1466060 2166800
+# part in this halo 11488
+1488663 2166800
+# part in this halo 18294
+1521018 2166800
+# part in this halo 13915
+1545911 2166800
+# part in this halo 30299
+1592495 2166800
+# part in this halo 123677
+1820337 2166800
+# part in this halo 11096
+1839158 2166800
+# part in this halo 18309
+1869400 2166800
+# part in this halo 31868
+1972136 2166800
+# part in this halo 16797
+2050821 2166800
+# part in this halo 10887
+2103480 2166800
+# part in this halo 17379
+increase the array size by 71960 from 2166800
+2238760 2238760
+took : 11.474637269973755
+++++++++++++ 
+ Loop over snapshots 
+ +++++++++++++ 
+
+Updating data
+Resampling 16985 values to a 400 by 400 by 1 grid
+Updating field vals
+Updating field vals
+Updating field vals
+Updating field vals
+minmax field 0.0 97202528483.2
+Updating data
+3.91688466072
+1.30562822024
+1
+99
+3.91688466072
+1.30562822024
+1
+104
+Updating data
+Resampling 84244 values to a 400 by 400 by 1 grid
+Updating field vals
+Updating field vals
+Updating field vals
+Updating field vals
+minmax field 0.0 472995992990.0
+Updating data
+7.36119842529
+2.45373280843
+2
+48
+7.36119842529
+2.45373280843
+2
+59
+Updating data
+Resampling 13431 values to a 400 by 400 by 1 grid
+Updating field vals
+Updating field vals
+Updating field vals
+Updating field vals
+minmax field 0.0 187380432337.0
+Updating data
+4.00644874573
+1.33548291524
+1
+107
+4.00644874573
+1.33548291524
+1
+135
+Updating data
+Resampling 42444 values to a 400 by 400 by 1 grid
+Updating field vals
+Updating field vals
+Updating field vals
+Updating field vals
+minmax field 0.0 199386688634.0
+Updating data
+5.77090072632
+1.92363357544
+1
+93
+5.77090072632
+1.92363357544
+1
+134
+Expected # of particles: 2166800
+# part in this halo 10803
+20412 2166800
+# part in this halo 56130
+143231 2166800
+# part in this halo 10291
+163141 2166800
+# part in this halo 29170
+222710 2166800
+# part in this halo 43309
+318084 2166800
+# part in this halo 13301
+341628 2166800
+# part in this halo 9772
+357920 2166800
+# part in this halo 13413
+378876 2166800
+# part in this halo 11234
+406279 2166800
+# part in this halo 10066
+418300 2166800
+# part in this halo 19610
+459848 2166800
+# part in this halo 9934
+478015 2166800
+# part in this halo 8733
+490585 2166800
+# part in this halo 9827
+507393 2166800
+# part in this halo 9627
+522568 2166800
+# part in this halo 14500
+543598 2166800
+# part in this halo 50530
+618252 2166800
+# part in this halo 16753
+631217 2166800
+# part in this halo 12372
+650765 2166800
+# part in this halo 61663
+763603 2166800
+# part in this halo 14141
+792100 2166800
+# part in this halo 21959
+835260 2166800
+# part in this halo 235840
+1351520 2166800
+# part in this halo 9957
+1369286 2166800
+# part in this halo 25548
+1447247 2166800
+# part in this halo 10010
+1466060 2166800
+# part in this halo 11488
+1488663 2166800
+# part in this halo 18294
+1521018 2166800
+# part in this halo 13915
+1545911 2166800
+# part in this halo 30299
+1592495 2166800
+# part in this halo 123677
+1820337 2166800
+# part in this halo 11096
+1839158 2166800
+# part in this halo 18309
+1869400 2166800
+# part in this halo 31868
+1972136 2166800
+# part in this halo 16797
+2050821 2166800
+# part in this halo 10887
+2103480 2166800
+# part in this halo 17379
+increase the array size by 71960 from 2166800
+2238760 2238760
+took : 11.342796325683594
+Expected # of particles: 2166800
+# part in this halo 10803
+20412 2166800
+# part in this halo 56130
+143231 2166800
+# part in this halo 10291
+163141 2166800
+# part in this halo 29170
+222710 2166800
+# part in this halo 43309
+318084 2166800
+# part in this halo 13301
+341628 2166800
+# part in this halo 9772
+357920 2166800
+# part in this halo 13413
+378876 2166800
+# part in this halo 11234
+406279 2166800
+# part in this halo 10066
+418300 2166800
+# part in this halo 19610
+459848 2166800
+# part in this halo 9934
+478015 2166800
+# part in this halo 8733
+490585 2166800
+# part in this halo 9827
+507393 2166800
+# part in this halo 9627
+522568 2166800
+# part in this halo 14500
+543598 2166800
+# part in this halo 50530
+618252 2166800
+# part in this halo 16753
+631217 2166800
+# part in this halo 12372
+650765 2166800
+# part in this halo 61663
+763603 2166800
+# part in this halo 14141
+792100 2166800
+# part in this halo 21959
+835260 2166800
+# part in this halo 235840
+1351520 2166800
+# part in this halo 9957
+1369286 2166800
+# part in this halo 25548
+1447247 2166800
+# part in this halo 10010
+1466060 2166800
+# part in this halo 11488
+1488663 2166800
+# part in this halo 18294
+1521018 2166800
+# part in this halo 13915
+1545911 2166800
+# part in this halo 30299
+1592495 2166800
+# part in this halo 123677
+1820337 2166800
+# part in this halo 11096
+1839158 2166800
+# part in this halo 18309
+1869400 2166800
+# part in this halo 31868
+1972136 2166800
+# part in this halo 16797
+2050821 2166800
+# part in this halo 10887
+2103480 2166800
+# part in this halo 17379
+increase the array size by 71960 from 2166800
+2238760 2238760
+took : 11.37303614616394
+aa

@@ -1,0 +1,8 @@
+/usr/lib/python3/dist-packages/scipy/io/idl.py:167: UserWarning: warning: empty strings are now set to '' instead of None
+  warnings.warn("warning: empty strings are now set to '' instead of None")
+/usr/lib/python3/dist-packages/scipy/io/idl.py:167: UserWarning: warning: empty strings are now set to '' instead of None
+  warnings.warn("warning: empty strings are now set to '' instead of None")
+/usr/lib/python3/dist-packages/scipy/io/idl.py:167: UserWarning: warning: empty strings are now set to '' instead of None
+  warnings.warn("warning: empty strings are now set to '' instead of None")
+/usr/lib/python3/dist-packages/scipy/io/idl.py:167: UserWarning: warning: empty strings are now set to '' instead of None
+  warnings.warn("warning: empty strings are now set to '' instead of None")

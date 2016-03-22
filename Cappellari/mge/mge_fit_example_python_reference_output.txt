@@ -1,0 +1,76 @@
+# mge_fit_example() reference output (version 18 June 2015)
+# Python 3.4 using NumPy 1.10, SciPy 0.16, Matplotlib 1.4
+###############################################################################
+runfile('mge/mge_fit_example.py', wdir='mge')
+
+Fitting M32---------------------------------------------
+
+Iteration:  1   chi2: 19.64  Nonzero: 11
+Nonzero Gaussians: 11
+Eliminating not useful Gaussians...
+############################################
+ Computation time: 1.01 seconds
+  Total Iterations:  10
+ Nonzero Gaussians:  11
+  Unused Gaussians:  0
+ Sectors used in the fit:  19
+ Total number of points fitted:  1620
+ Chi2: 2.404 
+ STDEV: 0.0385 
+ MEANABSDEV: 0.02199 
+############################################
+  Total_Counts  Sigma_Pixels      qObs
+############################################
+      84204.9           0.6      0.800084
+       780975       2.37372      0.820467
+  1.01924e+06       3.73174      0.779701
+  6.25959e+06       7.81989      0.781265
+  1.44781e+07       16.3962      0.725947
+  1.81489e+07       32.0292      0.734261
+  3.22314e+07       65.1698      0.731309
+  6.84322e+07       133.662      0.719431
+  1.23027e+08       275.893      0.743215
+  2.49438e+08       574.036      0.834674
+  2.78488e+08       1385.59      0.850000
+++++++++++++++++++++++++++++++++++++++++++++
+
+Fitting NGC4342-----------------------------------------
+
+ Pixels used: 22608
+ Peak (x,y): 356 366
+ Mean (x,y): 356.10 365.58
+ Theta (deg): 54.2
+ Eps: 0.579
+ Sigma along major axis (pix): 47.5
+Iteration:  1   chi2: 42.46  Nonzero: 12
+Iteration:  11   chi2: 2.736  Nonzero: 11
+Iteration:  21   chi2: 0.8141  Nonzero: 12
+Iteration:  31   chi2: 0.7401  Nonzero: 12
+Nonzero Gaussians: 12
+Eliminating not useful Gaussians...
+############################################
+ Computation time: 3.91 seconds
+  Total Iterations:  31
+ Nonzero Gaussians:  12
+  Unused Gaussians:  0
+ Sectors used in the fit:  19
+ Total number of points fitted:  882
+ Chi2: 0.7401 
+ STDEV: 0.02896 
+ MEANABSDEV: 0.01764 
+############################################
+  Total_Counts  Sigma_Pixels      qObs
+############################################
+      8662.74      0.605411      0.805065
+        29896        2.1275      0.896678
+       134192       6.43789      0.713453
+      48593.9       7.38966      0.178336
+       266281       13.3481      0.758602
+       258419       24.5241      0.877843
+       138197       44.5293      1.000000
+       346611       57.7628      0.366817
+       103782       86.9521      1.000000
+       894426       144.778      0.261158
+       742681       260.711      0.294144
+       266802       260.711      0.677695
+++++++++++++++++++++++++++++++++++++++++++++
