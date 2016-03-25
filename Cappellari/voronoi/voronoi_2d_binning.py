@@ -598,6 +598,7 @@ def voronoi_2d_binning(x, y, signal, noise, targetSN=50, cvt=True,
             plt.plot(rad[w], sn[w], 'xb', label='single spaxels')
         plt.axhline(targetSN)
         plt.legend()
+        plt.savefig("tessellation.png")
         plt.pause(0.01)  # allow plot to appear in certain cases
 
     return classe, xNode, yNode, xBar, yBar, sn, area, scale

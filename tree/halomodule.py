@@ -2,12 +2,34 @@
 """
 Created on Mon Apr  6 11:00:31 2015
 
+halo / galaxy calss including basic data load functionality. 
+
+Parameters
+----------
+nout : int
+    snapshot number
+base : str
+    work directory
+is_gal : logical
+    load galaxy if true
+return_id : logical
+    If True, load and return constituent particle id of each halo. 
+return_id_list : int list
+    specify halos of which particle id is returned.
+    If return_id is True but return_id_list is None, 
+    particle id of all halos are returned.
+
 
 MODIFICATIONS:
 2015. 08. 08
     Floats are all stored as doubles even though the original data is float32.
     If center position is stored in float32, then is used to select particles
     inside the region, then max(x) - min(x) > 2 * region['radius'] is possible!
+
+2016.03.26
+    if return_id = True, but no return_id_list is set, then return id lists
+     of all halos by dafault.
+
 @author: hoseung
 """
 class Hmhalo():
@@ -255,10 +277,12 @@ class Halo(HaloMeta):
 
             tothal = self.halnum + self.subnum
             self.data = np.recarray(tothal, dtype=dtype_halo)
+#            print("retunr id?", self.return_id)
             if self.return_id:
                 self.idlists=[]
                 self.hal_idlists=[]
-                    
+          
+#            print("idlists", self.idlists)          
             for i in range(tothal):
                 nph = read_fortran(f, np.dtype('i4'), 1)
                 self.data['np'][i] = nph
@@ -266,14 +290,16 @@ class Halo(HaloMeta):
                 tmp = read_fortran(f, np.dtype('i4'), nph) # id list. 
                 hnu = read_fortran(f, np.dtype('i4'), 1)[0]
                 self.data['id'][i] = hnu
+#                print(self.return_id_list, "return_id_list")
                 if self.return_id:
                     if self.return_id_list is not None:
                         if hnu in self.return_id_list:
                             self.idlists.append(tmp)
                             self.hal_idlists.append(hnu)
                     else:
-                        pass
-                        #self.idlists.append(tmp)
+                        #pass
+                  # By default save all id lists. 
+                        self.idlists.append(tmp)
             
                 read_fortran(f, np.dtype('i4'), 1) #timestep
                 self.data['level'][i], self.data['host'][i], \
@@ -305,6 +331,8 @@ class Halo(HaloMeta):
     
             f.close()
     
+            if self.return_id_list is None:
+                self.hal_idlists = self.data['id'] 
 #            self.refactor_hm()
             if info is not None:
                 self.set_info(info)

@@ -69,7 +69,6 @@ class Galaxy(object):
                 (E's have smaller R_t_r, L's have larger.)
                 
         """
-        import numpy as np
         member="Reff"
         print("Making a galaxy:", self.id)
         if verbose:
@@ -99,9 +98,9 @@ class Galaxy(object):
                     " using particles inside the radius-0 from the halo center."
                     , rr_tmp0 * self.info.pboxsize * 1000, ['kpc'])
 
-        xall = star['x']
-        yall = star['y']
-        zall = star['z']
+        xall = star['pos'][:,0]
+        yall = star['pos'][:,1]
+        zall = star['pos'][:,2]
         
         xc_tmp1 = np.median(xall)
         yc_tmp1 = np.median(yall)
@@ -149,7 +148,6 @@ class Galaxy(object):
         
 # Second, define the search radius
 # Only 'simple' works, because 'star' is not defined yet.
-
         if verbose: 
             print("Currrent CENTER:", xc0,yc0,zc0)
             print("Calculate Effective radius")
@@ -200,15 +198,15 @@ class Galaxy(object):
 
         if dm is not None:
             if member == "Reff":
-                idm = np.where( np.square(dm["x"] - xc) + 
-                                np.square(dm["y"] - yc) + 
-                                np.square(dm["z"] - zc) <= np.square(rgal_tmp))[0]
+                idm = np.where( np.square(dm["pos"][:,0] - xc) + 
+                                np.square(dm["pos"][:,1] - yc) + 
+                                np.square(dm["pos"][:,2] - zc) <= np.square(rgal_tmp))[0]
             elif member == "v200":
             # Alghough the velocity is redefined later,
             # particle membership is fixed at this point. 
-                idm = np.where( np.square(dm["vx"] - vx_hal0)+ 
-                                np.square(dm["vy"] - vy_hal0)+ 
-                                np.square(dm["vz"] - vz_hal0) <= np.square(200**2))[0]
+                idm = np.where( np.square(dm["pos"][:,0] - vx_hal0)+ 
+                                np.square(dm["pos"][:,1] - vy_hal0)+ 
+                                np.square(dm["pos"][:,2] - vz_hal0) <= np.square(200**2))[0]
             ndm_tot = len(idm)
 
             self.dm = np.recarray(ndm_tot, dtype=dm.dtype)
@@ -216,21 +214,23 @@ class Galaxy(object):
                 self.dm['id'] = dm['id'][idm] 
             if 'm' in dm.dtype.names:
                 self.dm['m'] = dm['m'][idm] * self.info.msun
-            if 'y' in dm.dtype.names:
-                self.dm['x'] = (dm['x'][idm] - self.xc) * self.info.pboxsize * 1000
-                self.dm['y'] = (dm['y'][idm] - self.yc) * self.info.pboxsize * 1000
-                self.dm['z'] = (dm['z'][idm] - self.zc) * self.info.pboxsize * 1000
-            if 'vy' in dm.dtype.names:
+            if 'pos' in dm.dtype.names:
+                self.dm['pos'] = (dm['pos'][idm,:] - [self.xc, self.yc, self.zc]) * self.info.pboxsize * 1000
+#                self.dm['pos'][:,1] = (dm['pos'][idm,1] - self.yc) * self.info.pboxsize * 1000
+#                self.dm['pos'][:,2] = (dm['pos'][idm,2] - self.zc) * self.info.pboxsize * 1000
+#                self.dm['y'] = (dm['y'][idm] - self.yc) * self.info.pboxsize * 1000
+#                self.dm['z'] = (dm['z'][idm] - self.zc) * self.info.pboxsize * 1000
+            if 'vel' in dm.dtype.names:
                 # Velocity is centered and normalized later on.
-                self.dm['vx'] = dm['vx'][idm]
-                self.dm['vy'] = dm['vy'][idm]
-                self.dm['vz'] = dm['vz'][idm]
+                self.dm['vel'] = dm['vel'][idm,:]
+#                self.dm['vy'] = dm['vy'][idm]
+#                self.dm['vz'] = dm['vz'][idm]
             if verbose: print("DM data stored")
             
         if star is not None:
-            istar = np.where(np.square(star["x"] - self.xc) + 
-                            np.square(star["y"] - self.yc) + 
-                            np.square(star["z"] - self.zc) <= np.square(rgal_tmp))[0]
+            istar = np.where(np.square(star["pos"][:,0] - self.xc) + 
+                             np.square(star["pos"][:,1] - self.yc) + 
+                             np.square(star["pos"][:,2] - self.zc) <= np.square(rgal_tmp))[0]
             nstar_tot = len(istar)
             if verbose: print("nstar tot:", nstar_tot)        
             if verbose: print("Store stellar particle")
@@ -240,18 +240,20 @@ class Galaxy(object):
                 self.star['id'] = star['id'][istar]
             if 'm' in star.dtype.names:
                 self.star['m'] = star['m'][istar] * self.info.msun
-            if 'x' in star.dtype.names:
-                self.star['x'] = (star['x'][istar] - self.xc) * self.info.pboxsize * 1000
-            if 'y' in star.dtype.names:            
-                self.star['y'] = (star['y'][istar] - self.yc) * self.info.pboxsize * 1000
-            if 'z' in star.dtype.names:
-                self.star['z'] = (star['z'][istar] - self.zc) * self.info.pboxsize * 1000
-            if 'vx' in star.dtype.names:
-                self.star['vx'] = star['vx'][istar]
-            if 'vy' in star.dtype.names:                
-                self.star['vy'] = star['vy'][istar]
-            if 'vz' in star.dtype.names:                
-                self.star['vz'] = star['vz'][istar]
+            if 'pos' in star.dtype.names:
+                self.star['pos'] = (star['pos'][istar,:] - [self.xc, self.yc, self.zc]) * self.info.pboxsize * 1000
+#                self.star['pos'][:,1] = (star['pos'][istar,1] - self.xc) * self.info.pboxsize * 1000
+#                self.star['pos'][:,2] = (star['pos'][istar,2] - self.xc) * self.info.pboxsize * 1000
+#            if 'y' in star.dtype.names:            
+#                self.star['y'] = (star['y'][istar] - self.yc) * self.info.pboxsize * 1000
+#            if 'z' in star.dtype.names:
+#                self.star['z'] = (star['z'][istar] - self.zc) * self.info.pboxsize * 1000
+            if 'vel' in star.dtype.names:
+                self.star['vel'] = star['vel'][istar,:]
+#            if 'vy' in star.dtype.names:                
+#                self.star['vy'] = star['vy'][istar]
+#            if 'vz' in star.dtype.names:                
+#                self.star['vz'] = star['vz'][istar]
             if 'time' in star.dtype.names:
                 import utils.cosmology
                 self.star['time'] = utils.cosmology.time2gyr(star['time'][istar],
@@ -262,23 +264,26 @@ class Galaxy(object):
 
         if cell is not None:
             if verbose: print("Cell is NOT none")
-            icell = np.where(np.square(cell["x"] - xc) + 
-                np.square(cell["y"] - yc) + 
-                np.square(cell["z"] - zc) <= np.square(rgal_tmp))[0]
+            icell = np.where(np.square(cell["pos"][:,0] - xc) + 
+                             np.square(cell["pos"][:,1] - yc) + 
+                             np.square(cell["pos"][:,2] - zc) <= np.square(rgal_tmp))[0]
             ncell_tot = len(icell)
-            dtype_cell = [('x', '<f8'), ('y', '<f8'), ('z', '<f8'),('dx', '<f8'),
-                      ('rho', '<f8'), ('vx', '<f8'), ('vy', '<f8'),
-                        ('vz', '<f8'), ('temp', '<f8'), ('metal', '<f8')]
+            dtype_cell = [('pos', '<f8', (3,)), ('dx', '<f8'),
+                          ('rho', '<f8'), ('vel', '<f8', (3,)),
+                          ('temp', '<f8'), ('metal', '<f8')]
 
             self.cell = np.recarray(ncell_tot, dtype=dtype_cell)
-            self.cell['x'] = (cell['x'][icell] - self.xc) * self.info.pboxsize * 1000
-            self.cell['y'] = (cell['y'][icell] - self.yc) * self.info.pboxsize * 1000
-            self.cell['z'] = (cell['z'][icell] - self.zc) * self.info.pboxsize * 1000
+            self.cell['pos'] = (cell['pos'][icell,:] - [self.xc, self.yc, self.zc]) * self.info.pboxsize * 1000
+#            self.cell['pos'][:,1] = (cell['pos'][icell,1] - self.xc) * self.info.pboxsize * 1000
+#            self.cell['pos'][:,2] = (cell['pos'][icell,2] - self.xc) * self.info.pboxsize * 1000
+
+            #self.cell['y'] = (cell['y'][icell] - self.yc) * self.info.pboxsize * 1000
+            #self.cell['z'] = (cell['z'][icell] - self.zc) * self.info.pboxsize * 1000
             self.cell['dx'] = cell['dx'][icell]
             self.cell['rho'] = cell['var0'][icell]
-            self.cell['vx'] = cell['var1'][icell]
-            self.cell['vy'] = cell['var2'][icell]
-            self.cell['vz'] = cell['var3'][icell]
+            self.cell['vel'][:,0] = cell['var1'][icell]
+            self.cell['vel'][:,1] = cell['var2'][icell]
+            self.cell['vel'][:,2] = cell['var3'][icell]
             self.cell['temp'] = cell['var4'][icell]
             self.cell['metal'] = cell['var5'][icell]
             self.cal_mgas()
@@ -304,12 +309,12 @@ class Galaxy(object):
         # Now, get cov        
 
         self.get_cov(center_only=True)
-        self.star['vx'] = (self.star['vx'] - self.vxc) * self.info.kms
-        self.star['vy'] = (self.star['vy'] - self.vyc) * self.info.kms
-        self.star['vz'] = (self.star['vz'] - self.vzc) * self.info.kms
-        self.dm['vx'] = (self.dm['vx'] - self.vxc) * self.info.kms
-        self.dm['vy'] = (self.dm['vy'] - self.vyc) * self.info.kms
-        self.dm['vz'] = (self.dm['vz'] - self.vzc) * self.info.kms
+        self.star['vel'] = (self.star['vel'] -[self.vxc, self.vyc, self.vzc]) * self.info.kms
+        #self.star['vy'] = (self.star['vy'] - self.vyc) * self.info.kms
+        #self.star['vz'] = (self.star['vz'] - self.vzc) * self.info.kms
+        self.dm['vel'] = (self.dm['vel'] - [self.vxc,self.vyc,self.vzc]) * self.info.kms
+        #self.dm['vy'] = (self.dm['vy'] - self.vyc) * self.info.kms
+        #self.dm['vz'] = (self.dm['vz'] - self.vzc) * self.info.kms
 
         return True
 
@@ -500,7 +505,6 @@ class Galaxy(object):
                 by dividing by the array.ptp() and then 
                 moving the element with maximum value inside.
             """
-            
             return (x - x.min())/x.ptp()
 
         
@@ -795,17 +799,6 @@ class Galaxy(object):
         vmap = np.zeros(nx * ny, dtype=float)
         # mass-weighted sigma         
         sigmap=np.zeros(nx * ny, dtype=float)
-        for i in range(nx * ny):
-            ind = np.where(indices == i)[0]
-            if len(ind) > 0:
-                sigmap[i] = self.weighted_std(vz[ind], mm[ind])
-                vmap[i] = np.average(vz[ind], weights=mm[ind])
-            else:
-                sigmap[i] = 0
-                vmap[i] = 0
-
-        self.sigmap = sigmap.reshape(nx, ny)
-        self.vmap = vmap.reshape(nx,ny)
 
 
         if voronoi is not None:
@@ -824,6 +817,30 @@ class Galaxy(object):
                 voronoi_2d_binning(xpos_regular, ypos_regular, count_map,
                                  noise_map, targetSN=voronoi["targetSN"],
                                  plot=voronoi["plot"], quiet=voronoi["quiet"])
+
+
+
+            def _display_pixels(x, y, counts, pixelSize):
+                """
+                Display pixels at coordinates (x, y) coloured with "counts".
+                This routine is fast but not fully general as it assumes the spaxels
+                are on a regular grid. This needs not be the case for Voronoi binning.
+            
+                """
+                xmin, xmax = np.min(x), np.max(x)
+                ymin, ymax = np.min(y), np.max(y)
+                nx = round((xmax - xmin)/pixelSize) + 1
+                ny = round((ymax - ymin)/pixelSize) + 1
+                img = np.full((nx, ny), np.nan)  # use nan for missing data
+                j = np.round((x - xmin)/pixelSize).astype(int)
+                k = np.round((y - ymin)/pixelSize).astype(int)
+                img[j, k] = counts
+            
+                plt.imshow(np.rot90(img), interpolation='none', cmap='prism',
+                           extent=[xmin - pixelSize/2, xmax + pixelSize/2,
+                                   ymin - pixelSize/2, ymax + pixelSize/2])
+           
+           
                                                          
             mmap_v = np.zeros(len(xNode))
             vmap_v = np.zeros(len(xNode)) # Not actually maps, but 1-D arrays.
@@ -837,21 +854,63 @@ class Galaxy(object):
                     i_part = np.append(i_part, np.where(indices == j)[0])
                 # all particles belonging to one Voronoi cell
                 mmap_v[ibin] = sum(mm[i_part])
-                vmap_v[ibin] = abs(np.average(vz[i_part], weights=mm[i_part]))
+                try:
+                    vmap_v[ibin] = np.average(vz[i_part], weights=mm[i_part])
+                except:
+                     continue # 
+ #                   print("mass", mm[i_part])
+#                    break
                 sigmap_v[ibin] = self.weighted_std(vz[i_part], weights=mm[i_part])
+
+                # update original map too.
+                vmap[ind] = vmap_v[ibin]
+                sigmap[ind] = sigmap_v[ibin]
+
             lambdamap_v = vmap_v / sigmap_v
-            # update maps.
-            # keep oroginal mmap to draw plots
+
+
             mmap_org = mmap 
             vmap_org = vmap 
             sigmap_org = sigmap 
+            self.sigmap = sigmap_org.reshape(nx, ny)
+            self.vmap = vmap_org.reshape(nx,ny)
+
+            # npix * npix map for plots
+            for ibin in range(len(xNode)):
+                ind = np.where(binNum == ibin)[0]
+                vmap_org[ind] = vmap_v[ibin]
+                sigmap_org[ind] = sigmap_v[ibin]
+
+            import matplotlib.pyplot as plt
+            
+            rnd = np.argsort(np.random.random(xNode.size))  # Randomize bin colors
+            _display_pixels(xpos_regular, ypos_regular, rnd[binNum], nx)
+#            plt.imshow(self.vmap)
+            plt.savefig('./mmap.png')
+            plt.imshow(self.sigmap)
+            plt.savefig('./sig.png')
+            plt.close()
+
+            # update maps.
+            # keep oroginal mmap to draw plots
             # Don't worry.  it's just switching pointer. No memory copy.
             sigmap = sigmap_v
-            vmap = vmap_v
-            mmap = mmap_v
+            vmap = vmap_v # overwrite??
+            mmap = mmap_v          
+
         else:
+            for i in range(nx * ny):
+                ind = np.where(indices == i)[0]
+                if len(ind) > 0:
+                    sigmap[i] = self.weighted_std(vz[ind], mm[ind])
+                    vmap[i] = np.average(vz[ind], weights=mm[ind])
+                else:
+                    sigmap[i] = 0
+                    vmap[i] = 0
             xNode = np.tile(np.arange(nx),ny) # x = tile? or repeat? 
             yNode = np.repeat(np.arange(ny),nx)
+            self.sigmap = sigmap.reshape(nx, ny)
+            self.vmap = vmap.reshape(nx,ny)
 
 # calculate profile by summing in bins.
         if method == 'circ':
@@ -861,13 +920,25 @@ class Galaxy(object):
 
             for i in range(npoints):
                 ind = np.where((dist1d > i) & (dist1d < (i+1)))[0]
-                print(i*rr/npoints, len(ind))
+#                print(i*rr/npoints, len(ind))
                 a = sum(mmap[ind] * dist1d[ind] * abs(vmap[ind]))
                 if a != 0:
                     ind2 = np.where(sigmap[ind] > 0)[0]
                     b = sum(mmap[ind[ind2]] * dist1d[ind[ind2]] 
                             * np.sqrt(vmap[ind[ind2]]**2 + sigmap[ind[ind2]]**2))
                     points[i] = a/b
+
+            if voronoi:
+                dd = np.sqrt( (xNode - 0.5*npix)**2 + (yNode - 0.5*npix)**2 )
+                i_radius = np.fix(dd).astype(int)
+                new_arr = np.zeros(np.fix(max(dd)) + 1)
+                new_cnt = np.zeros(np.fix(max(dd)) + 1)
+                # NGP, Average
+                for i, i_r in enumerate(i_radius):
+                    new_arr[i_r] = new_arr[i_r] + lambdamap_v[i]
+                    new_cnt[i_r] = new_cnt[i_r] + 1
+            
+
         elif method == 'ellip':
             # npix = round(gal.nstar**(1/3) * 3) # to maintain roughly same pixel density. 
             # Or, constant physical scale
@@ -916,7 +987,7 @@ class Galaxy(object):
                     return (y0 / (x1 - reff) + y1 / (reff - x0)) / (x1 - x0)
 
                 dist_r = mjr_arr * np.sqrt(1 - eps_arr) * dx * 3.5 # Let's just assume..
-                print(reff, dist_r)
+#                print(reff, dist_r)
                 ind = np.where(dist_r > reff)[0][0] -1 # Last element that is smaller than self.reff
                 x0 = dist_r[ind]
                 x1 = dist_r[ind+1]
@@ -964,7 +1035,7 @@ class Galaxy(object):
             ab = np.sqrt(sma*smi)
             for i in range(npoints):
                 ind = np.where( (dd > i/reff) & (dd < (i+1)/reff))[0]
-                print(i*rr/npoints, len(ind))
+#                print(i*rr/npoints, len(ind))
                 a = sum(mmap[ind] * dist1d[ind] * abs(vmap[ind]))
                 if a != 0:
                     b = sum(mmap[ind] * dist1d[ind] 
@@ -1198,21 +1269,17 @@ class Galaxy(object):
             try:
                 pop = getattr(self, target)
                 RM = self.rotation_matrix
-
-                new_x = RM[0,0]*pop['x'] + RM[1,0]*pop['y'] + RM[2,0]*pop['z']
-                new_y = RM[0,1]*pop['x'] + RM[1,1]*pop['y'] + RM[2,1]*pop['z']
-                new_z = RM[0,2]*pop['x'] + RM[1,2]*pop['y'] + RM[2,2]*pop['z']
-        
-                new_vx= RM[0,0]*pop['vx'] + RM[1,0]*pop['vy'] + RM[2,0]*pop['vz']
-                new_vy= RM[0,1]*pop['vx'] + RM[1,1]*pop['vy'] + RM[2,1]*pop['vz']
-                new_vz= RM[0,2]*pop['vx'] + RM[1,2]*pop['vy'] + RM[2,2]*pop['vz']
-                
-                pop['x'] = new_x
-                pop['y'] = new_y
-                pop['z'] = new_z
-                pop['vx'] = new_vx
-                pop['vy'] = new_vy
-                pop['vz'] = new_vz
+ 
+                new_x = np.matmul(RM, np.vstack((pop['x'], pop['y'], pop['z']))) 
+                new_v = np.matmul(RM, np.vstack((pop['vx'], pop['vy'], pop['vz'])))
+ 
+                pop['x'] = new_x[0,:]
+                pop['y'] = new_x[1,:]
+                pop['z'] = new_x[2,:]
+ 
+                pop['vx'] = new_v[0,:]
+                pop['vy'] = new_v[1,:]
+                pop['vz'] = new_v[2,:]
 
             except:
                 print("Error in reorient, couldn't update pos and vel")
@@ -1220,7 +1287,7 @@ class Galaxy(object):
 
     def cal_norm_vec(self, pop_nvec=['star'], dest=[0., 0., 1], bound_percentile=50):
         """
-        Determines normal vector of the given galaxy.
+        Determines normal vector (rotation axis) of the galaxy.
         
         Parameters
         ----------
@@ -1365,8 +1432,8 @@ class Galaxy(object):
     def cal_bound_ptcls(self, ptype='star', bound50=True):
         def gas_mass(cell, info):
             """
-                return mass of gas cells. 
-                Keep in mind that size of cells differ. 
+                return gas mass of cells. 
+                Keep in mind that the size of cells differ. 
             """
             msun = 1.98892e33 # solar mass in gram.
             return (cell['rho'] * info.unit_d) * (cell['dx'] * info.unit_l)**3 / msun
@@ -1411,11 +1478,19 @@ class Galaxy(object):
 
     def bound_particles(self, n=100, ptype='star'):
         """
-            save IDs of n most bound particles as galaxy.most_bound_particles.
+        save IDs of n most bound particles as galaxy.most_bound_particles.
+
+        Parameters
+        ----------
+        n : int
+            number of most bound particles to be kept. 
+        ptype : str "star" or "dm"
+            Type of particle.
             
-            NOTE
-            ----
-                Requires center of mass and center of velocity already determined.
+        NOTE
+        ----
+        The result has no use yet... I don't know why I have this...
+        Requires center of mass and center of velocity already determined.
         """
         
         #vrange = 100
@@ -1439,11 +1514,17 @@ class Galaxy(object):
     def cal_b2t(self, ptype='star', disk_criterion="Abadi2003",
                 bound_only = True, hist=False):
         """
-        Reorient galaxy first. 
+        Measure bulge to total ratio of the galaxy.
         
         parameters
-        ----------------------
-        hist : 
+        ----------
+        ptype : str
+            type of particle to consider.
+        disk_criterion : str 
+            discrimination criterion. (Defaults to "Abadi2003")
+        bound_only : logical
+            consider bound particles only
+        hist : logical
             if True, ellipticity histogram is returned
         """
         def gas_mass(cell, info):
