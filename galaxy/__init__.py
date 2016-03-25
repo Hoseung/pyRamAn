@@ -1,2 +1,2 @@
 from galaxy import galaxy
-from galaxy import galaxy2
+from galaxy import make_gal

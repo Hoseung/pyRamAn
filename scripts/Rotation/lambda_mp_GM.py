@@ -264,7 +264,7 @@ def mk_gal(galdata, halodata, info, star_id=None, dm_id=None,
     
     """
     plt.close()
-    import make_gal as mkg
+    import galaxy.make_gal as mkg
 
     if star_id is None:
         star, dm, cell = mkg.extract_data_old(halodata, rscale=rscale)
@@ -363,7 +363,7 @@ def worker(gals, hals, out_q, info, inds,
            lambda_method='ellip', rscale_lambda=3,npix_lambda=10,
            galaxy_plot=False, galaxy_plot_dir='galaxy_plot/',
            **kwargs):
-    import make_gal as mkg
+    import galaxy.make_gal as mkg
 
 #    worker_q = Queue()
     if type(inds) == int:
@@ -381,6 +381,7 @@ def worker(gals, hals, out_q, info, inds,
                     "vx":0.0, "vy":0.0, "vz":0.0,
                     "mstar":0.0, "nstar":0.0, "mgas":0.0,
                     "lambda_arr":[], "lambda_r":0, "rgal":0,
+                    "lambda_arr2":[], "lambda_r2":0,
                     "rhalo":hals.data['rvir'][i], "boxtokpc":info.pboxsize*1e3,
                     "b2t":0.0, "eps":0.0, "mjr":0.0}
 
@@ -389,15 +390,21 @@ def worker(gals, hals, out_q, info, inds,
             print(gal.id, " Not a good galaxy")
             #out_q.put(gal.meta)
         else:
+            gal.lambda_arr, gal.lambda_r = gal.cal_lambda_r_eps(npix_per_reff=npix_lambda,
+                           rscale=rscale_lambda, method='ellip') # calculate within 1.0 * reff    
+            if galaxy_plot:
+                gal.plot_gal(fn_save = galaxy_plot_dir + str(nout).zfill(3) \
+                                 + "_" + str(gal.id) + ".png", ioff=True)
             if reorient:
-                gal.cal_norm_vec(["star"])
-                gal.cal_rotation_matrix(dest = [0., 0., 1.]
-                gal.reorient(dest=[0., 0., 1], pop_nvec = ['star'], verbose=False)
- 
-            # Calculate lambda_r ---------------------------------------------------
-            gal.cal_lambda_r_eps(npix=npix_lambda, method=lambda_method,
-                                 rscale=rscale_lambda,
-                                 galaxy_plot_dir=galaxy_plot_dir) 
+                gal.cal_norm_vec(["star"], dest=[0.,1.,0.])
+                gal.cal_rotation_matrix(dest = [0., 1., 0.])
+                gal.reorient(dest=[0., 1., 0.], pop_nvec = ['star'], verbose=False)
+                gal.lambda_arr2, gal.lambda_r2 = gal.cal_lambda_r_eps(npix_per_reff=npix_lambda,
+                           rscale=rscale_lambda, method='ellip')
+                if galaxy_plot:
+                    gal.plot_gal(fn_save = galaxy_plot_dir + str(nout).zfill(3) \
+                                     + "_" + str(gal.id) + "_reori.png", ioff=True)
+   
  
             print("\n \n Good galaxy. ID, IDx", gal.id, gal.meta['idx'])
             # Save to catalog ----------------------------------------------------
@@ -413,6 +420,8 @@ def worker(gals, hals, out_q, info, inds,
             gal.meta['vz'] = gal.vzc * info.kms        
             gal.meta['lambda_arr'] = gal.lambda_arr
             gal.meta['lambda_r'] = gal.lambda_r
+            gal.meta['lambda_arr2'] = gal.lambda_arr2
+            gal.meta['lambda_r2'] = gal.lambda_r2
             gal.meta['rgal'] = gal.reff# * info.pboxsize * 1000.0 # in kpc  
             gal.meta['eps'] = gal.eps # Eps = 1-b/a
             gal.meta['pa'] = gal.pa

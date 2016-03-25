@@ -32,6 +32,8 @@ class Galaxy(object):
         self.mgas = 0
         self.lambda_arr = None
         self.lambda_r = 0
+        self.lambda_arr2 = None # reoriented values
+        self.lambda_r2 = 0 # reoriented values
         self.vmap = None
         self.pt=[]
         self.pq=[]
@@ -77,9 +79,6 @@ class Galaxy(object):
             print("Halo size:", self.halo['rvir'] * self.info.pboxsize * 1000.0)
 
         rscale_cen = 0.25
-        #xc_tmp0 = self.halo['x']
-        #yc_tmp0 = self.halo['y']
-        #zc_tmp0 = self.halo['z']
         vx_hal0 = self.halo['vx']
         vy_hal0 = self.halo['vy']
         vz_hal0 = self.halo['vz']
@@ -98,9 +97,9 @@ class Galaxy(object):
                     " using particles inside the radius-0 from the halo center."
                     , rr_tmp0 * self.info.pboxsize * 1000, ['kpc'])
 
-        xall = star['pos'][:,0]
-        yall = star['pos'][:,1]
-        zall = star['pos'][:,2]
+        xall = star['x']#[:,0]
+        yall = star['y']#[:,1]
+        zall = star['z']#[:,2]
         
         xc_tmp1 = np.median(xall)
         yc_tmp1 = np.median(yall)
@@ -198,15 +197,15 @@ class Galaxy(object):
 
         if dm is not None:
             if member == "Reff":
-                idm = np.where( np.square(dm["pos"][:,0] - xc) + 
-                                np.square(dm["pos"][:,1] - yc) + 
-                                np.square(dm["pos"][:,2] - zc) <= np.square(rgal_tmp))[0]
+                idm = np.where( np.square(dm["x"] - xc) + 
+                                np.square(dm["y"] - yc) + 
+                                np.square(dm["z"] - zc) <= np.square(rgal_tmp))[0]
             elif member == "v200":
             # Alghough the velocity is redefined later,
             # particle membership is fixed at this point. 
-                idm = np.where( np.square(dm["pos"][:,0] - vx_hal0)+ 
-                                np.square(dm["pos"][:,1] - vy_hal0)+ 
-                                np.square(dm["pos"][:,2] - vz_hal0) <= np.square(200**2))[0]
+                idm = np.where( np.square(dm["x"] - vx_hal0)+ 
+                                np.square(dm["y"] - vy_hal0)+ 
+                                np.square(dm["z"] - vz_hal0) <= np.square(200**2))[0]
             ndm_tot = len(idm)
 
             self.dm = np.recarray(ndm_tot, dtype=dm.dtype)
@@ -214,23 +213,23 @@ class Galaxy(object):
                 self.dm['id'] = dm['id'][idm] 
             if 'm' in dm.dtype.names:
                 self.dm['m'] = dm['m'][idm] * self.info.msun
-            if 'pos' in dm.dtype.names:
-                self.dm['pos'] = (dm['pos'][idm,:] - [self.xc, self.yc, self.zc]) * self.info.pboxsize * 1000
+            if 'x' in dm.dtype.names:
+                self.dm['x'] = (dm['x'][idm] - self.xc) * self.info.pboxsize * 1000
 #                self.dm['pos'][:,1] = (dm['pos'][idm,1] - self.yc) * self.info.pboxsize * 1000
 #                self.dm['pos'][:,2] = (dm['pos'][idm,2] - self.zc) * self.info.pboxsize * 1000
-#                self.dm['y'] = (dm['y'][idm] - self.yc) * self.info.pboxsize * 1000
-#                self.dm['z'] = (dm['z'][idm] - self.zc) * self.info.pboxsize * 1000
+                self.dm['y'] = (dm['y'][idm] - self.yc) * self.info.pboxsize * 1000
+                self.dm['z'] = (dm['z'][idm] - self.zc) * self.info.pboxsize * 1000
             if 'vel' in dm.dtype.names:
                 # Velocity is centered and normalized later on.
-                self.dm['vel'] = dm['vel'][idm,:]
-#                self.dm['vy'] = dm['vy'][idm]
-#                self.dm['vz'] = dm['vz'][idm]
+                self.dm['vx'] = dm['vx'][idm,:]
+                self.dm['vy'] = dm['vy'][idm]
+                self.dm['vz'] = dm['vz'][idm]
             if verbose: print("DM data stored")
             
         if star is not None:
-            istar = np.where(np.square(star["pos"][:,0] - self.xc) + 
-                             np.square(star["pos"][:,1] - self.yc) + 
-                             np.square(star["pos"][:,2] - self.zc) <= np.square(rgal_tmp))[0]
+            istar = np.where(np.square(star["x"] - self.xc) + 
+                             np.square(star["y"] - self.yc) + 
+                             np.square(star["z"] - self.zc) <= np.square(rgal_tmp))[0]
             nstar_tot = len(istar)
             if verbose: print("nstar tot:", nstar_tot)        
             if verbose: print("Store stellar particle")
@@ -240,20 +239,22 @@ class Galaxy(object):
                 self.star['id'] = star['id'][istar]
             if 'm' in star.dtype.names:
                 self.star['m'] = star['m'][istar] * self.info.msun
-            if 'pos' in star.dtype.names:
-                self.star['pos'] = (star['pos'][istar,:] - [self.xc, self.yc, self.zc]) * self.info.pboxsize * 1000
+#            if 'pos' in star.dtype.names:
+#                self.star['pos'] = (star['pos'][istar,:] - [self.xc, self.yc, self.zc]) * self.info.pboxsize * 1000
 #                self.star['pos'][:,1] = (star['pos'][istar,1] - self.xc) * self.info.pboxsize * 1000
 #                self.star['pos'][:,2] = (star['pos'][istar,2] - self.xc) * self.info.pboxsize * 1000
-#            if 'y' in star.dtype.names:            
-#                self.star['y'] = (star['y'][istar] - self.yc) * self.info.pboxsize * 1000
-#            if 'z' in star.dtype.names:
-#                self.star['z'] = (star['z'][istar] - self.zc) * self.info.pboxsize * 1000
-            if 'vel' in star.dtype.names:
-                self.star['vel'] = star['vel'][istar,:]
-#            if 'vy' in star.dtype.names:                
-#                self.star['vy'] = star['vy'][istar]
-#            if 'vz' in star.dtype.names:                
-#                self.star['vz'] = star['vz'][istar]
+            if 'x' in star.dtype.names:            
+                self.star['x'] = (star['x'][istar] - self.xc) * self.info.pboxsize * 1000
+            if 'y' in star.dtype.names:            
+                self.star['y'] = (star['y'][istar] - self.yc) * self.info.pboxsize * 1000
+            if 'z' in star.dtype.names:
+                self.star['z'] = (star['z'][istar] - self.zc) * self.info.pboxsize * 1000
+            if 'vx' in star.dtype.names:
+                self.star['vx'] = star['vx'][istar]
+            if 'vy' in star.dtype.names:                
+                self.star['vy'] = star['vy'][istar]
+            if 'vz' in star.dtype.names:                
+                self.star['vz'] = star['vz'][istar]
             if 'time' in star.dtype.names:
                 import utils.cosmology
                 self.star['time'] = utils.cosmology.time2gyr(star['time'][istar],
@@ -264,26 +265,23 @@ class Galaxy(object):
 
         if cell is not None:
             if verbose: print("Cell is NOT none")
-            icell = np.where(np.square(cell["pos"][:,0] - xc) + 
-                             np.square(cell["pos"][:,1] - yc) + 
-                             np.square(cell["pos"][:,2] - zc) <= np.square(rgal_tmp))[0]
+            icell = np.where(np.square(cell["x"] - xc) + 
+                             np.square(cell["y"] - yc) + 
+                             np.square(cell["z"] - zc) <= np.square(rgal_tmp))[0]
             ncell_tot = len(icell)
-            dtype_cell = [('pos', '<f8', (3,)), ('dx', '<f8'),
-                          ('rho', '<f8'), ('vel', '<f8', (3,)),
+            dtype_cell = [('x', '<f8',),('y', '<f8',),('z', '<f8',), ('dx', '<f8'),
+                          ('rho', '<f8'), ('vx', '<f8' ), ('vy', '<f8' ), ('vz', '<f8' ),
                           ('temp', '<f8'), ('metal', '<f8')]
 
             self.cell = np.recarray(ncell_tot, dtype=dtype_cell)
-            self.cell['pos'] = (cell['pos'][icell,:] - [self.xc, self.yc, self.zc]) * self.info.pboxsize * 1000
-#            self.cell['pos'][:,1] = (cell['pos'][icell,1] - self.xc) * self.info.pboxsize * 1000
-#            self.cell['pos'][:,2] = (cell['pos'][icell,2] - self.xc) * self.info.pboxsize * 1000
-
-            #self.cell['y'] = (cell['y'][icell] - self.yc) * self.info.pboxsize * 1000
-            #self.cell['z'] = (cell['z'][icell] - self.zc) * self.info.pboxsize * 1000
+            self.cell['x'] = (cell['x'][icell] - self.xc) * self.info.pboxsize * 1000
+            self.cell['y'] = (cell['y'][icell] - self.yc) * self.info.pboxsize * 1000
+            self.cell['z'] = (cell['z'][icell] - self.zc) * self.info.pboxsize * 1000
             self.cell['dx'] = cell['dx'][icell]
             self.cell['rho'] = cell['var0'][icell]
-            self.cell['vel'][:,0] = cell['var1'][icell]
-            self.cell['vel'][:,1] = cell['var2'][icell]
-            self.cell['vel'][:,2] = cell['var3'][icell]
+            self.cell['vx'] = cell['var1'][icell]
+            self.cell['vy'] = cell['var2'][icell]
+            self.cell['vz'] = cell['var3'][icell]
             self.cell['temp'] = cell['var4'][icell]
             self.cell['metal'] = cell['var5'][icell]
             self.cal_mgas()
@@ -309,12 +307,12 @@ class Galaxy(object):
         # Now, get cov        
 
         self.get_cov(center_only=True)
-        self.star['vel'] = (self.star['vel'] -[self.vxc, self.vyc, self.vzc]) * self.info.kms
-        #self.star['vy'] = (self.star['vy'] - self.vyc) * self.info.kms
-        #self.star['vz'] = (self.star['vz'] - self.vzc) * self.info.kms
-        self.dm['vel'] = (self.dm['vel'] - [self.vxc,self.vyc,self.vzc]) * self.info.kms
-        #self.dm['vy'] = (self.dm['vy'] - self.vyc) * self.info.kms
-        #self.dm['vz'] = (self.dm['vz'] - self.vzc) * self.info.kms
+        self.star['vx'] = (self.star['vx'] - self.vxc) * self.info.kms
+        self.star['vy'] = (self.star['vy'] - self.vyc) * self.info.kms
+        self.star['vz'] = (self.star['vz'] - self.vzc) * self.info.kms
+        self.dm['vx'] = (self.dm['vx'] - self.vxc) * self.info.kms
+        self.dm['vy'] = (self.dm['vy'] - self.vyc) * self.info.kms
+        self.dm['vz'] = (self.dm['vz'] - self.vzc) * self.info.kms
 
         return True
 
@@ -1084,15 +1082,15 @@ class Galaxy(object):
                             + "_" + str(self.id) + "dd.png")
             plt.close()
 
-
-        self.dist1d = dist1d
-        self.lambda_arr = points
+#        self.dist1d = dist1d
+        return points,  np.average(points[int(0.25 * npix) : int(0.25 * npix) + 1])
+#        self.lambda_arr = points
         # npix = ind_1Reff. 
         # ** npix 2 = npix * rscale
         # 0.5 * npix = Reff
         # 0.25 * npix = 0.5Reff
-        self.lambda_r = np.average(self.lambda_arr[int(0.25 * npix) : int(0.25 * npix) + 1])
-        if verbose: print("lambda_arr done")    
+#        self.lambda_r = np.average(self.lambda_arr[int(0.25 * npix) : int(0.25 * npix) + 1])
+#        if verbose: print("lambda_arr done")    
         
     def cal_lambda_r(self, npix=10,
                      r=0.5,
