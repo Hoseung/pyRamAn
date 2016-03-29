@@ -21,6 +21,10 @@
         galaxy dump and catalog in the same directory.
         optional suffix to the catalog file.
 
+    2016.03.26
+        Only close galaxies were accounted before (i_gal_near), - why...??
+        and that restriction is now gone. 
+
 """
 import matplotlib
 matplotlib.use("Agg")
@@ -46,7 +50,15 @@ def find_halo_near(data, center, rscale=1.0):
     import numpy as np
     i_gal_ok = dist2(data, center) <  np.square(rscale * center['rvir'])
     return i_gal_ok
-    
+
+
+def unique(a,b):
+    a = np.concatenate((a,b))
+    a = np.sort(a)
+    b = np.diff(a)
+    b = np.r_[1, b]
+    return a[b != 0]
+
 
 def associate_gal_hal(allgal, allhal):
     # associate halos with galaxies. 
@@ -77,9 +89,9 @@ def associate_gal_hal(allgal, allhal):
             dv = distv(allhal.data, gal)
             d_nomi = dd < 2e-4 # within 40kpc!! 
             v_nomi = dv < 150
-            
-            if sum(d_nomi * v_nomi) > 1:
-                dddv = dd[d_nomi]/2e-4 + dv[v_nomi]/150
+            dvnomi = d_nomi * v_nomi
+            if sum(dvnomi) > 1:
+                dddv = dd[dvnomi]/2e-4 + dv[dvnomi]/150
                 dddv_sort = np.argsort(dddv)
                 gal['hosthalo'] = allhal.data['id'][dddv_sort[0]]
                 i0.append(i)
@@ -261,6 +273,11 @@ def mk_gal(galdata, halodata, info, star_id=None, dm_id=None,
     Draw ed map of galaxy.
 
     minimum gas densiy = mean gas density of the universe?
+    Galaxy center = galdata['x'], ['y'], ['z']. Not halo center.
+
+    To do:
+    extract cells by density threshold, not radial cut. 
+    Gas extent varies a lot, and there no good single choice of radius cut. 
     
     """
     plt.close()
@@ -275,20 +292,21 @@ def mk_gal(galdata, halodata, info, star_id=None, dm_id=None,
             out_q.put(gal_out)
         return 
     else:
-        xc_tmp0 = halodata['x']
-        yc_tmp0 = halodata['y']
-        zc_tmp0 = halodata['z']
+        xc_tmp = galdata['x'] # 
+        yc_tmp = galdata['y']
+        zc_tmp = galdata['z']
  
-        rr_tmp0 = min([halodata['r'] * rscale, 0.0002])
-        rr_tmp0 = max([rr_tmp0, 0.000025])
+#        rr_tmp0 = min([halodata['r'] * rscale, galdata['r']]) # galdata['r'] = distance to the furthest particle.
+#        rr_tmp0 = max([rr_tmp0, galdata['r']])
+        rr_tmp0 = galdata['r']
  
         if cell_all is not None:
-            ind_c = ((cell_all['x'] - xc_tmp0)**2 + (cell_all['y'] - yc_tmp0)**2 +
-                    (cell_all['z'] - zc_tmp0)**2) < rr_tmp0**2
+            ind_c = ((cell_all['x'] - xc_tmp)**2 + (cell_all['y'] - yc_tmp)**2 +
+                    (cell_all['z'] - zc_tmp)**2) < rr_tmp0**2
             ind_c = ind_c * (cell_all['var0'] > min_gas_density)
  
-            ind_c = np.where((cell_all['x'] - xc_tmp0)**2 + (cell_all['y'] - yc_tmp0)**2
-                            + (cell_all['z'] - zc_tmp0)**2 < rr_tmp0**2)[0]
+            ind_c = np.where((cell_all['x'] - xc_tmp)**2 + (cell_all['y'] - yc_tmp)**2
+                            + (cell_all['z'] - zc_tmp)**2 < rr_tmp0**2)[0]
         else:
             return None
  
@@ -299,9 +317,9 @@ def mk_gal(galdata, halodata, info, star_id=None, dm_id=None,
         if len(dm_id) > 64:
             dm = dm_all[mtc.match_list_ind(dm_all['id'], dm_id)]
         else:
-            dm = dm_all[np.where((dm_all['x'] - halodata['x'])**2 +
-                             (dm_all['y'] - halodata['y'])**2 +
-                             (dm_all['z'] - halodata['z'])**2 < halodata['r']**2)[0]]
+            dm = dm_all[np.where((dm_all['x'] - xc_tmp)**2 +
+                             (dm_all['y'] - yc_tmp)**2 +
+                             (dm_all['z'] - zc_tmp)**2 < halodata['r']**2)[0]]
 
                
     # Direct plot ---------------------------------------------------------                                
@@ -341,6 +359,21 @@ def mk_gal(galdata, halodata, info, star_id=None, dm_id=None,
         
         plt.savefig(galaxy_plot_dir+"2dmap_"+str(halodata['id']).zfill(5)+'.png', dpi=144)
         plt.close()
+
+
+#    re-centering is done inside galaxy.mk_gal()
+#    star['x'] -= xc_tmp
+#    star['y'] -= yc_tmp
+#    star['z'] -= zc_tmp
+
+#    dm['x'] -= xc_tmp
+#    dm['y'] -= yc_tmp
+#    dm['z'] -= zc_tmp
+
+#    cell['x'] -= xc_tmp
+#    cell['y'] -= yc_tmp
+#    cell['z'] -= zc_tmp
+
 
     #Create galaxy ----------------------------------------------
     gal = galaxy.Galaxy(galdata, radius_method='eff', info=info)
@@ -391,20 +424,10 @@ def worker(gals, hals, out_q, info, inds,
             #out_q.put(gal.meta)
         else:
             gal.lambda_arr, gal.lambda_r = gal.cal_lambda_r_eps(npix_per_reff=npix_lambda,
-                           rscale=rscale_lambda, method='ellip') # calculate within 1.0 * reff    
+                           rscale=rscale_lambda, method='ellip', verbose=True) # calculate within 1.0 * reff    
             if galaxy_plot:
                 gal.plot_gal(fn_save = galaxy_plot_dir + str(nout).zfill(3) \
                                  + "_" + str(gal.id) + ".png", ioff=True)
-            if reorient:
-                gal.cal_norm_vec(["star"], dest=[0.,1.,0.])
-                gal.cal_rotation_matrix(dest = [0., 1., 0.])
-                gal.reorient(dest=[0., 1., 0.], pop_nvec = ['star'], verbose=False)
-                gal.lambda_arr2, gal.lambda_r2 = gal.cal_lambda_r_eps(npix_per_reff=npix_lambda,
-                           rscale=rscale_lambda, method='ellip')
-                if galaxy_plot:
-                    gal.plot_gal(fn_save = galaxy_plot_dir + str(nout).zfill(3) \
-                                     + "_" + str(gal.id) + "_reori.png", ioff=True)
-   
  
             print("\n \n Good galaxy. ID, IDx", gal.id, gal.meta['idx'])
             # Save to catalog ----------------------------------------------------
@@ -420,21 +443,29 @@ def worker(gals, hals, out_q, info, inds,
             gal.meta['vz'] = gal.vzc * info.kms        
             gal.meta['lambda_arr'] = gal.lambda_arr
             gal.meta['lambda_r'] = gal.lambda_r
-            gal.meta['lambda_arr2'] = gal.lambda_arr2
-            gal.meta['lambda_r2'] = gal.lambda_r2
             gal.meta['rgal'] = gal.reff# * info.pboxsize * 1000.0 # in kpc  
             gal.meta['eps'] = gal.eps # Eps = 1-b/a
             gal.meta['pa'] = gal.pa
             gal.meta['mjr'] = gal.mrj
-            out_q.put(gal.meta)
- 
+
             if dump_gal:
+                # save gal before reorientation
                 print(galaxy_plot_dir + str(nout).zfill(3) + "_" + str(gal.id) + ".h5")
                 mkg.save_gal(gal, galaxy_plot_dir + str(nout).zfill(3) + "_" + str(gal.id) + ".h5")
  
-            if galaxy_plot:
-                gal.plot_gal(fn_save = galaxy_plot_dir + str(nout).zfill(3) \
-                              + "_" + str(gal.id) + ".png", ioff=True)
+            if reorient:
+                gal.cal_norm_vec(["star"], dest=[0.,1.,0.])
+                gal.cal_rotation_matrix(dest = [0., 1., 0.])
+                gal.reorient(dest=[0., 1., 0.], pop_nvec = ['star'], verbose=False)
+                gal.lambda_arr2, gal.lambda_r2 = gal.cal_lambda_r_eps(npix_per_reff=npix_lambda,
+                           rscale=rscale_lambda, method='ellip')
+                if galaxy_plot:
+                    gal.plot_gal(fn_save = galaxy_plot_dir + str(nout).zfill(3) \
+                                     + "_" + str(gal.id) + "_reori.png", ioff=True)
+
+            gal.meta['lambda_arr2'] = gal.lambda_arr2
+            gal.meta['lambda_r2'] = gal.lambda_r2
+            out_q.put(gal.meta)
 #    for i in inds:
 #        out_q.put(worker_q.get())
 
@@ -458,11 +489,13 @@ hydro = True
 is_gal = True
 dump_gal = True
 
+nout_complete = 87 # at least complete up to z = 1
+
 # optional parameters ----------------------------------------------------
-lambda_plot = False 
 lambda_method = 'ellip' 
-galaxy_plot = False
-reorient = False
+galaxy_plot = True
+reorient = True
+verbose=True
 
 wdir = input("Working directory \n")
 #wdir = './'
@@ -514,8 +547,8 @@ else:
 
 nout_ini0 = 37
 nout_fi = 187
-#nouts = range(nout_fi, nout_ini -1, -1) 
-nouts = [187, 121, 87, 54, 37]
+nouts = range(nout_fi, nout_ini -1, -1) 
+#nouts = [187, 121, 87, 54, 37]
 nouts_dump_gal = [187, 154, 130, 121, 112,  98,  87,  67,  54,  37,  20]
 try: nouts_dump_gal
 except NameError: nouts_dump_gal = None
@@ -529,7 +562,7 @@ mk_gal_rscale = 1.1 # unit of Rvir,galaxy
 r_cluster_scale = 2.5 # maximum radius inside which galaxies are searched for
 npix=800
 rscale_lambda = 3.0 # Reff unit.
-npix_lambda = 10 # per 1Reff
+npix_lambda = 5 # per 1Reff
 lmax = 19
 ptypes=["star id pos mass vel time metal", "dm id pos mass vel"]
 
@@ -561,7 +594,6 @@ except:
     alltrees.data = ctu.augment_tree(alltrees.data, wdir, is_gal=is_gal)
     print("------ tree data extended")
     pickle.dump(alltrees, open(wdir + tree_path + "extended_tree.pickle", "wb" ))
-
 
 # Reading tree done
 
@@ -598,7 +630,7 @@ if not read_halo_list:
     # halos found inside the cluster and have complete tree back to nout_ini
     large_enugh = hh.data['mvir'] > m_halo_min
     halo_list = hh.data['id'][i_satellites * large_enugh]
-    final_ids = ctu.check_tree_complete(tt, 87, nout_fi, halo_list, idx=False) # 87: z = 1
+    final_ids = ctu.check_tree_complete(tt, nout_complete, nout_fi, halo_list, idx=False) # 87: z = 1
 
     final_gals_idx = [tt_final['id'][tt_final['Orig_halo_id'] == final_gal] for final_gal in final_ids]
     print(len(final_gals_idx), "halos left")
@@ -651,43 +683,56 @@ for inout, nout in enumerate(nouts):
         os.mkdir(galaxy_plot_dir)
 
     info = load.info.Info(nout=nout, base=wdir, load=True)
-    
-#    mstar_min = min([masscut_a * info.aexp + masscut_b, mstar_min]) * 2
-    print("Mstar min: {:.2e}".format(mstar_min))
+    if nout < 187:    
+        mstar_min = min([3 * masscut_a * info.aexp + masscut_b, mstar_min])
+    print("Mstar now, min: {:.2e} {:.2e}".format(3 * masscut_a * info.aexp + masscut_b, mstar_min))
 
     t_now = alltrees.data[alltrees.data['nout'] == nout]
     idxs_now = all_gals_in_trees[inout]
+#    id_now = t_now['Orig_halo_id']
 #    print(idxs_now)
 
-    h = halo_from_tree(t_now[mtc.match_list_ind(t_now['id'], np.array(idxs_now))], info)
-#    print(h.data,h.data.dtype)
+    gals_in_tree_now = halo_from_tree(t_now[mtc.match_list_ind(t_now['id'], np.array(idxs_now))], info)
+    id_now = gals_in_tree_now.data['id'] # this is Orig_halo_id
+#    print(gals_in_tree_now)
+#    print(id_now)
 
 
     allhal = hmo.Halo(base=wdir, nout=nout, is_gal=False, halofinder='HM', return_id=False, load=True)
-    clu = allhal.data[allhal.data.np.argmax()]
+    cluster_now = allhal.data[allhal.data.np.argmax()]
 
     # Galaxy with enough stellar mass
     allgal = hmo.Halo(base=wdir, nout=nout, is_gal=True, halofinder='HM', return_id=False, load=True)
-    i_gal_ok = allgal.data['m'] > mstar_min
-#    print("i_gal_ok", i_gal_ok)
-    i_gal_near = find_halo_near(allgal.data, clu, rscale=2.5)
-    id_gal_ok = allgal.data['id'][i_gal_ok * i_gal_near]
-    print("# id_gal_ok", len(id_gal_ok))
+    igal_mass_ok = allgal.data['m'] > mstar_min
+    print("igal_mass_ok", sum(igal_mass_ok))
 
+    # Galaxies outside the refinement region MUST be excluded.
+    # But, do you know the refinement region? 
+    # any galaxy closer than the furthest galaxy in the tree is OK.
+    igals_in_tree_now = mtc.match_list_ind(allgal.data['id'], id_now)
+    dist_from_cluster_center = dist(allgal.data, cluster_now)
+#    igal_inside_zoomin = dist_from_cluster_center < max(dist_from_cluster_center[igals_in_tree_now])
+
+#    print(dist_from_cluster_center[igals_in_tree_now] * info.pboxsize)
+    # massvie and inside the zoomin region.
+    igal_add = ((allgal.data['m'] > mstar_min) * (dist_from_cluster_center < max(dist_from_cluster_center[igals_in_tree_now])))
+    # massvie and inside zoomin + tree pogenitors
+    igal_ok = unique(igal_add,igals_in_tree_now)
+    id_gal_ok = allgal.data['id'][igal_ok]
+#    print("# id_gal_ok", len(id_gal_ok))
 
     # get the stellar particle IDs of OK galaxies.
     allgal = hmo.Halo(base=wdir, nout=nout, is_gal=True, halofinder='HM', return_id=True)
     allgal.set_return_id_list(id_gal_ok)
     allgal.load()
-    allgal.data = allgal.data[i_gal_ok * i_gal_near] # only good gals
+    allgal.data = allgal.data[igal_ok]# * igal_near] # only good gals
 
     # associate halos with galaxies. #########################################
     # Virial radius is required to measure gas mass associated with the galaxy
-
-    allhal.data = allhal.data[find_halo_near(allhal.data, clu, rscale=2.5)] # only good hals
+#    allhal.data = allhal.data[find_halo_near(allhal.data, cluster_now, rscale=2.5)] # only good hals
 
     # new halo catalog with 1:1 correlation to gals.
-    allhal = associate_gal_hal(allgal, allhal) 
+    allhal = associate_gal_hal(allgal, allhal)
 #    print("allhal.data", allhal.data['id'])
     
     tmp = hmo.Halo(base=wdir, nout=nout, is_gal=False, halofinder='HM', return_id=True, load=False)
@@ -704,15 +749,15 @@ for inout, nout in enumerate(nouts):
             allhal.idlists.append(tmp.idlists[np.where(tmp.hal_idlists == thisid)[0]])
     
     for gal in allgal.data:
-        ii =  np.where(h.data['id'] == gal['id'])[0]
+        ii =  np.where(gals_in_tree_now.data['id'] == gal['id'])[0]
         if len(ii) > 0:
-            gal['idx'] = h.data['idx'][ii]
+            gal['idx'] = gals_in_tree_now.data['idx'][ii]
         else:
             gal['idx'] = -1
 
     allhal.data['idx'] = allgal.data['idx']
 
-    print("idxxxxxx", allgal.data['idx'], allgal.data['id'])
+#    print("idxxxxxx", allgal.data['idx'], allgal.data['id'])
 #    show_target_summary(allgal)
     
     nh = len(allgal.data)
@@ -734,7 +779,7 @@ for inout, nout in enumerate(nouts):
     dm_all = s.part.dm   
 
     keywords = dict(rscale = mk_gal_rscale,
-                verbose=False,
+                verbose=verbose,
                 mstar_min=mstar_min)#, dump_gal = dump_gal,
 #                reorient=reorient)
 

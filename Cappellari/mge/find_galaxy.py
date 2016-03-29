@@ -157,7 +157,6 @@ class find_galaxy(object):
         """
         if len(img.shape) != 2:
             raise ValueError('IMG must be a two-dimensional array')
-
         a = signal.medfilt(img, binning)
 
         if level is None:
@@ -191,7 +190,7 @@ class find_galaxy(object):
                 ax.imshow(mask, cmap='binary', interpolation='none',
                           origin='lower', alpha=0.3)
             ax.autoscale(False)  # prevents further scaling after imshow()
-            mjr = 3.5* self.majoraxis/3.5
+            mjr = 3.5* self.majoraxis/2.
             yc, xc = self.xmed, self.ymed
             ellipse = patches.Ellipse(xy=(xc, yc), width=2*mjr, fill=False,
                                       height=2*mjr*(1-self.eps), angle=-self.theta,
