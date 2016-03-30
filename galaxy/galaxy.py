@@ -17,6 +17,11 @@ recalculated center of galaxy is likely to deviate from the center of the halo.
     
 import numpy as np
 #import  matplotlib.pyplot as plt
+
+def radial_profile_cut(star, center, mag_lim=25):
+
+
+
 class Galaxy(object):
 
     def __init__(self, halo=None, radius_method='eff', info=None):
@@ -84,11 +89,20 @@ class Galaxy(object):
             print("RSCALE:", rscale)
             print("Halo size:", self.halo['rvir'] * self.info.pboxsize * 1000.0)
 
+        # galaxy center from GalaxyMaker. - good enough.
+        xc = self.halo['x'] 
+        yc = self.halo['y']
+        zc = self.halo['z']
+
 #        rscale_cen = 0.25
         
 #        rr_tmp = min([self.halo['r'], 0.0002]) # less than 40kpc/h
         # arbitrary! < 40kpc
         rr_tmp = max([min([self.halo['r'], 0.0002]), 0.000015]) # larger than 3kpc/h
+
+        rr_tmp = radial_profile_cut(star, [xc,yc,zc], mag_limit=26)
+
+
         # When merger occurs, larger radius is likely to include 
         # companion galaxy resulting center to be in the middle of nowhere.
         # If you want a larger galaxy, # increase rgal_tmp instead. 
@@ -101,10 +115,6 @@ class Galaxy(object):
 #                    , rr_tmp * self.info.pboxsize * 1000, ['kpc'])
 
         
-        # galaxy center from GalaxyMaker. - good enough.
-        xc = self.halo['x'] 
-        yc = self.halo['y']
-        zc = self.halo['z']
 
         xall = star['x']# - xc #[:,0]
         yall = star['y']# - yc#[:,1]

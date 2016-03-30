@@ -37,23 +37,24 @@ import utils.util
 # 1. simulation parameter
 wdir = './'
 
-rscale = 2
-lmax = 19
-npix = 800
+rscale = 1
+lmax = 18
+npix = 1600
+dpi = 250
 extent = (0, npix, 0, npix)
-nouts = range(24, 30)
+nouts = range(187, 188)
 
 for nout in nouts:    
     info = load.info.Info(nout=nout, base=wdir, load=True)   
     
     # Find the central cluster.
-    hh = hmo.Halo(base=wdir, nout=nout, halofinder='HM', info=info)
-    hh.load()
+    hh = hmo.Halo(base=wdir, nout=nout, halofinder='HM', is_gal=False, info=info, load=True)
+    gg = hmo.Halo(base=wdir, nout=nout, halofinder='HM', is_gal=True,  info=info, load=True)
     i_center = np.where(hh.data['np'] == max(hh.data['np']))
     cluster = hh.data[i_center]
     xc, yc, zc, rr = cluster.x, cluster.y, cluster.z, cluster.rvir
     print(nout, xc,yc,zc,rr)
-    continue
+#    continue
     
 #    xc,yc,zc,rr = 0.638454915, 0.76221734, 0.359773845, 0.00278157
 
@@ -93,7 +94,6 @@ for nout in nouts:
     star_map = draw.pp.den2d(star['x'],star['y'],star['z'],star['m'] * info.msun / (info.pboxsize * info.pboxsize * 1e6)
                              , npix, region=small_region
                              , cic=True, norm_integer=False, proj='z', vmin=1000) # vmin in Msun / kpc2
-    
     
     
     # In[85]:
@@ -137,12 +137,18 @@ for nout in nouts:
     ax.set_yticklabels(yticks)
     ax.set_title("z= {:.2f}".format(s.info.zred))
     
-    plt.savefig(wdir + "2d_star_" + str(nout).zfill(3) + ".png", dpi=144)
+    plt.savefig(wdir + "2d_star_" + str(nout).zfill(3) + ".png", dpi=dpi)
+
+    draw.pp.pp_halo(gg, npix, region=small_region, rscale=1.0, ind=np.arange(len(gg.data)), axes=plt.gca(), name=True,
+                verbose=False, new_axes=False, linewidth=0.4, edgecolor='y')
+    
+    plt.savefig(wdir + "2d_star_gal_id" + str(nout).zfill(3) + ".png", dpi=dpi)
     
     draw.pp.pp_halo(hh, npix, region=small_region, rscale=1.0, ind=i_center[0], axes=plt.gca(), name=False,
                 verbose=False, new_axes=False, linewidth=0.4, edgecolor='y')
     
-    plt.savefig(wdir + "2d_star_halo_" + str(nout).zfill(3) + ".png", dpi=144)
+    plt.savefig(wdir + "2d_star_halo_" + str(nout).zfill(3) + ".png", dpi=dpi)
+
     plt.close()
     
     
@@ -169,11 +175,11 @@ for nout in nouts:
     ax.set_yticklabels(yticks)
     ax.set_title("z= {:.2f}".format(s.info.zred))
     
-    plt.savefig(wdir + "2d_gas_" + str(nout).zfill(3) + ".png", dpi=144)
+    plt.savefig(wdir + "2d_gas_" + str(nout).zfill(3) + ".png", dpi=dpi)
     
     draw.pp.pp_halo(hh, npix, region=small_region, rscale=1.0, ind=i_center[0], axes=ax, name=False,
                 verbose=False, new_axes=False, linewidth=0.4)
-    plt.savefig(wdir + "2d_gas_halo_" + str(nout).zfill(3) + ".png", dpi=144)
+    plt.savefig(wdir + "2d_gas_halo_" + str(nout).zfill(3) + ".png", dpi=dpi)
     plt.close()
 
 
@@ -191,7 +197,7 @@ for nout in nouts:
                 verbose=False, new_axes=False)
     ax = plt.gca()    
     ax.set_title("z= {:.2f}".format(s.info.zred))
-    plt.savefig(wdir + "2d_dm" + str(nout).zfill(3) +" .png", dpi=200)
+    plt.savefig(wdir + "2d_dm" + str(nout).zfill(3) +" .png", dpi=dpi)
     plt.close()
     
     
@@ -202,7 +208,7 @@ for nout in nouts:
     im3 = plt.imshow(np.transpose(lg), cmap="CMRmap", alpha=.5, interpolation='bilinear', extent=extent, origin='lower')
     ax = plt.gca()    
     ax.set_title("z= {:.2f}".format(s.info.zred))
-    plt.savefig(wdir + "2d_dm_gas" + str(nout).zfill(3) + ".png", dpi=200)
+    plt.savefig(wdir + "2d_dm_gas" + str(nout).zfill(3) + ".png", dpi=dpi)
     plt.close()
 # One of two should be transposed.
 # But which one?

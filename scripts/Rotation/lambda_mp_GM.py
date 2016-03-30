@@ -28,10 +28,10 @@
 """
 import matplotlib
 matplotlib.use("Agg")
+import matplotlib.pyplot as plt 
 
 import numpy as np
 import utils.sampling as smp
-import matplotlib.pyplot as plt 
 
 from galaxy import galaxy
 import utils.match as mtc
@@ -61,7 +61,11 @@ def unique(a,b):
 
 
 def associate_gal_hal(allgal, allhal):
-    # associate halos with galaxies. 
+    """
+    associate halos with galaxies. 
+
+    Arbitrary maching parameters are used.
+    """
     def distv(halo, center):
         norm = np.sqrt(np.square(center['vx'] - halo.vx) + 
                        np.square(center['vy'] - halo.vy) + 
@@ -179,7 +183,6 @@ def distance_to(xc, xx):
     return np.sqrt([(xc[0] - xx[0])**2 + (xc[1] - xx[1])**2 + (xc[2] - xx[2])**2])[0]
 
 def extract_halos_within(halos, i_center, info, dist_in_mpc=1.0):
-
     xc = halos['x'][i_center]
     yc = halos['y'][i_center]
     zc = halos['z'][i_center]
@@ -324,6 +327,7 @@ def mk_gal(galdata, halodata, info, star_id=None, dm_id=None,
                
     # Direct plot ---------------------------------------------------------                                
     if region_plot:
+        print("RRRRRRRRRRRRRRegion plot")
         import draw
         region = smp.set_region(xc=halodata['x'],
                             yc=halodata['y'],
@@ -360,21 +364,6 @@ def mk_gal(galdata, halodata, info, star_id=None, dm_id=None,
         plt.savefig(galaxy_plot_dir+"2dmap_"+str(halodata['id']).zfill(5)+'.png', dpi=144)
         plt.close()
 
-
-#    re-centering is done inside galaxy.mk_gal()
-#    star['x'] -= xc_tmp
-#    star['y'] -= yc_tmp
-#    star['z'] -= zc_tmp
-
-#    dm['x'] -= xc_tmp
-#    dm['y'] -= yc_tmp
-#    dm['z'] -= zc_tmp
-
-#    cell['x'] -= xc_tmp
-#    cell['y'] -= yc_tmp
-#    cell['z'] -= zc_tmp
-
-
     #Create galaxy ----------------------------------------------
     gal = galaxy.Galaxy(galdata, radius_method='eff', info=info)
     good_gal = gal.mk_gal(star, dm, cell,
@@ -394,7 +383,9 @@ def worker(gals, hals, out_q, info, inds,
            dump_gal=False,
            reorient=False,
            lambda_method='ellip', rscale_lambda=3,npix_lambda=10,
-           galaxy_plot=False, galaxy_plot_dir='galaxy_plot/',
+           galaxy_plot=False,
+           galaxy_plot_dir='galaxy_plot/',
+           region_plot=False,
            **kwargs):
     import galaxy.make_gal as mkg
 
@@ -408,6 +399,7 @@ def worker(gals, hals, out_q, info, inds,
                                s.info,
                                star_id=gals.idlists[i],
                                dm_id=hals.idlists[i],
+                               region_plot=region_plot,
                                **kwargs)
         print("galaxy is made \n")
         gal.meta = {"id":0, "idx":hals.data['idx'][i], "xc":0.0, "yc":0.0, "zc":0.0,
@@ -496,6 +488,7 @@ lambda_method = 'ellip'
 galaxy_plot = True
 reorient = True
 verbose=True
+region_plot = True
 
 wdir = input("Working directory \n")
 #wdir = './'
@@ -805,7 +798,8 @@ for inout, nout in enumerate(nouts):
                     rscale_lambda,
                     npix_lambda,
                     galaxy_plot,
-                    galaxy_plot_dir), kwargs=keywords) for i in range(ncore)]
+                    galaxy_plot_dir,
+                    region_plot), kwargs=keywords) for i in range(ncore)]
 
         # Run processes
         for p in processes:
