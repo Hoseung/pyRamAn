@@ -118,7 +118,7 @@ class HaloMeta():
     
     """
     def __init__(self, nout=None, base=None, info=None, halofinder=None,
-                 load=False, is_gal=False, return_id=False):
+                 load=False, is_gal=False, return_id=False, outdir=None):
        self.nout = nout
        self.set_base(base)
        self.set_info(info=info)
@@ -136,6 +136,17 @@ class HaloMeta():
        self.is_gal = is_gal
        self.return_id = return_id
        self.return_id_list=None
+
+       if outdir is None:
+           if is_gal:
+               self.gal_find_dir = 'GalaxyMaker/'
+           else:
+               self.dm_find_dir= 'halo/'
+       else:
+           if is_gal:
+               self.gal_find_dir = outdir
+           else:
+               self.dm_find_dir= outdir
        
        try:
            self.set_nout(nout)
@@ -246,9 +257,9 @@ class Halo(HaloMeta):
             base = self.base
         snout = str(self.nout).zfill(3)
         if self.is_gal:
-            fn = base + 'GalaxyMaker/gal/tree_bricks' + snout
+            fn = base + self.gal_find_dir + 'gal/tree_bricks' + snout
         else:
-            fn = base + 'halo/DM/tree_bricks' + snout
+            fn = base + self.dm_find_dir + 'DM/tree_bricks' + snout
         try:
             f = open(fn, "rb")
             import numpy as np

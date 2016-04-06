@@ -18,8 +18,7 @@ recalculated center of galaxy is likely to deviate from the center of the halo.
 import numpy as np
 #import  matplotlib.pyplot as plt
 
-def radial_profile_cut(star, center, mag_lim=25):
-
+#def radial_profile_cut(star, center, mag_lim=25):
 
 
 class Galaxy(object):
@@ -59,6 +58,61 @@ class Galaxy(object):
         # If length, 
         
         print([i * self.info.pboxsize * 100 for i in list(x)])
+
+
+    def radial_profile_cut(self, xx, yy, mm, vx, vy, vz, den_lim=1e6,
+                           mag_lim=25, nbins=100, rmax=50, dr=0.5):
+        # 2D photometry. (if rotated towards +y, then use x and z)
+        # now assuming +z alignment. 
+        rr = np.sqrt(np.square(xx) + np.square(yy))# in kpc unit
+
+        den_lim2 = 1e6
+        den_lim1 = 2e6
+        # Accounting for weights.
+        i_sort = np.argsort(rr)
+        r_sorted = rr[i_sort]
+        m_sorted = mm[i_sort]
+        
+        rmax = np.max(rr)
+        nbins = int(rmax/dr)
+
+        frequency, bins = np.histogram(r_sorted, bins = nbins, range=[0,rmax])
+        bin_centers = bins[:-1] + 0.5 * dr # remove the rightmost boundary.
+        
+        m_radial = np.zeros(nbins)
+        ibins = np.concatenate((np.zeros(1), np.cumsum(frequency)))
+        for i in range(nbins):
+            m_radial[i] = np.sum(m_sorted[ibins[i]:ibins[i+1]])
+            if (m_radial[i]/(2 * np.pi * bin_centers[i] * dr)) < den_lim2:
+                i_r_cut2 = i-1
+                break
+            
+        i_r_cut1= np.argmax(m_radial/(2 * np.pi * bin_centers * dr) < den_lim1)
+        print(rmax, nbins, i_r_cut1, i_r_cut2)
+#        dr = bins[1] - bins[0]
+#        star_den = m_radial / (2 * np. pi * bin_centers * dr)
+#        print(rr[100])
+#        print(mm[100]) ok.
+#        print(m_radial, dr)
+
+#        print(star_den)
+#        i_r_cut = np.argmax(star_den < (den_lim))
+        i_reff2 = np.argmax(np.cumsum(m_sorted) > (0.5*sum(m_radial[:i_r_cut2])))
+        i_reff1 = np.argmax(np.cumsum(m_sorted) > (0.5*sum(m_radial[:i_r_cut1])))
+        self.reff2 = r_sorted[i_reff2]
+        self.reff  = r_sorted[i_reff1]
+        self.rgal2 = bin_centers[i_r_cut2]
+        self.rgal  = bin_centers[i_r_cut1]
+
+#       velocity center
+        i_close = np.argsort(rr)[:i_reff1]
+       
+        self.vxc = np.average(vx[i_close])
+        self.vyc = np.average(vy[i_close])
+        self.vzc = np.average(vz[i_close])
+
+#        return rr < self.rgal
+
     
     def mk_gal(self, star, dm, cell,
                save=False, rscale=0.5, verbose=False,
@@ -90,205 +144,151 @@ class Galaxy(object):
             print("Halo size:", self.halo['rvir'] * self.info.pboxsize * 1000.0)
 
         # galaxy center from GalaxyMaker. - good enough.
-        xc = self.halo['x'] 
+        xc = self.halo['x']
         yc = self.halo['y']
         zc = self.halo['z']
+
+        self.xc = xc * self.info.pboxsize*1000
+        self.yc = yc * self.info.pboxsize*1000
+        self.zc = zc * self.info.pboxsize*1000
+
+        print("vvvvvvvvvvvvv", self.halo['vx'],self.halo['vx'])
+
+        star['x'] = (star['x'] - xc) * self.info.pboxsize*1000
+        star['y'] = (star['y'] - yc) * self.info.pboxsize*1000
+        star['z'] = (star['z'] - zc) * self.info.pboxsize*1000
 
 #        rscale_cen = 0.25
         
 #        rr_tmp = min([self.halo['r'], 0.0002]) # less than 40kpc/h
         # arbitrary! < 40kpc
-        rr_tmp = max([min([self.halo['r'], 0.0002]), 0.000015]) # larger than 3kpc/h
+#        rr_tmp = max([min([self.halo['r'], 0.0002]), 0.000015]) # larger than 3kpc/h
 
-        rr_tmp = radial_profile_cut(star, [xc,yc,zc], mag_limit=26)
+        if 'm' in star.dtype.names:
+            star['m'] = star['m'] * self.info.msun
 
+        rgal_tmp = self.halo['r'] * self.info.pboxsize * 1000.0
+        self.radial_profile_cut(star['x'], star['y'], star['m'],
+                                star['vx'], star['vy'], star['vz'],
+                           den_lim=1e6,
+                           mag_lim=25,
+                           nbins=int(rgal_tmp/0.5),
+                           dr=0.5,
+                           rmax=rgal_tmp)
 
-        # When merger occurs, larger radius is likely to include 
-        # companion galaxy resulting center to be in the middle of nowhere.
-        # If you want a larger galaxy, # increase rgal_tmp instead. 
-        #        
-        # xx is easier to search for than x.
+        ind = np.where((np.square(star['x']) + 
+                        np.square(star['y']) +
+                        np.square(star['z'])) < self.rgal**2)[0]# in kpc unit
 
-#        if verbose:
-#            print("First attempt to define the center"
-#                    " using particles inside the radius-0 from the halo center."
-#                    , rr_tmp * self.info.pboxsize * 1000, ['kpc'])
+        rr_tmp = self.rgal
+        self.star = star[ind]
 
-        
+#        plt.hist2d(self.star['x'], self.star['y'], bins=[[200,200]])
+#        plt.svefig(str(self.id) + "_.png")
+#        plt.close()
 
-        xall = star['x']# - xc #[:,0]
-        yall = star['y']# - yc#[:,1]
-        zall = star['z']# - zc#[:,2]
-#        rr_tmp1 = min([self.halo['rvir'] * rscale, 0.00025]) # modified!
-#        if verbose:
-#            print("Search for particles around the guessed center")
-#            print("within radius1", rr_tmp * self.info.pboxsize * 1000, ['kpc'])
-
-#        ind = np.where(np.square(xall - xc_tmp) + np.square(yall - yc_tmp) 
-#                            + np.square(zall - zc_tmp) < np.square(rr_tmp))[0]
-
-#        xx = xall[ind]
-#        yy = yall[ind] 
-#        zz = zall[ind] 
-#        mm = star['m'][ind] 
-
-#        m_sum = sum(mm)
-#        print("Number of stars", len(ind))
-#        print("galaxy::mk_gal: {:.2e} ".format(m_sum * self.info.msun))
-#        if m_sum * self.info.msun < mstar_min:
-#            print("(2)Not enough stars")
-#            print(" Aborting... \n")
-#            self.star = False
-#            return False
-#        else:
-            #if verbose:
-#            print("\n Galaxy is made. \n Number of particles:", len(ind))
-
-# First, define the center w.r.t. stars.        
-#
-#        if verbose:
-#            print("Now, cut out other components than the main galaxy \n" 
-#            " by identifying peaks in radial distribution of stars")
-#        if method_com == 1:
-#            if verbose: print("Second trial to determine the center. method1")
-#            xc0, yc0, zc0 = self.get_center(xx, yy, zz, mm) # STARS!
-#        elif method_com == 2:
-#            if verbose: print("Second trial to determine the center. method2")
-#            xc0, yc0, zc0 = self.get_center2(xx, yy, zz, mm) # STARS!
-            
-        
-# Second, define the search radius
-# Only 'simple' works, because 'star' is not defined yet.
-#        if verbose: 
-#            print("Currrent CENTER:", xc0,yc0,zc0)
-#            print("Calculate Effective radius")
-#        #rr_tmp2 = self.reff_main_gal(xall-xc0, yall-yc0, zall-zc0) # No mass! 
-#        rr_tmp2 = self.reff_main_gal(xx-xc0, yy-yc0, zz-zc0) # No mass! 
-#        if rr_tmp2 == False:
-#            # no other galaxies
-#            rr_tmp2 = max([rr_tmp1, rmin])
-#
-#        ind = np.where(np.square(xall - xc0) + np.square(yall - yc0) 
-#                            + np.square(zall - zc0) < np.square(rr_tmp2))[0]
-#        xx = xall[ind] - xc0
-#        yy = yall[ind] - yc0
-#        zz = zall[ind] - zc0
-#        mm = star['m'][ind]
-
-#        xc, yc, zc = self.get_center(xx, yy, zz, mm)
-#        xc = xc + xc0
-#        yc = yc + yc0
-#        zc = zc + zc0
-#        if verbose: print("New CENTER:", xc,yc,zc)
-        self.xc = xc
-        self.yc = yc
-        self.zc = zc
-
-        ind = np.where(np.square(xall - xc) + np.square(yall - yc)
-                     + np.square(zall - zc) < np.square(rr_tmp))[0]
+        self.nstar = len(ind)
+        self.mstar = sum(self.star['m'])
+#        ind = np.where(np.square(xall) + np.square(yall)
+#                     + np.square(zall) < np.square(rr_tmp))[0]
         
 #        print("ind length", len(xall), len(ind)) 
-        if sum(star['m'][ind]) * self.info.msun < mstar_min:
-            print("Not enough stars: {:.2e} Msun".format(sum(star['m'][ind]) * self.info.msun))
+        if self.mstar < mstar_min:
+            print("Not enough stars: {:.2e} Msun".format(self.mstar))
             print(" Aborting... \n")
             self.star = False
             return False                    
 
-#        xx = xall[ind] - xc
-#        yy = yall[ind] - yc
-#        zz = zall[ind] - zc
-#        mm = star['m'][ind]
-        
-        reff_tmp = self.get_radius(xall[ind] - xc,
-                                   yall[ind] - yc,
-                                   zall[ind] - zc,
-                                   star['m'][ind],
-                                   self.radius_method)
-        print("effective radius measured by get_radius", reff_tmp)
-        rgal_tmp = min([rr_tmp, reff_tmp * Rgal_to_reff])
-        self.Rgal_to_reff = rgal_tmp / reff_tmp
+#        reff_tmp = self.get_radius(xall[ind] - xc,
+#                                   yall[ind] - yc,
+#                                   zall[ind] - zc,
+#                                   star['m'][ind],
+#                                   self.radius_method)
+#        reff_tmp = self.reff
+#        print("effective radius measured by get_radius", reff_tmp)
+#        rgal_tmp = min([rr_tmp, reff_tmp * Rgal_to_reff])
+        self.Rgal_to_reff = self.rgal / self.reff
         # should not surpass rr_tmp, over where another galaxy might be.
         
         # Test if the outer annulus has significant amount of stars
         # -> it shouldn't.        
-        if verbose: print("Reff: ", reff_tmp * self.info.pboxsize*1000)
+#        if verbose: print("Reff: ", reff_tmp)
 
         # extract galaxy (particles and gas)
         if star is not None:
-#            istar = np.where(np.square(star["x"] - self.xc) + 
-#                             np.square(star["y"] - self.yc) + 
-#                             np.square(star["z"] - self.zc) <= np.square(rgal_tmp))[0]
-            nstar_tot = len(star['x'])
+#            istar = np.where(np.square(xall) + 
+#                             np.square(yall) + 
+#                             np.square(zall) <= np.square(rgal_tmp))[0]
+            nstar_tot = len(star['x'][ind])
             if verbose: print("nstar tot:", nstar_tot)        
             if verbose: print("Store stellar particle")
     
 #            self.star = np.recarray(nstar_tot, dtype=star.dtype)
-            self.star = star
 #            if 'id' in star.dtype.names:
 #                self.star['id'] = star['id'][istar]
-#            if 'm' in star.dtype.names:
-#                self.star['m'] = star['m'][istar] * self.info.msun
-            if 'x' in star.dtype.names: 
+#            if 'x' in star.dtype.names: 
 #                self.star['x'] = (star['x'][istar] - self.xc) * self.info.pboxsize * 1000
-                self.star['x'] = (self.star['x'] - self.xc) * self.info.pboxsize * 1000          
-            if 'y' in star.dtype.names:            
+#                self.star['x'] = self.star['x'][ind] * self.info.pboxsize * 1000
+#            if 'y' in star.dtype.names:            
 #                self.star['y'] = (star['y'][istar] - self.yc) * self.info.pboxsize * 1000
-                self.star['y'] = (self.star['y'] - self.yc) * self.info.pboxsize * 1000
-            if 'z' in star.dtype.names:
+#                self.star['y'] = self.star['y'][ind] * self.info.pboxsize * 1000
+#            if 'z' in star.dtype.names:
 #                self.star['z'] = (star['z'][istar] - self.zc) * self.info.pboxsize * 1000
-                self.star['z'] = (self.star['z'] - self.zc) * self.info.pboxsize * 1000
+#                self.star['z'] = self.star['z'][ind] * self.info.pboxsize * 1000
 #            if 'vx' in star.dtype.names:
-#                self.star['vx'] = star['vx'][istar]
-#            if 'vy' in star.dtype.names:                
- #               self.star['vy'] = star['vy'][istar]
- #           if 'vz' in star.dtype.names:                
- #               self.star['vz'] = star['vz'][istar]
-            if 'time' in star.dtype.names:
+#                self.star['vx'] = star['vx'][ind]
+#            if 'vy' in star.dtype.names:         
+#                self.star['vy'] = star['vy'][ind]
+#            if 'vz' in star.dtype.names:         
+#                self.star['vz'] = star['vz'][ind]
+            if 'time' in self.star.dtype.names:
                 import utils.cosmology
-                self.star['time'] = utils.cosmology.time2gyr(self.star['time'],#[istar],
+                self.star['time'] = utils.cosmology.time2gyr(self.star['time'],
                                              z_now = self.info.zred,
                                              info=self.info)
 #            if 'metal' in star.dtype.names:
-#                self.star['metal'] = star['metal'][istar]           
+#                self.star['metal'] = star['metal']
 
         # VERY arbitrary..
-        self.Rgal_to_reff = 4 #rgal_tmp / reff_tmp
-        rgal_tmp = self.Rgal_to_reff *reff_tmp
+#        self.Rgal_to_reff = 4 #rgal_tmp / reff_tmp
+        rgal_tmp = self.Rgal_to_reff *self.reff
 
-        self.reff = reff_tmp * self.info.pboxsize * 1000
-        self.rgal = rgal_tmp * self.info.pboxsize * 1000
-        self.nstar = nstar_tot
-        self.mstar = sum(self.star['m']) * self.info.msun
+#        self.reff = reff_tmp * self.info.pboxsize * 1000
+#        self.rgal = rgal_tmp * self.info.pboxsize * 1000
         #print(".........", self.star['m'][100:120], self.mstar)
         import utils.sampling as smp
-        self.region = smp.set_region(xc=xc, yc=yc, zc=zc, radius = self.rgal)
-
+        self.region = smp.set_region(xc=self.xc, yc=self.yc, zc=self.zc, radius = self.rgal)
 
         # Now, get cov
 #        print("galaxy velocity =  C.O.V of the particles inside 1Reff.")
-        print("pos.ptp(), 1reff", self.star['x'].ptp(), self.reff)
-        self.get_cov(center_only=True)
+#        print("pos.ptp(), 1reff", self.star['x'].ptp(), self.reff)
 
-        self.vxc = self.halo['vx']
-        self.vyc = self.halo['vy']
-        self.vzc = self.halo['vz']
+#        print("1111111",self.vxc, self.star['vx'][0:10])
 
-        self.star['vx'] = (self.star['vx'] - self.vxc) * self.info.kms
-        self.star['vy'] = (self.star['vy'] - self.vyc) * self.info.kms
-        self.star['vz'] = (self.star['vz'] - self.vzc) * self.info.kms
 
+#        self.get_cov(center_only=True)
+
+        self.vxc *= self.info.kms
+        self.vyc *= self.info.kms
+        self.vzc *= self.info.kms
+
+        self.star['vx'] = self.star['vx'] * self.info.kms - self.vxc
+        self.star['vy'] = self.star['vy'] * self.info.kms - self.vyc
+        self.star['vz'] = self.star['vz'] * self.info.kms - self.vzc
+
+#        print("2222222",self.vxc, self.star['vx'][0:10])
 
         if dm is not None:
             if member == "Reff":
-                idm = np.where( np.square(dm["x"] - xc) + 
-                                np.square(dm["y"] - yc) + 
-                                np.square(dm["z"] - zc) <= np.square(rgal_tmp))[0]
+                idm = np.where( np.square(dm["x"] - self.xc) + 
+                                np.square(dm["y"] - self.yc) + 
+                                np.square(dm["z"] - self.zc) <= np.square(rgal_tmp))[0]
             elif member == "v200":
             # Alghough the velocity is redefined later,
             # particle membership is fixed at this point. 
-                idm = np.where( np.square(dm["x"] - self.vxc)+ 
-                                np.square(dm["y"] - self.vyc)+ 
-                                np.square(dm["z"] - self.vzc) <= np.square(200**2))[0]
+                idm = np.where( np.square(dm["vx"] - self.vxc / self.info.kms)+ 
+                                np.square(dm["vy"] - self.vyc / self.info.kms)+ 
+                                np.square(dm["vz"] - self.vzc / self.info.kms) <= np.square(200**2))[0]
             ndm_tot = len(idm)
 
             self.dm = np.recarray(ndm_tot, dtype=dm.dtype)
@@ -297,9 +297,9 @@ class Galaxy(object):
             if 'm' in dm.dtype.names:
                 self.dm['m'] = dm['m'][idm] * self.info.msun
             if 'x' in dm.dtype.names:
-                self.dm['x'] = (dm['x'][idm] - self.xc) * self.info.pboxsize * 1000
-                self.dm['y'] = (dm['y'][idm] - self.yc) * self.info.pboxsize * 1000
-                self.dm['z'] = (dm['z'][idm] - self.zc) * self.info.pboxsize * 1000
+                self.dm['x'] = (dm['x'][idm] - xc) * self.info.pboxsize * 1000
+                self.dm['y'] = (dm['y'][idm] - yc) * self.info.pboxsize * 1000
+                self.dm['z'] = (dm['z'][idm] - zc) * self.info.pboxsize * 1000
             if 'vel' in dm.dtype.names:
                 # Velocity is centered and normalized later on.
                 self.dm['vx'] = (dm['vx'][idm] - self.vxc) * self.info.kms
@@ -319,36 +319,25 @@ class Galaxy(object):
                           ('temp', '<f8'), ('metal', '<f8')]
 
             self.cell = np.recarray(ncell_tot, dtype=dtype_cell)
-            self.cell['x'] = (cell['x'][icell] - self.xc) * self.info.pboxsize * 1000
-            self.cell['y'] = (cell['y'][icell] - self.yc) * self.info.pboxsize * 1000
-            self.cell['z'] = (cell['z'][icell] - self.zc) * self.info.pboxsize * 1000
+            self.cell['x'] = (cell['x'][icell] - xc) * self.info.pboxsize * 1000
+            self.cell['y'] = (cell['y'][icell] - yc) * self.info.pboxsize * 1000
+            self.cell['z'] = (cell['z'][icell] - zc) * self.info.pboxsize * 1000
             self.cell['dx'] = cell['dx'][icell]
             self.cell['rho'] = cell['var0'][icell]
-            self.cell['vx'] = (cell['var1'][icell] - self.vxc) * self.info.kms
-            self.cell['vy'] = (cell['var2'][icell] - self.vyc) * self.info.kms
-            self.cell['vz'] = (cell['var3'][icell] - self.vzc) * self.info.kms
+            self.cell['vx'] = cell['var1'][icell] * self.info.kms - self.vxc
+            self.cell['vy'] = cell['var2'][icell] * self.info.kms - self.vyc
+            self.cell['vz'] = cell['var3'][icell] * self.info.kms - self.vzc
             self.cell['temp'] = cell['var4'][icell]
             self.cell['metal'] = cell['var5'][icell]
             self.cal_mgas()
             
         # Some more sophistications.
-
-        #if self.reff < 0.5        
         """
         print("Rgal = 4 * Reff = ", rgal_tmp * self.info.pboxsize * 1000)
         
             # Save sink particle as a BH, not cloud particles. 
 
         """
-#        print("new COV vs galaxy velocity from GalaxyMaker")
-#        print(self.vxc, self.halo['vx'])
-#        print(self.vyc, self.halo['vy'])
-#        print(self.vzc, self.halo['vz'])
-#        self.dm['vx'] = (self.dm['vx'] - self.vxc) * self.info.kms
-#        self.dm['vy'] = (self.dm['vy'] - self.vyc) * self.info.kms
-#        self.dm['vz'] = (self.dm['vz'] - self.vzc) * self.info.kms
-        # cell?? 
-
         return True
 
 
@@ -433,8 +422,6 @@ class Galaxy(object):
             else:
                 return False
 
-
-        
     def get_radius(self, xx, yy, zz, mm, method):
         """
             Method 1: Radius = Rvir_halo
@@ -772,8 +759,8 @@ class Galaxy(object):
             print("Error!")
             return
 
-        reff = self.reff    
-        rr = reff * rscale
+        reff = min([self.reff,30]) # no larger than 30kpc
+        rr = reff * (rscale+1)
         dx = reff / npix_per_reff
         
         # Some margin makes mmap and vmap look better.
@@ -790,8 +777,10 @@ class Galaxy(object):
         # to supress contamination from tidal tail, 
         # give a cylindrical cut, not spherical cut. 
         # Cappellari 2002 assumes Cylindrical velocity ellipsoid.
-        ind = np.square(self.star['x']) + \
-              np.square(self.star['y']) < np.square((rscale + 1) * self.reff)
+        print("effective radius", reff, (rscale + 1) * reff )
+#        print(np.square(self.star['x'][0:20]) + np.square(self.star['y'][0:20]))
+        ind = (np.square(self.star['x']) + \
+              np.square(self.star['y'])) < np.square(reff * (rscale + 1))
 
         print(sum(ind)/self.nstar*100, "% of stellar particles selected")
 
@@ -810,6 +799,7 @@ class Galaxy(object):
             mm = self.star['m'][ind]
             vz = self.star['vz'][ind]
 
+        print("_____________________", vz.min(), vz.max(), vz.mean())
     
         if verbose: print(("\n" "Calculating Lambda_r for {} particles " 
         "inside {:.3f}kpc, or {}Reff".format(len(self.star['x']), rr, rscale)))
@@ -868,7 +858,6 @@ class Galaxy(object):
                                  plot=voronoi["plot"], quiet=voronoi["quiet"])
 
 
-
             def _display_pixels(x, y, counts, pixelSize):
                 """
                 Display pixels at coordinates (x, y) coloured with "counts".
@@ -888,7 +877,6 @@ class Galaxy(object):
                 plt.imshow(np.rot90(img), interpolation='none', cmap='prism',
                            extent=[xmin - pixelSize/2, xmax + pixelSize/2,
                                    ymin - pixelSize/2, ymax + pixelSize/2])
-           
            
                                                          
             mmap_v = np.zeros(len(xNode))
@@ -999,7 +987,7 @@ class Galaxy(object):
                 return idx        
         
             region = smp.set_region(xc=0, yc=0, zc=0, radius = 0.5 * l_img)
-            fig, ax = plt.subplots(1)
+#            fig, ax = plt.subplots(1)
             
 
 #            print("Reff (px)", reff / dx)
@@ -1068,9 +1056,9 @@ class Galaxy(object):
                     xcen = xpos_arr[i_reff]
                     ycen = ypos_arr[i_reff]
                     #sma=mjr_arr[i_reff] * 0.5 * 3.5 # SEMI major axis, pixel unit
-                plt.savefig(galaxy_plot_dir + str(self.info.nout).zfill(3) \
-                                + "_" + str(self.id) + "ellipticity.png")
-                plt.close()
+#                plt.savefig(galaxy_plot_dir + str(self.info.nout).zfill(3) \
+#                                + "_" + str(self.id) + "ellipticity.png")
+#                plt.close()
             else:
                 dsort = np.argsort(dist)
 # level = pixel value at cumsum = 50%.
@@ -1147,13 +1135,13 @@ class Galaxy(object):
                 axs[1,1].plot(new_arr / new_cnt)
                 axs[1,1].set_ylim(0,1)
 
-#            else:
-#                fig, axs = plt.subplots(2,2)
-#                cc = axs[0,0].imshow(dd.reshape(nx,ny))
-#                plt.colorbar(cc)
-#                axs[0,1].imshow(np.log10(mmap).reshape(nx,ny))
-#                axs[1,0].imshow(vmap.reshape(nx,ny))
-#                axs[1,1].imshow(sigmap.reshape(nx,ny))
+            else:
+                fig, axs = plt.subplots(2,2)
+                cc = axs[0,0].imshow(dd.reshape(nx,ny))
+                plt.colorbar(cc)
+                axs[0,1].imshow(np.log10(mmap).reshape(nx,ny))
+                axs[1,0].imshow(vmap.reshape(nx,ny))
+                axs[1,1].imshow(sigmap.reshape(nx,ny))
                 
 #            plt.savefig(galaxy_plot_dir + str(self.info.nout).zfill(3) \
 #                            + "_" + str(self.id) + "dd.png")
@@ -1588,7 +1576,7 @@ class Galaxy(object):
         
         
          
-    def plot_gal(self, npix=400, fn_save=None, ioff=True,
+    def plot_gal(self, npix=200, fn_save=None, ioff=True,
                  do9plots = False, **kwargs):
                 
         import matplotlib.pyplot as plt
@@ -1816,3 +1804,10 @@ class Galaxy(object):
         Load a galaxy from HDF5 file. 
         """
         pass#%%        
+
+    def surface_den_lim(self, D=3e8, mag=25):
+        M = mag_lim - 5 * np.log10(D) + 5
+        M_25 = 10**(2/5*(-M + 4.74))
+        l_per_pixel = D * np.tan(1/3600 * np.pi / 180)
+        m_limit_25 = M_25 / (1000/l_per_pixel)**2
+
