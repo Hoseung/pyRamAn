@@ -83,10 +83,14 @@ def save_gal(galaxy, filename):
     outfile = hdf.File(filename, 'w')
 
     # Store metadata using HDF5 attributes
-    attrs = get_metadata(galaxy)
+    attrs = get_metadata(galaxy.meta)
     attrs = get_metadata2(attrs)
     #outfile.attrs.create("all", attrs)
     for name, atr in attrs.items():
+#        if name == "meta":
+#            for name2, atr2 in atr.__dict__.items():
+#                outfile.attrs.create(name2, atr2)
+#        else:
         if atr != None:
             outfile.attrs.create(name, atr)
         #outfile.attrs[name] = atr
