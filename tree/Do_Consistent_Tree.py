@@ -11,6 +11,10 @@ Created on Fri Dec  4 16:33:27 2015
 @author: hoseung
 """
 
+import os
+import numpy as np
+import subprocess
+
 def write_halo_bricks_ct(data, desc, nout, out_dir='./', is_gal=True):
     """
         format
@@ -95,36 +99,10 @@ def write_scale(nouts, aexps, out_dir='./'):
             f.write(str(nout) + "  " + str(aexp) + "\n")
             
     f.close()
-    
-#%%   
-import os
-import numpy as np
-
-base = input("repository ('./') \n")
-if base == "":
-    base = './'
-base = os.path.abspath(base) + '/'
-cluster = base.split('/')[-2]
-
-is_gal = input("Galaxy? (y,n. default = n) \n")
-if is_gal in ["YES", "Yes", "yes", "Y", "y", True]:
-    is_gal = True
-else:
-    is_gal = False
-    
-#%%    
-#configure file template in consistent tree directory. or repo.
-f_cfg_template = '/home/hoseung/Copy/pyclusterevol/repo/CTree_template.cfg'
-ct_install_dir = "/home/hoseung/Work/consistent_trees-1.0"
-
-if is_gal:
-    out_dir = base + 'GalaxyMaker/'   
-else:
-    out_dir = base + 'halo/'
 
 
 # convert HM/GM output
-def convert_halo_list(nout_ini=11, nout_fi = 187, base=base, is_gal=is_gal):
+def convert_halo_list(nout_ini=11, nout_fi = 187, base='./', out_dir='./', is_gal=False):
     import load
     import tree.halomodule as hmo
     
@@ -142,7 +120,7 @@ def convert_halo_list(nout_ini=11, nout_fi = 187, base=base, is_gal=is_gal):
         else:
             galcat0 = galcat1
             data0, idlists0 = galcat0.data, galcat0.idlists
-          
+
         if nout == nouts[-1]:
             nhalo0 = galcat0.halnum + galcat0.subnum
             desc_list_final = np.zeros(nhalo0, dtype=int)
@@ -175,7 +153,6 @@ def convert_halo_list(nout_ini=11, nout_fi = 187, base=base, is_gal=is_gal):
             # one halo has only one descendants
             nhalo0 = galcat0.halnum + galcat0.subnum
             desc_list_final = np.zeros(nhalo0, dtype=int)
-    
             for i, pid_per_gal in enumerate(idlists0):
                 # Properties of current halos
                 np_prog = data0['np'][i]
@@ -217,6 +194,7 @@ def convert_halo_list(nout_ini=11, nout_fi = 187, base=base, is_gal=is_gal):
                                 desc_list_final[i] = frac_received_list[i_max_frac]
                     else:
                         desc_list_final[i] = desc_np_max
+                        #print(i, desc_np_max)
     
         
         # Convert variables in appropriate units
@@ -236,80 +214,116 @@ def convert_halo_list(nout_ini=11, nout_fi = 187, base=base, is_gal=is_gal):
         write_halo_bricks_ct(data0, desc_list_final, nout, out_dir = out_dir, is_gal=is_gal)
         aexps[inout] = info.aexp
     
+    print("Write Descscale")    
     write_scale(nouts, aexps, out_dir = out_dir)
 
 
 
-for path in ['Outputs', 'Trees']:
-    if not os.path.isdir(out_dir + path):
-        os.mkdir(out_dir + path)
-
-
-# ConsistentTrees will deal with multi-snaphsot linking taking all the halo properties into consideration.
-# So just find the descendants.
-# It is suffice to determine 'descendants' in s simple, classical way:
-# The halo that gets the most particles from the previous halo is the 'main' descendant. 
-# One possible improvement is to consider mass fraction, which is useful in case of halos undergoing tidal stripping in cluster environments. i.e., when a halo loses more than half of its particles to its host.
-
-# Sometimes.... 
-# 
-# Not matched
-# [17517   430   497]
-# [0.92151086327529064, 0.28067885117493474, 1.0]
-# 
-# one halo got most of the particles from the progenitor, while another halo got 100% of particles for the progenitor. But that 497-particled halo might be a temporary thing. 
-
-
-
-
-#%%
-# generate .cfg file
-inbase = out_dir
-scalefile = inbase + "DescScales.txt"
-outbase = inbase + 'Outputs'
-tree_outbase = inbase + 'Trees'
-hlist_outbase = inbase + 'Trees'
-
-if is_gal:
-    mass_res_ok = '1e10'
-    fname_cfg = inbase + cluster + '_GM.cfg'
-elif not is_gal: 
-    mass_res_ok = '5e10'
-    fname_cfg = inbase + cluster + '_HM.cfg'
-
-
-modify_strs = ["SCALEFILE", "INBASE", "OUTBASE", "TREE_OUTBASE", "HLIST_OUTBASE"]
-modify_vals=["MASS_RES_OK"]
-new_strs = [scalefile, inbase, outbase, tree_outbase, hlist_outbase]
-new_vals = [mass_res_ok]
-
-
-f_temp = open(f_cfg_template, 'r')     
-f_write = open(fname_cfg, 'w')
-
-for line in f_temp.readlines():
-    start_with = line.split("=")[0].strip()
-    if start_with in modify_strs:
-        ind = modify_strs.index(start_with.strip())
-        f_write.write(start_with + '= "' + new_strs[ind] + '"\n')
-    elif start_with in modify_vals:
-        ind = modify_vals.index(start_with.strip())
-        f_write.write(start_with + '= ' + new_vals[ind] + '\n')
+def run(wdir ='./', nout_ini=None, is_gal=False):
+    base = os.path.abspath(wdir) + '/'
+    cluster = base.split('/')[-2]
+    if is_gal:
+        if nout_ini is None:
+            nout_ini=11
+        out_dir = base + 'GalaxyMaker/'   
     else:
-        f_write.write(line)
-            
+        if nout_ini is None:
+            nout_ini=7
+        out_dir = base + 'halo/'
+    convert_halo_list(nout_ini=nout_ini, nout_fi = 187, base=base, out_dir=out_dir, is_gal=is_gal)
+        
+    #configure file template in consistent tree directory. or repo.
+    f_cfg_template = '/home/hopung/Work/pyclusterevol/repo/CTree_template.cfg'
+    ct_install_dir = "/home/hopung/Work/consistent_trees-1.01"
+    
+    
+    
+    for path in ['Outputs', 'Trees']:
+        if not os.path.isdir(out_dir + path):
+            os.mkdir(out_dir + path)
+    
+    
+    # ConsistentTrees deals with multi-snaphsot linking taking all the halo properties into consideration.
+    # So just find the descendants.
+    # It is suffice to determine 'descendants' in a simple, classic way:
+    # The halo that gets the most particles from the previous halo is the 'main' descendant. 
+    # One possible improvement is to consider mass fraction, which is useful in case of halos
+    # undergoing tidal stripping in cluster environments.
+    # i.e., when a halo loses more than half of its particles to its host.
+    
+    # Sometimes.... 
+    # 
+    # Not matched
+    # [17517   430   497]
+    # [0.92151086327529064, 0.28067885117493474, 1.0]
+    # 
+    # one halo got most of the particles from the progenitor,
+    # while another halo got 100% of particles for the progenitor.
+    # But that 497-particled halo might be a temporary thing. 
+    
+    
+    #%%
+    # generate .cfg file
+    inbase = out_dir
+    scalefile = inbase + "DescScales.txt"
+    outbase = inbase + 'Outputs'
+    tree_outbase = inbase + 'Trees'
+    hlist_outbase = inbase + 'Trees'
+    
+    if is_gal:
+        mass_res_ok = '1e10'
+        fname_cfg = inbase + cluster + '_GM.cfg'
+    elif not is_gal: 
+        mass_res_ok = '5e10'
+        fname_cfg = inbase + cluster + '_HM.cfg'
+    
+    
+    modify_strs = ["SCALEFILE", "INBASE", "OUTBASE", "TREE_OUTBASE", "HLIST_OUTBASE"]
+    modify_vals=["MASS_RES_OK"]
+    new_strs = [scalefile, inbase, outbase, tree_outbase, hlist_outbase]
+    new_vals = [mass_res_ok]
+    
+    
+    f_temp = open(f_cfg_template, 'r')     
+    f_write = open(fname_cfg, 'w')
+    
+    for line in f_temp.readlines():
+        start_with = line.split("=")[0].strip()
+        if start_with in modify_strs:
+            ind = modify_strs.index(start_with.strip())
+            f_write.write(start_with + '= "' + new_strs[ind] + '"\n')
+        elif start_with in modify_vals:
+            ind = modify_vals.index(start_with.strip())
+            f_write.write(start_with + '= ' + new_vals[ind] + '\n')
+        else:
+            f_write.write(line)
+                
+    f_write.close()
+    f_temp.close()     
+    #%%
+    # run Consistent Trees
+    os.chdir(ct_install_dir)
+    subprocess.call(["perl", "do_merger_tree_np.pl", fname_cfg])
+    subprocess.call(["perl", "halo_trees_to_catalog.pl", fname_cfg])
+     
 
-f_write.close()
-f_temp.close()     
-#%%
-# run Consistent Trees
-import subprocess
-os.chdir(ct_install_dir)
-subprocess.call(["perl", "do_merger_tree_np.pl", fname_cfg])
-subprocess.call(["perl", "halo_trees_to_catalog.pl", fname_cfg])
+#%%   
+if __name__ == "__main__":
+#    clusters=["01605", "04466", "05427", "074010", "10002", "14172",
+#              "17891", "24954", "28928", "29172", "29176", "35663",
+#              "36413", "36415_000", "49096", "6098", "7206", "39990"]
+    
+    is_gal = input("Galaxy? (y,n. default = n) \n")
+    if is_gal in ["YES", "Yes", "yes", "Y", "y", True]:
+        is_gal = True
+    else:
+        is_gal = False
 
-
-
-
-
-
+    here = os.path.abspath('./')
+#    for cluster in clusters[6:7]:
+#    print("Processing....")
+#     print(cluster)
+    nout_ini=int(input("not_ini=? (12)"))
+    if nout_ini == "":
+        nout_ini = 12
+    run(wdir = here + "/" , is_gal=is_gal, nout_ini=nout_ini)

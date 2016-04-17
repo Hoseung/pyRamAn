@@ -77,7 +77,7 @@ import pickle
 import numpy as np
 
 alltrees = treemodule.CTree()
-wdir = '/home/hoseung/Work/data/05427/'
+wdir = './'
 is_gal = True
 
 if is_gal:

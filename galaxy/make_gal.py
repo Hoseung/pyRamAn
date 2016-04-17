@@ -50,7 +50,7 @@ def extract_data(halo, rscale=1.25):
     rr_tmp0 = max([rr_tmp0, 0.000025])
     # When merger occurs, larger radius is likely to include 
     # companion galaxy resulting center to be in the middle of nowhere.
-
+    print(cell_all, "cell_all")
     if cell_all is not None:
         ind_c = np.where((cell_all['x'] - xc_tmp0)**2 + (cell_all['y'] - yc_tmp0)**2
                         + (cell_all['z'] - zc_tmp0)**2 < rr_tmp0**2)[0]
@@ -83,10 +83,14 @@ def save_gal(galaxy, filename):
     outfile = hdf.File(filename, 'w')
 
     # Store metadata using HDF5 attributes
-    attrs = get_metadata(galaxy)
+    attrs = get_metadata(galaxy.meta)
     attrs = get_metadata2(attrs)
     #outfile.attrs.create("all", attrs)
     for name, atr in attrs.items():
+#        if name == "meta":
+#            for name2, atr2 in atr.__dict__.items():
+#                outfile.attrs.create(name2, atr2)
+#        else:
         if atr != None:
             outfile.attrs.create(name, atr)
         #outfile.attrs[name] = atr

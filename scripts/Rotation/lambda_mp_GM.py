@@ -73,23 +73,27 @@ def associate_gal_hal(allgal, allhal):
         
         return norm
 
-    i0=[]
-    i1=[]
+    i0=[] # matched list
+    i1=[] # unmatched list
 
     newhals = np.recarray(len(allgal.data), dtype=allhal.data.dtype) # equivalent with allhal.data
     
     for i, gal in enumerate(allgal.data):
-        dd = dist(allhal.data, gal)
+        dd = dist(allhal.data, gal)# 3d distance. simply sqrt((x-xc)**2 + ...)
         d_sort = np.argsort(dd)
+        # if closest halo is closer by 0.1 than the second and close than 10kpc/h, good match.
         if (dd[d_sort[0]] < 0.1 * dd[d_sort[1]]) and (dd[d_sort[0]] < 5e-5):
             gal['hosthalo'] = allhal.data['id'][d_sort[0]]
             i0.append(i)
             newhals[i] = allhal.data[d_sort[0]]
+        
+        # if closest halo is closer by 0.3 and than the second and closer than 5kpc/h, good match.
         elif (dd[d_sort[0]] < 0.3 * dd[d_sort[1]]) and (dd[d_sort[0]] < 2.5e-5):
             gal['hosthalo'] = allhal.data['id'][d_sort[0]]
             i0.append(i)
             newhals[i] = allhal.data[d_sort[0]]
         else:
+            # if closet than 40kpc/h and has similar velocity.
             dv = distv(allhal.data, gal)
             d_nomi = dd < 2e-4 # within 40kpc!! 
             v_nomi = dv < 150
@@ -101,8 +105,10 @@ def associate_gal_hal(allgal, allhal):
                 i0.append(i)
                 newhals[i] = allhal.data[dddv_sort[0]]
             else:
+                # otherwise non-matched.
                 gal['hosthalo'] = -1
                 i1.append(i)
+                # copy galaxy catalog data to new 'fake' halo catalog. 
                 newhals[i]['x'] = gal['x']
                 newhals[i]['y'] = gal['y']
                 newhals[i]['z'] = gal['z']
@@ -488,7 +494,7 @@ lambda_method = 'ellip'
 galaxy_plot = True
 reorient = True
 verbose=True
-region_plot = True
+region_plot = False
 
 wdir = input("Working directory \n")
 #wdir = './'
@@ -677,8 +683,8 @@ for inout, nout in enumerate(nouts):
 
     info = load.info.Info(nout=nout, base=wdir, load=True)
     if nout < 187:    
-        mstar_min = min([3 * masscut_a * info.aexp + masscut_b, mstar_min])
-    print("Mstar now, min: {:.2e} {:.2e}".format(3 * masscut_a * info.aexp + masscut_b, mstar_min))
+        mstar_min = min([2 * (masscut_a * info.aexp + masscut_b), mstar_min])
+    print("Mstar now, min: {:.2e} {:.2e}".format(2 * (masscut_a * info.aexp + masscut_b), mstar_min))
 
     t_now = alltrees.data[alltrees.data['nout'] == nout]
     idxs_now = all_gals_in_trees[inout]
