@@ -880,11 +880,6 @@ class Galaxy(object):
 
             rnd = np.argsort(np.random.random(xNode.size))  # Randomize bin colors
 #            _display_pixels(xpos_regular, ypos_regular, rnd[binNum], nx)
-#            plt.imshow(self.vmap)
-#            plt.savefig('./mmap.png')
-#            plt.imshow(self.sigmap)
-#            plt.savefig('./sig.png')
-#            plt.close()
 
             # update maps.
             # keep oroginal mmap to draw plots
@@ -1004,14 +999,11 @@ class Galaxy(object):
     
                 else:              
                     i_reff = np.argmax(np.array(f_light_arr) > 0.5) -1# first element > 0.5 -1
-    #                i_reff = find_nearest(mjr_arr * np.sqrt(1 - np.square(eps_arr)), reff)
-                    #i_reff = 3
-                    print('reff, i_reff', reff, i_reff)
+#                    print('reff, i_reff', reff, i_reff)
                     self.meta.eps = eps_arr[i_reff] # eps at 1 * R_half(=eff)
                     self.meta.pa  = pa_arr[i_reff]
                     sma = reff / np.sqrt(1-self.meta.eps) / dx
                     smi = sma*(1-self.meta.eps)
-    #                self.mjr = sma
                     self.meta.sma = mjr_arr[i_reff] * 3.5
                     self.meta.smi = self.meta.sma*(1-self.meta.eps)
                     xcen = xpos_arr[i_reff]
@@ -1103,30 +1095,63 @@ class Galaxy(object):
                 d_05reff = np.argmax(dsort > 0.5*dsort[i_reff]) # dsort[d_05reff] = 0.5Reff
                 frac05 = d_05reff/len(mmap)
 
-#                print("frac05", frac05)
+                print("frac05", frac05)
 
                 f = mge.find_galaxy.find_galaxy(self.mmap, quiet=True, plot=False,
                                                 mask_shade=False,
                                                 fraction=frac05)
-                self.meta.eps05 = f.eps
-                sma = npix_per_reff / np.sqrt(1 - self.meta.eps05)
-                smi = sma * (1 - self.meta.eps05)
-                self.meta.pa05 = f.theta
-                pa_rad = -1 * self.meta.pa05/ 180 * np.pi
+                self.meta.epsh = f.eps
+                sma = npix_per_reff / np.sqrt(1 - self.meta.epsh)
+                smi = sma * (1 - self.meta.epsh)
+                self.meta.pah = f.theta
+                pa_rad = -1 * self.meta.pah/ 180 * np.pi
                 cos = np.cos(pa_rad)
                 sin = np.sin(pa_rad)
-                self.meta.xcen05 = f.xmed
-                self.meta.ycen05 = f.ymed
-                self.meta.sma05 = sma
-                self.meta.smi05 = smi
+                self.meta.xcenh = f.xmed
+                self.meta.ycenh = f.ymed
+                self.meta.smah = sma
+                self.meta.smih = smi
 
-                result_05reff = _measure_lambda(self.meta.xcen05,
-                                                self.meta.ycen05,
+                result_hreff = _measure_lambda(self.meta.xcenh,
+                                                self.meta.ycenh,
                                                 cos, sin,
                                                 sma, smi,
                                                 voronoi=False)
-        return (result_1reff, result_05reff),  \
-               (np.average(result_1reff[npix_per_reff]), np.average(result_05reff[npix_per_reff]))
+
+
+
+                d_25reff = np.argmax(dsort > 0.25*dsort[i_reff]) # dsort[d_05reff] = 0.5Reff
+                frac25 = d_25reff/len(mmap)
+
+                print("frac25", frac25)
+
+                f = mge.find_galaxy.find_galaxy(self.mmap, quiet=True, plot=False,
+                                                mask_shade=False,
+                                                fraction=frac25)
+                self.meta.epsq = f.eps
+                sma = npix_per_reff / np.sqrt(1 - self.meta.epsq)
+                smi = sma * (1 - self.meta.epsq)
+                self.meta.paq = f.theta
+                pa_rad = -1 * self.meta.paq/ 180 * np.pi
+                cos = np.cos(pa_rad)
+                sin = np.sin(pa_rad)
+                self.meta.xcenq = f.xmed
+                self.meta.ycenq = f.ymed
+                self.meta.smaq = sma
+                self.meta.smiq = smi
+
+                result_qreff = _measure_lambda(self.meta.xcenq,
+                                                self.meta.ycenq,
+                                                cos, sin,
+                                                sma, smi,
+                                                voronoi=False)
+
+
+
+        return (result_1reff, result_hreff, result_qreff),  \
+               (np.average(result_1reff[npix_per_reff]),
+                np.average(result_hreff[npix_per_reff]),
+                np.average(result_qreff[npix_per_reff]))
 #        self.lambda_arr = points
         # npix = ind_1Reff. 
         # ** npix 2 = npix * rscale

@@ -50,7 +50,7 @@ def extract_data(halo, rscale=1.25):
     rr_tmp0 = max([rr_tmp0, 0.000025])
     # When merger occurs, larger radius is likely to include 
     # companion galaxy resulting center to be in the middle of nowhere.
-
+    print(cell_all, "cell_all")
     if cell_all is not None:
         ind_c = np.where((cell_all['x'] - xc_tmp0)**2 + (cell_all['y'] - yc_tmp0)**2
                         + (cell_all['z'] - zc_tmp0)**2 < rr_tmp0**2)[0]
