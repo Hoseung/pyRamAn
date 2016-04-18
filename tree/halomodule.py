@@ -42,15 +42,41 @@ class Hmhalo():
         self.halnum=0
         self.subnum=0
         self.fn = fn
-        self.f = open(fn, "rb")
-        self.load_meta()
-        self.load_data()
-        self.f.close()
+        #self.f = open(fn, "rb")
+#        self.load_meta()
+#        self.load_data()
+        self.load()
+#        self.f.close()
         
         def set_return_id_list(ids):
             self.return_id_list = ids
-        
-        def load_meta(self):
+
+        def load(self):
+            import tree.load_c.rd_hal as rd_halo
+            dtype_halo = [('np', '<i4'), ('hnu', '<i4'), ('hhost', '<i4', (5,)),
+                  ('ang', '<f8', (3,)), ('m', '<f8'), ('mvir', '<f8'),
+                    ('r', '<f8'), ('rvir', '<f8'), ('p', '<f8', (3,)),
+                    ('v', '<f8', (3,)), ('sp', '<f8'),
+                    ('energy', '<f8', (3,)),('radius', '<f8', (4,))]
+            temp = rd_halo.read_file(self.fn.encode())# as a byte str.
+            self.nbodies, self.halnum, self.subnum, self.massp, self.aexp, self.omegat, self.age = temp[0:7]
+            
+            self.data = np.recarray(self.halnum + self.subnum, dtype=dtype_halo)
+            self.data['np'],\
+            self.data['hnu'],\
+            self.data['hhost'],\
+            self.data['ang'],\
+            self.data['energy'],\
+            self.data['m'],\
+            self.data['radius'],\
+            self.data['rvir'],\
+            self.data['p'],\
+            self.data['sp'],\
+            self.data['v'] = temp[7:]
+            self.data['r'] = self.data['radius'][0]
+            print("Here I am")
+
+        def load_meta_py(self):
             import numpy as np
             from load.utils import read_fortran
             f = self.f
@@ -61,7 +87,7 @@ class Hmhalo():
             self.age = read_fortran(f, np.dtype('f4'), 1)
             self.halnum, self.subnum = read_fortran(f, np.dtype('i4'), 2)        
            
-        def load_data(self, tothal=None):
+        def load_data_py(self, tothal=None):
             f = self.f
             import numpy as np
             from load.utils import read_fortran
@@ -94,6 +120,38 @@ class Hmhalo():
                 self.data['rvir'][i], self.data['mvir'][i] = read_fortran(f, np.dtype('f4'), 4)[0:2]
                 read_fortran(f, np.dtype('f4'), 2)
         
+        def load_data_np(self, tothal=None):
+            f = self.f
+            import numpy as np
+            from load.utils import read_fortran
+            dtype_halo = [('np', '<i4'), ('hnu', '<i4'), ('hhost', '<i4', (5,)),
+                  ('ang', '<f8', (3,)), ('m', '<f8'), ('mvir', '<f8'),
+                    ('r', '<f8'), ('rvir', '<f8'), ('p', '<f8', (3,)),
+                    ('v', '<f8', (3,)), ('sp', '<f8')]
+            if tothal is None:
+                tothal = self.halnum + self.subnum
+            self.data = np.recarray(tothal, dtype=dtype_halo)
+            if self.read_id:
+                self.ids=[]
+            for i in range(tothal):
+                nph = read_fortran(f, np.dtype('i4'), 1)
+                self.data['np'][i] = nph
+                tmp = read_fortran(f, np.dtype('i4'), nph) # id list. 
+                hnu = read_fortran(f, np.dtype('i4'), 1)
+                self.data['hnu'][i] = hnu
+                if self.read_id and hnu in self.return_id_list:
+                    self.ids.append(tmp)
+                read_fortran(f, np.dtype('i4'), 1) #timestep
+                self.data['hhost'][i][0:5] = read_fortran(f, np.dtype('i4'), 5)
+                self.data['m'][i] = read_fortran(f, np.dtype('f4'), 1)
+                self.data['p'][i][0:3] = read_fortran(f, np.dtype('f4'), 3)
+                self.data['v'][i][0:3] = read_fortran(f, np.dtype('f4'), 3)
+                self.data['ang'][i][0:3] = read_fortran(f, np.dtype('f4'), 3)
+                self.data['r'][i] = read_fortran(f, np.dtype('f4'), 4)[0]
+                read_fortran(f, np.dtype('f4'), 3)#energies
+                self.data['sp'][i] = read_fortran(f, np.dtype('f4'), 1)
+                self.data['rvir'][i], self.data['mvir'][i] = read_fortran(f, np.dtype('f4'), 4)[0:2]
+                read_fortran(f, np.dtype('f4'), 2)
 
 class HaloMeta():
     """HaloMeta class.
@@ -251,6 +309,80 @@ class Halo(HaloMeta):
             self.return_id_list = ids
 
     def load_hm(self, nout=None, base=None, info=None):
+        if nout is None:
+            nout = self.nout
+        if base is None:
+            base = self.base
+        snout = str(self.nout).zfill(3)
+        if self.is_gal:
+            fn = base + self.gal_find_dir + 'gal/tree_bricks' + snout
+        else:
+            fn = base + self.dm_find_dir + 'DM/tree_bricks' + snout
+        try:
+            dtype_halo = [('np', '<i4'), ('id', '<i4'), ('level', '<i4'),
+                          ('host', '<i4'), ('sub', '<i4'), ('nsub', '<i4'),
+                        ('nextsub', '<i4'),
+                        ('m', '<f4'), ('mvir', '<f4'),
+                        ('r', '<f4'), ('rvir', '<f4'), 
+                        ('tvir', '<f4'), ('cvel', '<f4'), 
+                        ('x', '<f4'), ('y', '<f4'), ('z', '<f4'),
+                        ('vx', '<f4'), ('vy', '<f4'), ('vz', '<f4'),
+                        ('ax', '<f4'), ('ay', '<f4'), ('az', '<f4'),
+                        ('sp', '<f4'), ('idx', '<i4'),
+                        ('p_rho', '<f4'),('p_c', '<f4'), 
+                        ('energy', '<f8', (3,)), ('radius', '<f8', (4,))]
+
+            if self.is_gal:
+                dtype_halo += [('sig', '<f4'), ('sigbulge', '<f4'),
+                               ('mbulge', '<f4'), ('hosthalo', '<i4')]
+
+            import tree.load_c.rd_hal as rd_halo
+            import numpy as np
+            temp = rd_halo.read_file(fn.encode())# as a byte str.
+            
+            self.nbodies, self.halnum, self.subnum,\
+                self.massp, self.aexp, self.omegat, self.age = temp[0:7]
+            ntot = self.halnum + self.subnum
+            self.data = np.recarray(ntot, dtype=dtype_halo)
+            self.data['np'],\
+            self.data['id'],\
+            levels,\
+            ang,\
+            energy,\
+            self.data['m'],\
+            radius, pos, self.data['sp'], vel,\
+            vir, profile = temp[7:]
+
+            self.data['energy'] = energy.reshape((ntot,3))
+            levels = levels.reshape((ntot,5))
+            self.data['level'], self.data['host'], \
+            self.data['sub'], self.data['nsub'], \
+            self.data['nextsub'] = levels[:,0], \
+                levels[:,1], levels[:,2],levels[:,3], levels[:,4]
+            pos = pos.reshape((ntot,3))
+            self.data['x'], self.data['y'], self.data['z'] \
+                    = pos[:,0],pos[:,1],pos[:,2]
+            vel = vel.reshape((ntot,3))
+            self.data['vx'], self.data['vy'], self.data['vz'] \
+                    = vel[:,0],vel[:,1],vel[:,2]
+            ang = ang.reshape((ntot,3))
+            self.data['ax'], self.data['ay'], self.data['az'] \
+                    = ang[:,0],ang[:,1],ang[:,2]
+            self.data['r'] = radius[::4].copy()
+#            vir.reshape((ntot,4))
+#            copy so that memory are continuous. (right?)
+            self.data['rvir'],self.data['mvir'], \
+                    self.data['tvir'],self.data['cvel'] = vir[::4].copy(),\
+                vir[1::4].copy(),vir[2::4].copy(),vir[3::4].copy()
+            self.data['p_rho'], self.data['p_c'] =\
+                    profile[::2].copy(),profile[1::2].copy() # profile rho and concentration
+            if self.is_gal:
+                self.data['sig'], self.data['sigbulge'], self.data['mbulge'] =gal[:]
+
+        except:
+            print("Something wrong")
+
+    def load_hm_old(self, nout=None, base=None, info=None):
         if nout is None:
             nout = self.nout
         if base is None:
