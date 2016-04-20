@@ -10,18 +10,6 @@ struct Meta{
     float massp, aexp, omegat, age;
 };
 
-// First try, array of a structure.
-struct Data{
-    int np, hnu;
-    int hhost [5];
-    float ang [3];
-    float mass, mvir, rvir, sp;
-    float pos [3];
-    float vel [3];
-    float radius [4];
-    float energy [3];
-};
-
 struct Data2{
     int * np;
     int * hnu;
@@ -36,6 +24,9 @@ struct Data2{
     float * vir;
     float * profile;
     float * gal;
+    int * g_nbin;
+    float * g_rr;
+    float * g_rho;
 };
 
 void fortran_skip(std::fstream&);
@@ -46,10 +37,9 @@ void fortran_read_float(std::fstream&, float &, int);
 
 void load_meta(std::fstream&,  Meta&);
 
-void load_data(std::fstream&,  struct Data [], int );
+void load_data(std::fstream&,  Data2&, int);
+void load_data_gal(std::fstream&,  Data2&, int, int);
 
-void load_data2(std::fstream&,  Data2&, int);
+void allocate_data(Data2&, int, int);
 
-void allocate_data(Data2&, int );
-
-void load(std::string&, Meta& haloinfo, Data2& halodata);
+void load(std::string&, Meta&, Data2&, int);
