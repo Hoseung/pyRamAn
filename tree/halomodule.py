@@ -175,7 +175,7 @@ class HaloMeta():
     given nout and base, info is autoloaded if not explicitely given.
     
     """
-    def __init__(self, nout=None, base=None, info=None, halofinder=None,
+    def __init__(self, nout=None, base=None, info=None, halofinder='HM',
                  load=False, is_gal=False, return_id=False, outdir=None):
        self.nout = nout
        self.set_base(base)
@@ -334,24 +334,26 @@ class Halo(HaloMeta):
 
             if self.is_gal:
                 dtype_halo += [('sig', '<f4'), ('sigbulge', '<f4'),
-                               ('mbulge', '<f4'), ('hosthalo', '<i4')]
+                               ('mbulge', '<f4'), ('hosthalo', '<i4'),
+                               ('g_nbin', '<i4'), ('g_rr', '<f4', (100,)),
+                               ('g_rho', '<f4', (100,))]
 
             import tree.load_c.rd_hal as rd_halo
             import numpy as np
-            temp = rd_halo.read_file(fn.encode())# as a byte str.
+            temp = rd_halo.read_file(fn.encode(), int(self.is_gal))# as a byte str.
             
             self.nbodies, self.halnum, self.subnum,\
                 self.massp, self.aexp, self.omegat, self.age = temp[0:7]
             ntot = self.halnum + self.subnum
             self.data = np.recarray(ntot, dtype=dtype_halo)
-            self.data['np'],\
-            self.data['id'],\
-            levels,\
-            ang,\
-            energy,\
+            self.data['np'], self.data['id'],\
+            levels, ang, energy, \
             self.data['m'],\
-            radius, pos, self.data['sp'], vel,\
-            vir, profile = temp[7:]
+            radius, pos,\
+            self.data['sp'], vel = temp[7:17]
+            vir, profile = temp[17:19]
+            if self.is_gal:
+                temp_gal = temp[19]
 
             self.data['energy'] = energy.reshape((ntot,3))
             levels = levels.reshape((ntot,5))
@@ -369,7 +371,7 @@ class Halo(HaloMeta):
             self.data['ax'], self.data['ay'], self.data['az'] \
                     = ang[:,0],ang[:,1],ang[:,2]
             self.data['r'] = radius[::4].copy()
-#            vir.reshape((ntot,4))
+
 #            copy so that memory are continuous. (right?)
             self.data['rvir'],self.data['mvir'], \
                     self.data['tvir'],self.data['cvel'] = vir[::4].copy(),\
@@ -377,7 +379,11 @@ class Halo(HaloMeta):
             self.data['p_rho'], self.data['p_c'] =\
                     profile[::2].copy(),profile[1::2].copy() # profile rho and concentration
             if self.is_gal:
-                self.data['sig'], self.data['sigbulge'], self.data['mbulge'] =gal[:]
+                self.data['sig'], self.data['sigbulge'], self.data['mbulge'] =\
+                        temp_gal[::3].copy(), temp_gal[1::3].copy(), temp_gal[2::3].copy()
+                self.data['g_nbin'] = temp[20]
+                self.data['g_rr'] = temp[21].reshape(ntot,100)
+                self.data['g_rho']= temp[22].reshape(ntot,100)
 
         except:
             print("Something wrong")
