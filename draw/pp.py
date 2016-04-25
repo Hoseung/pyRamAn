@@ -42,7 +42,7 @@ def polygon_scatter(axes, x_array, y_array, resolution=5, radius=0.5, **kwargs):
     return True
 
 def part2den(part, info, region=None, proj='z', npix=800, ptype=None,
-               offset=[0,0,0], **kwargs):
+               offset=[0,0,0], hist=False, **kwargs):
     """
     creates img object, calculate 2d-projection map and return the img object.
     given part, info, region, it passes x,y,z,m,npix,info arrays to pp.den2d.
@@ -55,10 +55,10 @@ def part2den(part, info, region=None, proj='z', npix=800, ptype=None,
     if region is None:
         import utils.sampling as smp
     
-        region = smp.set_region(xr=[part.x.min() + offset[0], part.x.max() + offset[0]],
-                                yr=[part.y.min() + offset[1], part.y.max() + offset[1]],
-                                zr=[part.z.min() + offset[2], part.z.max() + offset[2]])       
-        ind_ok = np.arange(len(part.x))
+        region = smp.set_region(xr=[part['x'].min() + offset[0], part['x'].max() + offset[0]],
+                                yr=[part['y'].min() + offset[1], part['y'].max() + offset[1]],
+                                zr=[part['z'].min() + offset[2], part['z'].max() + offset[2]])       
+        ind_ok = np.arange(len(part['x']))
     else:
         ind_ok = np.where((part.x > region["xr"][0] - offset[0])
                         & (part.x < region["xr"][1] - offset[0])
@@ -74,7 +74,7 @@ def part2den(part, info, region=None, proj='z', npix=800, ptype=None,
                               part["y"][ind_ok] + offset[1],
                               part["z"][ind_ok] + offset[2],
                               part["m"][ind_ok], npix, region=None, proj=proj,
-                              cic=True, norm_integer=True, **kwargs))
+                              cic=True, norm_integer=True, hist=hist, **kwargs))
         return img
     else:
         return False
@@ -83,7 +83,8 @@ def part2den(part, info, region=None, proj='z', npix=800, ptype=None,
 def den2d(x, y, z, m, npix, region=None, proj='z',
                     ngp=False, cic=False, tsc=False,
                     vmin=None, vmax=None, verbose=False,
-                    norm_integer=False, mass_test=True):
+                    norm_integer=False, mass_test=True,
+                    hist=True):
     """
     Return 2D density map of given particle distribution in (npix,npix) array.
     
@@ -173,18 +174,23 @@ def den2d(x, y, z, m, npix, region=None, proj='z',
             print("Minmum mass is {} and maximum is {}".format(m.min(), m.max()))
 
     # mass assigning
-    if ngp is False and cic is False and tsc is False: cic = True
-    if ngp:
-        field = assign.ngp(m, x, npix, y, npix, wraparound=True)
-    
-    print("x.ptp()", x.ptp(), "npix", npix)
-
-    if cic:
-        field = assign.cic(m, x, npix, y, npix, wraparound=True,
-                           average=False, norm_integer=False)
-
-    if tsc:
-        field = assign.tsc(m, x, npix, y, npix, wraparound=True)
+    if hist:
+        field, xedges, yedges = np.histogram2d(x, y, bins=[npix,npix])
+        field = field.T * m[0]
+#        img.set_data(H * part['m'][0]) # Assuming all stellar particle have the same mass
+    else:
+        if ngp is False and cic is False and tsc is False: cic = True
+        if ngp:
+            field = assign.ngp(m, x, npix, y, npix, wraparound=True)
+        
+        print("x.ptp()", x.ptp(), "npix", npix)
+ 
+        if cic:
+            field = assign.cic(m, x, npix, y, npix, wraparound=True,
+                               average=False, norm_integer=False)
+ 
+        if tsc:
+            field = assign.tsc(m, x, npix, y, npix, wraparound=True)
 
     if verbose:
         print("minmax field", field.min(), field.max())
