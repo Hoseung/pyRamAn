@@ -63,14 +63,12 @@ class Galaxy(object):
         print([i * self.info.pboxsize * 100 for i in list(x)])
 
 
-    def radial_profile_cut(self, xx, yy, mm, vx, vy, vz, den_lim=1e6,
+    def radial_profile_cut(self, xx, yy, mm, vx, vy, vz, den_lim=2e6,
                            mag_lim=25, nbins=100, rmax=50, dr=0.5):
         # 2D photometry. (if rotated towards +y, then use x and z)
         # now assuming +z alignment. 
         rr = np.sqrt(np.square(xx) + np.square(yy))# in kpc unit
 
-        den_lim2 = 2e6
-#        den_lim1 = 1e6
         # Accounting for weights.
         i_sort = np.argsort(rr)
         r_sorted = rr[i_sort]
