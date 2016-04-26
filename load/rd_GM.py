@@ -14,7 +14,7 @@ class Gal():
         self.header = None
 
 
-def rd_gal(nout, idgal, wdir="./GalaxyMaker/", metal=True, nchem=0,long=True):
+def rd_gal(nout, idgal, wdir="./", metal=True, nchem=0,long=True):
     # Header structure
     dtype_header = np.dtype([('my_number', 'i4'),
                              ('level', 'i4'),
@@ -37,7 +37,7 @@ def rd_gal(nout, idgal, wdir="./GalaxyMaker/", metal=True, nchem=0,long=True):
     
     idgal = str(idgal).zfill(7)
     dir_nout = "GAL_" + str(nout).zfill(5)      
-    with open(wdir +  dir_nout + '/gal_stars_' + idgal, "rb") as f:
+    with open(wdir + 'GalaxyMaker/' +  dir_nout + '/gal_stars_' + idgal, "rb") as f:
         header = read_header(f, dtype=dtype_header)
         header['mgal'] *= 1e11 # mass fof galaxy
         
