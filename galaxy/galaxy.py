@@ -69,7 +69,7 @@ class Galaxy(object):
         # now assuming +z alignment. 
         rr = np.sqrt(np.square(xx) + np.square(yy))# in kpc unit
 
-        # Accounting for weights.
+        # Account for weights.
         i_sort = np.argsort(rr)
         r_sorted = rr[i_sort]
         m_sorted = mm[i_sort]
