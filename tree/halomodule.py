@@ -42,7 +42,7 @@ class HaloMeta():
     ----------
     nout : snapshot number, int
     base : working directory, str
-    info : info object (usually s.info)
+    info : info object
     halofinder : "RS" or "HM". Full names also work. case insensitive.
  
     Examples
@@ -56,9 +56,12 @@ class HaloMeta():
     
     """
     def __init__(self, nout=None, base=None, info=None, halofinder='HM',
-                 load=False, is_gal=False, return_id=False, outdir=None):
+                 load=False, is_gal=False, return_id=False, outdir=None,
+                 vebose=False):
        self.nout = nout
+       self.verbose = verbose
        self.set_base(base)
+       self.info = None
        self.set_info(info=info)
        self.run_params = {"none":None}
        if isinstance(halofinder, str):
@@ -98,7 +101,7 @@ class HaloMeta():
             try:
                 self.load_info()
             except:
-                print("Are these parameters right?")
+            print("[Halo.set_info] Are these parameters right?")
         else:
             self.info = info
 
@@ -106,10 +109,10 @@ class HaloMeta():
         import load.info
         if nout is None:
             nout = self.nout
-        #print("Halo is loading info")
-        #print(nout, self.base)
+        if self.verbose : print("[Halo.load_info] loading info")
+#        print("[Halo.load_info]", nout, self.base)
         self.info = load.info.Info(nout=nout, base=self.base, load=True)    
-        #print("info is loaded")
+        if self.verbose : print("[Halo.load_info] info is loaded")
 
     def set_halofinder(self, halofinder):
         from utils import util
@@ -162,7 +165,16 @@ class Halo(HaloMeta):
         if self.halofinder is 'Rockstar':
             self.load_rs()
         elif self.halofinder is 'HaloMaker':
-            self.load_hm()
+            if self.return_id:
+                self.load_hm_old()
+            else:
+                self.load_hm()
+            if self.info is None:
+                import load
+                info = load.info.Info(base = self.base, nout = self.nout, load = True)
+                self.set_info(info)
+        
+            self.normalize()
 
     def load_hm_sav(self, nout=None, base=None, info=None):
         if nout is None:
@@ -336,17 +348,17 @@ class Halo(HaloMeta):
                 self.data['nextsub'][i] = read_fortran(f, np.dtype('i4'), 5)
                 self.data['m'][i] = read_fortran(f, np.dtype('f4'), 1)
                 self.data['x'][i], self.data['y'][i], self.data['z'][i] \
-                = read_fortran(f, np.dtype('f4'), 3)
+                    = read_fortran(f, np.dtype('f4'), 3)
                 self.data['vx'][i], self.data['vy'][i], self.data['vz'][i] \
-                = read_fortran(f, np.dtype('f4'), 3)
+                    = read_fortran(f, np.dtype('f4'), 3)
                 self.data['ax'][i], self.data['ay'][i], self.data['az'][i] \
-                = read_fortran(f, np.dtype('f4'), 3)                
+                    = read_fortran(f, np.dtype('f4'), 3)                
                 self.data['r'][i] = read_fortran(f, np.dtype('f4'), 4)[0]
                 read_fortran(f, np.dtype('f4'), 3)#energies
                 self.data['sp'][i] = read_fortran(f, np.dtype('f4'), 1)
                 if self.is_gal:
                     self.data['sig'][i], self.data['sigbulge'][i], self.data['mbulge'][i] \
-                    = read_fortran(f, np.dtype('f4'), 3)
+                        = read_fortran(f, np.dtype('f4'), 3)
                     #skip_fortran(f)
                     
                 self.data['rvir'][i], self.data['mvir'][i],self.data['tvir'][i],self.data['cvel'][i] \
@@ -363,10 +375,6 @@ class Halo(HaloMeta):
             if self.return_id_list is None:
                 self.hal_idlists = self.data['id'] 
 #            self.refactor_hm()
-            if info is not None:
-                self.set_info(info)
-    #        print("load done")
-            self.normalize()
         except IOError:
             print("Couldn't find {}".format(fn))
 
