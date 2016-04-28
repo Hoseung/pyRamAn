@@ -9,12 +9,13 @@ import numpy as np
 
 class Info:
     def __init__(self, nout = None, base = None,
-                 fn = None, load=False):
+                 fn = None, load=False, data_dir='snapshots'):
+        self.data_dir = data_dir
         if nout is not None or base is not None or fn is not None:
             self.setup(nout=nout, base=base, fn=fn)
         if load:
             self.read_info()
-        pass
+        
     def setup(self, nout = None, base = None, fn = None):
         try:  # set nout
             self._set_nout(nout)
@@ -49,7 +50,7 @@ class Info:
     def update_fn(self, fn=None):
         import os
         try:
-            self.fn = os.path.join(self.base, 'snapshots/') + 'output_' + self.snout + '/info_' + self.snout + '.txt'
+            self.fn = os.path.join(self.base, self.data_dir) + 'output_' + self.snout + '/info_' + self.snout + '.txt'
         except:
             if self.nout is None and self.base is None:
                 try:

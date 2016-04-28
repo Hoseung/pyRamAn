@@ -272,7 +272,7 @@ class Sim(Simbase):
     .. note::
         This is a sample note
     """
-    def __init__(self, nout=None, base='./', data_dir='snapshots',
+    def __init__(self, nout=None, base='./', data_dir='snapshots/',
                  ranges=[[0.0,1.0],[0.0,1.0],[0.0,1.0]], dmo=False
                  , setup=False, region=None):
 
@@ -281,8 +281,9 @@ class Sim(Simbase):
         # info appreciates nout and base (not medatary, though)
         self.dmo = dmo
         # DMO runs are slightly different!
-        self.add_info()
+        print("data_dir =", data_dir)
         self.set_data_dir(data_dir)
+        self.add_info()
         # set_data_dir and set_range needs info instance be exist.
 #        self.set_ranges(ranges)
         if region is not None:
@@ -300,7 +301,7 @@ class Sim(Simbase):
     def all_set(self):
         return (self.nout is not None) & (self.base is not None)
 
-    def setup(self, nout=None, base='./', data_dir='snapshots',
+    def setup(self, nout=None, base='./', data_dir='snapshots/',
                  ranges=[[0.0,1.0],[0.0,1.0],[0.0,1.0]], dmo=False):
         self.nout = nout
         self.set_base(base)        
@@ -352,7 +353,7 @@ class Sim(Simbase):
             
     def add_info(self, load=False):
         from load import info
-        self.info = info.Info(self.nout, self.base, load=load)
+        self.info = info.Info(self.nout, self.base, load=load, data_dir = self.data_dir)
 #        self.info.setup()
 
     def add_part(self, ptypes=[], load=False, fortran=True, dmo=False, **kwargs):

@@ -12,5 +12,7 @@ int main(int argc, char *argv[])
     std::string fname ("/home/hoseung/Work/data/29176/GalaxyMaker/gal/tree_bricks187");
 //    std::string fname ("/home/hoseung/Work/data/29176/halo/DM/tree_bricks187");
     load(fname, haloinfo, halodata, 1);
+    
+    std::cout << halodata.pos[123] << std::endl;
     std::cout << " Done " << std::endl;
 }

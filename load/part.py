@@ -76,7 +76,7 @@ class Part(load.sim.Simbase):
 # Otherwise, a method may fail to find an object to act on.
 # This is called 'Object consistency'
     def __init__(self, info, dmo=False, ptypes=None, base='./', 
-                 data_dir='snapshots', dmref=False, dmvel=False, dmmass=True):
+                 data_dir='snapshots/', dmref=False, dmvel=False, dmmass=True):
         """        
         parameters
         ----------
@@ -146,7 +146,7 @@ class Part(load.sim.Simbase):
         """
         from os import path
         snout = str(self.info.nout).zfill(5)
-        self._fbase = path.abspath(path.join(self.base, data_dir +'/output_' + snout + '/part_' + snout + '.out'))
+        self._fbase = path.abspath(path.join(self.base, data_dir +'output_' + snout + '/part_' + snout + '.out'))
 
     def set_cpus(self, cpus):
         self.cpus = cpus
