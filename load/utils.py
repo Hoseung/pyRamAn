@@ -54,6 +54,7 @@ def read_header(f, dtype, check=True):
     q = np.empty(1, dtype=dtype)
     for i in range(len(dtype.fields)):
         data = read_fortran(f, dtype[i], check=check)
+#        print(dtype.names[i], data)
 
         if np.issubdtype(dtype[i], np.string_):
             q[0][i] = data

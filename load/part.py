@@ -234,14 +234,14 @@ class Part(load.sim.Simbase):
             print("Loading particles in {}-th cpu output out of {} cpus.\r"
             .format(icpu, len(self.cpus)))
 
-    def load(self, fortran=False, **kwargs):
+    def load(self, fortran=False, read_metal=True, **kwargs):
         """ tests whether the files exist, and then calls load() or load_dmo()
         """
         if self.dmo:
             self.load_dmo(self, **kwargs)
         else:
             if fortran:
-                self.load_fortran(self, **kwargs) 
+                self.load_fortran(self, read_metal=read_metal, **kwargs) 
             else:
                 self.load_general(self, **kwargs)
 
@@ -648,7 +648,7 @@ class Part(load.sim.Simbase):
                     self.sink['id'][i_skip_sink:i_skip_sink + nsink_icpu] = id_temp[i_sink]
                 i_skip_sink += nsink_icpu
 
-    def load_fortran(self, return_meta=False):
+    def load_fortran(self, return_meta=False, read_metal=True):
         from load import part_shared
         print("Loading by fortran module")
         xmi = self.info.ranges[0][0]
@@ -679,12 +679,13 @@ class Part(load.sim.Simbase):
         nstar_actual = max([nstar_actual, 1])
         star_float, star_int, dm_float, dm_int = part_shared.load_part(
                 nstar_actual, ndm_actual, nsink_actual,
-                work_dir, xmi, xma, ymi, yma, zmi, zma)
+                work_dir, xmi, xma, ymi, yma, zmi, zma, read_metal)
 
         dtype_star = [('x', '<f8'), ('y', '<f8'), ('z', '<f8'),
                       ('vx', '<f8'), ('vy', '<f8'), ('vz', '<f8'),
-                        ('m', '<f8'), ('time', '<f8'), ('metal', '<f8'),
-                        ('id', '<i4')]
+                      ('m', '<f8'), ('time', '<f8'), ('id', '<i4')]
+        if read_metal:
+            dtype_star.extend(('metal', '<f8'))
 
         self.star = np.zeros(self.nstar, dtype=dtype_star)
         self.star['x'] = star_float[:,0]
@@ -695,7 +696,8 @@ class Part(load.sim.Simbase):
         self.star['vz'] = star_float[:,5]
         self.star['m'] = star_float[:,6]
         self.star['time'] = star_float[:,7]
-        self.star['metal'] = star_float[:,8]
+        if read_metal:
+            self.star['metal'] = star_float[:,8]
         self.star['id'] = star_int[:]
 
         dtype_dm = [('x', '<f8'), ('y', '<f8'), ('z', '<f8'),('vx', '<f8'),

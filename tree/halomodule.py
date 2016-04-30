@@ -101,7 +101,7 @@ class HaloMeta():
             try:
                 self.load_info()
             except:
-            print("[Halo.set_info] Are these parameters right?")
+                print("[Halo.set_info] Are these parameters right?")
         else:
             self.info = info
 

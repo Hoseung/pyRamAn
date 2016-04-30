@@ -63,10 +63,17 @@ class Galaxy(object):
         print([i * self.info.pboxsize * 100 for i in list(x)])
 
 
-    def radial_profile_cut(self, xx, yy, mm, vx, vy, vz, den_lim=2e6,
-                           mag_lim=25, nbins=100, rmax=50, dr=0.5):
+#    def radial_profile_cut(self, xx, yy, mm, vx, vy, vz,
+    def radial_profile_cut(self, den_lim=2e6, den_lim2=5e6,
+                            mag_lim=25, nbins=100, rmax=50, dr=0.5):
         # 2D photometry. (if rotated towards +y, then use x and z)
         # now assuming +z alignment. 
+        xx = self.star['x']
+        yy = self.star['y']
+        mm = self.star['m']
+        vx = self.star['vx']
+        vy = self.star['vy']
+        vz = self.star['vz']
         rr = np.sqrt(np.square(xx) + np.square(yy))# in kpc unit
 
         # Account for weights.
@@ -171,9 +178,9 @@ class Galaxy(object):
 
         rgal_tmp = self.halo['r'] * self.info.pboxsize * 1000.0
         print("Rgal_tmp", rgal_tmp)
-        self.radial_profile_cut(star['x'], star['y'], star['m'],
-                                star['vx'], star['vy'], star['vz'],
-                           den_lim=1e6,
+#        self.radial_profile_cut(star['x'], star['y'], star['m'],
+#                                star['vx'], star['vy'], star['vz'],
+        self.radial_profile_cut(den_lim=1e6, den_lim2=5e6,
                            mag_lim=25,
                            nbins=int(rgal_tmp/0.5),
                            dr=0.5,
@@ -716,7 +723,9 @@ class Galaxy(object):
             print("Error!")
             return
 
-        reff = min([self.meta.reff,20]) # no larger than 30kpc
+
+#        reff = min([self.meta.reff,20]) # no larger than 30kpc
+        reff = self.meta.reff # reff restriction must be given at earlier stage, radial_profile_cut()
         full_radius = reff * (rscale+1) # in kpc
         dx = reff / npix_per_reff # kpc/pixel
         
@@ -728,7 +737,6 @@ class Galaxy(object):
         nx, ny = npix, npix
 
 
-
         # to suppress contamination from tidal tail, 
         # give a cylindrical cut, not spherical cut. 
         # Cappellari 2002 assumes Cylindrical velocity ellipsoid.
@@ -738,7 +746,7 @@ class Galaxy(object):
                np.square(self.star['y']) + \
                np.square(self.star['z'])) < np.square(reff * (rscale + 1))
 
-        print(sum(ind)/self.meta.nstar*100, "% of stellar particles selected")
+        print("{:.2f}% of stellar particles selected".format(sum(ind)/self.meta.nstar*100))
         # 100% means that the galaxy radius is smaller than 4Reff.
         # Considering ellipticity, even 4Reff may not be enough to derive.
 
@@ -757,6 +765,8 @@ class Galaxy(object):
             mm = self.star['m'][ind]
             vz = self.star['vz'][ind]
 
+        print("min, max x,y,z:")
+        print(min(xstars), max(xstars), min(ystars), max(ystars))
 #        print("_____________________", vz.min(), vz.max(), vz.mean())
     
         if verbose: print(("\n" "Calculating Lambda_r using {} particles " 
@@ -1024,14 +1034,27 @@ class Galaxy(object):
                     if verbose: print("Reff = half light?1", sum(mmap[dd < 1.0])/ sum(mmap))
    
                     dist1d = np.sqrt(np.square(xNode - xcen) + np.square(yNode - ycen))
+                    fig, ax = plt.subplots(4,4)
+                    ax = ax.ravel()
                     for i in range(len(points)):
+                        print(i/reff, (i+1)/reff)
                         ind = np.where( (dd > i/reff) & (dd < (i+1)/reff))[0]
-                        a = sum(mmap[ind] * dist1d[ind] * abs(vmap[ind]))
-                        if a != 0:
+#                        print(len(ind), ind)
+#                        print(mmap[ind])
+#                        print(vmap[ind])
+                        if i < 16:
+                            mmapc = mmap.copy()
+                            mmapc[ind] = 100
+                            
+                            ax[i].imshow(mmapc.reshape(npix,npix))
+                        if len(ind) >  0:
+                            a = sum(mmap[ind] * dist1d[ind] * abs(vmap[ind]))
                             b = sum(mmap[ind] * dist1d[ind] 
                                     * np.sqrt(np.square(vmap[ind]) + np.square(sigmap[ind])))
                             points[i] = a/b
-    
+
+                    plt.show()
+
                     if voronoi:
                         dd = np.sqrt( (xNode - 0.5*npix)**2 + (yNode - 0.5*npix)**2 )
                         i_radius = np.fix(dd).astype(int)
@@ -1069,7 +1092,7 @@ class Galaxy(object):
                 frac =  i_reff/ len(mmap)
             
 #                print("frac1", frac)
-                f = mge.find_galaxy.find_galaxy(self.mmap, quiet=True, plot=False,
+                f = mge.find_galaxy.find_galaxy(self.mmap, quiet=True, plot=True,
                                                 mask_shade=False,
                                                 fraction=frac)
                 self.meta.eps = f.eps
@@ -1159,7 +1182,8 @@ class Galaxy(object):
 #        if verbose: print("lambda_arr done")    
         
     
-    def reorient(self, dest=[0., 0., 1], pop_nvec = ['star'], verbose=False):
+    def reorient(self, dest=[0., 0., 1], pop_nvec = ['star'],
+                 pops=['star', 'dm', 'cell'], verbose=False):
         """
         rotate particles/cells using rotation matrix.
 
@@ -1207,25 +1231,23 @@ class Galaxy(object):
             self.cal_rotation_matrix(dest = dest)
 
         # New coordinates
-        for target in ['star', 'dm', 'cell']:
-            try:
-                pop = getattr(self, target)
-                RM = self.rotation_matrix
- 
-                new_x = np.matmul(RM, np.vstack((pop['x'], pop['y'], pop['z']))) 
-                new_v = np.matmul(RM, np.vstack((pop['vx'], pop['vy'], pop['vz'])))
- 
-                pop['x'] = new_x[0,:]
-                pop['y'] = new_x[1,:]
-                pop['z'] = new_x[2,:]
- 
-                pop['vx'] = new_v[0,:]
-                pop['vy'] = new_v[1,:]
-                pop['vz'] = new_v[2,:]
+        for target in pops:
+            pop = getattr(self, target)
+            RM = self.rotation_matrix
 
-            except:
-                print("Error in reorient, couldn't update pos and vel")
-                continue
+            new_x = np.matmul(RM, np.vstack((pop['x'], pop['y'], pop['z']))) 
+            new_v = np.matmul(RM, np.vstack((pop['vx'], pop['vy'], pop['vz'])))
+
+            pop['x'] = new_x[0,:]
+            pop['y'] = new_x[1,:]
+            pop['z'] = new_x[2,:]
+
+            pop['vx'] = new_v[0,:]
+            pop['vy'] = new_v[1,:]
+            pop['vz'] = new_v[2,:]
+
+#            print("Error in reorient, couldn't update pos and vel")
+#            continue
 
     def cal_norm_vec(self, pop_nvec=['star'], dest=[0., 0., 1], bound_percentile=50):
         """

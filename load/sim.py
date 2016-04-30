@@ -375,8 +375,11 @@ class Sim(Simbase):
         self.part = part.Part(self.info, ptypes=ptypes, data_dir=self.data_dir, dmo=self.dmo, **kwargs)
         print("A particle instance is created\n")
 
-        if load :
-            self.part.load(fortran=fortran)
+        if load:
+            read_metal=False
+            if "metal" in ptypes:
+                read_metal=True
+            self.part.load(fortran=fortran, read_metal=read_metal)
         else:
             print("Use part.load() to load particle")
 
