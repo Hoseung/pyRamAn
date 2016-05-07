@@ -17,7 +17,8 @@ class Hydro:
 
         snout = str(info.nout).zfill(5)
         # file name
-        self._fnbase = info.base + '/snapshots/output_' + snout + '/hydro_' + snout + '.out'
+        self.out_dir = 'snapshots/'
+        self._fnbase = info.base + '/' + self.out_dir + 'output_' + snout + '/hydro_' + snout + '.out'
         self._get_basic_info()
         self.set_info(info)
         try:
@@ -60,29 +61,21 @@ class Hydro:
         
     def amr2cell(self, lmax=None, icpu=0, verbose=False, return_meta=False):
         from load import a2c
-        # If there's no source code, compile it with scipy. 
-#        import numpy as np
-#        cpus = self.info.cpus
-#        ndim = self.info.ndim
-#        print("CPU list:", cpus)
         nvarh = self.header.nvarh
-#        ncpu = self.header.ncpu
-#        nboundary = self.header.nboundary
         nlevelmax = self.header.nlevelmax
         if lmax is None:
             lmax = nlevelmax
 
         print(' >>> working resolution (lmax) =', lmax)
-        #print("a2ca2c")
 
         # Set ranges
-        xmi = self.info.ranges[0][0]
-        xma = self.info.ranges[0][1]
-        ymi = self.info.ranges[1][0]
-        yma = self.info.ranges[1][1]
-        zmi = self.info.ranges[2][0]
-        zma = self.info.ranges[2][1]
-        work_dir = self.info.base + '/snapshots/output_' + str(self.info.nout).zfill(5)
+        xmi, xma = self.info.ranges[0]
+#        xma = self.info.ranges[0][1]
+        ymi, yma = self.info.ranges[1]
+#        yma = self.info.ranges[1][1]
+        zmi, zma = self.info.ranges[2]
+#        zma = self.info.ranges[2][1]
+        work_dir = self.info.base + '/' + self.out_dir + 'output_' + str(self.info.nout).zfill(5)
         
         out = a2c.a2c_count(work_dir, xmi, xma, ymi, yma, zmi, zma, lmax)
         if return_meta:
@@ -91,14 +84,24 @@ class Hydro:
         else:
             cell = a2c.a2c_load(work_dir, xmi, xma, ymi, yma, zmi, zma, lmax
                                  ,out[0], nvarh)
-            dtype_cell = [('x', '<f8'), ('y', '<f8'), ('z', '<f8'),('dx', '<f8'),
-                      ('var0', '<f8'), ('var1', '<f8'), ('var2', '<f8'),
-                        ('var3', '<f8'), ('var4', '<f8'), ('var5', '<f8')]
+            dtype_cell = [('x', '<f8'), ('y', '<f8'), ('z', '<f8'),('dx', '<f8')] 
+            for i in range(nvarh):
+                dtype_cell.append( ('var' + str(i), '<f8'))
+#                      ('var0', '<f8'), ('var1', '<f8'), ('var2', '<f8'),
+#                        ('var3', '<f8'), ('var4', '<f8'), ('var5', '<f8')]
 
-        self.cell = np.rec.fromarrays([cell[0][:,0], cell[0][:,1], cell[0][:,2], cell[1],
-                                       cell[2][:,0], cell[2][:,1], cell[2][:,2],
-                                       cell[2][:,3], cell[2][:,4], cell[2][:,5]],
-                                       dtype = dtype_cell)
+        print(dtype_cell)
+        self.cell = np.zeros(len(cell[1]), dtype=dtype_cell)
+        self.cell['x'] = cell[0][:,0]
+        self.cell['y'] = cell[0][:,1]
+        self.cell['z'] = cell[0][:,2]
+        self.cell['dx'] = cell[1]
+        for i in range(nvarh):
+            self.cell['var' + str(i)] = cell[2][:,i]
+#        self.cell = np.rec.fromarrays([cell[0][:,0], cell[0][:,1], cell[0][:,2], cell[1],
+#                                       cell[2][:,0], cell[2][:,1], cell[2][:,2],
+#                                       cell[2][:,3], cell[2][:,4], cell[2][:,5]],
+#                                       dtype = dtype_cell)
 
 
     def amr2cell_old(self, lmax=None, icpu=0, verbose=False):
@@ -313,5 +316,3 @@ class Hydro:
                                        vart[3][:nend], vart[4][:nend], vart[5][:nend]],
                                        dtype = dtype_cell)
 
-    def passpass(self):
-        print("   ")

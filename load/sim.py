@@ -342,11 +342,13 @@ class Sim(Simbase):
     def show_base(self):
         print("setting the base(working) directory to :", self.base)
 
-    def add_hydro(self, load=False, lmax=19):
+    def add_hydro(self, load=False, lmax=None):
         from load import hydro
         self.hydro = hydro.Hydro(self.info, self.amr)
         print("An Hydro instance is created\n")
         if load :
+            if lmax is None:
+                lmax = self.info.lmax
             self.hydro.amr2cell(lmax=lmax)
         else:
             print("Use hydro.amr2cell() to load hydro variables")
@@ -422,7 +424,6 @@ class Sim(Simbase):
     def search_zoomin_region(self, *args, **kwargs):  # If part is not loaded yet, load particles
         """
         Not only part, but also hydro or amr can be used to find the zoomin region!
-
         Determine priority, amr or part?
         """
         if hasattr(self, 'part'):

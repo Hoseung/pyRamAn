@@ -167,7 +167,6 @@ class Galaxy(object):
         self.meta.yc = yc * self.info.pboxsize*1000
         self.meta.zc = zc * self.info.pboxsize*1000
 
-#        print("vvvvvvvvvvvvv", self.halo['vx'],self.halo['vx'])
 
         star['x'] = (star['x'] - xc) * self.info.pboxsize*1000
         star['y'] = (star['y'] - yc) * self.info.pboxsize*1000
@@ -246,15 +245,13 @@ class Galaxy(object):
         self.star['vy'] = self.star['vy'] * self.info.kms - self.meta.vyc
         self.star['vz'] = self.star['vz'] * self.info.kms - self.meta.vzc
 
-#        print("2222222",self.vxc, self.star['vx'][0:10])
-
         if dm is not None:
             if member == "Reff":
                 idm = np.where( np.square(dm["x"] - self.meta.xc) + 
                                 np.square(dm["y"] - self.meta.yc) + 
                                 np.square(dm["z"] - self.meta.zc) <= np.square(rgal_tmp))[0]
             elif member == "v200":
-            # Alghough the velocity is redefined later,
+            # Although the velocity is redefined later,
             # particle membership is fixed at this point. 
                 idm = np.where( np.square(dm["vx"] - self.meta.vxc / self.info.kms)+ 
                                 np.square(dm["vy"] - self.meta.vyc / self.info.kms)+ 
@@ -729,8 +726,6 @@ class Galaxy(object):
             print("Error!")
             return
 
-
-#        reff = min([self.meta.reff,20]) # no larger than 30kpc
         reff = self.meta.reff # reff restriction must be given at earlier stage, radial_profile_cut()
         full_radius = reff * (rscale+1) # in kpc
         dx = reff / npix_per_reff # kpc/pixel
@@ -1031,7 +1026,6 @@ class Galaxy(object):
             else:
                 
                 # mmap = 1D, self.mmap = mmap.reshap(nx,ny)
-
                 def _measure_lambda(xcen, ycen, cos, sin, sma, smi, voronoi=False):
                     dd = np.sqrt(((xNode-xcen)*cos + (yNode-ycen)*sin)**2/sma**2 + \
                                  ((yNode-ycen)*cos - (xNode-xcen)*sin)**2/smi**2)
@@ -1041,32 +1035,18 @@ class Galaxy(object):
                     if verbose: print("Reff = half light?1", sum(mmap[dd < 1.0])/ sum(mmap))
    
                     dist1d = np.sqrt(np.square(xNode - xcen) + np.square(yNode - ycen))
-                    fig, ax = plt.subplots(4,4)
-                    ax = ax.ravel()
                     for i in range(len(points)):
-<<<<<<< HEAD
-                        # print(i/reff, (i+1)/reff)
                         ind = np.where( (dd > i/reff) & (dd < (i+1)/reff))[0]
-=======
-                        print(i/reff, (i+1)/reff)
-                        ind = np.where( (dd > i/reff) & (dd < (i+1)/reff))[0]
-#                        print(len(ind), ind)
-#                        print(mmap[ind])
-#                        print(vmap[ind])
                         if i < 16:
                             mmapc = mmap.copy()
                             mmapc[ind] = 100
                             
-                            ax[i].imshow(mmapc.reshape(npix,npix))
->>>>>>> 947f9c5f8400be294bf10bb04ab3a02c4d7dbe74
                         if len(ind) >  0:
                             a = sum(mmap[ind] * dist1d[ind] * abs(vmap[ind]))
                             b = sum(mmap[ind] * dist1d[ind] 
                                     * np.sqrt(np.square(vmap[ind]) + np.square(sigmap[ind])))
-                            print(a,b)
                             points[i] = a/b
 
-                    plt.show()
 
                     if voronoi:
                         dd = np.sqrt( (xNode - 0.5*npix)**2 + (yNode - 0.5*npix)**2 )
@@ -1105,7 +1085,7 @@ class Galaxy(object):
                 frac =  i_reff/ len(mmap)
             
 #                print("frac1", frac)
-                f = mge.find_galaxy.find_galaxy(self.mmap, quiet=True, plot=True,
+                f = mge.find_galaxy.find_galaxy(self.mmap, quiet=True, plot=False,
                                                 mask_shade=False,
                                                 fraction=frac)
                 self.meta.eps = f.eps
@@ -1153,7 +1133,6 @@ class Galaxy(object):
                                                 voronoi=False)
 
 
-
                 d_25reff = np.argmax(dsort > 0.25*dsort[i_reff]) # dsort[d_05reff] = 0.5Reff
                 frac25 = d_25reff/len(mmap)
 
@@ -1186,13 +1165,6 @@ class Galaxy(object):
                (np.average(result_1reff[npix_per_reff]),
                 np.average(result_hreff[npix_per_reff]),
                 np.average(result_qreff[npix_per_reff]))
-#        self.lambda_arr = points
-        # npix = ind_1Reff. 
-        # ** npix 2 = npix * rscale
-        # 0.5 * npix = Reff
-        # 0.25 * npix = 0.5Reff
-#        self.lambda_r = np.average(self.lambda_arr[int(0.25 * npix) : int(0.25 * npix) + 1])
-#        if verbose: print("lambda_arr done")    
         
     
     def reorient(self, dest=[0., 0., 1], pop_nvec = ['star'],
@@ -1604,8 +1576,6 @@ class Galaxy(object):
     def cal_trivia(self):
         self.meta.mstar = sum(self.star['m'])
         self.meta.vcen = self.get_vcen()
-#        self.metal = 
-#        self.reff = 12333
 
     def save_gal_pickle(self):
         import pickle
