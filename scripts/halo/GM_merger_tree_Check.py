@@ -221,4 +221,3 @@ plt.close()
 
 
 # It's working well. 
-# Now search the tree to calculate construct catalog, and search for mergers.
