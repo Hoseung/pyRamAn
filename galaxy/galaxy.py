@@ -30,9 +30,13 @@ class Galaxy(object):
         self.set_halo(halo)
         self.info = info
         self.meta.radius_method=radius_method
+        self.meta.id=-1
         self.meta.xc = 0
         self.meta.yc = 0
         self.meta.zc = 0
+        self.meta.vxc = 0
+        self.meta.vyc = 0
+        self.meta.vzc = 0
         self.meta.reff = 0
         self.meta.mstar = 0
         self.meta.nstar = 0
@@ -138,6 +142,8 @@ class Galaxy(object):
             Since now (as of 2016.03) galaxy calculation is based on the GalaxyMaker results,
             let's just believe and minimize redundant processes to determine the center of mass,
             system velocity, and to check the presence of additional components. 
+
+            Assuming all data in the code units.
                 
         """
         member="Reff"
@@ -617,8 +623,8 @@ class Galaxy(object):
         import numpy as np
         # average over last 100Myrs
         time_new = 100 * 1e-3 # in Myr
-        ind_new_star = np.where(utils.cosmology.time2myr(
-                        self.star['time'], z_now=self.info.zred) < time_new)[0]
+        ind_new_star = np.where(utils.cosmology.time2gyr(
+                        self.star['time'], z_now=self.info.zred, info=self.info) * 1e3 < time_new)[0]
         m_star_new = sum(self.star['m'][ind_new_star])
         self.meta.sfr=m_star_new / time_new
         return m_star_new / time_new

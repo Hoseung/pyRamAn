@@ -2,6 +2,7 @@
 from utils import array
 from utils import assign
 from utils import custom_utils
+from utils import cosmology
 from utils import util
 from utils import match
 from utils import sampling

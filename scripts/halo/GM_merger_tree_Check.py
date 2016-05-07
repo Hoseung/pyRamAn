@@ -76,8 +76,8 @@ from tree import treeutils
 import pickle
 import numpy as np
 
-alltrees = treemodule.CTree()
-wdir = '/home/hoseung/Work/data/05427/'
+#alltrees = treemodule.CTree()
+wdir = './'
 is_gal = True
 
 if is_gal:
@@ -87,13 +87,14 @@ else:
     # halo tree
     tree_path = 'halo/Trees/'
 
-load_extended_tree = False
+load_extended_tree = True
     
 if load_extended_tree:    
     try:
         alltrees = pickle.load(open(wdir + tree_path + "extended_tree.pickle", "rb" ))
         print("Loaded an extended tree")
     except:
+        print("Couldn't load extended_tree.pickle")
         load_extended_tree = False
 
 if not load_extended_tree:
@@ -149,6 +150,7 @@ def plot_atree(atree, galid):
     ax.scatter(atree['aexp'], np.log10(atree['m']))
     ax.title(galid)
     plt.savefig(wdir + "mergertrees/" + sidgal + '.png')
+    plt.close()
 
 
 # In[5]:
@@ -156,7 +158,7 @@ def plot_atree(atree, galid):
 import matplotlib.pyplot as plt
 
 nout_fi = 187
-nout_ini = 30
+nout_ini = 37
 
 
 i_final = np.where(alltrees.data["nout"] == nout_fi)
@@ -164,13 +166,8 @@ ttt_sub = alltrees.data[i_final]
 
 nouts = np.arange(nout_fi - nout_ini + 1)
 
-final_gals = ttt_sub['id']
+final_gals = ttt_sub['id'][ttt_sub['m'] > 1e10]
 final_gals_org = ttt_sub['Orig_halo_id']
-
-plt.ioff()
-
-#figure(figsize=[6,6])
-#ax = fig.add_subplot(211)
 
 #aexps = np.unique(alltrees.data["aexp"])[:len(nouts)]
 aexps = np.unique(alltrees.data["aexp"])[:-len(nouts):-1]
@@ -183,10 +180,9 @@ if not os.path.isdir(wdir + "mergertrees/"):
 
 for galid in final_gals:
     #galid = 42216
-    #galid = 42207
-    plt.clf()
     fig, ax = plt.subplots(1,2)
     fig.set_size_inches([12,6])
+    #galid = 42207
     
     sidgal = str(galid).zfill(5)      
     
@@ -214,7 +210,8 @@ for galid in final_gals:
     ax[1].set_title(sidgal + ", " + str(atree[0]['Orig_halo_id']))
     #fig.show()
     plt.savefig(wdir + "mergertrees/" + sidgal + '.png')
-    #plt.close()
+#    plt.clf()
+    plt.close()
 
 
 plt.close()

@@ -158,7 +158,7 @@ def cic(value, x, nx, y=None, ny=1, z=None, nz=1,
                 if debug: print(ind, weights[i], value[i], field[ind])
 
 
-	import cymodule
+    import cymodule
     nx, ny, nz = (int(i) for i in (nx, ny, nz))
     nxny = nx * ny
     value = np.asarray(value)

@@ -63,33 +63,3 @@ def match_list_ind(arr1, arr2):
 
     return np.ma.array(smallindex, mask=mask).compressed()
     
-#def match_list_ind_p(arr1, arr2):
-
-#%%    
-import numpy as np
-import os
-from multiprocessing import Process
-def info(title):
-    print(title)
-    print('module name:', __name__)
-    if hasattr(os, 'getppid'):  # only available on Unix
-        print('parent process:', os.getppid())
-    print('process id:', os.getpid())
-
-a = np.random.random(1000)
-#for i in range(100):
-#    b = np.random.random(100)
-def f(name):
-    info('function f')
-    print('hello', name)
-
-if __name__ == '__main__':
-    info('main line')
-    p = Process(target=f, args=('bob',))
-    p.start()
-    p.join()
-
-
-
-
-    

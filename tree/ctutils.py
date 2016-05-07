@@ -55,7 +55,7 @@ def augment_tree(treedata, base, is_gal=False):
         
         for i, ind in enumerate(ind_org_gals):
             assert sum(New_arr[ind_tree_this_nout[i]]) == 0. # array must be empty
-            New_arr[ind_tree_this_nout[i]] = gal_org[ind]
+            New_arr[ind_tree_this_nout[i]] = gal_org[ind].copy()
  
     # Drop duplicate fields
     #["id", "mvir", "rvir", "x", "y", "z", "vx", "vy", "vz"]
