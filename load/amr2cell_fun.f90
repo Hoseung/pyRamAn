@@ -13,14 +13,6 @@ subroutine a2c_count(ngridtot, nvarh, repository, xmin, xmax, ymin, ymax, zmin, 
   integer     ,INTENT(IN)::lmax
   integer     ,INTENT(OUT)::ngridtot
 ! default value from python side is 0.
-!  integer::nx_sample=0,ny_sample=0,nz_sample=0
-!  integer     ,INTENT(IN)::nx_sample,ny_sample,nz_sample
-
-!  real(KIND=8),dimension(:,:),allocatable::xarr,varr
-!  real(KIND=8),dimension(:),allocatable::dxarr
-
-!  real(KIND=8),INTENT(OUT),dimension(:,:),allocatable::xarr,varr
-!  real(KIND=8),INTENT(OUT),dimension(:),allocatable::dxarr
 
   integer::ndim,n,i,j,k,twotondim,ncoarse,type=0,ii
   integer::ivar,nvar,ncpu,ncpuh,nboundary,ngrid_current
@@ -29,32 +21,20 @@ subroutine a2c_count(ngridtot, nvarh, repository, xmin, xmax, ymin, ymax, zmin, 
   integer::nlevelmaxs,nlevel,iout
   integer::ind,ipos,ngrida,ngridh,ilevela,ilevelh,icnt
   integer::ngridmax,nstep_coarse,icpu,ncpu_read
-!  integer::nhx,nhy,ihx,ihy,ivar1,ivar2
-!  real::smallr,smallc
   real::boxlen!,boxlen2
   real::t!,aexp,hexp!,t2,aexp2,hexp2
-!  real::omega_m,omega_l,omega_k,omega_b
-!  real::scale_l,scale_d,scale_t
-!  real::omega_m2,omega_l2,omega_k2,omega_b2
 
   integer::ngrid,imin,imax,jmin,jmax,kmin,kmax
-!  integer::ncpu2,npart2,ndim2,nlevelmax2,nstep_coarse2
   integer,INTENT(OUT)::nvarh!,nx2,ny2,nz2,ngridmax2,ndimh,nlevelmaxh
   integer::ix,iy,iz,ndom,impi,bit_length,maxdom
   integer::nx_full,ny_full,nz_full,lmin,levelmin
   integer,dimension(1:8)::idom,jdom,kdom,cpu_min,cpu_max
   real(KIND=8),dimension(1:8)::bounding_min,bounding_max,bounding
   real(KIND=8)::dkey,dmax,dummy,order_min
-!  real(kind=8),dimension(1:npoint)::order_min
   real(KIND=8)::xxmin,xxmax,yymin,yymax,zzmin,zzmax,dx,dx2
   real(KIND=8),dimension(:,:),allocatable::x,xg
-!  real(KIND=8),dimension(:,:,:),allocatable::var
-!  real(KIND=8),dimension(:,:,:),allocatable::varr
 
-!  real(KIND=4),dimension(:,:,:),allocatable::toto
-!  real(KIND=8),dimension(:)  ,allocatable::rho
   logical,dimension(:)  ,allocatable::ref
-!  integer,dimension(:)  ,allocatable::isp
   integer,dimension(:,:),allocatable::son,ngridfile,ngridlevel,ngridbound
   real(KIND=8),dimension(1:8,1:3)::xc
   real(KIND=8),dimension(1:3)::xbound=(/0d0,0d0,0d0/)

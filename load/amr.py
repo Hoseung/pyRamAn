@@ -52,6 +52,7 @@ class AmrHeader():
         or varies with cpus?
         Local values must be separated from global values.
         """
+        skip_header = True
         h1 = read_header(f, np.dtype(
                              [('ncpu', 'i4'), ('ndim', 'i4'),
                               ('ng', 'i4', (3,)), ('nlevelmax', 'i4'),
@@ -59,6 +60,17 @@ class AmrHeader():
                               ('ngrid', 'i4'), ('boxlen', 'f8'),
                               ('outputs', 'i4', (3,))]))  # Global
 
+        self.ncpu = h1['ncpu']
+        self.ndim = h1['ndim']
+        self.ng = h1['ng']
+        self.nlevelmax = h1['nlevelmax']
+        self.ngridmax = h1['ngridmax']
+        self.nboundary = h1['nboundary']
+        self.ngrid = h1['ngrid']
+        self.boxlen = h1['boxlen']
+        self.nnouts = h1['outputs'][0]
+        self.iout = h1['outputs'][1]
+        self.ifout = h1['outputs'][2]
         # Basic information that are required to read the header further.
         ncpu = h1['ncpu']
         nnouts = h1['outputs'][0]
@@ -66,35 +78,36 @@ class AmrHeader():
         ncoarse = np.product(h1['ng'][:])  # multiply all elements in an array
 
         # Global
-        h2 = read_header(f,
-                         np.dtype(
-                             [('tout', 'f8', (nnouts,)),
-                              ('aout', 'f8', (nnouts,)),
-                              ('t', 'f8'),
-                              ('dtold', 'f8', (nlevelmax,)),
-                              ('dtnew', 'f8', (nlevelmax,)),
-                              ('nsteps', 'i4', (2,)),
-                              ('cmr', 'f8', (3,)),
+        dtype_h2 =  np.dtype(
+                     [('tout', 'f8', (nnouts,)),
+                      ('aout', 'f8', (nnouts,)),
+                      ('t', 'f8'),
+                      ('dtold', 'f8', (nlevelmax,)),
+                      ('dtnew', 'f8', (nlevelmax,)),
+                      ('nsteps', 'i4', (2,))])
+
+        dtype_h20 = np.dtype([('cmr', 'f8', (3,)),
                               ('omlkbhal', 'f8', (7,)),
                               ('expepot', 'f8', (5,)),
                               ('mass_sph', 'f8'),
                               ('headl', 'i4', (nlevelmax, ncpu,)),
                               ('taill', 'i4', (nlevelmax, ncpu,)),
-                              ('numbl', 'i4', (nlevelmax, ncpu,))]))
-        skip_fortran(f)
+                              ('numbl', 'i4', (nlevelmax, ncpu,))])
 
-    # When reading 2D array, beware that fortran file is written in
-    # ???-major order but python will save it in ???-major order
+        if skip_header:
+            return
+            for i in range(len(dtype_h2)):
+               skip_fortran(f)
+            h2 = np.empty(1,dtype_h2)
 
-    # For example,
-    # numbl is (ncpu x nlevelmax) array in fortran
-    # and is accessed by numbl[icpu,ilevel]
-
-    # But in Python, this should be
-    #
-
-    # where is the 170 coming from?
-        
+            for i in range(len(dtype_h20)):
+               skip_fortran(f)
+            h20 = np.empty(1,dtype_h20)
+            skip_fortran(f)
+        else:
+            h2 = read_header(f, dtype_h2)
+            h20= read_header(f, dtype_h20)
+            skip_fortran(f)
 
         if (h1['nboundary'] > 0):
             h3 = read_header(f, np.dtype([('headb', 'i4', (nlevelmax, ncpu,)),
@@ -103,7 +116,7 @@ class AmrHeader():
             self.headb = h3['headb']
             self.tailb = h3['tailb']
             self.numbb = h3['numbb']
-        
+
         h4 = read_header(f, np.dtype([('htnm1m2', 'i4', (5,)),
                                       ('ordering', 'a128',(1,))]),check=True)
         self.headf = h4['htnm1m2'][0]
@@ -112,6 +125,17 @@ class AmrHeader():
         self.used_mem = h4['htnm1m2'][3]
         self.used_mem_tot = h4['htnm1m2'][4]
         self.ordering = h4['ordering']
+
+
+    # When reading 2D array, beware that fortran file is written in
+    # ???-major order but python will save it in ???-major order
+
+    # For example,
+    # numbl is (ncpu x nlevelmax) array in fortran
+    # and is accessed by numbl[icpu,ilevel]
+
+    # where is the 170 coming from?
+        
         
         #h4 = read_header(f, np.dtype([('bound_key', 'f8', (ncpu+1,))]),check=False)
         # Get the data type by calculating precision from the fortran block header
@@ -137,48 +161,38 @@ class AmrHeader():
 # it still reads based on what fortran binary says.
 
         # if assign
-        self.ncpu = h1['ncpu']
-        self.ndim = h1['ndim']
-        self.ng = h1['ng']
-        self.nlevelmax = h1['nlevelmax']
-        self.ngridmax = h1['ngridmax']
-        self.nboundary = h1['nboundary']
-        self.ngrid = h1['ngrid']
-        self.boxlen = h1['boxlen']
-        self.nnouts = h1['outputs'][0]
-        self.iout = h1['outputs'][1]
-        self.ifout = h1['outputs'][2]
 
         self.tout = h2['tout']
         self.aout = h2['aout']
         self.t = h2['t']
         self.dtold = h2['dtold']
         self.dtnew = h2['dtnew']
-        self.const = h2['cmr'][0]
-        self.mass_tot0 = h2['cmr'][1]
-        self.rho_tot = h2['cmr'][2]
         self.nstep = h2['nsteps'][0]
         self.nstep_coarse = h2['nsteps'][1]
 
-        self.Om = h2['omlkbhal'][0]
-        self.Ol = h2['omlkbhal'][1]
-        self.Ok = h2['omlkbhal'][2]
-        self.Ob = h2['omlkbhal'][3]
-        self.h0 = h2['omlkbhal'][4]
-        self.aexp_ini = h2['omlkbhal'][5]
-        self.boxlen = h2['omlkbhal'][6]
 
-        self.aexp = h2['expepot'][0]
-        self.hexp = h2['expepot'][1]
-        self.aexp_old = h2['expepot'][2]
-        self.epot_tot_ini = h2['expepot'][3]
-        self.epot_tot_old = h2['expepot'][4]
+        self.const = h20['cmr'][0]
+        self.mass_tot0 = h20['cmr'][1]
+        self.rho_tot = h20['cmr'][2]
+        self.Om = h20['omlkbhal'][0]
+        self.Ol = h20['omlkbhal'][1]
+        self.Ok = h20['omlkbhal'][2]
+        self.Ob = h20['omlkbhal'][3]
+        self.h0 = h20['omlkbhal'][4]
+        self.aexp_ini = h20['omlkbhal'][5]
+        self.boxlen = h20['omlkbhal'][6]
 
-        self.mass_sph = h2['mass_sph']
+        self.aexp = h20['expepot'][0]
+        self.hexp = h20['expepot'][1]
+        self.aexp_old = h20['expepot'][2]
+        self.epot_tot_ini = h20['expepot'][3]
+        self.epot_tot_old = h20['expepot'][4]
 
-        self.headl = h2['headl']
-        self.taill = h2['taill']
-        self.numbl = h2['numbl']
+        self.mass_sph = h20['mass_sph']
+
+        self.headl = h20['headl']
+        self.taill = h20['taill']
+        self.numbl = h20['numbl']
 #        self.numbot = h2['numbot'] # This value has been skipped
 
         self.son = h4['son']
@@ -190,7 +204,7 @@ class Amr():
     def __init__(self, info):
         snout = str(info.nout).zfill(5)
         self.info = info
-        self._fnbase = info.base + '/snapshots/output_' + snout + '/amr_' + snout + '.out'
+        self._fnbase = info.data_dir + 'output_' + snout + '/amr_' + snout + '.out'
         f = open(self._fnbase + '00001', "rb")
 
         self.header = AmrHeader()
