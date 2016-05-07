@@ -969,7 +969,7 @@ class Galaxy(object):
                 f_light_arr=[]
                 for i in range(6):
                     # mmap = 1D, self.mmap = mmap.reshap(nx,ny)
-                    f = mge.find_galaxy.find_galaxy(self.mmap, quiet=True, plot=True,
+                    f = mge.find_galaxy.find_galaxy(self.mmap, quiet=True, plot=False,
                                                     mask_shade=True,
                                                     fraction=0.04*(i+1)**1.5)
                     mjr_arr.append(f.majoraxis)#f.majoraxis * 3.5 / npix * l_img
@@ -1002,7 +1002,8 @@ class Galaxy(object):
                     self.meta.eps, self.meta.pa, self.meta.sma, self.meta.xcen, self.meta.ycen = \
                         interpol(np.array(f_light_arr), 0.5, (eps_arr, pa_arr, mjr_arr, xpos_arr, ypos_arr))
                     print('eps arra', eps_arr)
-                    print("interpolated eps, pa, sma, xcen, ycen", self.meta.eps, self.meta.pa, self.meta.sma, self.meta.xcen, self.meta.ycen)
+                    print("interpolated eps, pa, sma, xcen, ycen", \
+                          self.meta.eps, self.meta.pa, self.meta.sma, self.meta.xcen, self.meta.ycen)
                     self.meta.smi = self.meta.sma * (1 - self.meta.eps)
     
                 else:              
@@ -1010,7 +1011,8 @@ class Galaxy(object):
 #                    print('reff, i_reff', reff, i_reff)
                     self.meta.eps = eps_arr[i_reff] # eps at 1 * R_half(=eff)
                     self.meta.pa  = pa_arr[i_reff]
-                    sma = reff / np.sqrt(1-self.meta.eps) / dx
+                    sma = reff# / np.sqrt(1-self.meta.eps) / dx 
+# sma becomes too large with large e, (when e = 0.9, sma = 10 * reff).
                     smi = sma*(1-self.meta.eps)
                     self.meta.sma = mjr_arr[i_reff] * 3.5
                     self.meta.smi = self.meta.sma*(1-self.meta.eps)
@@ -1024,7 +1026,6 @@ class Galaxy(object):
                 
                 # mmap = 1D, self.mmap = mmap.reshap(nx,ny)
 
-
                 def _measure_lambda(xcen, ycen, cos, sin, sma, smi, voronoi=False):
                     dd = np.sqrt(((xNode-xcen)*cos + (yNode-ycen)*sin)**2/sma**2 + \
                                  ((yNode-ycen)*cos - (xNode-xcen)*sin)**2/smi**2)
@@ -1034,23 +1035,14 @@ class Galaxy(object):
                     if verbose: print("Reff = half light?1", sum(mmap[dd < 1.0])/ sum(mmap))
    
                     dist1d = np.sqrt(np.square(xNode - xcen) + np.square(yNode - ycen))
-                    fig, ax = plt.subplots(4,4)
-                    ax = ax.ravel()
                     for i in range(len(points)):
-                        print(i/reff, (i+1)/reff)
+                        # print(i/reff, (i+1)/reff)
                         ind = np.where( (dd > i/reff) & (dd < (i+1)/reff))[0]
-#                        print(len(ind), ind)
-#                        print(mmap[ind])
-#                        print(vmap[ind])
-                        if i < 16:
-                            mmapc = mmap.copy()
-                            mmapc[ind] = 100
-                            
-                            ax[i].imshow(mmapc.reshape(npix,npix))
                         if len(ind) >  0:
                             a = sum(mmap[ind] * dist1d[ind] * abs(vmap[ind]))
                             b = sum(mmap[ind] * dist1d[ind] 
                                     * np.sqrt(np.square(vmap[ind]) + np.square(sigmap[ind])))
+                            print(a,b)
                             points[i] = a/b
 
                     plt.show()
@@ -1092,11 +1084,11 @@ class Galaxy(object):
                 frac =  i_reff/ len(mmap)
             
 #                print("frac1", frac)
-                f = mge.find_galaxy.find_galaxy(self.mmap, quiet=True, plot=True,
+                f = mge.find_galaxy.find_galaxy(self.mmap, quiet=True, plot=False,
                                                 mask_shade=False,
                                                 fraction=frac)
                 self.meta.eps = f.eps
-                sma = npix_per_reff / np.sqrt(1 - self.meta.eps)
+                sma = npix_per_reff #/ np.sqrt(1 - self.meta.eps)
                 smi = sma * (1 - self.meta.eps)
                 self.meta.pa = f.theta
                 pa_rad = -1 * self.meta.pa/ 180 * np.pi
@@ -1122,7 +1114,7 @@ class Galaxy(object):
                                                 mask_shade=False,
                                                 fraction=frac05)
                 self.meta.epsh = f.eps
-                sma = npix_per_reff / np.sqrt(1 - self.meta.epsh)
+                sma = npix_per_reff# / np.sqrt(1 - self.meta.epsh)
                 smi = sma * (1 - self.meta.epsh)
                 self.meta.pah = f.theta
                 pa_rad = -1 * self.meta.pah/ 180 * np.pi
@@ -1150,7 +1142,7 @@ class Galaxy(object):
                                                 mask_shade=False,
                                                 fraction=frac25)
                 self.meta.epsq = f.eps
-                sma = npix_per_reff / np.sqrt(1 - self.meta.epsq)
+                sma = npix_per_reff #/ np.sqrt(1 - self.meta.epsq)
                 smi = sma * (1 - self.meta.epsq)
                 self.meta.paq = f.theta
                 pa_rad = -1 * self.meta.paq/ 180 * np.pi
