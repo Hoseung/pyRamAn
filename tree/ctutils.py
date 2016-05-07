@@ -145,16 +145,17 @@ def extract_main_tree(treedata, idx=None):
         idx = treedata['id'][0]
         print("idx = ", idx)
 
-    
+    smalldata = treedata[treedata['tree_root_id'] == idx]
+
     nprg = 1
-    ind_list=[np.where(treedata['id'] == idx)[0][0]]
+    ind_list=[np.where(smalldata['id'] == idx)[0][0]]
       
     while nprg > 0:
-        idx = get_progenitors(treedata, idx, main=True)
-        ind_list.append(np.where(treedata['id'] == idx[0])[0][0])
-        nprg = get_npr(treedata, idx[0])
+        idx = get_progenitors(smalldata, idx, main=True)
+        ind_list.append(np.where(smalldata['id'] == idx[0])[0][0])
+        nprg = get_npr(smalldata, idx[0])
 
-    return treedata[ind_list]
+    return smalldata[ind_list]
 
 
 def extract_main_tree_full(atree, idx):

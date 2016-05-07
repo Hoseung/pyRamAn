@@ -13,21 +13,21 @@ subroutine count_part(ndm_actual, nstar_actual, nsink_actual, repository, xmin, 
   integer::ncpu_read
   real(KIND=8), INTENT(IN)::xmin,xmax,ymin,ymax,zmin,zmax
   integer::imin,imax,jmin,jmax,kmin,kmax,lmin!,npart_actual
-  real(KIND=8)::xxmin,xxmax,yymin,yymax,dx,dy,deltax,boxlen
+  real(KIND=8)::deltax,boxlen
   real(KIND=8),dimension(:,:),allocatable::x
   real(KIND=8),dimension(:)  ,allocatable::age
   integer,dimension(:)  ,allocatable::id
   character(LEN=5)::nchar,ncharcpu
   character(LEN=80)::ordering
   character(LEN=128)::nomfich,repository
-  logical::ok, ok_part, ok_sink, ok_star, ok_dm
+  logical::ok_part
 
   ! CPU list
   integer::impi,ndom,bit_length,maxdom
   integer,dimension(1:8)::idom,jdom,kdom,cpu_min,cpu_max
   real(KIND=8),dimension(1:8)::bounding,bounding_min,bounding_max
   real(KIND=8)::dkey,order_min,dmax
-  real(kind=8)::xx,yy,zz,aexp
+  real(kind=8)::aexp
   real(kind=8),dimension(:),allocatable::bound_key
   logical,dimension(:),allocatable::cpu_read
 !  integer,dimension(:),allocatable, INTENT(OUT)::cpu_list 
@@ -231,7 +231,7 @@ subroutine count_part(ndm_actual, nstar_actual, nsink_actual, repository, xmin, 
 
 
   subroutine load_part(star_float, star_int, dm_float, dm_int, nstar_actual, ndm_actual, nsink_actual, repository, &
-             & xmin, xmax, ymin, ymax, zmin, zmax)
+             & xmin, xmax, ymin, ymax, zmin, zmax, read_metal)
 
   real(KIND=8),dimension(:,:),allocatable::x,v
   real(KIND=8),dimension(:)  ,allocatable::m,age,metal
@@ -249,14 +249,10 @@ subroutine count_part(ndm_actual, nstar_actual, nsink_actual, repository, xmin, 
   integer,dimension(1:8)::idom,jdom,kdom,cpu_min,cpu_max
   real(KIND=8),dimension(1:8)::bounding,bounding_min,bounding_max
   real(KIND=8)::dkey,order_min,dmax
-  real(kind=8)::xx,yy,zz,aexp
+  real(kind=8)::aexp
   real(kind=8),dimension(:),allocatable::bound_key
   logical,dimension(:),allocatable::cpu_read
   integer,dimension(:),allocatable::cpu_list
-
-!  real(KIND=8),INTENT(INOUT),dimension(nstar_actual,10)::star_arr
-!  real(KIND=8),INTENT(INOUT),dimension(ndm_actual,8)::dm_arr
-!  real(KIND=8),INTENT(INOUT),dimension(nsink_actual,8)::sink_arr
 
   real(KIND=8),INTENT(OUT),dimension(nstar_actual,9)::star_float
   integer(KIND=4),INTENT(OUT),dimension(nstar_actual)::star_int
@@ -264,7 +260,8 @@ subroutine count_part(ndm_actual, nstar_actual, nsink_actual, repository, xmin, 
   integer(KIND=4),INTENT(OUT),dimension(ndm_actual + nsink_actual)::dm_int
 !  real(KIND=8),INTENT(OUT),dimension(:,:),allocatable::sink_arr
 
-  logical::ok, ok_part, ok_sink, ok_star, ok_dm
+  logical::ok_part
+  logical, INTENT(IN):: read_metal
   integer::ncpu,ndim,npart,i,j,k,icpu,ipos,nstar
   integer::i_dm, i_star
   integer::ncpu2,npart2,ndim2,levelmin,levelmax,ilevel
@@ -423,23 +420,18 @@ subroutine count_part(ndm_actual, nstar_actual, nsink_actual, repository, xmin, 
      allocate(id(1:npart2))
 !    if(nstar>0)then ! age and id to distinguish star, DM, and sink.
         allocate(age(1:npart2))
+     if(read_metal)then
         allocate(metal(1:npart2))
-!    endif
+     endif
      ! Position to select particles insdie the region of interest
      ! Read position
      do i=1,ndim
-	read(1)x(1:npart2,i)
-!	read(1)x(1:npart2,2)
-!	read(1)x(1:npart2,3)
-!       read(1)m
-!       x(1:npart2,0)=m/boxlen
+       read(1)x(1:npart2,i)
      end do
 
      ! Read velocity
      do i=1,ndim
-	read(1)v(1:npart2,i)
-!	read(1)v(1:npart2,2)
-!	read(1)v(1:npart2,3)
+       read(1)v(1:npart2,i)
      end do
 
      ! Skip mass
@@ -469,16 +461,16 @@ subroutine count_part(ndm_actual, nstar_actual, nsink_actual, repository, xmin, 
 	   dm_int(i_dm) = id(i)
         elseif(ok_part.and.(age(i).ne.0.0d0).and.(id(i)>0))then
 	   i_star = i_star + 1
-	   star_float(i_star,1) = x(i,1)
-	   star_float(i_star,2) = x(i,2)
-	   star_float(i_star,3) = x(i,3)
-	   star_float(i_star,4) = v(i,1)
-	   star_float(i_star,5) = v(i,2)
-	   star_float(i_star,6) = v(i,3)
-	   star_float(i_star,7) = m(i)
-	   star_int(i_star) = id(i)
-	   star_float(i_star,8) = age(i)
-	   star_float(i_star,9) = metal(i)
+		 star_float(i_star,1) = x(i,1)
+		 star_float(i_star,2) = x(i,2)
+		 star_float(i_star,3) = x(i,3)
+		 star_float(i_star,4) = v(i,1)
+		 star_float(i_star,5) = v(i,2)
+		 star_float(i_star,6) = v(i,3)
+		 star_float(i_star,7) = m(i)
+	     star_int(i_star) = id(i)
+		star_float(i_star,8) = age(i)
+       if(read_metal)  star_float(i_star,9) = metal(i)
 !	elseif(ok_part.and.(age(i).eq.0.0d0).and.(id(i)<0))then
 !	   sink_arr(i_sink,1) = x(i,1)
 !	   sink_arr(i_sink,2) = x(i,2)
@@ -492,7 +484,8 @@ subroutine count_part(ndm_actual, nstar_actual, nsink_actual, repository, xmin, 
         endif
      end do
      deallocate(x,v,m,id)
-     if(nstar>0)deallocate(age,metal)
+     if(nstar>0)deallocate(age)
+       if(read_metal)deallocate(metal)
   end do
 
 end subroutine  
