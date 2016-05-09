@@ -9,7 +9,7 @@ import numpy as np
 
 class Info:
     def __init__(self, nout = None, base = None,
-                 fn = None, load=False, data_dir='snapshots'):
+                 fn = None, load=False, data_dir='snapshots/'):
         self.data_dir = data_dir
         if nout is not None or base is not None or fn is not None:
             self.setup(nout=nout, base=base, fn=fn)

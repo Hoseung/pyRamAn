@@ -42,7 +42,7 @@ class Nml():
 
 
 class RefineParam():
-    def __init__(self, name=None):
+    def __init__(self, name=None, load=True):
         self.name = name
         self.nnout = 0
         self.nzoomlevel = 0
@@ -51,8 +51,10 @@ class RefineParam():
         self.y_refine = []
         self.z_refine = []
         self.r_refine = []
+        if load:
+            self.loadRegion()
 
-    def loadRegion(self, fname, aexp=None):
+    def loadRegion(self, fname='refine_params.txt', aexp=None):
         """
         """
         with open(fname, mode='r') as f:
@@ -75,3 +77,29 @@ class RefineParam():
             for i in range(self.nnout):
                 self.r_refine.append(float(f.readline()))
 
+    def get_region(self, aexp=None, redshift=None):
+        import numpy as np
+
+        """
+            returns region at the given aexp or redshift.
+            Values are interpolated by default.
+        """
+        if (aexp is not None) + (redshift is not None) != 1:
+            print("Use only one of aexp and redshift")
+            return False
+
+        if redshift is not None:
+            aexp = 1/(1 + redshift)            
+                    
+        if aexp is not None:
+            x = np.interp(aexp, self.aexp, self.x_refine)
+            y = np.interp(aexp, self.aexp, self.y_refine)
+            z = np.interp(aexp, self.aexp, self.z_refine)
+            r = np.interp(aexp, self.aexp, self.r_refine)
+
+        import utils.sampling as smp
+        
+        region = smp.set_region(xc=x, yc=y, zc=z, radius=r)
+        
+        return region
+            

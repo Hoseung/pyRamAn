@@ -57,7 +57,7 @@ class HaloMeta():
     """
     def __init__(self, nout=None, base=None, info=None, halofinder='HM',
                  load=False, is_gal=False, return_id=False, outdir=None,
-                 vebose=False):
+                 verbose=False):
        self.nout = nout
        self.verbose = verbose
        self.set_base(base)

@@ -144,16 +144,43 @@ class CTree(object):
         for ii,jj in zip(self.data.dtype.names,data[ind]):
             print("%s : %f" % (ii,jj))
 
+def load_tree(wdir, is_gal=False, no_dump=False):
+    import pickle
+    #from tree import treemodule
+    import tree.ctutils as ctu
+    from general import defaults
+    
+    df = defaults.Default()
+    tree_path = df.tree_path(is_gal=is_gal)
+
+    try:
+        alltrees = pickle.load(open(wdir + df.ext_tree_pickle(is_gal=is_gal), "rb" ))
+        print("Loaded an extended tree")
+    except:
+        alltrees = CTree()
+        alltrees.load(filename= wdir + tree_path + 'tree_0_0_0.dat')
+        if not no_dump:
+            # Fix nout -----------------------------------------------------
+            nout_max = alltrees.data['nout'].max()
+            alltrees.data['nout'] += 187 - nout_max
+            print("------ NOUT fixed")
+            alltrees.data = ctu.augment_tree(alltrees.data, wdir, is_gal=is_gal)
+            print("------ tree data extended")
+        
+    return alltrees
+
 
 def rs2codeunit(rst):
-    """ nout in Consistent Tree by default starts from 0 regardless of 
+    """ 
+        Check and clean up.         
+        
+        nout in Consistent Tree by default starts from 0 regardless of 
         the original simulation snapshot number. 
         This function assumes the nouts are already fixed. 
         In practice, it should be fixed when reading from ASCII and pickling it.
     
     """
     import numpy as np
-    import load
     nouts = np.unique(rst['nout'])
 #    wdir = '/home/hoseung/Work/data/AGN2/'
     for nout in nouts:

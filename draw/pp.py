@@ -255,7 +255,7 @@ def pp_halo(h, npix, rscale=1.0, region=None, ind=None, axes=None,
     if ind is None:
         if region is None:
             # If no region, plot all 
-            ind = np.arange(h.nhalo)
+            ind = np.arange(len(h.data))
             xmin = min(h.data['x'][ind])
             ymin = min(h.data['y'][ind])
             xspan = np.ptp(h.data['x'][ind])
