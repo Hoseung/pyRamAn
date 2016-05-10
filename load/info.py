@@ -8,15 +8,20 @@ import numpy as np
 #import load as ld
 
 class Info:
-    def __init__(self, nout = None, base = None,
-                 fn = None, load=False, data_dir='snapshots/'):
+    def __init__(self, nout = None, base = './',
+                 fn = None, load=False, data_dir=None):
+        if data_dir is None:
+            from general import defaults
+            df = defaults.Default()
+            data_dir = df.dir_snapshot
         self.data_dir = data_dir
+        
         if nout is not None or base is not None or fn is not None:
             self.setup(nout=nout, base=base, fn=fn)
         if load:
             self.read_info()
         
-    def setup(self, nout = None, base = None, fn = None):
+    def setup(self, nout = None, base = './', fn = None):
         try:  # set nout
             self._set_nout(nout)
         except:
