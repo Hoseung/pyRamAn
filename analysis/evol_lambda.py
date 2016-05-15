@@ -1,5 +1,10 @@
 # coding: utf-8
+
+import numpy as np
+import scipy
+
 def load_pickle(fname):
+    import pickle
     with open(fname, 'rb') as f:
         return pickle.load(f)
 
@@ -86,11 +91,10 @@ def smooth(x, beta=5, window_len=20, monotonic=False):
 
         
 class MainPrg():
-    import tree.ctutils as ctu
     import numpy as np
-    
-    def __init__(self, treedata, final_gal, nout_ini=None, nout_fi=None):
 
+    def __init__(self, treedata, final_gal, nout_ini=None, nout_fi=None):
+        import tree.ctutils as ctu
         temp_tree = ctu.extract_main_tree(treedata, final_gal)
         if nout_ini == None:
             nout_ini = min(temp_tree['nout'])

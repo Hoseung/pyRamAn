@@ -39,8 +39,6 @@ def match_list_ind(arr1, arr2):
         return np.where(arr1 == arr2)[0]
     
     
-    
-    
     # If list, convert to array
     if isinstance(arr1, list):
         arr1 = np.array(arr1)

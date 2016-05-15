@@ -5,7 +5,9 @@ Created on Mon Mar 16 14:01:14 2015
 @author: hoseung
 """
 
-def circle_scatter(axes, x_array, y_array, radii_array, **kwargs):
+def circle_scatter(axes, x_array, y_array, radii_array,
+                   colors=None,
+                   cmap='RdYlBu_r', **kwargs):
     """
     draws circles of gievn x,y, and radii
     
@@ -14,13 +16,28 @@ def circle_scatter(axes, x_array, y_array, radii_array, **kwargs):
         Can I make it more general? 
     """
     import matplotlib.pylab as plt
+    from matplotlib.collections import PatchCollection
+
+    mypatches = []
     try:
         for (x, y, r) in zip(x_array, y_array, radii_array):
-            circle = plt.Circle((x,y), radius=r, **kwargs)
-            axes.add_patch(circle)
+            circle = plt.Circle((x,y), radius=r)#, **kwargs)
+            mypatches.append(circle)
+            
     except:
-        circle = plt.Circle((x_array,y_array), radius=radii_array, **kwargs)
-        axes.add_patch(circle)            
+        circle = plt.Circle((x_array,y_array), radius=radii_array)#, **kwargs)
+        mypatches.append(circle)
+        
+    color_map = plt.get_cmap(cmap)
+ 
+    p = PatchCollection(mypatches, alpha=1.0, **kwargs)
+                        #facecolors = color_map(colors))
+    if colors is not None:
+        p.set_edgecolor(color_map(colors))
+        #p.set_facecolor('none')
+        #p.set_clim([np.min(colors),np.max(colors)])
+    #plt.colorbar(p,shrink=0.5)
+    axes.add_collection(p)
     return True
 
 def square_scatter(axes, x_array, y_array, size_array, **kwargs):
@@ -212,8 +229,10 @@ def den2d(x, y, z, m, npix, region=None, proj='z',
     return(field)
 
 def pp_halo(h, npix, rscale=1.0, region=None, ind=None, axes=None,
-            name=False, radius="rvir", edgecolor = 'b',
-            verbose=False, new_axes=False, fontsize=10, linewidth=1.0, **kwargs):
+            name=False, radius="rvir",
+            verbose=False, new_axes=False,
+            fontsize=10, linewidth=1.0,
+            color_field=None, **kwargs):
     """
     plot halo circles on the current/given/new axes.
     
@@ -301,7 +320,13 @@ def pp_halo(h, npix, rscale=1.0, region=None, ind=None, axes=None,
         print(r)
         print(xmin, ymin, xspan, yspan, npix, rscale)
 
-    pp.circle_scatter(axes, x, y, r, facecolor='none', edgecolor=edgecolor, linewidth=linewidth)
+    if color_field is not None:
+        colors = h.data[color_field][ind]
+    else:
+        colors = None
+    pp.circle_scatter(axes, x, y, r, facecolors='none',
+                      colors=colors,
+                      linewidth=linewidth, **kwargs)
 
     if name:
         for i, ii in enumerate(ind):

@@ -69,8 +69,8 @@ void load_data_gal(std::fstream& fin,  Data2& halodata, int tothal, int is_gal){
 //            fortran_skip(fin);// time step
             fortran_read_float(fin, halodata.gal[i*3], 3);
         }
-        fortran_read_float(fin, halodata.vir[i], 4);
-        fortran_read_float(fin, halodata.profile[i], 2);
+        fortran_read_float(fin, halodata.vir[i*4], 4);
+        fortran_read_float(fin, halodata.profile[i*2], 2);
         if (is_gal > 0)
         {
 //            fortran_skip(fin);// time step

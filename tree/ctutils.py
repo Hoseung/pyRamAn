@@ -5,7 +5,7 @@ Created on Fri Jul 10 17:10:10 2015
 @author: hoseung
 """
 from tree import treemodule
-from tree import treeutils
+#from tree import treeutils
 import numpy as np
 #%%
 
@@ -131,8 +131,15 @@ def extract_a_tree(alltrees, idx_last):
     """
     return alltrees[np.where(alltrees['tree_root_id'] == idx_last)]
 
+def extract_satellite(atree, idx):
+    """
+        extract a partial tree of satellite.
+        Starting from a certain nout, goes back in time. 
+    """
+    pass
+    
 
-def extract_main_tree(treedata, idx=None):
+def extract_main_tree(treedata, idx=None, no_subset=False):
     """
         Returns a single branch/trunk of tree following only the main progenitors.
         Works with both alltrees or atree.
@@ -145,7 +152,10 @@ def extract_main_tree(treedata, idx=None):
         idx = treedata['id'][0]
         print("idx = ", idx)
 
-    smalldata = treedata[treedata['tree_root_id'] == idx]
+    if no_subset:
+        smalldata = treedata
+    else:
+        smalldata = treedata[treedata['tree_root_id'] == idx]
 
     nprg = 1
     ind_list=[np.where(smalldata['id'] == idx)[0][0]]

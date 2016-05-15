@@ -455,7 +455,7 @@ contains
        ! Position to select particles insdie the region of interest
        ! Read position
        do i=1,ndim
-  	read(1)x(1:npart2,i)
+         read(1)x(1:npart2,i)
   !	read(1)x(1:npart2,2)
   !	read(1)x(1:npart2,3)
   !       read(1)m
@@ -464,10 +464,10 @@ contains
   
        ! Read velocity
        do i=1,ndim
-  	read(1)v(1:npart2,i)
+         read(1)v(1:npart2,i)
   !	read(1)v(1:npart2,2)
   !	read(1)v(1:npart2,3)
-     end do
+       end do
 
      ! Skip mass
        read(1)m
