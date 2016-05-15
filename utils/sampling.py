@@ -129,19 +129,18 @@ def set_region(**region):
         2. Accept both "center" and "centers"
            Also, both "range" and "ranges"
     """
-    
-    xxr = "xr" in region
-    xyr = "yr" in region
-    xzr = "zr" in region
-    xxc = "xc" in region
-    xyc = "yc" in region
-    xzc = "zc" in region
+      
+    xxr = any([i in region for i in ["xr", "yr", "zr"]])
+    xxc = any([i in region for i in ["xc", "yc", "zc"]])
     xrd = "radius" in region
     xcens = "centers" in region
     xrans = "ranges" in region
     
-#    print(xxr, xyr, xzr, xxc,xyc,xzc,xrd,xcens,xrans)
-    if not xrans:
+    """
+    Check more annoying(more to type) parameters first.
+    """
+
+    if xxr:
         try:
             xr = region["xr"]
         except:
@@ -154,84 +153,70 @@ def set_region(**region):
             zr = region["zr"]
         except:
             zr = [0,1]
-    else:
+        # calculate the rest
+        ranges = [xr, yr, zr]
+        centers= [sum(xr)*0.5, sum(yr)*0.5, sum(zr)*0.5] 
+        xc,yc,zc = centers
+        radius = max([ranges[0][1]-ranges[0][0],
+                    ranges[1][1]-ranges[1][0],
+                    ranges[2][1]-ranges[2][0]])
+
+# Later..
+# region = {"rangse": range, "centers":centers,...)
+    elif xxc:
+        try:
+            xc = region["xc"]
+        except:
+            xc = 0.5
+        try:
+            yc = region["yc"]
+        except:
+            yc = 0.5
+        try:
+            zc = region["zc"]
+        except:
+            zc = 0.5
+        try:
+            radius = region["radius"]
+        except:
+            radius = 0.5
+        # calculate the rest
+        ranges=[[xc - radius, xc + radius],
+                [yc - radius, yc + radius],
+                [zc - radius, zc + radius]]
+        xr, yr, zr = ranges
+        centers=[xc, yc, zc]
+
+    elif xrans:
         ranges = region["ranges"]
         xr, yr, zr = ranges[0], ranges[1], ranges[2]
+        centers=[sum(xr)*0.5, sum(yr)*0.5, sum(zr)*0.5]
+        xc, yc, zc = centers
+        radius=max([ranges[0][1]-ranges[0][0],
+                    ranges[1][1]-ranges[1][0],
+                    ranges[2][1]-ranges[2][0]])
 
-    if not xcens:
-        if xxc:
-            xc = region["xc"]
-        else:
-            xc = 0.5
-        if xyc:
-            yc = region["yc"]
-        else:
-            yc = 0.5
-        if xzc:
-            zc = region["zc"]
-        else:
-            zc = 0.5
-        if xrd:
-            radius = region["radius"]
-        else:
-            radius = 0.5
-    else:
+    elif xcens:
         centers = region["centers"]
-        xc, yc, zc = centers#[0], centers[1], centers[2]
-        radius = region["radius"]
-
-    if (not xxr) and (not xyr) and (not xzr) and (not xrans):
-        no_ranges = True
-    else:
-        no_ranges = False
-
-    if (not xxc) and (not xyc) and (not xzc) and (not xcens) or (not xrd):
-        no_centers = True
-    else:
-        no_centers = False
-
-# fill empty values
-    if no_ranges is True:
-        if no_centers:
-            print("No useful data is given.. 1")
-            print("Setting to default")
-            return {"ranges":[[0,1]]*3, "centers":[0.5]*3, "radius":0.5}
-        else:
-            # at least one value is given
-            try:
-                ranges=[[xc - radius, xc + radius],
-                        [yc - radius, yc + radius],
-                        [zc - radius, zc + radius]]
-                centers=[xc, yc, zc]
-            except:
-                print("Something is wrong 3")
-                print("Given values")
-                print("xc:",xc, "yc:",yc, "zc:",zc)
-                return False
-    elif no_centers is True:
-        # But ranges is not None
+        xc, yc, zc = centers
         try:
-            ranges = [xr, yr, zr]
-            centers=[sum(xr)*0.5, sum(yr)*0.5, sum(zr)*0.5]
-            radius=max([ranges[0][1]-ranges[0][0], ranges[1][1]-ranges[1][0], ranges[2][1]-ranges[2][0]])
+            radius = region["radius"]
         except:
-            print("Something is wrong")
-            print("Given values")
-            print("ranges:", ranges)
-            return False
+            radius = 0.5
+        xr = [xc - radius, xc + radius]
+        yr = [yc - radius, yc + radius]
+        zr = [zc - radius, zc + radius]
+        ranges=[xr, yr, zr]
+    elif xrd:
+        return set_region(xc=0.5, yc=0.5, zc=0.5, radius = region["radius"])
+    else:
+        return set_region(xc=0.5, yc=0.5, zc=0.5, radius = 0.5)
+        
 
-    region={"ranges":ranges, "centers":centers, "radius":radius}
-    region2={"xr":ranges[0], "yr":ranges[1], "zr":ranges[2], \
-             "xc":centers[0], "yc":centers[1], "zc":centers[2]}
-    region.update(region2)
-    return region
-#r1 = set_region(yr=[0.45,0.733])
-#r2 = set_region(xc=0.7, radius=0.2)
-#r3 = set_region(center=[0.33, 0.33, 0.64], radius=0.1)
-#reg={"ranges":[[0.3, 0.4], [0.3, 0.4], [0.3, 0.4]]}
-#region = set_region(*reg)
-
-#%%
+    return {"ranges":ranges, "centers":centers,
+            "xr":xr, "yr":yr, "zr":zr,
+            "xc":xc, "yc":yc, "zc":zc,
+            "radius":radius}
 
 class Region():
     def __init__(self):
