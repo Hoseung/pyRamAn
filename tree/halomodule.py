@@ -55,7 +55,7 @@ class HaloMeta():
     given nout and base, info is autoloaded if not explicitely given.
     
     """
-    def __init__(self, nout=None, base=None, info=None, halofinder='HM',
+    def __init__(self, nout=None, base='./', info=None, halofinder='HM',
                  load=False, is_gal=False, return_id=False, outdir=None,
                  verbose=False):
        self.nout = nout
@@ -75,8 +75,15 @@ class HaloMeta():
        self.massp = 0 # in case of single level DMO run.
        self.unit={"mass":None, "lengh":None, "velocity":None}
        self.is_gal = is_gal
-       self.return_id = return_id
-       self.return_id_list=None
+       if return_id is False:
+           self.return_id = False
+       else:
+           import collections
+           if isinstance(return_id, collections.Sequence):
+               self.return_id_list = return_id
+           else:
+               self.return_id_list = None # None = load all halo's ids.
+           self.return_id = True
 
        if outdir is None:
            if is_gal:
@@ -197,9 +204,6 @@ class Halo(HaloMeta):
         self.normalize()
         # load .sav file
     
-    def set_return_id_list(self, ids):
-            self.return_id_list = ids
-
     def load_hm(self, nout=None, base=None, info=None):
         if nout is None:
             nout = self.nout

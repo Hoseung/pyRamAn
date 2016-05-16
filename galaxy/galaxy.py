@@ -1133,14 +1133,15 @@ class Galaxy(object):
                                                 voronoi=False)
 
 
-                d_25reff = np.argmax(dsort > 0.25*dsort[i_reff]) # dsort[d_05reff] = 0.5Reff
-                frac25 = d_25reff/len(mmap)
+                reff_limit = 15 #Assuming possible largest Reff = 15kpc.
+                d_15reff = np.argmax(dsort > reff_limit) # dsort[d_05reff] = 0.5Reff
+                frac15 = d_15reff/len(mmap)
 
-                print("frac25", frac25)
+                print("frac15", frac15)
 
                 f = mge.find_galaxy.find_galaxy(self.mmap, quiet=True, plot=False,
                                                 mask_shade=False,
-                                                fraction=frac25)
+                                                fraction=frac15)
                 self.meta.epsq = f.eps
                 sma = npix_per_reff #/ np.sqrt(1 - self.meta.epsq)
                 smi = sma * (1 - self.meta.epsq)
@@ -1153,18 +1154,18 @@ class Galaxy(object):
                 self.meta.smaq = sma
                 self.meta.smiq = smi
 
-                result_qreff = _measure_lambda(self.meta.xcenq,
-                                                self.meta.ycenq,
-                                                cos, sin,
-                                                sma, smi,
-                                                voronoi=False)
+                result_12kpc = _measure_lambda(self.meta.xcenq,
+                                               self.meta.ycenq,
+                                               cos, sin,
+                                               sma, smi,
+                                               voronoi=False)
 
 
 
-        return (result_1reff, result_hreff, result_qreff),  \
+        return (result_1reff, result_hreff, result_12kpc,  \
                (np.average(result_1reff[npix_per_reff]),
                 np.average(result_hreff[npix_per_reff]),
-                np.average(result_qreff[npix_per_reff]))
+                np.average(result_12kpc[npix_per_reff]))
         
     
     def reorient(self, dest=[0., 0., 1], pop_nvec = ['star'],

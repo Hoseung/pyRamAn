@@ -50,11 +50,9 @@ void load_data_gal(std::fstream& fin,  Data2& halodata, int tothal, int is_gal){
     int* ids;
     for (int i=0; i < tothal; i++){
         fortran_read_int(fin, halodata.np[i], 1);
-//        std::cout<< "np   " << halodata.np[i] << std::endl;
         ids = new int [halodata.np[i]];
         fortran_read_int(fin, ids[0], halodata.np[i]);
         fortran_read_int(fin, halodata.hnu[i], 1);
-//        std::cout<< "id   " << halodata.hnu[i] << std::endl;
         fortran_skip(fin);// time step
         fortran_read_int(fin, halodata.hhost[i*5], 5);
         fortran_read_float(fin, halodata.mass[i], 1);
