@@ -67,17 +67,19 @@ class Galaxy(object):
         print([i * self.info.pboxsize * 100 for i in list(x)])
 
 
-#    def radial_profile_cut(self, xx, yy, mm, vx, vy, vz,
-    def radial_profile_cut(self, den_lim=2e6, den_lim2=5e6,
+#    def radial_profile_cut(self, den_lim=2e6, den_lim2=5e6,
+    def radial_profile_cut(self, xx, yy, mm, vx, vy, vz,
+                          den_lim=2e6, den_lim2=5e6,
                             mag_lim=25, nbins=100, rmax=50, dr=0.5):
         # 2D photometry. (if rotated towards +y, then use x and z)
         # now assuming +z alignment. 
-        xx = self.star['x']
-        yy = self.star['y']
-        mm = self.star['m']
-        vx = self.star['vx']
-        vy = self.star['vy']
-        vz = self.star['vz']
+#        xx = self.star['x']
+#        yy = self.star['y']
+#        mm = self.star['m']
+#        vx = self.star['vx']
+#        vy = self.star['vy']
+#        vz = self.star['vz']
+#        print("min max xx",min(xx), max(xx))
         rr = np.sqrt(np.square(xx) + np.square(yy))# in kpc unit
 
         # Account for weights.
@@ -116,7 +118,7 @@ class Galaxy(object):
 #       as the system velocity is WRONG.
 #       If 1Reff is huge, try smaller aperture when measuring the system velocity.
 #
-        i_close = i_sort[:np.argmax(np.cumsum(m_sorted) > (0.1*mtot2))] # 10% closest particles
+        i_close = i_sort[:np.argmax(np.cumsum(m_sorted) > (0.2*mtot2))] # 20% closest particles
 #        i_close = np.argsort(rr)[:min([i_reff1])]
 #        i_close = i_sort[:min([i_reff1])]
        
@@ -158,6 +160,9 @@ class Galaxy(object):
             print("RSCALE:", rscale)
             print("Halo size:", self.halo['rvir'] * self.info.pboxsize * 1000.0)
 
+
+#        print("min max stars ",min(star['x']), max(star['x']))
+
         # galaxy center from GalaxyMaker. - good enough.
         xc = self.halo['x']
         yc = self.halo['y']
@@ -183,13 +188,14 @@ class Galaxy(object):
 
         rgal_tmp = self.halo['r'] * self.info.pboxsize * 1000.0
         print("Rgal_tmp", rgal_tmp)
-#        self.radial_profile_cut(star['x'], star['y'], star['m'],
-#                                star['vx'], star['vy'], star['vz'],
-        self.radial_profile_cut(den_lim=1e6, den_lim2=5e6,
-                           mag_lim=25,
-                           nbins=int(rgal_tmp/0.5),
-                           dr=0.5,
-                           rmax=rgal_tmp)
+#        self.radial_profile_cut(den_lim=1e6, den_lim2=5e6,
+        self.radial_profile_cut(star['x'], star['y'], star['m'],
+                                star['vx'], star['vy'], star['vz'],
+                                den_lim=1e6, den_lim2=5e6,
+                                mag_lim=25,
+                                nbins=int(rgal_tmp/0.5),
+                                dr=0.5,
+                                rmax=rgal_tmp)
 
         ind = np.where((np.square(star['x']) + 
                         np.square(star['y']) +
@@ -766,8 +772,8 @@ class Galaxy(object):
             mm = self.star['m'][ind]
             vz = self.star['vz'][ind]
 
-        print("min, max x,y,z:")
-        print(min(xstars), max(xstars), min(ystars), max(ystars))
+        #print("min, max x,y,z:")
+        #print(min(xstars), max(xstars), min(ystars), max(ystars))
 #        print("_____________________", vz.min(), vz.max(), vz.mean())
     
         if verbose: print(("\n" "Calculating Lambda_r using {} particles " 
@@ -1162,7 +1168,7 @@ class Galaxy(object):
 
 
 
-        return (result_1reff, result_hreff, result_12kpc,  \
+        return (result_1reff, result_hreff, result_12kpc),  \
                (np.average(result_1reff[npix_per_reff]),
                 np.average(result_hreff[npix_per_reff]),
                 np.average(result_12kpc[npix_per_reff]))
@@ -1501,23 +1507,32 @@ class Galaxy(object):
         # Calculating boundness requires total mass inside a radius.
         # -> DM, Cell are also needed. 
         #part = getattr(self, ptype)
-        
-        m_g = gas_mass(self.cell, self.info)
+
         m_d = self.dm['m']# * info.msun
+
+        if hasattr(self, "cell"):
+            m_g = gas_mass(self.cell, self.info)
+            m_all = np.concatenate((self.star['m'], m_g, m_d))
+        else:
+            m_all = np.concatenate((self.star['m'], m_d))
         
-        m_all = np.concatenate((self.star['m'], m_g, m_d))
 
         r_s = np.sqrt(np.square(self.star['x']) 
                     + np.square(self.star['y']) 
                     + np.square(self.star['z']))
-        r_g = np.sqrt(np.square(self.cell['x'])
+
+        if hasattr(self, "cell"):
+            r_g = np.sqrt(np.square(self.cell['x'])
                     + np.square(self.cell['y']) 
                     + np.square(self.cell['z']))
         r_d = np.sqrt(np.square(self.dm['x']) 
                     + np.square(self.dm['y']) 
                     + np.square(self.dm['z']))
 
-        r_all = np.concatenate((r_s, r_g, r_d))
+        if hasattr(self, "cell"):
+            r_all = np.concatenate((r_s, r_g, r_d))
+        else:
+            r_all = np.concatenate((r_s, r_d))
         i_sorted = np.argsort(r_all)
         m_enc = np.cumsum(m_all[i_sorted])
        

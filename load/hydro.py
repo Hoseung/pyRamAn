@@ -87,10 +87,7 @@ class Hydro:
             dtype_cell = [('x', '<f8'), ('y', '<f8'), ('z', '<f8'),('dx', '<f8')] 
             for i in range(nvarh):
                 dtype_cell.append( ('var' + str(i), '<f8'))
-#                      ('var0', '<f8'), ('var1', '<f8'), ('var2', '<f8'),
-#                        ('var3', '<f8'), ('var4', '<f8'), ('var5', '<f8')]
 
-        print(dtype_cell)
         self.cell = np.zeros(len(cell[1]), dtype=dtype_cell)
         self.cell['x'] = cell[0][:,0]
         self.cell['y'] = cell[0][:,1]
