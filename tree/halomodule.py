@@ -377,10 +377,15 @@ class Halo(HaloMeta):
             f.close()
     
             if self.return_id_list is None:
-                self.hal_idlists = self.data['id'] 
+                self.hal_idlists = self.data['id']
 #            self.refactor_hm()
         except IOError:
             print("Couldn't find {}".format(fn))
+
+        if self.return_id_list is not None:
+            import utils.match as mtc
+            ind_ok = mtc.match_list_ind(self.data['id'], self.return_id_list)
+            self.data[ind_ok]
 
     def refactor_hm(self):
         """
