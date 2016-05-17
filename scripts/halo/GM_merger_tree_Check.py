@@ -69,6 +69,46 @@ def recursive_tree(idx, tt, nstep, ax, x0, y0, dx, mass_unit=1e10):
                 recursive_tree(i, tt, nstep - 1, ax, x, y0 + 1, dx, mass_unit=mass_unit)
 
 
+def extract_main_tree(treedata, idx=None, verbose=False):
+    """
+        Returns a single branch/trunk of tree following only the main progenitors.
+        Works with both alltrees or atree.
+        Search until no progenitor is found. Doesn't matter how long the given tree is. 
+        Only earlier snapshots are searched for.
+    """
+    
+    if idx == None:
+        idx = treedata['id'][0]
+        if verbose:
+            print("No idx is given")
+            print("idx = ", idx)
+
+    
+    nprg = 1
+    ind_list=[np.where(treedata['id'] == idx)[0][0]]
+    
+    # main progenitor = mmp.
+    while nprg > 0:        
+        idx = ctu.get_progenitors(treedata, idx, main=True)
+#        print(idx)
+        ind_list.append(np.where(treedata['id'] == idx[0])[0][0])
+
+        nprg = ctu.get_npr(treedata, idx[0])
+
+    return treedata[ind_list]
+
+
+def plot_atree(atree, galid):
+    fig, ax = plt.subplots(1)
+    ax.scatter(atree['aexp'], np.log10(atree['m']))
+    ax.title(galid)
+    plt.savefig(wdir + "mergertrees/" + sidgal + '.png')
+    plt.close()
+
+
+
+
+
 # In[2]:
 
 from tree import treemodule
@@ -113,45 +153,6 @@ if not load_extended_tree:
 
 
 # In[4]:
-
-def extract_main_tree(treedata, idx=None, verbose=False):
-    """
-        Returns a single branch/trunk of tree following only the main progenitors.
-        Works with both alltrees or atree.
-        Search until no progenitor is found. Doesn't matter how long the given tree is. 
-        Only earlier snapshots are searched for.
-    """
-    
-    if idx == None:
-        idx = treedata['id'][0]
-        if verbose:
-            print("No idx is given")
-            print("idx = ", idx)
-
-    
-    nprg = 1
-    ind_list=[np.where(treedata['id'] == idx)[0][0]]
-    
-    # main progenitor = mmp.
-    while nprg > 0:        
-        idx = ctu.get_progenitors(treedata, idx, main=True)
-#        print(idx)
-        ind_list.append(np.where(treedata['id'] == idx[0])[0][0])
-
-        nprg = ctu.get_npr(treedata, idx[0])
-
-    return treedata[ind_list]
-
-
-# In[ ]:
-
-def plot_atree(atree, galid):
-    fig, ax = plt.subplots(1)
-    ax.scatter(atree['aexp'], np.log10(atree['m']))
-    ax.title(galid)
-    plt.savefig(wdir + "mergertrees/" + sidgal + '.png')
-    plt.close()
-
 
 # In[5]:
 
