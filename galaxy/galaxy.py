@@ -30,7 +30,7 @@ class Galaxy(object):
         self.set_halo(halo)
         self.info = info
         self.meta.radius_method=radius_method
-        self.meta.id=-1
+        #self.meta.id=-1 # why did I do this...?? 
         self.meta.xc = 0
         self.meta.yc = 0
         self.meta.zc = 0
@@ -209,7 +209,7 @@ class Galaxy(object):
         
         if self.meta.mstar < mstar_min:
             print("Not enough stars: {:.2e} Msun".format(self.meta.mstar))
-            print(" Aborting... \n")
+            print("{} Aborting... \n".format(len(self.star['m'])))
             self.meta.star = False
             return False                    
 
@@ -953,10 +953,6 @@ class Galaxy(object):
             import utils.sampling as smp
             # import draw
             from Cappellari import mge
-
-            #def find_nearest(array,value):
-            #    idx = (np.abs(array-value)).argmin()
-            #    return idx        
         
             region = smp.set_region(xc=0, yc=0, zc=0, radius = 0.5 * l_img)
 
@@ -1140,9 +1136,10 @@ class Galaxy(object):
 
 
                 reff_limit = 15 #Assuming possible largest Reff = 15kpc.
-                d_15reff = np.argmax(dsort > reff_limit) # dsort[d_05reff] = 0.5Reff
-                frac15 = d_15reff/len(mmap)
-
+                #d_15reff = np.argmax(dsort > reff_limit) # dsort[d_05reff] = 0.5Reff
+                #frac15 = d_15reff/len(mmap)
+                frac15 = np.pi / self.meta.rscale_lambda**2 * (15/(2*reff))**2 # fraction of 15kpc in the mmap.
+                frac15 = min([0.99, frac15])
                 print("frac15", frac15)
 
                 f = mge.find_galaxy.find_galaxy(self.mmap, quiet=True, plot=False,
@@ -1160,7 +1157,7 @@ class Galaxy(object):
                 self.meta.smaq = sma
                 self.meta.smiq = smi
 
-                result_12kpc = _measure_lambda(self.meta.xcenq,
+                result_15kpc = _measure_lambda(self.meta.xcenq,
                                                self.meta.ycenq,
                                                cos, sin,
                                                sma, smi,
@@ -1168,10 +1165,10 @@ class Galaxy(object):
 
 
 
-        return (result_1reff, result_hreff, result_12kpc),  \
+        return (result_1reff, result_hreff, result_15kpc),  \
                (np.average(result_1reff[npix_per_reff]),
                 np.average(result_hreff[npix_per_reff]),
-                np.average(result_12kpc[npix_per_reff]))
+                np.average(result_15kpc[npix_per_reff]))
         
     
     def reorient(self, dest=[0., 0., 1], pop_nvec = ['star'],
