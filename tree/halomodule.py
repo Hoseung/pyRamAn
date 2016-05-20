@@ -78,8 +78,8 @@ class HaloMeta():
        if return_id is False:
            self.return_id = False
        else:
-           import collections
-           if isinstance(return_id, collections.Sequence):
+           if hasattr(return_id, "__len__"):
+               # String also has __len__, but let's just ignore such cases.
                self.return_id_list = return_id
            else:
                self.return_id_list = None # None = load all halo's ids.
@@ -342,9 +342,9 @@ class Halo(HaloMeta):
                             self.idlists.append(tmp)
                             self.hal_idlists.append(hnu)
                     else:
-                        #pass
+                        pass
                   # By default save all id lists. 
-                        self.idlists.append(tmp)
+#                        self.idlists.append(tmp)
             
                 read_fortran(f, np.dtype('i4'), 1) #timestep
                 self.data['level'][i], self.data['host'][i], \
@@ -385,7 +385,7 @@ class Halo(HaloMeta):
         if self.return_id_list is not None:
             import utils.match as mtc
             ind_ok = mtc.match_list_ind(self.data['id'], self.return_id_list)
-            self.data[ind_ok]
+            self.data = self.data[ind_ok]
 
     def refactor_hm(self):
         """
