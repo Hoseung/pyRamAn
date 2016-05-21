@@ -181,9 +181,7 @@ def den2d(x, y, z, m, npix, region=None, proj='z',
             y = (y - min(y)) / lbox * npix
 
 
-    
-
-    # mass in solar mass unit.
+        # mass in solar mass unit.
     # Test if that's true.
     if not mass_test:
         if m.min() < 1:
@@ -249,7 +247,7 @@ def pp_halo(h, npix, rscale=1.0, region=None, ind=None, axes=None,
         If region and ind are both given, 
     ind : int array
         If ind is given, 
-        only selected halos are plotted out of the bigger halo instance.
+        only selected halos are plotted out of the bigger halo sample.
     axes : pyplot axes instance
         If axes is given, halos are plotted on the axes.
     new_axes : Boolean, default = False
@@ -284,7 +282,7 @@ def pp_halo(h, npix, rscale=1.0, region=None, ind=None, axes=None,
             # The size of region is retained. 
             # image area does not shrink to fit only valid halos.
             ind = np.where((h.data['x'] > region["xr"][0]) &
-            (h.data['x'] < region["xr"][1]) &
+                    (h.data['x'] < region["xr"][1]) &
                     (h.data['y']> region["yr"][0]) & 
                     (h.data['y'] < region["yr"][1]) &
                     (h.data['z'] > region["zr"][0]) &
@@ -321,13 +319,15 @@ def pp_halo(h, npix, rscale=1.0, region=None, ind=None, axes=None,
         print(xmin, ymin, xspan, yspan, npix, rscale)
 
     if color_field is not None:
-        colors = h.data[color_field][ind]
-    else:
-        colors = None
+        #colors = h.data[color_field][ind]
+        kwargs.update({"colors": h.data[color_field][ind]})
+    #else:
+        #kwargs.update({"colors": None})
     pp.circle_scatter(axes, x, y, r, facecolors='none',
-                      colors=colors,
                       linewidth=linewidth, **kwargs)
 
+    axes.set_xlim([min(x), max(x)])
+    axes.set_ylim([min(y), max(y)])
     if name:
         for i, ii in enumerate(ind):
             axes.annotate(str(h.data["id"][ii]), (x[i],y[i]),
