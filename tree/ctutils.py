@@ -40,7 +40,12 @@ def augment_tree(treedata, base, is_gal=False):
     import tree.halomodule as hmo
     for nout in np.unique(treedata['nout']):
         # nout and Orig_halo_id are required.
-        gal_org = hmo.Halo(base=base, nout=nout, halofinder='HM', load=True, is_gal=is_gal)
+        try:
+            gal_org = hmo.Halo(base=base, nout=nout, halofinder='HM', load=True, is_gal=is_gal)
+        except:
+            print("Can't load halo catalog\n Original data is not modified.")
+            return treedata
+            
         # Before we start, remove unnecessary coulmns
         dtype_names = [field[0] for field in dtype_new_quantities]
         gal_org = gal_org.data[dtype_names]
