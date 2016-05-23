@@ -145,10 +145,10 @@ def load_tree(wdir, is_gal=False, no_dump=False, load_ascii=False):
         nout_max = alltrees.data['nout'].max()
         alltrees.data['nout'] += 187 - nout_max
         print("------ NOUT fixed")
-        #alltrees.data = ctu.augment_tree(alltrees.data, wdir, is_gal=is_gal)
+        alltrees.data = ctu.augment_tree(alltrees.data, wdir, is_gal=is_gal)
         print("------ tree data extended")
-        #if not no_dump:
-        #    pickle.dump(open(wdir + df.ext_tree_pickle(is_gal=is_gal), "wb" ), alltrees)
+        if not no_dump:
+            pickle.dump(open(wdir + df.ext_tree_pickle(is_gal=is_gal), "wb" ), alltrees)
     else:
         try:
             alltrees = pickle.load(open(wdir + df.ext_tree_pickle(is_gal=is_gal), "rb" ))
@@ -162,8 +162,8 @@ def load_tree(wdir, is_gal=False, no_dump=False, load_ascii=False):
             print("------ NOUT fixed")
             alltrees.data = ctu.augment_tree(alltrees.data, wdir, is_gal=is_gal)
             print("------ tree data extended")
-        #    if not no_dump:
-        #        pickle.dump(open(wdir + df.ext_tree_pickle(is_gal=is_gal), "wb" ), alltrees)
+            if not no_dump:
+                pickle.dump(open(wdir + df.ext_tree_pickle(is_gal=is_gal), "wb" ), alltrees)
                 
     return alltrees
 
