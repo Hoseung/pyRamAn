@@ -66,35 +66,12 @@ def augment_tree(treedata, base, is_gal=False):
     return join_struct_arrays([treedata, New_arr[keep_fields]])
 
 
-def load_tree(wdir, is_gal=False, no_dump=False, nout_fi=187):
-    import pickle
-    #import tree.ctutils as ctu
-
-    alltrees = treemodule.CTree()   
-
-    if is_gal:
-        # Galaxy tree
-        tree_path = 'GalaxyMaker/Trees/'
-    else:
-        # halo tree
-        tree_path = 'halo/Trees/'
-
-    try:
-        alltrees = pickle.load(open(wdir + tree_path + "extended_tree.pickle", "rb" ))
-        print("Loaded an extended tree")
-    except:
-        alltrees = treemodule.CTree()
-        print("No extended tree is found")
-        alltrees.load(filename= wdir + tree_path + 'tree_0_0_0.dat')
-        if not no_dump:
-            # Fix nout -----------------------------------------------------
-            nout_max = alltrees.data['nout'].max()
-            alltrees.data['nout'] += nout_fi - nout_max
-            print("nout_fi = {}, fixing nout of the tree".format(nout_fi))
-            alltrees.data = augment_tree(alltrees.data, wdir, is_gal=is_gal)
-            print("------ tree data extended")
-        
-    return alltrees
+def load_tree(wdir, is_gal=False, no_dump=False, load_ascii=False):
+    """
+    Basically deprecated. 
+    Use treemodule.load_tree() instead.
+    """
+    return treemodule.load_tree(wdir, is_gal=is_gal, no_dump=no_dump, load_ascii=load_ascii)
 
 
 def get_npr(treedata, idx):
@@ -157,13 +134,20 @@ def extract_main_tree(treedata, idx=None, no_subset=False):
     else:
         smalldata = treedata[treedata['tree_root_id'] == idx]
 
-    nprg = 1
+    #nprg = 1
     ind_list=[np.where(smalldata['id'] == idx)[0][0]]
       
-    while nprg > 0:
+#    while nprg > 0:
+#        idx = get_progenitors(smalldata, idx, main=True)
+#        ind_list.append(np.where(smalldata['id'] == idx[0])[0][0])
+#        nprg = get_npr(smalldata, idx[0])
+    while True:
         idx = get_progenitors(smalldata, idx, main=True)
-        ind_list.append(np.where(smalldata['id'] == idx[0])[0][0])
-        nprg = get_npr(smalldata, idx[0])
+        if len(idx) > 0:
+            ind_list.append(np.where(smalldata['id'] == idx[0])[0].squeeze())#[0])
+        else:
+            break
+          
 
     return smalldata[ind_list]
 

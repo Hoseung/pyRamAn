@@ -11,43 +11,27 @@ import numpy as np
 def _is_ascii(filename):
     return filename.split(".")[-1] == "dat"
     
-dtype=[('aexp', '<f8'), ('id', '<i8'), ('desc_aexp', '<i8'),
-       ('desc_id', '<i8'), ('nprog', '<i8'),
- ('pid', '<i8'), ('upid', '<i8'), ('desc_pid', '<i8'), ('pahntom', '<i8'),
- ('sam_mvir', '<f8'), ('mvir', '<f8'), ('rvir', '<f8'), ('rs', '<i8'),
- ('vrms', '<f8'), ('mmp', '<f8'), ('aexp_last_MM', '<f8'), ('vmax', '<i8'),
- ('x', '<f8'), ('y', '<f8'), ('z', '<f8'),
- ('vx', '<f8'), ('vy', '<f8'), ('vz', '<i8'),
- ('jx', '<i8'), ('jy', '<i8'), ('jz', '<f8'),
- ('spin', '<i8'), ('b_id', '<i8'), ('d_id', '<i8'), ('tree_root_id', '<i8'),
- ('Orig_halo_id', '<i8'), ('nout', '<i8'), ('next_coprogenitor_d_id', '<i8'),
- ('last_progenitor_d_id', '<f8'), ('rs_Klypin', '<i8'), ('mvir_all', '<i8'),
- ('m200b', '<i8'), ('m200c', '<i8'), ('m500c', '<i8'), ('m2500c', '<i8'),
- ('xoff', '<f8'), ('voff', '<f8'), ('spin_Bullock', '<f8'),
- ('btoc', '<f8'), ('ctoa', '<f8'),
- ('ax', '<f8'), ('ay', '<f8'), ('az', '<f8'),
- ('btoa500', '<f8'), ('ctoa500', '<f8'),
- ('ax500', '<f8'), ('ay500', '<f8'), ('az500', '<f8'),
- ('toveru', '<f8'), ('mpe_b', '<i8'), ('mpe_d', '<i8')]
-
 class CTree(object):
+    """
+        compatible with ConsistentTrees 1.01
+    """
 
     def __init__(self, filename=None):
         if filename is not None:
             self.load(filename=filename)
     
     def _add_info(self):
-        self.pboxsize = 199.632011
+        #self.pboxsize = 199.632011
+        self.pboxsize = 200.0
 
     def _load_ascii(self, filename):
         cnt_header = 0
         
         datatype =[ 'f8','i8','i8','i8','i8','i8','i8','i8','i8','f8'\
                    ,'f8','f8','i8','f8','f8','f8','i8','f8','f8','f8'\
-                   ,'f8','f8','i8','i8','i8','f8','i8','i8','i8','i8'\
-                   ,'i8','i8','i8','f8']#,'i8','i8','i8',\
-                    #'i8','i8','i8','f8','f8','f8','f8','f8','f8','f8','f8','f8','f8',\
-                    #'f8','f8','f8','f8','i8','i8']        
+                   ,'f8','f8','f8','f8','f8','f8','f8','i8','i8','i8'\
+                   ,'i8','i8','i8','i8','i8','f8','i8']#,\      
+
 
         with open(filename, 'rb') as f:   
             for i in range(180):
@@ -61,10 +45,11 @@ class CTree(object):
             self.data = np.genfromtxt(f,dtype=datatype)
     
         self.data.dtype.names=(\
-            'aexp','id','desc_aexp','desc_id','nprog','pid','upid','desc_pid','phantom','sam_mvir'\
+             'aexp','id','desc_aexp','desc_id','nprog','pid','upid','desc_pid','phantom','sam_mvir'\
             ,'mvir','rvir','rs','vrms','mmp','aexp_last_MM','vmax','x','y','z'\
             ,'vx','vy','vz','jx','jy','jz','spin','b_id','d_id','tree_root_id'\
-            ,'Orig_halo_id','nout','next_coprogenitor_d_id','last_progenitor_d_id')
+            ,'Orig_halo_id','nout','next_coprogenitor_d_id','last_progenitor_d_id'\
+            ,'last_mainleaf_depthfirst_id', 'tidal_force', 'tidal_id')
 
         print("Loading Consistent Tree data from ASCII is done")
 
@@ -84,7 +69,7 @@ class CTree(object):
             from tkinter.filedialog import askopenfilename
             filename = askopenfilename() # show an "Open" dialog box and return the path to the selected file
 
-        if _is_ascii(filename) is True:
+        if _is_ascii(filename):
             self._load_ascii(filename)
         else:
             self._load_pickle(filename)
@@ -144,7 +129,7 @@ class CTree(object):
         for ii,jj in zip(self.data.dtype.names,data[ind]):
             print("%s : %f" % (ii,jj))
 
-def load_tree(wdir, is_gal=False, no_dump=False):
+def load_tree(wdir, is_gal=False, no_dump=False, load_ascii=False):
     import pickle
     #from tree import treemodule
     import tree.ctutils as ctu
@@ -153,20 +138,33 @@ def load_tree(wdir, is_gal=False, no_dump=False):
     df = defaults.Default()
     tree_path = df.tree_path(is_gal=is_gal)
 
-    try:
-        alltrees = pickle.load(open(wdir + df.ext_tree_pickle(is_gal=is_gal), "rb" ))
-        print("Loaded an extended tree")
-    except:
+    if load_ascii:
         alltrees = CTree()
         alltrees.load(filename= wdir + tree_path + 'tree_0_0_0.dat')
-        if not no_dump:
+        # Fix nout -----------------------------------------------------
+        nout_max = alltrees.data['nout'].max()
+        alltrees.data['nout'] += 187 - nout_max
+        print("------ NOUT fixed")
+        #alltrees.data = ctu.augment_tree(alltrees.data, wdir, is_gal=is_gal)
+        print("------ tree data extended")
+        #if not no_dump:
+        #    pickle.dump(open(wdir + df.ext_tree_pickle(is_gal=is_gal), "wb" ), alltrees)
+    else:
+        try:
+            alltrees = pickle.load(open(wdir + df.ext_tree_pickle(is_gal=is_gal), "rb" ))
+            print("Loaded an extended tree")
+        except:
+            alltrees = CTree()
+            alltrees.load(filename= wdir + tree_path + 'tree_0_0_0.dat')
             # Fix nout -----------------------------------------------------
             nout_max = alltrees.data['nout'].max()
             alltrees.data['nout'] += 187 - nout_max
             print("------ NOUT fixed")
             alltrees.data = ctu.augment_tree(alltrees.data, wdir, is_gal=is_gal)
             print("------ tree data extended")
-        
+        #    if not no_dump:
+        #        pickle.dump(open(wdir + df.ext_tree_pickle(is_gal=is_gal), "wb" ), alltrees)
+                
     return alltrees
 
 
