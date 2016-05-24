@@ -183,6 +183,7 @@ class Halo(HaloMeta):
         
             self.normalize()
 
+    """
     def load_hm_sav(self, nout=None, base=None, info=None):
         if nout is None:
             nout = self.nout
@@ -203,7 +204,8 @@ class Halo(HaloMeta):
 #        print("load done")
         self.normalize()
         # load .sav file
-    
+    """
+
     def load_hm(self, nout=None, base=None, info=None):
         if nout is None:
             nout = self.nout
