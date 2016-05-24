@@ -148,7 +148,7 @@ def load_tree(wdir, is_gal=False, no_dump=False, load_ascii=False):
         alltrees.data = ctu.augment_tree(alltrees.data, wdir, is_gal=is_gal)
         print("------ tree data extended")
         if not no_dump:
-            pickle.dump(open(wdir + df.ext_tree_pickle(is_gal=is_gal), "wb" ), alltrees)
+            pickle.dump(alltrees, open(wdir + df.ext_tree_pickle(is_gal=is_gal), "wb" ))
     else:
         try:
             alltrees = pickle.load(open(wdir + df.ext_tree_pickle(is_gal=is_gal), "rb" ))
@@ -163,7 +163,7 @@ def load_tree(wdir, is_gal=False, no_dump=False, load_ascii=False):
             alltrees.data = ctu.augment_tree(alltrees.data, wdir, is_gal=is_gal)
             print("------ tree data extended")
             if not no_dump:
-                pickle.dump(open(wdir + df.ext_tree_pickle(is_gal=is_gal), "wb" ), alltrees)
+                pickle.dump(alltrees, open(wdir + df.ext_tree_pickle(is_gal=is_gal), "wb" ), alltrees)
                 
     return alltrees
 
