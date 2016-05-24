@@ -344,7 +344,8 @@ class Halo(HaloMeta):
                             self.idlists.append(tmp)
                             self.hal_idlists.append(hnu)
                     else:
-                        pass
+                        self.idlists.append(tmp)
+                        self.hal_idlists.append(hnu)
                   # By default save all id lists. 
 #                        self.idlists.append(tmp)
             

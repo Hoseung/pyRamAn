@@ -64,9 +64,12 @@ def augment_tree(treedata, base, is_gal=False):
  
     # Drop duplicate fields
     #["id", "mvir", "rvir", "x", "y", "z", "vx", "vy", "vz"]
-    keep_fields = ["np", "m", "r", "tvir", "cvel"]
+    
+    keep_fields = ["np", "r", "tvir", "cvel"]
     if is_gal:
-        [keep_fields.append(i) for i in ['sig', 'sigbulge', 'mbulge']]
+        [keep_fields.append(i) for i in ['sig', 'sigbulge', 'mbulge', "m"]]
+    else:
+        keep_fields.append("mvir")
         
     return join_struct_arrays([treedata, New_arr[keep_fields]])
 
