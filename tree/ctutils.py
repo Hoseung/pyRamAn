@@ -152,10 +152,10 @@ def extract_main_tree(treedata, idx=None, no_subset=False):
     while True:
         idx = get_progenitors(smalldata, idx, main=True)
         if len(idx) > 0:
-            ind_list.append(np.where(smalldata['id'] == idx[0])[0].squeeze())#[0])
+            ind_list.append(np.where(smalldata['id'] == idx[0])[0][0])
         else:
             break
-          
+
 
     return smalldata[ind_list]
 
