@@ -9,7 +9,7 @@ import numpy as np
 
 class Info:
     def __init__(self, nout = None, base = './',
-                 fn = None, load=False, data_dir=None):
+                 fn = None, load=True, data_dir=None):
         if data_dir is None:
             from general import defaults
             df = defaults.Default()

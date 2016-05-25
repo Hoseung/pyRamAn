@@ -18,18 +18,25 @@ import subprocess
 from tree.tree_builder import convert_halo_list
 
 
-def run(wdir ='./', nout_ini=None, is_gal=False):
+def run(wdir ='./', nout_ini=None, is_gal=False,
+        out_dir_g='GalaxyMaker/', out_dir_d='halo/'):
     base = os.path.abspath(wdir) + '/'
     cluster = base.split('/')[-2]
     if is_gal:
         if nout_ini is None:
             nout_ini=11
-        out_dir = base + 'GalaxyMaker/'   
+        out_dir = base + out_dir_g
     else:
         if nout_ini is None:
             nout_ini=7
-        out_dir = base + 'halo/'
-    convert_halo_list(nout_ini=nout_ini, nout_fi = 187, base=base, out_dir=out_dir, is_gal=is_gal)
+        out_dir = base + out_dir_d
+
+
+    convert_halo_list(nout_ini=nout_ini, nout_fi = 187,
+                      base=base, out_dir=out_dir, is_gal=is_gal,
+                      nmax_fracmax_ratio=1.01,
+                      nmax_fracmax_ratio2=1.00,
+                      frac_max_small=0.5)
         
     #configure file template in consistent tree directory. or repo.
     f_cfg_template = '/home/hopung/Work/pyclusterevol/repo/CTree_template.cfg'
@@ -119,8 +126,9 @@ if __name__ == "__main__":
     #if nout_ini == "":
     #    nout_ini = 12
     is_gal = True
-    nout_ini = 12
-    run(wdir = here + "/" , is_gal=is_gal, nout_ini=nout_ini)
+    nout_ini = 20
+    run(wdir = here + "/" , is_gal=is_gal, nout_ini=nout_ini,
+        out_dir_g="GalaxyMaker/")
 
 
 def run_all(is_gal=True):

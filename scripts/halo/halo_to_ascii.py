@@ -15,7 +15,7 @@ def halo_to_ascii(hh, fname, quick=False):
                 f.write(line[0] + " ")
             f.write("\n")
 
-            for line in hh.data[0:100]:
+            for line in hh.data:
                 for ll in line:
                     f.write(str(ll) + ' ')
                 f.write('\n')
@@ -26,11 +26,9 @@ def halo_to_ascii(hh, fname, quick=False):
 import load
 import tree.halomodule as hmo
 
-wdir = "/home/hoseung/Work/data/Rsmith/"
-nout=21 
-info = load.info.Info(nout=nout, base=wdir, load=True)
-    
-hh = hmo.Halo(base=wdir, nout=nout, halofinder='HM', info=info, load=True, is_gal=False)
-fname = wdir + 'halo_brick_' + str(nout).zfill(3) + '.txt'
-halo_to_ascii(hh, fname, quick=False)
+wdir = "./"
+for nout in range(20, 188):
+    hh = hmo.Halo(base=wdir, nout=nout, halofinder='HM', is_gal=False)
+    fname = wdir + 'halo_brick_' + str(nout).zfill(3) + '.txt'
+    halo_to_ascii(hh, fname, quick=False)
 

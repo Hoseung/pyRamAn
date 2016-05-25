@@ -1,8 +1,13 @@
-
 # coding: utf-8
 
 # In[ ]:
 
+# required : 
+# info, galaxy catalog, halo catalog, tree, lambda catalog (catalog_187.pickle)
+#
+#
+#
+#
 def mma_all(clusters, nout_fi=187, nout_ini=57, cdir='easy/',
             savefig_pdf=False, savefig_simple=True, savefig_violin=True):
     import utils.sampling as smp

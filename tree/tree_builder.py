@@ -94,14 +94,32 @@ def write_scale(nouts, aexps, out_dir='./'):
 
 
 # convert HM/GM output
-def convert_halo_list(nout_ini=11, nout_fi = 187, base='./', out_dir='./', is_gal=False):
+def convert_halo_list(nout_ini=11, nout_fi = 187, base='./',
+                      out_dir='./', is_gal=False,
+                       nmax_fracmax_ratio=2.0, nmax_fracmax_ratio2=1.2,
+                       frac_max_small=0.3):
     """
         Generate halo catalog with descendant ID.
         
         Going from earlier snapshots to later snapshots, 
         measure fraction of particles passed to the descendants.
         
-    
+        parameters
+        ----------
+        nmax_fracmax_ratio :
+            if contribution from np_max is larger than that of frac_max
+            by more than nmax_fracmax_ratio, than np_max is for sure the main progenitor.
+
+        nmax_fracmax_ratio2 :
+            if contribution from frac_max is lower than "frac_max_small" and np_max is larger than that of frac_max
+            by more than nmax_fracmax_ratio, than np_max is for sure the main progenitor.
+
+        frac_max_small :
+            max_fraction_progenitor whose contribution is lower than frac_max_small is 
+            suspected not to be the main progenitor.
+            if max_np_progenitor contributes slightly more than the max frac, 
+            then max_np_progenitor is considered to be the main progenitor.
+        
     """
     import load
     import tree.halomodule as hmo
@@ -147,7 +165,6 @@ def convert_halo_list(nout_ini=11, nout_fi = 187, base='./', out_dir='./', is_ga
             # each particle has its halo id.
             for iha, ids in enumerate(idlists1):
                 hid_of_particles1[ids] = data1['id'][iha] 
-            print("zero?", hid_of_particles1[0])
             
             # progenitors of next halos
             # one halo can have multiple main progenitor.
@@ -189,11 +206,11 @@ def convert_halo_list(nout_ini=11, nout_fi = 187, base='./', out_dir='./', is_ga
                     i_max_frac = np.argmax(frac_received_list)
                     desc_frac_max = all_desc_list[i_max_frac]
     
-                    print(i_max_np, i_max_frac)
-                    print(np_received_list, frac_received_list, "\n")
+                    #print(i_max_np, i_max_frac)
+                    #print(np_received_list, frac_received_list, "\n")
                     
                     if desc_np_max != desc_frac_max:
-                        if np_received_list[i_max_np] > 10 * np_received_list[i_max_frac]:
+                        if np_received_list[i_max_np] > nmax_fracmax_ratio * np_received_list[i_max_frac]:
                             # If one halo is significantly larger than the other, 
                             # which means much more fraction of the progenitor is inherited to the larger one,
                             # then the larger one is the descendant.
@@ -203,8 +220,8 @@ def convert_halo_list(nout_ini=11, nout_fi = 187, base='./', out_dir='./', is_ga
                             # and, the other halo may or may not find it's progenitor.
                             # If the fraction if very high, it is very likely that the halo is coming out of nothing.
                             # Or at least the "real progenitor" had been misstaken as a part of another larger halo in the previous snapshot.
-                        elif frac_received_list[i_max_frac] < 0.3:
-                            if np_received_list[i_max_np] > 2 * np_received_list[i_max_frac]:
+                        elif frac_received_list[i_max_frac] < frac_max_small:
+                            if np_received_list[i_max_np] > nmax_fracmax_ratio2 * np_received_list[i_max_frac]:
                                 desc_list_final[i] = frac_received_list[i_max_np]
                             else:
                                 desc_list_final[i] = frac_received_list[i_max_frac]
