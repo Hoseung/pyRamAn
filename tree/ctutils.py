@@ -143,7 +143,11 @@ def extract_main_tree(treedata, idx=None, no_subset=False):
         smalldata = treedata[treedata['tree_root_id'] == idx]
 
     #nprg = 1
-    ind_list=[np.where(smalldata['id'] == idx)[0][0]]
+    try:
+        ind_list=[np.where(smalldata['id'] == idx)[0][0]]
+    except:
+        print(" idx = {} not found in the list :".format(idx), smalldata['id'][:10])
+        raise
       
 #    while nprg > 0:
 #        idx = get_progenitors(smalldata, idx, main=True)

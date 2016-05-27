@@ -28,7 +28,18 @@ def get_tick_locations(org_range, x_range):
 
 
 
-def find_merger_epochs(alltrees, idx_all, mpgs, nout_ini=37):
+def find_merger_epochs(alltrees, idx_all, mpgs, nout_ini=37, dist_gal_scale=2,
+                       mass_ratio="early"):
+    """
+    
+        parameter
+        ---------
+        dist_gal_scale 
+            if two galaxies are closer than dist_gal_scale * (sum of raidus of the two),
+            that epoch is the nout_init_merger.
+        nout_ini
+            blabla
+    """
     verbose=False
     gal_list=[]
     mr_list=[]
@@ -67,7 +78,8 @@ def find_merger_epochs(alltrees, idx_all, mpgs, nout_ini=37):
 
                 i_sat = np.argmax(mass_prgs[1:]) + 1
                 #mass_ratios_single[i] = max([mass_prgs[1:] / max(mass_prgs)][0])
-                mass_ratios_single[i] = mass_prgs[i_sat] / mass_prgs[0]
+                if mass_ratio == "max":
+                    mass_ratios_single[i] = mass_prgs[i_sat] / mass_prgs[0]
 
                 satellite = ctu.extract_main_tree(atree, id_prgs[i_sat], no_subset=True)
 
@@ -80,10 +92,17 @@ def find_merger_epochs(alltrees, idx_all, mpgs, nout_ini=37):
                              + np.square(pos[1,i_main_ok] - satellite['y'])
                              + np.square(pos[2,i_main_ok] - satellite['z']))
                 rgal_tot = main['r'][i_main_ok] + satellite['r']
-                if sum(100 * rgal_tot < dd) > 0:
+                #print(" Galaxy sizes : main {}, and the second {}, and the sum {}".format(
+                #        main['r'][i_main_ok], satellite['r'], rgal_tot))
+                #print(" dd :", dd)
+                if sum(dist_gal_scale * rgal_tot < dd) > 0:
                     #print(50 * rgal_tot - dd)
                     #print(satellite['nout'][50 * rgal_tot < dd])
-                    nout_inits[i] = max(satellite['nout'][100 * rgal_tot < dd])
+                    nout_inits[i] = max(satellite['nout'][dist_gal_scale * rgal_tot < dd])
+                    if mass_ratio == "early":
+                        
+                        mass_ratios_single[i] = satellite['m'][satellite['nout'] == nout_inits[i]] / mass_prgs[0]
+                        
                 else:
                     nout_inits[i] = nout
                 if verbose:
@@ -201,9 +220,21 @@ def Maj_min_acc_ratio(mpgs, dt=5, major_ratio=3):
         gal.dlM = delta_lambda_major
         gal.dlm = delta_lambda_minor
 
+  
         
         
-def measure_delta_lambda(mpgs, dt=7, nout_ini=37):
+def measure_delta_lambda(mpgs, dt_before=7, dt_after=7, nout_ini=37,
+                         filter_smaller=True):
+    """
+        Note that nout are in descending order.
+        
+        physical meaning of dt_after is the time for a merger to settle down.
+        And, if there are multiple mergers within dt_after 
+        the effect of the larger merger and the rest are all mixed up. 
+        Then I assume that it is more reasonable to take the 'mixed' effect
+        is of the larger merger alone.
+        
+    """
     from scipy.signal import medfilt
     for gal in mpgs:
         ind_nout = gal.nouts > nout_ini
@@ -212,11 +243,15 @@ def measure_delta_lambda(mpgs, dt=7, nout_ini=37):
         gal.smoothed_lambda = medfilt(gal.data['lambda_r'], kernel_size=5)
 
         if gal.merger is not None:
+            #if filter_smaller:            
+                #gal.merger = filter_smaller_mergers(gal.merger)
             delta_lambda =[]
+            
             for mr, xx, x2 in zip(gal.merger.mr, gal.merger.nout, gal.merger.nout_ini):
                 i_nout = np.where(gal.nouts == xx)[0]
+                iini_nout = np.where(gal.nouts == x2)[0]
 
-                lambda_after = np.average(gal.smoothed_lambda[max([0, i_nout - dt]) : i_nout])
-                lambda_before = np.average(gal.smoothed_lambda[i_nout:min([len(gal.data), i_nout + dt])])
+                lambda_after = np.average(gal.smoothed_lambda[max([0, i_nout - dt_after]) : i_nout])
+                lambda_before = np.average(gal.smoothed_lambda[iini_nout:min([len(gal.data), iini_nout + dt_before])])
                 delta_lambda.append(lambda_after - lambda_before)
             gal.merger.delta = np.array(delta_lambda)
