@@ -266,8 +266,8 @@ static CYTHON_INLINE float __PYX_NAN() {
   #endif
 #endif
 
-#define __PYX_HAVE__pyclusterevol__draw__ppc
-#define __PYX_HAVE_API__pyclusterevol__draw__ppc
+#define __PYX_HAVE__draw__ppc
+#define __PYX_HAVE_API__draw__ppc
 #include "string.h"
 #include "stdio.h"
 #include "stdlib.h"
@@ -510,7 +510,7 @@ static const char *__pyx_filename;
 
 
 static const char *__pyx_f[] = {
-  "pyclusterevol/draw/ppc.pyx",
+  "draw/ppc.pyx",
   "__init__.pxd",
   "type.pxd",
 };
@@ -740,14 +740,14 @@ typedef npy_double __pyx_t_5numpy_double_t;
  */
 typedef npy_longdouble __pyx_t_5numpy_longdouble_t;
 
-/* "pyclusterevol/draw/ppc.pyx":5
+/* "draw/ppc.pyx":5
  * 
  * DTYPE = np.float
  * ctypedef np.float_t DTYPE_t             # <<<<<<<<<<<<<<
  * 
- * def col_over_denom(np.ndarray[np.int64_t, ndim=1] iin, \
+ * def col_over_denom(np.ndarray[np.int32_t, ndim=1] iin, \
  */
-typedef __pyx_t_5numpy_float_t __pyx_t_13pyclusterevol_4draw_3ppc_DTYPE_t;
+typedef __pyx_t_5numpy_float_t __pyx_t_4draw_3ppc_DTYPE_t;
 /* None.proto */
 #if CYTHON_CCOMPLEX
   #ifdef __cplusplus
@@ -1213,13 +1213,13 @@ static PyTypeObject *__pyx_ptype_5numpy_ndarray = 0;
 static PyTypeObject *__pyx_ptype_5numpy_ufunc = 0;
 static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *, char *, char *, int *); /*proto*/
 
-/* Module declarations from 'pyclusterevol.draw.ppc' */
-static __Pyx_TypeInfo __Pyx_TypeInfo_nn___pyx_t_5numpy_int64_t = { "int64_t", NULL, sizeof(__pyx_t_5numpy_int64_t), { 0 }, 0, IS_UNSIGNED(__pyx_t_5numpy_int64_t) ? 'U' : 'I', IS_UNSIGNED(__pyx_t_5numpy_int64_t), 0 };
+/* Module declarations from 'draw.ppc' */
+static __Pyx_TypeInfo __Pyx_TypeInfo_nn___pyx_t_5numpy_int32_t = { "int32_t", NULL, sizeof(__pyx_t_5numpy_int32_t), { 0 }, 0, IS_UNSIGNED(__pyx_t_5numpy_int32_t) ? 'U' : 'I', IS_UNSIGNED(__pyx_t_5numpy_int32_t), 0 };
 static __Pyx_TypeInfo __Pyx_TypeInfo_nn___pyx_t_5numpy_float64_t = { "float64_t", NULL, sizeof(__pyx_t_5numpy_float64_t), { 0 }, 0, 'R', 0, 0 };
-#define __Pyx_MODULE_NAME "pyclusterevol.draw.ppc"
-int __pyx_module_is_main_pyclusterevol__draw__ppc = 0;
+#define __Pyx_MODULE_NAME "draw.ppc"
+int __pyx_module_is_main_draw__ppc = 0;
 
-/* Implementation of 'pyclusterevol.draw.ppc' */
+/* Implementation of 'draw.ppc' */
 static PyObject *__pyx_builtin_ValueError;
 static PyObject *__pyx_builtin_range;
 static PyObject *__pyx_builtin_RuntimeError;
@@ -1251,11 +1251,10 @@ static const char __pyx_k_colden[] = "colden";
 static const char __pyx_k_column[] = "column";
 static const char __pyx_k_import[] = "__import__";
 static const char __pyx_k_float32[] = "float32";
-static const char __pyx_k_percent[] = "percent";
+static const char __pyx_k_draw_ppc[] = "draw.ppc";
 static const char __pyx_k_ValueError[] = "ValueError";
 static const char __pyx_k_RuntimeError[] = "RuntimeError";
 static const char __pyx_k_col_over_denom[] = "col_over_denom";
-static const char __pyx_k_pyclusterevol_draw_ppc[] = "pyclusterevol.draw.ppc";
 static const char __pyx_k_ndarray_is_not_C_contiguous[] = "ndarray is not C contiguous";
 static const char __pyx_k_home_hoseung_Work_pyclusterevol[] = "/home/hoseung/Work/pyclusterevol/draw/ppc.pyx";
 static const char __pyx_k_unknown_dtype_code_in_numpy_pxd[] = "unknown dtype code in numpy.pxd (%d)";
@@ -1273,6 +1272,7 @@ static PyObject *__pyx_n_s_col_over_denom;
 static PyObject *__pyx_n_s_colden;
 static PyObject *__pyx_n_s_column;
 static PyObject *__pyx_n_s_denom;
+static PyObject *__pyx_n_s_draw_ppc;
 static PyObject *__pyx_n_s_dtype;
 static PyObject *__pyx_n_s_float;
 static PyObject *__pyx_n_s_float32;
@@ -1296,14 +1296,12 @@ static PyObject *__pyx_n_s_np;
 static PyObject *__pyx_n_s_numpy;
 static PyObject *__pyx_n_s_nx;
 static PyObject *__pyx_n_s_ny;
-static PyObject *__pyx_n_s_percent;
-static PyObject *__pyx_n_s_pyclusterevol_draw_ppc;
 static PyObject *__pyx_n_s_range;
 static PyObject *__pyx_n_s_sden;
 static PyObject *__pyx_n_s_test;
 static PyObject *__pyx_kp_u_unknown_dtype_code_in_numpy_pxd;
 static PyObject *__pyx_n_s_zeros;
-static PyObject *__pyx_pf_13pyclusterevol_4draw_3ppc_col_over_denom(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_iin, PyArrayObject *__pyx_v_ixl, PyArrayObject *__pyx_v_ixr, PyArrayObject *__pyx_v_iyl, PyArrayObject *__pyx_v_iyr, PyArrayObject *__pyx_v_mass, PyArrayObject *__pyx_v_sden, int __pyx_v_nx, int __pyx_v_ny, int __pyx_v_column); /* proto */
+static PyObject *__pyx_pf_4draw_3ppc_col_over_denom(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_iin, PyArrayObject *__pyx_v_ixl, PyArrayObject *__pyx_v_ixr, PyArrayObject *__pyx_v_iyl, PyArrayObject *__pyx_v_iyr, PyArrayObject *__pyx_v_mass, PyArrayObject *__pyx_v_sden, int __pyx_v_nx, int __pyx_v_ny, int __pyx_v_column); /* proto */
 static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, Py_buffer *__pyx_v_info, int __pyx_v_flags); /* proto */
 static void __pyx_pf_5numpy_7ndarray_2__releasebuffer__(PyArrayObject *__pyx_v_self, Py_buffer *__pyx_v_info); /* proto */
 static PyObject *__pyx_int_1;
@@ -1316,18 +1314,18 @@ static PyObject *__pyx_tuple__6;
 static PyObject *__pyx_tuple__7;
 static PyObject *__pyx_codeobj__8;
 
-/* "pyclusterevol/draw/ppc.pyx":7
+/* "draw/ppc.pyx":7
  * ctypedef np.float_t DTYPE_t
  * 
- * def col_over_denom(np.ndarray[np.int64_t, ndim=1] iin, \             # <<<<<<<<<<<<<<
- *      np.ndarray[np.float64_t, ndim=1] ixl, \
- *      np.ndarray[np.float64_t, ndim=1] ixr, \
+ * def col_over_denom(np.ndarray[np.int32_t, ndim=1] iin, \             # <<<<<<<<<<<<<<
+ *      np.ndarray[np.int32_t, ndim=1] ixl, \
+ *      np.ndarray[np.int32_t, ndim=1] ixr, \
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_13pyclusterevol_4draw_3ppc_1col_over_denom(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static PyMethodDef __pyx_mdef_13pyclusterevol_4draw_3ppc_1col_over_denom = {"col_over_denom", (PyCFunction)__pyx_pw_13pyclusterevol_4draw_3ppc_1col_over_denom, METH_VARARGS|METH_KEYWORDS, 0};
-static PyObject *__pyx_pw_13pyclusterevol_4draw_3ppc_1col_over_denom(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_4draw_3ppc_1col_over_denom(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyMethodDef __pyx_mdef_4draw_3ppc_1col_over_denom = {"col_over_denom", (PyCFunction)__pyx_pw_4draw_3ppc_1col_over_denom, METH_VARARGS|METH_KEYWORDS, 0};
+static PyObject *__pyx_pw_4draw_3ppc_1col_over_denom(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyArrayObject *__pyx_v_iin = 0;
   PyArrayObject *__pyx_v_ixl = 0;
   PyArrayObject *__pyx_v_ixr = 0;
@@ -1444,7 +1442,7 @@ static PyObject *__pyx_pw_13pyclusterevol_4draw_3ppc_1col_over_denom(PyObject *_
   __pyx_L5_argtuple_error:;
   __Pyx_RaiseArgtupleInvalid("col_over_denom", 1, 10, 10, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 7, __pyx_L3_error)
   __pyx_L3_error:;
-  __Pyx_AddTraceback("pyclusterevol.draw.ppc.col_over_denom", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("draw.ppc.col_over_denom", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
@@ -1455,7 +1453,7 @@ static PyObject *__pyx_pw_13pyclusterevol_4draw_3ppc_1col_over_denom(PyObject *_
   if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_iyr), __pyx_ptype_5numpy_ndarray, 1, "iyr", 0))) __PYX_ERR(0, 11, __pyx_L1_error)
   if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_mass), __pyx_ptype_5numpy_ndarray, 1, "mass", 0))) __PYX_ERR(0, 12, __pyx_L1_error)
   if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_sden), __pyx_ptype_5numpy_ndarray, 1, "sden", 0))) __PYX_ERR(0, 13, __pyx_L1_error)
-  __pyx_r = __pyx_pf_13pyclusterevol_4draw_3ppc_col_over_denom(__pyx_self, __pyx_v_iin, __pyx_v_ixl, __pyx_v_ixr, __pyx_v_iyl, __pyx_v_iyr, __pyx_v_mass, __pyx_v_sden, __pyx_v_nx, __pyx_v_ny, __pyx_v_column);
+  __pyx_r = __pyx_pf_4draw_3ppc_col_over_denom(__pyx_self, __pyx_v_iin, __pyx_v_ixl, __pyx_v_ixr, __pyx_v_iyl, __pyx_v_iyr, __pyx_v_mass, __pyx_v_sden, __pyx_v_nx, __pyx_v_ny, __pyx_v_column);
 
   /* function exit code */
   goto __pyx_L0;
@@ -1466,8 +1464,7 @@ static PyObject *__pyx_pw_13pyclusterevol_4draw_3ppc_1col_over_denom(PyObject *_
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_13pyclusterevol_4draw_3ppc_col_over_denom(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_iin, PyArrayObject *__pyx_v_ixl, PyArrayObject *__pyx_v_ixr, PyArrayObject *__pyx_v_iyl, PyArrayObject *__pyx_v_iyr, PyArrayObject *__pyx_v_mass, PyArrayObject *__pyx_v_sden, int __pyx_v_nx, int __pyx_v_ny, int __pyx_v_column) {
-  CYTHON_UNUSED int __pyx_v_percent;
+static PyObject *__pyx_pf_4draw_3ppc_col_over_denom(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_iin, PyArrayObject *__pyx_v_ixl, PyArrayObject *__pyx_v_ixr, PyArrayObject *__pyx_v_iyl, PyArrayObject *__pyx_v_iyr, PyArrayObject *__pyx_v_mass, PyArrayObject *__pyx_v_sden, int __pyx_v_nx, int __pyx_v_ny, int __pyx_v_column) {
   PyObject *__pyx_v_colden = NULL;
   PyObject *__pyx_v_denom = NULL;
   PyObject *__pyx_v_i = NULL;
@@ -1530,27 +1527,27 @@ static PyObject *__pyx_pf_13pyclusterevol_4draw_3ppc_col_over_denom(CYTHON_UNUSE
   __pyx_pybuffernd_sden.rcbuffer = &__pyx_pybuffer_sden;
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_iin.rcbuffer->pybuffer, (PyObject*)__pyx_v_iin, &__Pyx_TypeInfo_nn___pyx_t_5numpy_int64_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 7, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_iin.rcbuffer->pybuffer, (PyObject*)__pyx_v_iin, &__Pyx_TypeInfo_nn___pyx_t_5numpy_int32_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 7, __pyx_L1_error)
   }
   __pyx_pybuffernd_iin.diminfo[0].strides = __pyx_pybuffernd_iin.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_iin.diminfo[0].shape = __pyx_pybuffernd_iin.rcbuffer->pybuffer.shape[0];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_ixl.rcbuffer->pybuffer, (PyObject*)__pyx_v_ixl, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float64_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 7, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_ixl.rcbuffer->pybuffer, (PyObject*)__pyx_v_ixl, &__Pyx_TypeInfo_nn___pyx_t_5numpy_int32_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 7, __pyx_L1_error)
   }
   __pyx_pybuffernd_ixl.diminfo[0].strides = __pyx_pybuffernd_ixl.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_ixl.diminfo[0].shape = __pyx_pybuffernd_ixl.rcbuffer->pybuffer.shape[0];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_ixr.rcbuffer->pybuffer, (PyObject*)__pyx_v_ixr, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float64_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 7, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_ixr.rcbuffer->pybuffer, (PyObject*)__pyx_v_ixr, &__Pyx_TypeInfo_nn___pyx_t_5numpy_int32_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 7, __pyx_L1_error)
   }
   __pyx_pybuffernd_ixr.diminfo[0].strides = __pyx_pybuffernd_ixr.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_ixr.diminfo[0].shape = __pyx_pybuffernd_ixr.rcbuffer->pybuffer.shape[0];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_iyl.rcbuffer->pybuffer, (PyObject*)__pyx_v_iyl, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float64_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 7, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_iyl.rcbuffer->pybuffer, (PyObject*)__pyx_v_iyl, &__Pyx_TypeInfo_nn___pyx_t_5numpy_int32_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 7, __pyx_L1_error)
   }
   __pyx_pybuffernd_iyl.diminfo[0].strides = __pyx_pybuffernd_iyl.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_iyl.diminfo[0].shape = __pyx_pybuffernd_iyl.rcbuffer->pybuffer.shape[0];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_iyr.rcbuffer->pybuffer, (PyObject*)__pyx_v_iyr, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float64_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 7, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_iyr.rcbuffer->pybuffer, (PyObject*)__pyx_v_iyr, &__Pyx_TypeInfo_nn___pyx_t_5numpy_int32_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 7, __pyx_L1_error)
   }
   __pyx_pybuffernd_iyr.diminfo[0].strides = __pyx_pybuffernd_iyr.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_iyr.diminfo[0].shape = __pyx_pybuffernd_iyr.rcbuffer->pybuffer.shape[0];
   {
@@ -1564,18 +1561,9 @@ static PyObject *__pyx_pf_13pyclusterevol_4draw_3ppc_col_over_denom(CYTHON_UNUSE
   }
   __pyx_pybuffernd_sden.diminfo[0].strides = __pyx_pybuffernd_sden.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_sden.diminfo[0].shape = __pyx_pybuffernd_sden.rcbuffer->pybuffer.shape[0];
 
-  /* "pyclusterevol/draw/ppc.pyx":16
- *      int nx, int ny, int column):
+  /* "draw/ppc.pyx":17
  * 
- *     cdef int percent = 0             # <<<<<<<<<<<<<<
- *     colden = np.zeros((nx,ny), dtype=np.float32)
- *     denom =  np.zeros((nx,ny), dtype=np.float32)
- */
-  __pyx_v_percent = 0;
-
-  /* "pyclusterevol/draw/ppc.pyx":17
- * 
- *     cdef int percent = 0
+ * #    cdef int percent = 0
  *     colden = np.zeros((nx,ny), dtype=np.float32)             # <<<<<<<<<<<<<<
  *     denom =  np.zeros((nx,ny), dtype=np.float32)
  * 
@@ -1619,8 +1607,8 @@ static PyObject *__pyx_pf_13pyclusterevol_4draw_3ppc_col_over_denom(CYTHON_UNUSE
   __pyx_v_colden = __pyx_t_5;
   __pyx_t_5 = 0;
 
-  /* "pyclusterevol/draw/ppc.pyx":18
- *     cdef int percent = 0
+  /* "draw/ppc.pyx":18
+ * #    cdef int percent = 0
  *     colden = np.zeros((nx,ny), dtype=np.float32)
  *     denom =  np.zeros((nx,ny), dtype=np.float32)             # <<<<<<<<<<<<<<
  * 
@@ -1665,7 +1653,7 @@ static PyObject *__pyx_pf_13pyclusterevol_4draw_3ppc_col_over_denom(CYTHON_UNUSE
   __pyx_v_denom = __pyx_t_1;
   __pyx_t_1 = 0;
 
-  /* "pyclusterevol/draw/ppc.pyx":20
+  /* "draw/ppc.pyx":20
  *     denom =  np.zeros((nx,ny), dtype=np.float32)
  * 
  *     if column:             # <<<<<<<<<<<<<<
@@ -1675,7 +1663,7 @@ static PyObject *__pyx_pf_13pyclusterevol_4draw_3ppc_col_over_denom(CYTHON_UNUSE
   __pyx_t_6 = (__pyx_v_column != 0);
   if (__pyx_t_6) {
 
-    /* "pyclusterevol/draw/ppc.pyx":21
+    /* "draw/ppc.pyx":21
  * 
  *     if column:
  *         for i in iin:             # <<<<<<<<<<<<<<
@@ -1724,7 +1712,7 @@ static PyObject *__pyx_pf_13pyclusterevol_4draw_3ppc_col_over_denom(CYTHON_UNUSE
       __Pyx_XDECREF_SET(__pyx_v_i, __pyx_t_2);
       __pyx_t_2 = 0;
 
-      /* "pyclusterevol/draw/ppc.pyx":27
+      /* "draw/ppc.pyx":27
  * #            j2 = iyr[i]
  * #            colden[i1:i2+1, j1:j2+1] += sden[i]
  *             colden[ixl[i]:ixr[i]+1, iyl[i]:iyr[i]+1] += sden[i]             # <<<<<<<<<<<<<<
@@ -1773,7 +1761,7 @@ static PyObject *__pyx_pf_13pyclusterevol_4draw_3ppc_col_over_denom(CYTHON_UNUSE
       __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
 
-      /* "pyclusterevol/draw/ppc.pyx":21
+      /* "draw/ppc.pyx":21
  * 
  *     if column:
  *         for i in iin:             # <<<<<<<<<<<<<<
@@ -1783,7 +1771,7 @@ static PyObject *__pyx_pf_13pyclusterevol_4draw_3ppc_col_over_denom(CYTHON_UNUSE
     }
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-    /* "pyclusterevol/draw/ppc.pyx":28
+    /* "draw/ppc.pyx":28
  * #            colden[i1:i2+1, j1:j2+1] += sden[i]
  *             colden[ixl[i]:ixr[i]+1, iyl[i]:iyr[i]+1] += sden[i]
  *         return colden             # <<<<<<<<<<<<<<
@@ -1795,7 +1783,7 @@ static PyObject *__pyx_pf_13pyclusterevol_4draw_3ppc_col_over_denom(CYTHON_UNUSE
     __pyx_r = __pyx_v_colden;
     goto __pyx_L0;
 
-    /* "pyclusterevol/draw/ppc.pyx":20
+    /* "draw/ppc.pyx":20
  *     denom =  np.zeros((nx,ny), dtype=np.float32)
  * 
  *     if column:             # <<<<<<<<<<<<<<
@@ -1804,7 +1792,7 @@ static PyObject *__pyx_pf_13pyclusterevol_4draw_3ppc_col_over_denom(CYTHON_UNUSE
  */
   }
 
-  /* "pyclusterevol/draw/ppc.pyx":30
+  /* "draw/ppc.pyx":30
  *         return colden
  *     else:
  *         for i in iin:             # <<<<<<<<<<<<<<
@@ -1854,7 +1842,7 @@ static PyObject *__pyx_pf_13pyclusterevol_4draw_3ppc_col_over_denom(CYTHON_UNUSE
       __Pyx_XDECREF_SET(__pyx_v_i, __pyx_t_5);
       __pyx_t_5 = 0;
 
-      /* "pyclusterevol/draw/ppc.pyx":31
+      /* "draw/ppc.pyx":31
  *     else:
  *         for i in iin:
  *             i1 = ixl[i]             # <<<<<<<<<<<<<<
@@ -1866,7 +1854,7 @@ static PyObject *__pyx_pf_13pyclusterevol_4draw_3ppc_col_over_denom(CYTHON_UNUSE
       __Pyx_XDECREF_SET(__pyx_v_i1, __pyx_t_5);
       __pyx_t_5 = 0;
 
-      /* "pyclusterevol/draw/ppc.pyx":32
+      /* "draw/ppc.pyx":32
  *         for i in iin:
  *             i1 = ixl[i]
  *             i2 = ixr[i]             # <<<<<<<<<<<<<<
@@ -1878,7 +1866,7 @@ static PyObject *__pyx_pf_13pyclusterevol_4draw_3ppc_col_over_denom(CYTHON_UNUSE
       __Pyx_XDECREF_SET(__pyx_v_i2, __pyx_t_5);
       __pyx_t_5 = 0;
 
-      /* "pyclusterevol/draw/ppc.pyx":33
+      /* "draw/ppc.pyx":33
  *             i1 = ixl[i]
  *             i2 = ixr[i]
  *             j1 = iyl[i]             # <<<<<<<<<<<<<<
@@ -1890,7 +1878,7 @@ static PyObject *__pyx_pf_13pyclusterevol_4draw_3ppc_col_over_denom(CYTHON_UNUSE
       __Pyx_XDECREF_SET(__pyx_v_j1, __pyx_t_5);
       __pyx_t_5 = 0;
 
-      /* "pyclusterevol/draw/ppc.pyx":34
+      /* "draw/ppc.pyx":34
  *             i2 = ixr[i]
  *             j1 = iyl[i]
  *             j2 = iyr[i]             # <<<<<<<<<<<<<<
@@ -1902,7 +1890,7 @@ static PyObject *__pyx_pf_13pyclusterevol_4draw_3ppc_col_over_denom(CYTHON_UNUSE
       __Pyx_XDECREF_SET(__pyx_v_j2, __pyx_t_5);
       __pyx_t_5 = 0;
 
-      /* "pyclusterevol/draw/ppc.pyx":36
+      /* "draw/ppc.pyx":36
  *             j2 = iyr[i]
  *             # no smoothing or max, no column
  *             colden[i1:i2+1, j1:j2+1] += sden[i]             # <<<<<<<<<<<<<<
@@ -1939,7 +1927,7 @@ static PyObject *__pyx_pf_13pyclusterevol_4draw_3ppc_col_over_denom(CYTHON_UNUSE
       __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
 
-      /* "pyclusterevol/draw/ppc.pyx":37
+      /* "draw/ppc.pyx":37
  *             # no smoothing or max, no column
  *             colden[i1:i2+1, j1:j2+1] += sden[i]
  *             denom[i1:i2+1, j1:j2+1] += mass[i]             # <<<<<<<<<<<<<<
@@ -1976,7 +1964,7 @@ static PyObject *__pyx_pf_13pyclusterevol_4draw_3ppc_col_over_denom(CYTHON_UNUSE
       __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
 
-      /* "pyclusterevol/draw/ppc.pyx":30
+      /* "draw/ppc.pyx":30
  *         return colden
  *     else:
  *         for i in iin:             # <<<<<<<<<<<<<<
@@ -1986,7 +1974,7 @@ static PyObject *__pyx_pf_13pyclusterevol_4draw_3ppc_col_over_denom(CYTHON_UNUSE
     }
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-    /* "pyclusterevol/draw/ppc.pyx":38
+    /* "draw/ppc.pyx":38
  *             colden[i1:i2+1, j1:j2+1] += sden[i]
  *             denom[i1:i2+1, j1:j2+1] += mass[i]
  *         return colden / denom             # <<<<<<<<<<<<<<
@@ -2000,12 +1988,12 @@ static PyObject *__pyx_pf_13pyclusterevol_4draw_3ppc_col_over_denom(CYTHON_UNUSE
     goto __pyx_L0;
   }
 
-  /* "pyclusterevol/draw/ppc.pyx":7
+  /* "draw/ppc.pyx":7
  * ctypedef np.float_t DTYPE_t
  * 
- * def col_over_denom(np.ndarray[np.int64_t, ndim=1] iin, \             # <<<<<<<<<<<<<<
- *      np.ndarray[np.float64_t, ndim=1] ixl, \
- *      np.ndarray[np.float64_t, ndim=1] ixr, \
+ * def col_over_denom(np.ndarray[np.int32_t, ndim=1] iin, \             # <<<<<<<<<<<<<<
+ *      np.ndarray[np.int32_t, ndim=1] ixl, \
+ *      np.ndarray[np.int32_t, ndim=1] ixr, \
  */
 
   /* function exit code */
@@ -2027,7 +2015,7 @@ static PyObject *__pyx_pf_13pyclusterevol_4draw_3ppc_col_over_denom(CYTHON_UNUSE
     __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_mass.rcbuffer->pybuffer);
     __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_sden.rcbuffer->pybuffer);
   __Pyx_ErrRestore(__pyx_type, __pyx_value, __pyx_tb);}
-  __Pyx_AddTraceback("pyclusterevol.draw.ppc.col_over_denom", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("draw.ppc.col_over_denom", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   goto __pyx_L2;
   __pyx_L0:;
@@ -4206,6 +4194,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_colden, __pyx_k_colden, sizeof(__pyx_k_colden), 0, 0, 1, 1},
   {&__pyx_n_s_column, __pyx_k_column, sizeof(__pyx_k_column), 0, 0, 1, 1},
   {&__pyx_n_s_denom, __pyx_k_denom, sizeof(__pyx_k_denom), 0, 0, 1, 1},
+  {&__pyx_n_s_draw_ppc, __pyx_k_draw_ppc, sizeof(__pyx_k_draw_ppc), 0, 0, 1, 1},
   {&__pyx_n_s_dtype, __pyx_k_dtype, sizeof(__pyx_k_dtype), 0, 0, 1, 1},
   {&__pyx_n_s_float, __pyx_k_float, sizeof(__pyx_k_float), 0, 0, 1, 1},
   {&__pyx_n_s_float32, __pyx_k_float32, sizeof(__pyx_k_float32), 0, 0, 1, 1},
@@ -4229,8 +4218,6 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_numpy, __pyx_k_numpy, sizeof(__pyx_k_numpy), 0, 0, 1, 1},
   {&__pyx_n_s_nx, __pyx_k_nx, sizeof(__pyx_k_nx), 0, 0, 1, 1},
   {&__pyx_n_s_ny, __pyx_k_ny, sizeof(__pyx_k_ny), 0, 0, 1, 1},
-  {&__pyx_n_s_percent, __pyx_k_percent, sizeof(__pyx_k_percent), 0, 0, 1, 1},
-  {&__pyx_n_s_pyclusterevol_draw_ppc, __pyx_k_pyclusterevol_draw_ppc, sizeof(__pyx_k_pyclusterevol_draw_ppc), 0, 0, 1, 1},
   {&__pyx_n_s_range, __pyx_k_range, sizeof(__pyx_k_range), 0, 0, 1, 1},
   {&__pyx_n_s_sden, __pyx_k_sden, sizeof(__pyx_k_sden), 0, 0, 1, 1},
   {&__pyx_n_s_test, __pyx_k_test, sizeof(__pyx_k_test), 0, 0, 1, 1},
@@ -4317,17 +4304,17 @@ static int __Pyx_InitCachedConstants(void) {
   __Pyx_GOTREF(__pyx_tuple__6);
   __Pyx_GIVEREF(__pyx_tuple__6);
 
-  /* "pyclusterevol/draw/ppc.pyx":7
+  /* "draw/ppc.pyx":7
  * ctypedef np.float_t DTYPE_t
  * 
- * def col_over_denom(np.ndarray[np.int64_t, ndim=1] iin, \             # <<<<<<<<<<<<<<
- *      np.ndarray[np.float64_t, ndim=1] ixl, \
- *      np.ndarray[np.float64_t, ndim=1] ixr, \
+ * def col_over_denom(np.ndarray[np.int32_t, ndim=1] iin, \             # <<<<<<<<<<<<<<
+ *      np.ndarray[np.int32_t, ndim=1] ixl, \
+ *      np.ndarray[np.int32_t, ndim=1] ixr, \
  */
-  __pyx_tuple__7 = PyTuple_Pack(18, __pyx_n_s_iin, __pyx_n_s_ixl, __pyx_n_s_ixr, __pyx_n_s_iyl, __pyx_n_s_iyr, __pyx_n_s_mass, __pyx_n_s_sden, __pyx_n_s_nx, __pyx_n_s_ny, __pyx_n_s_column, __pyx_n_s_percent, __pyx_n_s_colden, __pyx_n_s_denom, __pyx_n_s_i, __pyx_n_s_i1, __pyx_n_s_i2, __pyx_n_s_j1, __pyx_n_s_j2); if (unlikely(!__pyx_tuple__7)) __PYX_ERR(0, 7, __pyx_L1_error)
+  __pyx_tuple__7 = PyTuple_Pack(17, __pyx_n_s_iin, __pyx_n_s_ixl, __pyx_n_s_ixr, __pyx_n_s_iyl, __pyx_n_s_iyr, __pyx_n_s_mass, __pyx_n_s_sden, __pyx_n_s_nx, __pyx_n_s_ny, __pyx_n_s_column, __pyx_n_s_colden, __pyx_n_s_denom, __pyx_n_s_i, __pyx_n_s_i1, __pyx_n_s_i2, __pyx_n_s_j1, __pyx_n_s_j2); if (unlikely(!__pyx_tuple__7)) __PYX_ERR(0, 7, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__7);
   __Pyx_GIVEREF(__pyx_tuple__7);
-  __pyx_codeobj__8 = (PyObject*)__Pyx_PyCode_New(10, 0, 18, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__7, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_hoseung_Work_pyclusterevol, __pyx_n_s_col_over_denom, 7, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__8)) __PYX_ERR(0, 7, __pyx_L1_error)
+  __pyx_codeobj__8 = (PyObject*)__Pyx_PyCode_New(10, 0, 17, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__7, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_hoseung_Work_pyclusterevol, __pyx_n_s_col_over_denom, 7, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__8)) __PYX_ERR(0, 7, __pyx_L1_error)
   __Pyx_RefNannyFinishContext();
   return 0;
   __pyx_L1_error:;
@@ -4409,14 +4396,14 @@ PyMODINIT_FUNC PyInit_ppc(void)
   #if PY_MAJOR_VERSION < 3 && (__PYX_DEFAULT_STRING_ENCODING_IS_ASCII || __PYX_DEFAULT_STRING_ENCODING_IS_DEFAULT)
   if (__Pyx_init_sys_getdefaultencoding_params() < 0) __PYX_ERR(0, 1, __pyx_L1_error)
   #endif
-  if (__pyx_module_is_main_pyclusterevol__draw__ppc) {
+  if (__pyx_module_is_main_draw__ppc) {
     if (PyObject_SetAttrString(__pyx_m, "__name__", __pyx_n_s_main) < 0) __PYX_ERR(0, 1, __pyx_L1_error)
   }
   #if PY_MAJOR_VERSION >= 3
   {
     PyObject *modules = PyImport_GetModuleDict(); if (unlikely(!modules)) __PYX_ERR(0, 1, __pyx_L1_error)
-    if (!PyDict_GetItemString(modules, "pyclusterevol.draw.ppc")) {
-      if (unlikely(PyDict_SetItemString(modules, "pyclusterevol.draw.ppc", __pyx_m) < 0)) __PYX_ERR(0, 1, __pyx_L1_error)
+    if (!PyDict_GetItemString(modules, "draw.ppc")) {
+      if (unlikely(PyDict_SetItemString(modules, "draw.ppc", __pyx_m) < 0)) __PYX_ERR(0, 1, __pyx_L1_error)
     }
   }
   #endif
@@ -4448,7 +4435,7 @@ PyMODINIT_FUNC PyInit_ppc(void)
   if (__Pyx_patch_abc() < 0) __PYX_ERR(0, 1, __pyx_L1_error)
   #endif
 
-  /* "pyclusterevol/draw/ppc.pyx":1
+  /* "draw/ppc.pyx":1
  * import numpy as np             # <<<<<<<<<<<<<<
  * cimport numpy as np
  * 
@@ -4458,7 +4445,7 @@ PyMODINIT_FUNC PyInit_ppc(void)
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_np, __pyx_t_1) < 0) __PYX_ERR(0, 1, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "pyclusterevol/draw/ppc.pyx":4
+  /* "draw/ppc.pyx":4
  * cimport numpy as np
  * 
  * DTYPE = np.float             # <<<<<<<<<<<<<<
@@ -4473,19 +4460,19 @@ PyMODINIT_FUNC PyInit_ppc(void)
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_DTYPE, __pyx_t_2) < 0) __PYX_ERR(0, 4, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "pyclusterevol/draw/ppc.pyx":7
+  /* "draw/ppc.pyx":7
  * ctypedef np.float_t DTYPE_t
  * 
- * def col_over_denom(np.ndarray[np.int64_t, ndim=1] iin, \             # <<<<<<<<<<<<<<
- *      np.ndarray[np.float64_t, ndim=1] ixl, \
- *      np.ndarray[np.float64_t, ndim=1] ixr, \
+ * def col_over_denom(np.ndarray[np.int32_t, ndim=1] iin, \             # <<<<<<<<<<<<<<
+ *      np.ndarray[np.int32_t, ndim=1] ixl, \
+ *      np.ndarray[np.int32_t, ndim=1] ixr, \
  */
-  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_13pyclusterevol_4draw_3ppc_1col_over_denom, NULL, __pyx_n_s_pyclusterevol_draw_ppc); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 7, __pyx_L1_error)
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_4draw_3ppc_1col_over_denom, NULL, __pyx_n_s_draw_ppc); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 7, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_col_over_denom, __pyx_t_2) < 0) __PYX_ERR(0, 7, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "pyclusterevol/draw/ppc.pyx":1
+  /* "draw/ppc.pyx":1
  * import numpy as np             # <<<<<<<<<<<<<<
  * cimport numpy as np
  * 
@@ -4511,11 +4498,11 @@ PyMODINIT_FUNC PyInit_ppc(void)
   __Pyx_XDECREF(__pyx_t_2);
   if (__pyx_m) {
     if (__pyx_d) {
-      __Pyx_AddTraceback("init pyclusterevol.draw.ppc", __pyx_clineno, __pyx_lineno, __pyx_filename);
+      __Pyx_AddTraceback("init draw.ppc", __pyx_clineno, __pyx_lineno, __pyx_filename);
     }
     Py_DECREF(__pyx_m); __pyx_m = 0;
   } else if (!PyErr_Occurred()) {
-    PyErr_SetString(PyExc_ImportError, "init pyclusterevol.draw.ppc");
+    PyErr_SetString(PyExc_ImportError, "init draw.ppc");
   }
   __pyx_L0:;
   __Pyx_RefNannyFinishContext();

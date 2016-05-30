@@ -488,19 +488,26 @@ def pp_colden(cell, npix, info, proj="z", verbose=False, autosize=False):
 def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
             column=False,
             region=None,
-            xmin=None, xmax=None, ymin=None, ymax=None):
+            xmin=None, xmax=None, ymin=None, ymax=None,
+            hvar="rho", field_var=None):
     """
     Accepts cell data and returns 2D projected gas map.
     """
     import numpy as np
     from draw import ppc
 #    xh = np.asarray([0.5, 0.5, 0.5])
-    hvar = 1
+    #hvar = 1
+    
+    field_x, field_y, field_z, \
+    field_dx, field_rho,\
+    field_vx, field_vy, field_vz, \
+    field_temp, field_metal = cell.dtype.names
+        
     sig = 1.0
     sigrange = sig * 2# what is sigrange?
 
-    x = cell.x
-    y = cell.y
+    x = cell[field_x]
+    y = cell[field_y]
 #    z = cell.z
 #    di = [0, 1]  # What is this?
 #    zh = xh[2]  # what is this?
@@ -541,33 +548,37 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
     scale_nH = info.unit_nH
     scale_T2 = info.unit_T2
 
-    dx = cell.dx[val]
+    dx = cell[field_dx][val]
 
 # No max, no column
     # mass/L**2 = rho*L
     # sden differs with hydro variable type.
+
     if column:
-        sden = cell.var0[val]*dx*(scale_d*scale_l)*0.76/1.66e-24
+        sden = cell[hvar][val]*dx*(scale_d*scale_l)*0.76/1.66e-24
     else:
-        if hvar == 1:
-            sden = cell.var0[val]**2*dx*scale_nH
-#            sden = cell.var0[val]**2*dx*scale_nH
-        if hvar == 5:
-            sden = cell.var4[val]*scale_T2
-        if hvar == 6:
-            sden = cell.var0[val]*dx*cell.var5[val]/0.02
-    mass = cell.var0[val]*dx
+        if field_var is None:
+            if hvar == "rho":
+                sden = cell[field_rho][val]**2*dx*scale_nH
+            if hvar == "temp":
+                sden = cell[field_temp][val]*scale_T2
+            if hvar == "metal":
+                sden = cell[field_temp][val]*dx*cell.var5[val]/0.02            
+        else:
+            sden = cell[field_var][val]
+
+    mass = cell[field_rho][val]*dx
     mass.transpose()
 
     mindx = min(dx)
 
     xmi = np.floor(xmi0/mindx)*mindx
     xma = np.ceil(xma0/mindx)*mindx
-    nx = np.round((xma-xmi-mindx)/mindx)
+    nx = np.round((xma-xmi-mindx)/mindx).astype(np.int32)
 
     ymi = np.floor(ymi0/mindx)*mindx
     yma = ymi + mindx*nx + mindx
-    ny = np.round((yma-ymi-mindx)/mindx)
+    ny = np.round((yma-ymi-mindx)/mindx).astype(np.int32)
 
     if verbose:
         print(" ... working resolution % npix ", nx, ny)
@@ -577,19 +588,19 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
     #dx_dot = (xma0-xmi0)/npix
 #    lv_skip = np.floor(-1. * np.log10(dx_dot)/np.log10(2)) - 1
     # Assum no smoothing.
-    ixmi = round(xmi/mindx)
-    iymi = round(ymi/mindx)
+    ixmi = np.round(xmi/mindx).astype(np.int32) # int
+    iymi = np.round(ymi/mindx).astype(np.int32)
 
     xl   = xl[val]
     xr   = xr[val]
     yl   = yl[val]
     yr   = yr[val]
 
-    ixl = np.round(xl / mindx) - ixmi
-    ixr = np.round(xr / mindx) - ixmi -1
-    iyl = np.round(yl / mindx) - iymi
-    iyr = np.round(yr / mindx) - iymi -1
-    iin = np.where((ixr >= 0) & (ixl <= nx-1) & (iyr >= 0) & (iyl <= ny-1))[0]
+    ixl = np.round(xl / mindx).astype(np.int32) - ixmi
+    ixr = np.round(xr / mindx).astype(np.int32) - ixmi -1
+    iyl = np.round(yl / mindx).astype(np.int32) - iymi
+    iyr = np.round(yr / mindx).astype(np.int32) - iymi -1
+    iin = np.where((ixr >= 0) & (ixl <= nx-1) & (iyr >= 0) & (iyl <= ny-1))[0].astype(np.int32)
     # What does it mean?
     """
     fd = np.where(ixl < 0)[0]
@@ -620,22 +631,14 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
 #    sden.transpose()
 #    colden = np.zeros((nx,ny), dtype=np.float32)
 #    denom =  np.zeros((nx,ny), dtype=np.float32)
+
+    if verbose:
+        print("dimensions of \n mass = {}, \n sden = {}, and nx, ny are {}, {}".format(\
+        mass.shape, sden.shape, nx, ny))
+        print(all(np.isfinite(mass)), all(np.isfinite(sden)))
+        print(mass[100:110])
+        print(sden[100:110])
+        
+    
     return resize(ppc.col_over_denom(iin, ixl, ixr, iyl, iyr, mass, sden, nx, ny, column), [npix,npix])
-    """    
-    print("ddd")
-    if column:
-        for i in iin:
-            colden[ixl[i]:ixr[i]+1, iyl[i]:iyr[i]+1] += sden[i]
-        return(resize(colden, [npix,npix]))
-    else:
-        for i in iin:
-            i1 = ixl[i]
-            i2 = ixr[i]
-            j1 = iyl[i]
-            j2 = iyr[i]
-            # no smoothing or max, no column
-            colden[i1:i2+1, j1:j2+1] += sden[i]
-            denom[i1:i2+1, j1:j2+1] += mass[i]
-        print("eee")
-        return(resize(colden / denom, [npix,npix]))
-    """
+

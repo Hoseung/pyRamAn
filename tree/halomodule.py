@@ -100,25 +100,26 @@ class HaloMeta():
            self.set_nout(nout)
        except:
            pass
+
        if load:
            self.load()
        
     def set_info(self, info):
         if info is None:
             try:
-                self.load_info()
+                self._load_info()
             except:
-                print("[Halo.set_info] Are these parameters right?")
+                print("[Halo.set_info] Couldn't load info file.")
+                raise # automatically raise the most recent error
         else:
             self.info = info
 
-    def load_info(self, nout=None):
+    def _load_info(self):
         import load.info
-        if nout is None:
-            nout = self.nout
-        if self.verbose : print("[Halo.load_info] loading info")
-#        print("[Halo.load_info]", nout, self.base)
-        self.info = load.info.Info(nout=nout, base=self.base, load=True)    
+        if self.verbose: 
+            print("[Halo.load_info] loading info")
+            print("[Halo.load_info] nout = {}, base ={}".format(self.nout, self.base))
+        self.info = load.info.Info(nout=self.nout, base=self.base, load=True)    
         if self.verbose : print("[Halo.load_info] info is loaded")
 
     def set_halofinder(self, halofinder):
@@ -160,8 +161,13 @@ class Halo(HaloMeta):
        Rockstar halo id starts from 0. CT id too.
 
     """
-#    def __init__(self):  __ini__ is also inherited from HaloMeta
+#    def __init__(self):  __ini__ is also inherited from HaloMet
 
+    def _check_params(self):
+        assert (self.base is not None), "No working directory given : {}".format(self.base)
+        assert (self.nout is not None), "No nout given : {}".format(self.nout)
+        #assert (self.base is not None), "No  : {}".format(self.base)
+    
     def set_data(self, data):
         if data is None:
             self.load()
@@ -169,6 +175,8 @@ class Halo(HaloMeta):
             self.data = data
 
     def load(self):
+        print(self.nout)
+        self._check_params()
         if self.halofinder is 'Rockstar':
             self.load_rs()
         elif self.halofinder is 'HaloMaker':
@@ -178,7 +186,7 @@ class Halo(HaloMeta):
                 self.load_hm()
             if self.info is None:
                 import load
-                info = load.info.Info(base = self.base, nout = self.nout, load = True)
+                info = load.info.Info(base = self.base, nout = self.nout, load=True)
                 self.set_info(info)
         
             self.normalize()
@@ -216,6 +224,7 @@ class Halo(HaloMeta):
             fn = base + self.gal_find_dir + 'gal/tree_bricks' + snout
         else:
             fn = base + self.dm_find_dir + 'DM/tree_bricks' + snout
+        if self.verbose: print("Loading file:", fn)
         try:
             dtype_halo = [('np', '<i4'), ('id', '<i4'), ('level', '<i4'),
                           ('host', '<i4'), ('sub', '<i4'), ('nsub', '<i4'),
@@ -527,5 +536,4 @@ class Halo(HaloMeta):
             self.nhalo = len(ind)
         except:
             self.nhalo = len([ind])
-
 
