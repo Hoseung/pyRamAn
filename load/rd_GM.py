@@ -15,6 +15,10 @@ class Gal():
 
 
 def rd_gal(nout, idgal, wdir="./", metal=True, nchem=0,long=True):
+    """
+
+    header xg in Mpc (physical, centered at 0.5, 0.5, 0.5 of the simualtion volume)
+    """
     # Header structure
     dtype_header = np.dtype([('my_number', 'i4'),
                              ('level', 'i4'),

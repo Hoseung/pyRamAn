@@ -64,12 +64,13 @@ def augment_tree(treedata, base, is_gal=False):
  
     # Drop duplicate fields
     #["id", "mvir", "rvir", "x", "y", "z", "vx", "vy", "vz"]
-    
     keep_fields = ["np", "r", "tvir", "cvel"]
     if is_gal:
         [keep_fields.append(i) for i in ['sig', 'sigbulge', 'mbulge', "m"]]
     else:
-        keep_fields.append("mvir")
+        keep_fields.append("m") 
+    # in case of DM halo, mvir is already passed to Ctrees  when building it.
+        
         
     return join_struct_arrays([treedata, New_arr[keep_fields]])
 
