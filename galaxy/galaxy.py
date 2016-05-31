@@ -20,38 +20,69 @@ import numpy as np
 
 #def radial_profile_cut(star, center, mag_lim=25):
 
-class dummy():
-	pass
+def print_large_number(q):
+    if isinstance(q, (int, np.int, np.int16, np.int32, np.int64)):
+        return("{:d}".format(q))
+    elif q > 1e4:
+        return("{:.3e}".format(q))
+    else:
+        return("{:.2f}".format(q))
+
+class Meta():   
+    def __init__(self):
+        self.xc = 0
+        self.yc = 0
+        self.zc = 0
+        self.vxc = 0
+        self.vyc = 0
+        self.vzc = 0
+        self.reff = 0
+        self.mstar = 0
+        self.nstar = 0
+        self.mgas = 0        
+        self.lambda_arr = None
+        self.lambda_r = 0
+        self.lambda_arr2 = None # reoriented values
+        self.lambda_r2 = 0 # reoriented values
+        self.vmap = None
+        self.pt=[]
+        self.pq=[]
+        self.sfr=0.0
+        self.ssfr=0.0
+        self.mrj=0.0
+        self.d2t=0.0
+        
+    def show_summary(self):
+        """
+            prints a summary of the galaxy meta data.
+        """
+        for name in sorted(self.__dict__):
+            q = self.__dict__[name]
+            if q is not None:
+                if isinstance(q, str):
+                    print(name, ":", q)
+                else:
+                    try: 
+                        len(q) # if sequence
+                        print(name, ":", q)
+                    except:
+                        if np.isfinite(q): # string..
+                            print(name, ":", print_large_number(q))
+                        else:
+                            print(name, ":", q)
+            else:
+                print(name, ":", q)     
+
+	
 
 class Galaxy(object):
 
     def __init__(self, halo=None, radius_method='eff', info=None):
-        self.meta = dummy()
+        self.meta = Meta()
         self.set_halo(halo)
         self.info = info
         self.meta.radius_method=radius_method
         #self.meta.id=-1 # why did I do this...?? 
-        self.meta.xc = 0
-        self.meta.yc = 0
-        self.meta.zc = 0
-        self.meta.vxc = 0
-        self.meta.vyc = 0
-        self.meta.vzc = 0
-        self.meta.reff = 0
-        self.meta.mstar = 0
-        self.meta.nstar = 0
-        self.meta.mgas = 0
-        self.meta.lambda_arr = None
-        self.meta.lambda_r = 0
-        self.meta.lambda_arr2 = None # reoriented values
-        self.meta.lambda_r2 = 0 # reoriented values
-        self.meta.vmap = None
-        self.meta.pt=[]
-        self.meta.pq=[]
-        self.meta.sfr=0.0
-        self.meta.ssfr=0.0
-        self.meta.mrj=0.0
-        self.meta.d2t=0.0
 
     def set_halo(self, halo):
         if halo is not None:
@@ -73,13 +104,6 @@ class Galaxy(object):
                             mag_lim=25, nbins=100, rmax=50, dr=0.5):
         # 2D photometry. (if rotated towards +y, then use x and z)
         # now assuming +z alignment. 
-#        xx = self.star['x']
-#        yy = self.star['y']
-#        mm = self.star['m']
-#        vx = self.star['vx']
-#        vy = self.star['vy']
-#        vz = self.star['vz']
-#        print("min max xx",min(xx), max(xx))
         rr = np.sqrt(np.square(xx) + np.square(yy))# in kpc unit
 
         # Account for weights.
@@ -132,7 +156,8 @@ class Galaxy(object):
     def mk_gal(self, star, dm, cell,
                save=False, rscale=0.5, verbose=False,
                mstar_min=1e9,
-               rmin = -1, Rgal_to_reff=5.0, method_com=1, follow_bp=None):
+               rmin = -1, Rgal_to_reff=5.0, method_com=1, follow_bp=None,
+               unit_conversion="code"):
         """
             Input data in code unit.
             
@@ -161,30 +186,39 @@ class Galaxy(object):
             print("Halo size:", self.halo['rvir'] * self.info.pboxsize * 1000.0)
 
 
-#        print("min max stars ",min(star['x']), max(star['x']))
-
         # galaxy center from GalaxyMaker. - good enough.
         xc = self.halo['x']
         yc = self.halo['y']
         zc = self.halo['z']
 
-        self.meta.xc = xc * self.info.pboxsize*1000
-        self.meta.yc = yc * self.info.pboxsize*1000
-        self.meta.zc = zc * self.info.pboxsize*1000
+        print(xc, yc, zc)
+    
+        if unit_conversion == "code":
+            self.meta.xc = xc * self.info.pboxsize*1000
+            self.meta.yc = yc * self.info.pboxsize*1000
+            self.meta.zc = zc * self.info.pboxsize*1000
 
-
-        star['x'] = (star['x'] - xc) * self.info.pboxsize*1000
-        star['y'] = (star['y'] - yc) * self.info.pboxsize*1000
-        star['z'] = (star['z'] - zc) * self.info.pboxsize*1000
-
+            star['x'] = (star['x'] - xc) * self.info.pboxsize*1000
+            star['y'] = (star['y'] - yc) * self.info.pboxsize*1000
+            star['z'] = (star['z'] - zc) * self.info.pboxsize*1000
+            if 'm' in star.dtype.names:
+                star['m'] = star['m'] * self.info.msun
+        elif unit_conversion == "GM":
+            self.meta.xc = xc * self.info.pboxsize
+            self.meta.yc = yc * self.info.pboxsize
+            self.meta.zc = zc * self.info.pboxsize
+            
+            star['x'] = (star['x'] - (xc - 0.5) * self.info.pboxsize)*1e3
+            star['y'] = (star['y'] - (yc - 0.5) * self.info.pboxsize)*1e3
+            star['z'] = (star['z'] - (zc - 0.5) * self.info.pboxsize)*1e3
+            if 'm' in star.dtype.names:
+                star['m'] = star['m'] * 1e11 # in Msun.
+            
 #        rscale_cen = 0.25
-        
 #        rr_tmp = min([self.halo['r'], 0.0002]) # less than 40kpc/h
         # arbitrary! < 40kpc
 #        rr_tmp = max([min([self.halo['r'], 0.0002]), 0.000015]) # larger than 3kpc/h
 
-        if 'm' in star.dtype.names:
-            star['m'] = star['m'] * self.info.msun
 
         rgal_tmp = self.halo['r'] * self.info.pboxsize * 1000.0
         print("Rgal_tmp", rgal_tmp)
@@ -201,7 +235,7 @@ class Galaxy(object):
                         np.square(star['y']) +
                         np.square(star['z'])) < self.meta.rgal**2)[0]# in kpc unit
 
-        rr_tmp = self.meta.rgal
+        #rr_tmp = self.meta.rgal
         self.star = star[ind]
 
         self.meta.nstar = len(ind)
@@ -242,14 +276,18 @@ class Galaxy(object):
 
         # Now, get cov
 #        self.get_cov(center_only=True)
+        if unit_conversion == "code":
+            self.meta.vxc *= self.info.kms
+            self.meta.vyc *= self.info.kms
+            self.meta.vzc *= self.info.kms
 
-        self.meta.vxc *= self.info.kms
-        self.meta.vyc *= self.info.kms
-        self.meta.vzc *= self.info.kms
-
-        self.star['vx'] = self.star['vx'] * self.info.kms - self.meta.vxc
-        self.star['vy'] = self.star['vy'] * self.info.kms - self.meta.vyc
-        self.star['vz'] = self.star['vz'] * self.info.kms - self.meta.vzc
+            self.star['vx'] = self.star['vx'] * self.info.kms - self.meta.vxc
+            self.star['vy'] = self.star['vy'] * self.info.kms - self.meta.vyc
+            self.star['vz'] = self.star['vz'] * self.info.kms - self.meta.vzc
+        elif unit_conversion == "GM":
+            self.star['vx'] -= self.meta.vxc
+            self.star['vy'] -= self.meta.vyc
+            self.star['vz'] -= self.meta.vzc
 
         if dm is not None:
             if member == "Reff":
@@ -295,7 +333,7 @@ class Galaxy(object):
             self.cell['x'] = (cell['x'][icell] - xc) * self.info.pboxsize * 1000
             self.cell['y'] = (cell['y'][icell] - yc) * self.info.pboxsize * 1000
             self.cell['z'] = (cell['z'][icell] - zc) * self.info.pboxsize * 1000
-            self.cell['dx'] = cell['dx'][icell]
+            self.cell['dx'] = cell['dx'][icell] * self.info.pboxsize * 1000
             self.cell['rho'] = cell['var0'][icell]
             self.cell['vx'] = cell['var1'][icell] * self.info.kms - self.meta.vxc
             self.cell['vy'] = cell['var2'][icell] * self.info.kms - self.meta.vyc
