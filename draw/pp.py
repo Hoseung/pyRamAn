@@ -260,6 +260,14 @@ def pp_halo(h, npix, rscale=1.0, region=None, ind=None, axes=None,
     from draw import pp
     import numpy as np
 
+	# h can be either a halo.data or just a halo.
+    # 
+    try:
+        h.data['x']
+        hd = h.data
+    except:
+        hd = h
+
     # use pp_halo rather then the script below.
     if axes is None:
         if new_axes:
@@ -272,21 +280,21 @@ def pp_halo(h, npix, rscale=1.0, region=None, ind=None, axes=None,
     if ind is None:
         if region is None:
             # If no region, plot all 
-            ind = np.arange(len(h.data))
-            xmin = min(h.data['x'][ind])
-            ymin = min(h.data['y'][ind])
-            xspan = np.ptp(h.data['x'][ind])
-            yspan = np.ptp(h.data['y'][ind])
+            ind = np.arange(len(hd))
+            xmin = min(hd['x'][ind])
+            ymin = min(hd['y'][ind])
+            xspan = np.ptp(hd['x'][ind])
+            yspan = np.ptp(hd['y'][ind])
         else:
             # If reion is given, plot only the halos inside the region.
             # The size of region is retained. 
             # image area does not shrink to fit only valid halos.
-            ind = np.where((h.data['x'] > region["xr"][0]) &
-                    (h.data['x'] < region["xr"][1]) &
-                    (h.data['y']> region["yr"][0]) & 
-                    (h.data['y'] < region["yr"][1]) &
-                    (h.data['z'] > region["zr"][0]) &
-                    (h.data['z'] < region["zr"][1]))[0]
+            ind = np.where((hd['x'] > region["xr"][0]) &
+                    (hd['x'] < region["xr"][1]) &
+                    (hd['y']> region["yr"][0]) & 
+                    (hd['y'] < region["yr"][1]) &
+                    (hd['z'] > region["zr"][0]) &
+                    (hd['z'] < region["zr"][1]))[0]
             xmin = region["xr"][0]
             ymin = region["yr"][0]
             xspan = np.ptp(region["xr"])
@@ -297,19 +305,19 @@ def pp_halo(h, npix, rscale=1.0, region=None, ind=None, axes=None,
             ind = np.arange(len(ind))[ind]
         
         if region is None:
-            xmin = min(h.data['x'][ind])
-            ymin = min(h.data['y'][ind])
-            xspan = np.ptp(h.data['x'][ind])
-            yspan = np.ptp(h.data['y'][ind])
+            xmin = min(hd['x'][ind])
+            ymin = min(hd['y'][ind])
+            xspan = np.ptp(hd['x'][ind])
+            yspan = np.ptp(hd['y'][ind])
         else:
             xmin = region["xr"][0]
             ymin = region["yr"][0]
             xspan = np.ptp(region["xr"])
             yspan = np.ptp(region["yr"])
 
-    x = (h.data["x"][ind] - xmin) / xspan * npix 
-    y = (h.data["y"][ind] - ymin) / yspan * npix 
-    r = h.data[radius][ind]/xspan * npix * rscale # Assuing xspan == yspan
+    x = (hd["x"][ind] - xmin) / xspan * npix 
+    y = (hd["y"][ind] - ymin) / yspan * npix 
+    r =  hd[radius][ind]/xspan * npix * rscale # Assuing xspan == yspan
 
     if verbose:
         print("# of halos to plot:", len(ind))
@@ -319,8 +327,8 @@ def pp_halo(h, npix, rscale=1.0, region=None, ind=None, axes=None,
         print(xmin, ymin, xspan, yspan, npix, rscale)
 
     if color_field is not None:
-        #colors = h.data[color_field][ind]
-        kwargs.update({"colors": h.data[color_field][ind]})
+        #colors = hd[color_field][ind]
+        kwargs.update({"colors": hd[color_field][ind]})
     #else:
         #kwargs.update({"colors": None})
     pp.circle_scatter(axes, x, y, r, facecolors='none',
@@ -330,7 +338,7 @@ def pp_halo(h, npix, rscale=1.0, region=None, ind=None, axes=None,
     axes.set_ylim([min(y), max(y)])
     if name:
         for i, ii in enumerate(ind):
-            axes.annotate(str(h.data["id"][ii]), (x[i],y[i]),
+            axes.annotate(str(hd["id"][ii]), (x[i],y[i]),
                               fontsize=fontsize)
 
     return True
