@@ -24,6 +24,6 @@ class Default():
         if is_gal:
             return self.dir_galaxy_tree + "extended_tree.pickle"
         else:
-            return self.dir_galaxy_halo + "extended_tree.pickle"
+            return self.dir_halo_tree + "extended_tree.pickle"
         
         

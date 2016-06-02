@@ -78,6 +78,54 @@ def rd_gal(nout, idgal, wdir="./", metal=True, nchem=0,long=True):
     return gal
 
 
+def rd_dm(nout, idgal, wdir="./", long=True):
+    """
+
+    header xg in Mpc (physical, centered at 0.5, 0.5, 0.5 of the simualtion volume)
+    """
+    # Header structure
+    dtype_header = np.dtype([('my_number', 'i4'),
+                             ('level', 'i4'),
+                             ('mgal', 'f8'),
+                             ('xg', 'f8', (3,)),
+                             ('vg', 'f8', (3,)),
+                             ('lg', 'f8', (3,)),
+                             ('npart', 'i4')])
+    
+    # variable type
+    dtype_data=[('x', '<f8'),
+                ('y', '<f8'),
+                ('z', '<f8'),
+                ('vx', '<f8'),
+                ('vy', '<f8'),
+                ('vz', '<f8'),
+               ('id', '<i4'),
+               ('m', '<f8')]
+    
+    idgal = str(idgal).zfill(7)
+    dir_nout = "HAL_" + str(nout).zfill(5)      
+    with open(wdir + 'halo/' +  dir_nout + '/hal_dms_' + idgal, "rb") as f:
+        header = read_header(f, dtype=dtype_header)
+        header['mgal'] *= 1e11 # mass fof galaxy
+        
+        # data array
+        data = np.recarray(header["npart"], dtype=dtype_data)
+        data['x'] = read_fortran(f, np.dtype('f8'), header["npart"]) # row-major
+        data['y'] = read_fortran(f, np.dtype('f8'), header["npart"])
+        data['z'] = read_fortran(f, np.dtype('f8'), header["npart"])
+    
+        data['vx'] = read_fortran(f, np.dtype('f8'), header["npart"]) # row-major
+        data['vy'] = read_fortran(f, np.dtype('f8'), header["npart"])
+        data['vz'] = read_fortran(f, np.dtype('f8'), header["npart"])
+        
+        
+        data['m'] = read_fortran(f, np.dtype('f8'), header["npart"]) # row-major
+        data['id'] = read_fortran(f, np.dtype('i4'), header["npart"])
+        
+    return data
+
+
+
 def rd_cell(nout, idgal, wdir="./", metal=True, nchem=0):
     from utils import io
     dir_nout = "CELL_" + str(nout).zfill(5)   

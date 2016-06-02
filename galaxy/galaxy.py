@@ -30,20 +30,20 @@ def print_large_number(q):
 
 class Meta():   
     def __init__(self):
-        self.xc = 0
-        self.yc = 0
-        self.zc = 0
-        self.vxc = 0
-        self.vyc = 0
-        self.vzc = 0
-        self.reff = 0
-        self.mstar = 0
+        self.xc = 0.0
+        self.yc = 0.0
+        self.zc = 0.0
+        self.vxc = 0.0
+        self.vyc = 0.0
+        self.vzc = 0.0
+        self.reff = 0.0
+        self.mstar = 0.0
         self.nstar = 0
-        self.mgas = 0        
+        self.mgas = 0.0
         self.lambda_arr = None
-        self.lambda_r = 0
+        self.lambda_r = 0.0
         self.lambda_arr2 = None # reoriented values
-        self.lambda_r2 = 0 # reoriented values
+        self.lambda_r2 = 0.0 # reoriented values
         self.vmap = None
         self.pt=[]
         self.pq=[]
@@ -124,9 +124,15 @@ class Galaxy(object):
             if (m_radial[i]/(2 * np.pi * bin_centers[i] * dr)) < den_lim:
                 i_r_cut1 = i-1
                 break
-            
-        i_r_cut2= np.argmax(m_radial/(2 * np.pi * bin_centers * dr) < den_lim2)
-
+        #i_r_cut2= np.argmax(m_radial/(2 * np.pi * bin_centers * dr) < den_lim2)
+        # If for some reason central region is less dense,
+        # profile can end at the first index.
+        # Instead coming from backward, search for the point the opposite condition satisfied.
+        den_radial_inverse = m_radial[::-1]/(2 * np.pi * bin_centers[::-1] * dr)
+        if max(den_radial_inverse) < den_lim2:
+            return False
+        i_r_cut2=len(m_radial) - np.argmax(den_radial_inverse > den_lim2)
+        
         mtot2 = sum(m_radial[:i_r_cut2])
         mtot1 = sum(m_radial[:i_r_cut1])
         i_reff2 = np.argmax(np.cumsum(m_sorted) > (0.5*mtot2))
@@ -150,7 +156,7 @@ class Galaxy(object):
         self.meta.vyc = np.average(vy[i_close])
         self.meta.vzc = np.average(vz[i_close])
 
-#        return rr < self.rgal
+        return True
 
     
     def mk_gal(self, star, dm, cell,
@@ -160,6 +166,8 @@ class Galaxy(object):
                unit_conversion="code"):
         """
             Input data in code unit.
+
+            Returns True if it is a good galaxy
             
             Parameters
             ----------
@@ -191,7 +199,7 @@ class Galaxy(object):
         yc = self.halo['y']
         zc = self.halo['z']
 
-        print(xc, yc, zc)
+        if verbose: print(xc, yc, zc)
     
         if unit_conversion == "code":
             self.meta.xc = xc * self.info.pboxsize*1000
@@ -221,16 +229,17 @@ class Galaxy(object):
 
 
         rgal_tmp = self.halo['r'] * self.info.pboxsize * 1000.0
-        print("Rgal_tmp", rgal_tmp)
+        if verbose: print("Rgal_tmp", rgal_tmp)
 #        self.radial_profile_cut(den_lim=1e6, den_lim2=5e6,
-        self.radial_profile_cut(star['x'], star['y'], star['m'],
+        dense_enough = self.radial_profile_cut(star['x'], star['y'], star['m'],
                                 star['vx'], star['vy'], star['vz'],
                                 den_lim=1e6, den_lim2=5e6,
                                 mag_lim=25,
                                 nbins=int(rgal_tmp/0.5),
                                 dr=0.5,
                                 rmax=rgal_tmp)
-
+        if not dense_enough:
+            return False
         ind = np.where((np.square(star['x']) + 
                         np.square(star['y']) +
                         np.square(star['z'])) < self.meta.rgal**2)[0]# in kpc unit
@@ -302,20 +311,35 @@ class Galaxy(object):
                                 np.square(dm["vz"] - self.meta.vzc / self.info.kms) <= np.square(200**2))[0]
             ndm_tot = len(idm)
 
+
             self.dm = np.recarray(ndm_tot, dtype=dm.dtype)
             if 'id' in dm.dtype.names:
                 self.dm['id'] = dm['id'][idm] 
             if 'm' in dm.dtype.names:
-                self.dm['m'] = dm['m'][idm] * self.info.msun
+                if unit_conversion == "code":
+                    self.dm['m'] = dm['m'][idm] * self.info.msun
+                elif unit_conversion == "GM":
+                    self.dm['m'] = dm['m'][idm] * 1e11
+
             if 'x' in dm.dtype.names:
-                self.dm['x'] = (dm['x'][idm] - xc) * self.info.pboxsize * 1000
-                self.dm['y'] = (dm['y'][idm] - yc) * self.info.pboxsize * 1000
-                self.dm['z'] = (dm['z'][idm] - zc) * self.info.pboxsize * 1000
+                if unit_conversion == "code":
+                    self.dm['x'] = (dm['x'][idm] - xc) * self.info.pboxsize * 1000
+                    self.dm['y'] = (dm['y'][idm] - yc) * self.info.pboxsize * 1000
+                    self.dm['z'] = (dm['z'][idm] - zc) * self.info.pboxsize * 1000
+                elif unit_conversion == "GM":
+                    self.dm['x'] = (dm['x'][idm] - (xc - 0.5) * self.info.pboxsize)*1e3
+                    self.dm['y'] = (dm['y'][idm] - (yc - 0.5) * self.info.pboxsize)*1e3
+                    self.dm['z'] = (dm['z'][idm] - (zc - 0.5) * self.info.pboxsize)*1e3
             if 'vel' in dm.dtype.names:
-                # Velocity is centered and normalized later on.
-                self.dm['vx'] = (dm['vx'][idm] - self.meta.vxc) * self.info.kms
-                self.dm['vy'] = (dm['vy'][idm] - self.meta.vyc) * self.info.kms
-                self.dm['vz'] = (dm['vz'][idm] - self.meta.vzc) * self.info.kms
+                if unit_conversion == "code":
+                    # Velocity is centered and normalized later on.
+                    self.dm['vx'] = (dm['vx'][idm] - self.meta.vxc) * self.info.kms
+                    self.dm['vy'] = (dm['vy'][idm] - self.meta.vyc) * self.info.kms
+                    self.dm['vz'] = (dm['vz'][idm] - self.meta.vzc) * self.info.kms
+                elif unit_conversion == "GM":
+                    self.dm['vx'] -= self.meta.vxc
+                    self.dm['vy'] -= self.meta.vyc
+                    self.dm['vz'] -= self.meta.vzc
             if verbose: print("DM data stored")
             
 
@@ -333,7 +357,7 @@ class Galaxy(object):
             self.cell['x'] = (cell['x'][icell] - xc) * self.info.pboxsize * 1000
             self.cell['y'] = (cell['y'][icell] - yc) * self.info.pboxsize * 1000
             self.cell['z'] = (cell['z'][icell] - zc) * self.info.pboxsize * 1000
-            self.cell['dx'] = cell['dx'][icell] * self.info.pboxsize * 1000
+            self.cell['dx'] = cell['dx'][icell]# * self.info.pboxsize * 1000
             self.cell['rho'] = cell['var0'][icell]
             self.cell['vx'] = cell['var1'][icell] * self.info.kms - self.meta.vxc
             self.cell['vy'] = cell['var2'][icell] * self.info.kms - self.meta.vyc
@@ -661,7 +685,7 @@ class Galaxy(object):
     def cal_mgas(self):
         msun = 1.98892e33 # solar mass in gram.
         self.meta.mgas = sum((self.cell['rho'] * self.info.unit_d) * 
-        (self.cell['dx'] * self.info.unit_l)**3 / msun)
+                             (self.cell['dx']  * self.info.unit_l)**3) / msun
         # [g/cm^3] * [cm^3] / [g/msun] = [msun]
     
     def cal_sfr(self):
@@ -791,7 +815,14 @@ class Galaxy(object):
                np.square(self.star['y']) + \
                np.square(self.star['z'])) < np.square(reff * (rscale + 1))
 
-        print("{:.2f}% of stellar particles selected".format(sum(ind)/self.meta.nstar*100))
+        n_frac = sum(ind)/self.meta.nstar*100
+        print("{:.2f}% of stellar particles selected".format(n_frac))
+        if n_frac < 10:
+            print("min max x", min(self.star['x']), max(self.star['x']))
+            print("min max y", min(self.star['y']), max(self.star['y']))
+            print("min max z", min(self.star['z']), max(self.star['z']))
+            print("# star", len(ind))
+            return False
         # 100% means that the galaxy radius is smaller than 4Reff.
         # Considering ellipticity, even 4Reff may not be enough to derive.
 
@@ -1149,7 +1180,7 @@ class Galaxy(object):
                 d_05reff = np.argmax(dsort > 0.5*dsort[i_reff]) # dsort[d_05reff] = 0.5Reff
                 frac05 = d_05reff/len(mmap)
 
-                print("frac05", frac05)
+                #print("frac05", frac05)
 
                 f = mge.find_galaxy.find_galaxy(self.mmap, quiet=True, plot=False,
                                                 mask_shade=False,
@@ -1178,7 +1209,7 @@ class Galaxy(object):
                 #frac15 = d_15reff/len(mmap)
                 frac15 = np.pi / self.meta.rscale_lambda**2 * (15/(2*reff))**2 # fraction of 15kpc in the mmap.
                 frac15 = min([0.99, frac15])
-                print("frac15", frac15)
+                #print("frac15", frac15)
 
                 f = mge.find_galaxy.find_galaxy(self.mmap, quiet=True, plot=False,
                                                 mask_shade=False,
@@ -1261,7 +1292,6 @@ class Galaxy(object):
         for target in pops:
             pop = getattr(self, target)
             RM = self.rotation_matrix
-
             new_x = np.matmul(RM, np.vstack((pop['x'], pop['y'], pop['z']))) 
             new_v = np.matmul(RM, np.vstack((pop['vx'], pop['vy'], pop['vz'])))
 
@@ -1354,7 +1384,6 @@ class Galaxy(object):
         lx = sum(y*vz - z*vy) # normalized; *m is omitted.
         ly = sum(z*vx - x*vz)
         lz = sum(x*vy - y*vx)
-
         self.meta.nvec = np.array([lx, ly, lz])/np.sqrt(lx**2 + ly**2 + lz**2)
 #        self.cal_rotation_matrix(dest=dest)
         return self.meta.nvec
