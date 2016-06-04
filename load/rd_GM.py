@@ -8,6 +8,15 @@ from load.utils import read_header, read_fortran
 import numpy as np
 
 
+class Header():
+    def __init__(self):
+        self.nout = -1
+        self.gid = -1
+        self.hid = -1
+        
+
+    
+
 class Gal():
     def __init__(self):
         """
@@ -15,7 +24,31 @@ class Gal():
         """
         self.star = None # data -> star
         self.header = None
+        self.nout = -1
+        self.gid = -1
+        self.hid = -1
+        self._age_in_gyr = False
 
+    def time2gyr(self, info=None):
+        if self._age_in_gyr:
+            print("stellar age already in physical unit")
+        else:
+            if info is None:
+                try:
+                    import load
+                    self.info = load.info.Info(nout=self.nout, base=self.wdir)
+                    info = self.info
+                except:
+                    print("Failed to load info")
+                    return
+ 
+            import utils.cosmology
+            self.star['time'] = utils.cosmology.time2gyr(self.star['time'],
+                                 z_now = info.zred,
+                                 info=info)
+            self._age_in_gyr = True
+        
+ 
 
 def rd_gal(nout, idgal, wdir="./", metal=True, nchem=0,long=True):
     """
@@ -75,6 +108,10 @@ def rd_gal(nout, idgal, wdir="./", metal=True, nchem=0,long=True):
     gal = Gal()
     gal.star = data
     gal.header = header
+    gal.gid = header['my_number']
+    gal.nout = nout
+    gal.wdir = wdir
+
     return gal
 
 

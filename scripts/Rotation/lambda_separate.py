@@ -455,6 +455,8 @@ def worker(gals, hals, out_q, info, inds,
         galid = gg['id']
         halid = hh['id']
         gm = load.rd_GM.rd_gal(info.nout, galid, wdir=wdir)
+        # print('!!!! mima vx in gm', min(gm.star['vx']), max(gm.star['vx']))
+
         if hydro:
             gm.cell = load.rd_GM.rd_cell(info.nout, galid, wdir=wdir)
         else:
@@ -477,20 +479,21 @@ def worker(gals, hals, out_q, info, inds,
         gal = galaxy.Galaxy(halo = gg,
                             radius_method='eff',
                             info=info)
+        #print('!!!! mima vx gm.dm', min(gm.dm['vx']), max(gm.dm['vx']))
         good_gal = gal.mk_gal(gm.star, gm.dm, gm.cell,
                               unit_conversion="GM",
-                              verbose=True)
+                              verbose=False)
 
-        print("GAS MASS in solar mass", gal.meta.mgas)
+        #print("GAS MASS in solar mass", gal.meta.mgas)
 
         galid = gal.meta.id
-        print("galaxy {} is made \n".format(galid))
 
         #do other things
         if not good_gal:
             print(galid, " Not a good galaxy")
             #out_q.put(gal.meta)
         else:
+            print("galaxy {} is made \n".format(galid))
             lambdas = gal.cal_lambda_r_eps(npix_per_reff=npix_lambda,
                            rscale=rscale_lambda, method='ellip', verbose=False) # calculate within 1.0 * reff
             gal.meta.lambda_arr, gal.meta.lambda_arrh, gal.meta.lambda_12kpc= lambdas[0]
@@ -502,11 +505,12 @@ def worker(gals, hals, out_q, info, inds,
             gal.meta.__dict__['idx'] = hals.data['idx'][i]
             gal.meta.__dict__['rhalo'] = hals.data['rvir'][i]
 
-            print("\n \n Good galaxy. ID, IDx", galid, gal.meta.idx)
+            print("   lambda calculation done. ID, IDx", galid, gal.meta.idx)
 #            if dump_gal:
 #                # save gal before reorientation
 #                print(galaxy_plot_dir + str(nout).zfill(3) + "_" + str(galid) + ".h5")
 #                mkg.save_gal(gal, galaxy_plot_dir + str(nout).zfill(3) + "_" + str(galid) + ".h5")
+
 
             if reorient:
                 gal.cal_norm_vec(["star"], dest=[0.,1.,0.])
@@ -732,7 +736,7 @@ def main(wdir='./',
 
         info = load.info.Info(nout=nout, base=wdir, load=True)
         if nout < 187:
-            mstar_min = get_mstar_min(info.aexp)
+            mstar_min = 2 * get_mstar_min(info.aexp)
         print("Mstar now, min: {:.2e} {:.2e}".format(2 * \
                     (masscut_a * info.aexp + masscut_b), mstar_min))
 

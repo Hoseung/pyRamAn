@@ -93,6 +93,7 @@ class Info:
 # from M import * does not import _blah_blah.
 
     def _cal_units(self, arr, rarr):
+        import utils.cosmology
         # in cgs unit
         kpc = 3.08e21
         twopi = 6.2831853e0
@@ -119,7 +120,6 @@ class Info:
 
         self.ncpu_tot = arr[0]
         self.boxtokpc = rarr[0] * scale_l/kpc
-        self.tGyr = rarr[1] * scale_t/Gyr # unreliable.
         self.boxlen = rarr[0]
         self.lmin = arr[2]
         self.lmax = arr[3]
@@ -145,6 +145,7 @@ class Info:
         self.ob = rarr[7]
         self.msun = scale_d*scale_l**3/m_sun
         self.cboxsize = self.H0 * self.pboxsize / self.aexp * 1e-2
+        self.tGyr = utils.cosmology.time2gyr(rarr[1], z_now = self.zred, info = self)
 
     def keys(self):
         from pprint import pprint

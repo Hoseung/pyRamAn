@@ -100,8 +100,9 @@ class Galaxy(object):
 
 #    def radial_profile_cut(self, den_lim=2e6, den_lim2=5e6,
     def radial_profile_cut(self, xx, yy, mm, vx, vy, vz,
-                          den_lim=2e6, den_lim2=5e6,
-                            mag_lim=25, nbins=100, rmax=50, dr=0.5):
+                           den_lim=2e6, den_lim2=5e6,
+                           mag_lim=25, nbins=100, rmax=50, dr=0.5,
+                           debug=False):
         # 2D photometry. (if rotated towards +y, then use x and z)
         # now assuming +z alignment. 
         rr = np.sqrt(np.square(xx) + np.square(yy))# in kpc unit
@@ -119,6 +120,10 @@ class Galaxy(object):
         
         m_radial = np.zeros(nbins)
         ibins = np.concatenate((np.zeros(1), np.cumsum(frequency)))
+
+        i_r_cut1 = nbins -1 # Maximum value
+        # on rare occasions, a galaxy's stellar surface density
+        # never crosses the density limit. Then i_r_cut1 = last index.
         for i in range(nbins):
             m_radial[i] = np.sum(m_sorted[ibins[i]:ibins[i+1]])
             if (m_radial[i]/(2 * np.pi * bin_centers[i] * dr)) < den_lim:
@@ -129,9 +134,13 @@ class Galaxy(object):
         # profile can end at the first index.
         # Instead coming from backward, search for the point the opposite condition satisfied.
         den_radial_inverse = m_radial[::-1]/(2 * np.pi * bin_centers[::-1] * dr)
-        if max(den_radial_inverse) < den_lim2:
+        if max(den_radial_inverse) < 2 * den_lim2:
             return False
         i_r_cut2=len(m_radial) - np.argmax(den_radial_inverse > den_lim2)
+        if debug:
+            print("[galaxy.Galaxy.radial_profile_cut] m_radial \n", m_radial)
+            print("[galaxy.Galaxy.radial_profile_cut] den_radial_inverse \n", den_radial_inverse)
+            print("[galaxy.Galaxy.radial_profile_cut] i_r_cut2", i_r_cut2)
         
         mtot2 = sum(m_radial[:i_r_cut2])
         mtot1 = sum(m_radial[:i_r_cut1])
@@ -148,6 +157,8 @@ class Galaxy(object):
 #       as the system velocity is WRONG.
 #       If 1Reff is huge, try smaller aperture when measuring the system velocity.
 #
+        if debug: print("[galaxy.Galaxy.radial_profile_cut] mtot, mtot2", mtot1, mtot2)
+
         i_close = i_sort[:np.argmax(np.cumsum(m_sorted) > (0.2*mtot2))] # 20% closest particles
 #        i_close = np.argsort(rr)[:min([i_reff1])]
 #        i_close = i_sort[:min([i_reff1])]
@@ -163,7 +174,7 @@ class Galaxy(object):
                save=False, rscale=0.5, verbose=False,
                mstar_min=1e9,
                rmin = -1, Rgal_to_reff=5.0, method_com=1, follow_bp=None,
-               unit_conversion="code"):
+               unit_conversion="code", debug=False):
         """
             Input data in code unit.
 
@@ -187,8 +198,8 @@ class Galaxy(object):
                 
         """
         member="Reff"
-        print("Making a galaxy:", self.meta.id)
         if verbose:
+            print("Making a galaxy:", self.meta.id)
             print("SAVE:", save)
             print("RSCALE:", rscale)
             print("Halo size:", self.halo['rvir'] * self.info.pboxsize * 1000.0)
@@ -247,6 +258,9 @@ class Galaxy(object):
         #rr_tmp = self.meta.rgal
         self.star = star[ind]
 
+        if debug: print('[galaxy.Galaxy.mk_gal] mima vx 1', min(self.star['vx']), max(self.star['vx']))
+
+
         self.meta.nstar = len(ind)
         self.meta.mstar = sum(self.star['m'])
         
@@ -269,7 +283,7 @@ class Galaxy(object):
             if verbose: print("nstar tot:", nstar_tot)        
             if verbose: print("Store stellar particle")
     
-            if 'time' in self.star.dtype.names:
+            if 'time' in self.star.dtype.names and unit_conversion == "code":
                 import utils.cosmology
                 self.star['time'] = utils.cosmology.time2gyr(self.star['time'],
                                              z_now = self.info.zred,
@@ -297,6 +311,10 @@ class Galaxy(object):
             self.star['vx'] -= self.meta.vxc
             self.star['vy'] -= self.meta.vyc
             self.star['vz'] -= self.meta.vzc
+      
+        if debug:
+            print('[galaxy.Galaxy.mk_gal] meta.v[x,y,z]c', self.meta.vxc, self.meta.vyc, self.meta.vzc)
+            print('[galaxy.Galaxy.mk_gal] mima vx 2', min(self.star['vx']), max(self.star['vx']))
 
         if dm is not None:
             if member == "Reff":
@@ -809,7 +827,7 @@ class Galaxy(object):
         # to suppress contamination from tidal tail, 
         # give a cylindrical cut, not spherical cut. 
         # Cappellari 2002 assumes Cylindrical velocity ellipsoid.
-        print("effective radius", reff, (rscale + 1) * reff )
+        print("effective radius {:.2f}  {:.2f}".format(reff, (rscale + 1) * reff ))
         # particles inside 4Reff.
         ind = (np.square(self.star['x']) + \
                np.square(self.star['y']) + \
@@ -822,7 +840,7 @@ class Galaxy(object):
             print("min max y", min(self.star['y']), max(self.star['y']))
             print("min max z", min(self.star['z']), max(self.star['z']))
             print("# star", len(ind))
-            return False
+            return [-1,-1,-1], [-1,-1,-1]
         # 100% means that the galaxy radius is smaller than 4Reff.
         # Considering ellipticity, even 4Reff may not be enough to derive.
 
@@ -1241,7 +1259,7 @@ class Galaxy(object):
         
     
     def reorient(self, dest=[0., 0., 1], pop_nvec = ['star'],
-                 pops=['star', 'dm', 'cell'], verbose=False):
+                 pops=['star', 'dm', 'cell'], verbose=False, debug=False):
         """
         rotate particles/cells using rotation matrix.
 
@@ -1287,6 +1305,12 @@ class Galaxy(object):
             if verbose:
                 print("Galaxy.reorientation: No Rotation matrix. \n Calculating..")
             self.cal_rotation_matrix(dest = dest)
+
+        if debug:
+            print("---------------------")
+            print(self.meta.nvec)
+            print(self.rotation_matrix)
+            print("---------------------")
 
         # New coordinates
         for target in pops:
