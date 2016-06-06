@@ -68,7 +68,7 @@ import os
 
 
 wdir='./'
-nouts = range(180, 57, -1)
+nouts = range(154, 54, -1)
 
 
 # In[15]:
