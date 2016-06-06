@@ -61,38 +61,39 @@ def _extract_cell(cell_all, xc, yc, zc, rr,
 
 # In[2]:
 
-import load
-import tree.halomodule as hmo
-import numpy as np
-import os
-
-
-wdir='./'
-nouts = range(154, 54, -1)
-
+def main(nout_ini, nout_fi, wdir='./', rcluster_scale = 2.9):
+    import load
+    import tree.halomodule as hmo
+    import numpy as np
+    import os
+    
+    nouts = range(nout_fi, nout_ini, -1)
 
 # In[15]:
+    
+    for nout in nouts:
+        s = load.sim.Sim(nout=nout, base=wdir, setup=True)
+        s.add_hydro(load=True)
+    
+        info = load.info.Info(base=wdir, nout=nout)
+        gcat = hmo.Halo(base=wdir, is_gal=True, verbose=True, nout=nout)
+        hcat = hmo.Halo(base=wdir, is_gal=False, nout=nout)
+    
+        cluster = hcat.data[np.argmax(hcat.data['np'])]
+        out_dir = wdir + 'GalaxyMaker/CELL_' + str(nout).zfill(5) + '/'
+        if not os.path.isdir(out_dir):
+            os.mkdir(out_dir)
+    
+        i_ok_gals = radial_cut(cluster['x'], cluster['y'], cluster['z'],
+                               rcluster_scale * cluster['rvir'],
+                               gcat.data['x'], gcat.data['y'], gcat.data['z'])
+    
+        g_ok = gcat.data[i_ok_gals]
+        for gal in g_ok:
+            gcell = extract_gas(s.hydro.cell, gal)
+            dump_cell(gcell, out_dir + "gal_cells_" + str(gal['id']).zfill(7), nout, gal['id'])
 
-rcluster_scale = 2.9
-for nout in nouts:
-    s = load.sim.Sim(nout=nout, base=wdir, setup=True)
-    s.add_hydro(load=True)
 
-    info = load.info.Info(base=wdir, nout=nout)
-    gcat = hmo.Halo(base=wdir, is_gal=True, verbose=True, nout=nout)
-    hcat = hmo.Halo(base=wdir, is_gal=False, nout=nout)
 
-    cluster = hcat.data[np.argmax(hcat.data['np'])]
-    out_dir = wdir + 'GalaxyMaker/CELL_' + str(nout).zfill(5) + '/'
-    if not os.path.isdir(out_dir):
-        os.mkdir(out_dir)
-
-    i_ok_gals = radial_cut(cluster['x'], cluster['y'], cluster['z'],
-                           rcluster_scale * cluster['rvir'],
-                           gcat.data['x'], gcat.data['y'], gcat.data['z'])
-
-    g_ok = gcat.data[i_ok_gals]
-    for gal in g_ok:
-        gcell = extract_gas(s.hydro.cell, gal)
-        dump_cell(gcell, out_dir + "gal_cells_" + str(gal['id']).zfill(7), nout, gal['id'])
-
+if __name__ == '__main__':
+    main(75, 100)

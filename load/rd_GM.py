@@ -48,13 +48,9 @@ class Gal():
                                  info=info)
             self._age_in_gyr = True
         
- 
 
-def rd_gal(nout, idgal, wdir="./", metal=True, nchem=0,long=True):
-    """
 
-    header xg in Mpc (physical, centered at 0.5, 0.5, 0.5 of the simualtion volume)
-    """
+def rd_gm_gal_file(fname, metal=True, nchem=0, long=True):
     # Header structure
     dtype_header = np.dtype([('my_number', 'i4'),
                              ('level', 'i4'),
@@ -71,17 +67,15 @@ def rd_gal(nout, idgal, wdir="./", metal=True, nchem=0,long=True):
                 ('vx', '<f8'),
                 ('vy', '<f8'),
                 ('vz', '<f8'),
-               ('id', '<i4'),
-               ('m', '<f8'),
-               ('time', '<f8')]
+                ('id', '<i4'),
+                ('m', '<f8'),
+                ('time', '<f8')]
     if metal:
         dtype_data.append(('metal', '<f8'))
         if nchem > 0:
             dtype_data.append(('cp', '<f8', (nchem,)))
-    
-    idgal = str(idgal).zfill(7)
-    dir_nout = "GAL_" + str(nout).zfill(5)      
-    with open(wdir + 'GalaxyMaker/' +  dir_nout + '/gal_stars_' + idgal, "rb") as f:
+
+    with open(fname, "rb") as f:
         header = read_header(f, dtype=dtype_header)
         header['mgal'] *= 1e11 # mass fof galaxy
         
@@ -104,6 +98,18 @@ def rd_gal(nout, idgal, wdir="./", metal=True, nchem=0,long=True):
             if nchem > 0:
                 for i in range(nchem):
                     data['cp'][:,i] = read_fortran(f, np.dtype('f8'), header["npart"])
+    return header, data
+ 
+
+def rd_gal(nout, idgal, wdir="./", metal=True, nchem=0,long=True):
+    """
+
+    header xg in Mpc (physical, centered at 0.5, 0.5, 0.5 of the simualtion volume)
+    """
+    
+    idgal = str(idgal).zfill(7)
+    dir_nout = "GAL_" + str(nout).zfill(5)      
+    header, data = rd_gm_gal_file(wdir + 'GalaxyMaker/' +  dir_nout + '/gal_stars_' + idgal)
         
     gal = Gal()
     gal.star = data

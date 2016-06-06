@@ -295,13 +295,21 @@ def main(galidx,
     is_gal = True
     dump_gal = True
     nout_complete = 87 # at least complete up to z = 1
+
+    masscut_a = 1256366362.16
+    masscut_b = -20583566.5218
     
+    age_cut = 9
+    mstar_min = 1e20 # no more galaxies than I chose.
+
     # optional parameters ----------------------------------------------------
     lambda_method = 'ellip' 
     galaxy_plot = True
     reorient = True
     verbose=False
     region_plot = False
+    dump_gal = False # No need to save galaxy anymore.
+                     # Now star, dm, cell are stored in separate files. 
 
     verbose=False
     out_dir = "gal_" + str(galidx) + '/'
@@ -336,44 +344,19 @@ def main(galidx,
     #----------------------------------------------------------------------
     mstar_min = 5e9
     # Only galaxies above this stellar mass at the final snapshot are considered.
-    mstar_min_plot = 5e9
     mk_gal_rscale = 1.1 # unit of Rvir,galaxy
-    #r_cluster_scale = 2.9 # maximum radius inside which galaxies are searched for
     npix=800
     rscale_lambda = 3.0 # Reff unit.
     npix_lambda = 5 # per 1Reff
-    lmax = 19
-    ptypes=["star id pos mass vel time metal", "dm id pos mass vel"]
 
     ## halo part -----------------------------------------------------------
     dir_out = wdir + out_dir + '/'
 
-
     # Load complete tree -----------------------------------------------------
-    if is_gal:
-        # Galaxy tree
-        tree_path = 'GalaxyMaker/Trees/'
-        m_halo_min = 5e9 # minimum galaxy mass above which galaxies are searched for. 
-    else:
-        # halo tree
-        tree_path = 'halo/Trees/'
-        m_halo_min = 2e10 # minimum halo mass. 
-    try:
-        alltrees = pickle.load(open(wdir + tree_path + "extended_tree.pickle", "rb" ))
-        print("Loaded an extended tree")
-    except:
-        alltrees = treemodule.CTree()
-        alltrees.load(filename= wdir + tree_path + 'tree_0_0_0.dat')
-        # Fix nout -----------------------------------------------------
-        nout_max = alltrees.data['nout'].max()
-        alltrees.data['nout'] += nout_fi - nout_max
-        print("------ NOUT fixed")
-        alltrees.data = ctu.augment_tree(alltrees.data, wdir, is_gal=is_gal)
-        print("------ tree data extended")
-        pickle.dump(alltrees, open(wdir + tree_path + "extended_tree.pickle", "wb" ))
+    # Galaxy tree
+    tree_path = 'GalaxyMaker/Trees/'
+    m_halo_min = 5e9 # minimum galaxy mass above which galaxies are searched for. 
 
-    # Reading tree done
-    td = alltrees.data
 
     if read_halo_list:
         try:
@@ -384,6 +367,22 @@ def main(galidx,
             read_halo_list = False
 
     if not read_halo_list:
+        # Load tree 
+        try:
+            alltrees = pickle.load(open(wdir + tree_path + "extended_tree.pickle", "rb" ))
+            print("Loaded an extended tree")
+        except:
+            alltrees = treemodule.CTree()
+            alltrees.load(filename= wdir + tree_path + 'tree_0_0_0.dat')
+            # Fix nout -----------------------------------------------------
+            nout_max = alltrees.data['nout'].max()
+            alltrees.data['nout'] += nout_fi - nout_max
+            print("------ NOUT fixed")
+            alltrees.data = ctu.augment_tree(alltrees.data, wdir, is_gal=is_gal)
+            print("------ tree data extended")
+            pickle.dump(alltrees, open(wdir + tree_path + "extended_tree.pickle", "wb" ))
+ 
+        # build progenitor-only tree
         info = load.info.Info(nout=nout_fi, base=wdir, load=True)
         prg_only_tree = get_sample_tree(alltrees, info,
                         wdir=wdir,
@@ -396,25 +395,13 @@ def main(galidx,
         pickle.dump(prg_only_tree, open(wdir + 'prg_only_tree.pickle', 'wb'))
 
 
-    masscut_a = 1256366362.16
-    masscut_b = -20583566.5218
-    
-    age_cut = 9
-
+    # Tree of only one galaxy.
     prg_only_tree = ctu.extract_main_tree(prg_only_tree, idx=galidx)
-    mstar_min = 1e20 # no more galaxies than I chose.
-
-#%%
-    #m = mp.Manager()
-    #out_all = m.Queue()
-    #out_young = m.Queue()
-    #out_old = m.Queue()
   
     out_all = Queue()
     out_young = Queue()
     out_old = Queue()    
 
-    dump_gal = False
 
     for nout in nouts:
         print(nout, nout_fi)
@@ -425,10 +412,6 @@ def main(galidx,
 
         galaxy_plot_dir = out_base
         info = load.info.Info(nout=nout, base=wdir, load=True)
-
-        #print("target galaxy from the tree",
-        #      prg_only_tree[prg_only_tree['nout'] == nout])
-        #print("tree dtype", prg_only_tree.dtype)
         
         # What to do with Phantom galaxy??
         this_gal = prg_only_tree[prg_only_tree['nout'] == nout]
@@ -438,50 +421,11 @@ def main(galidx,
         allgal, allhal = get_sample_gal(wdir,
                              nout, info, prg_only_tree, mstar_min)
 
-        
-        #print(allgal.data)
-        #print(allhal.data)
  
         keywords = dict(rscale = mk_gal_rscale,
                     verbose=verbose,
                     mstar_min=mstar_min)#, dump_gal = dump_gal,
 
-    #   Multiprocessing -----------------------------------------------------------
-
-        # Distribute galaxies among cores
-#        inds=[0]
-        #[inds.append([]) for i in range(ncore)]
-#        print(inds)
-#        nh = len(inds)
-#        print("Analyzing galaxies inside {} halos".format(nh))
-
-#        age_cut_now = 9 - info.tGyr 
-#        print("Age Cut", age_cut_now)
-     
-#        processes = [mp.Process(target=worker, args=(allgal, allhal,
-#                    out_all, out_young, out_old,
-#                    info, inds[i],
-#                    dump_gal,
-#                    reorient,
-#                    lambda_method,
-#                    rscale_lambda,
-#                    npix_lambda,
-#                    galaxy_plot,
-#                    galaxy_plot_dir,
-#                    region_plot,
-#                    wdir,
-#                    with_DM,
-#                    with_cell,
-#                    age_cut), kwargs=keywords) for i in range(ncore)]
-   
-        # Run processes
-#        for p in processes:
-#            p.start()
-        
-        # Exit the completed processes
- #       for p in processes:
- #           p.join()
-                
         worker(allgal,allhal, out_all, out_young, out_old,
                info,
                dump_gal=dump_gal,
