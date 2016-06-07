@@ -107,6 +107,7 @@ def worker(gals, hals, out_all, out_young, out_old, info,
         else:
             gm.dm = None
 
+        # copy - galaxy will be reoriented.
         gm_young = copy.copy(gm)
         gm_old = copy.copy(gm)
  

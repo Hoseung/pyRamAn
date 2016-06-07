@@ -2,6 +2,7 @@
 # coding: utf-8
 
 # In[1]:
+import numpy as np
 
 def radial_cut(xc,yc,zc,r, x,y,z):
     return np.where(np.square(xc-x) +
@@ -96,4 +97,4 @@ def main(nout_ini, nout_fi, wdir='./', rcluster_scale = 2.9):
 
 
 if __name__ == '__main__':
-    main(75, 100)
+    main(100, 125)

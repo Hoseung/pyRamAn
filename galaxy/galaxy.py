@@ -197,6 +197,10 @@ class Galaxy(object):
             Assuming all data in the code units.
                 
         """
+        assert (self.halo is not None), "Need halo information,"
+        "use Galaxy.set_halo() and provide x,y,z,vx,vy,vz,r,rvir, at least"
+        "Units are - "
+
         member="Reff"
         if verbose:
             print("Making a galaxy:", self.meta.id)
