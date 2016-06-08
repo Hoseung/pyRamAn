@@ -818,25 +818,20 @@ class Galaxy(object):
             return
 
         reff = self.meta.reff # reff restriction must be given at earlier stage, radial_profile_cut()
-        print("reff", reff)
         full_radius = reff * (rscale+1) # in kpc
-        print("full_radius", full_radius)
         dx = reff / npix_per_reff # kpc/pixel
-        print("dx", dx)
         # Some margin makes mmap and vmap look better.
         # If rscale = 3 is given, calculate inside 3Reff,
         # but plot a map of 4Reff.
         l_img = 2 * full_radius# in kpc 
-        print("l_img", l_img)
         npix = round(npix_per_reff * 2 * (rscale + 1)) 
-        print("npix", npix)
         nx, ny = npix, npix
 
 
         # to suppress contamination from tidal tail, 
         # give a cylindrical cut, not spherical cut. 
         # Cappellari 2002 assumes Cylindrical velocity ellipsoid.
-        print("effective radius {:.2f}  {:.2f}".format(reff, (rscale + 1) * reff ))
+#        print("effective radius {:.2f}  {:.2f}".format(reff, (rscale + 1) * reff ))
         # particles inside 4Reff.
         ind = (np.square(self.star['x']) + \
                np.square(self.star['y'])) < np.square(reff * (rscale + 1))
@@ -884,9 +879,7 @@ class Galaxy(object):
         # 0.5 * (min + max) != center
     # stars within 4Reff.
         xstars = (xstars + full_radius) / full_radius * 0.5 * nx # 0 < xstarts < nx
-        print("min max xstars < npix", min(xstars), max(xstars))
         ystars = (ystars + full_radius) / full_radius * 0.5 * ny
-        print("min max ystars < npix", min(ystars), max(ystars))
         # because of Gaussian smoothing, pseudo particles can go out of cic region.
         # But don't worry, np.clip is ready.
         
@@ -1014,7 +1007,6 @@ class Galaxy(object):
             xNode = np.tile(np.arange(nx),ny) # x = tile? or repeat? 
             yNode = np.repeat(np.arange(ny),nx)
             self.sigmap = sigmap.reshape(nx, ny)
-            print("min sigmap", min(self.sigmap.ravel()))
             self.vmap = vmap.reshape(nx,ny)
 
 
@@ -1153,10 +1145,6 @@ class Galaxy(object):
    
                     if verbose: print("Reff = half light?1", sum(mmap[dd < 1.0])/ sum(mmap))
                     dist1d = np.sqrt(np.square(xNode - xcen) + np.square(yNode - ycen))
-                    print("max dd", max(dd))
-                    print("max dist1d", max(dist1d))
-                    print("max xNode - xcen", max(xNode-xcen))
-                    print("max yNode - ycen", max(yNode-ycen))
                     for i in range(len(points)):
 #                        ind = np.where( (dd > i/reff) & (dd < (i+1)/reff))[0]
                         ind = np.where( (dd > i) & (dd < (i+1)))[0]
