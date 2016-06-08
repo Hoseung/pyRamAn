@@ -111,8 +111,8 @@ class Galaxy(object):
         i_sort = np.argsort(rr)
         r_sorted = rr[i_sort]
         m_sorted = mm[i_sort]
-        
-        rmax = np.max(rr)
+
+        rmax = min([np.max(rr), rmax])
         nbins = int(rmax/dr)
 
         frequency, bins = np.histogram(r_sorted, bins = nbins, range=[0,rmax])
@@ -253,6 +253,7 @@ class Galaxy(object):
                                 nbins=int(rgal_tmp/0.5),
                                 dr=0.5,
                                 rmax=rgal_tmp)
+
         if not dense_enough:
             return False
         ind = np.where((np.square(star['x']) + 
@@ -817,14 +818,18 @@ class Galaxy(object):
             return
 
         reff = self.meta.reff # reff restriction must be given at earlier stage, radial_profile_cut()
+        print("reff", reff)
         full_radius = reff * (rscale+1) # in kpc
+        print("full_radius", full_radius)
         dx = reff / npix_per_reff # kpc/pixel
-        
+        print("dx", dx)
         # Some margin makes mmap and vmap look better.
         # If rscale = 3 is given, calculate inside 3Reff,
         # but plot a map of 4Reff.
         l_img = 2 * full_radius# in kpc 
+        print("l_img", l_img)
         npix = round(npix_per_reff * 2 * (rscale + 1)) 
+        print("npix", npix)
         nx, ny = npix, npix
 
 
@@ -834,8 +839,8 @@ class Galaxy(object):
         print("effective radius {:.2f}  {:.2f}".format(reff, (rscale + 1) * reff ))
         # particles inside 4Reff.
         ind = (np.square(self.star['x']) + \
-               np.square(self.star['y']) + \
-               np.square(self.star['z'])) < np.square(reff * (rscale + 1))
+               np.square(self.star['y'])) < np.square(reff * (rscale + 1))
+#               np.square(self.star['z'])) < np.square(reff * (rscale + 1))
 
         n_frac = sum(ind)/self.meta.nstar*100
         print("{:.2f}% of stellar particles selected".format(n_frac))
@@ -850,6 +855,7 @@ class Galaxy(object):
 
         if n_pseudo > 1:
             # sig in kpc unit. up to 1M particles
+            # sig = 0.3kpc from Naab 2014.
             n_pseudo = max([round(1e6/self.meta.nstar), n_pseudo])
             xstars, ystars, mm, vz = self._pseudo_particles(self.star['x'][ind],
                                                       self.star['y'][ind],
@@ -878,16 +884,17 @@ class Galaxy(object):
         # 0.5 * (min + max) != center
     # stars within 4Reff.
         xstars = (xstars + full_radius) / full_radius * 0.5 * nx # 0 < xstarts < nx
+        print("min max xstars < npix", min(xstars), max(xstars))
         ystars = (ystars + full_radius) / full_radius * 0.5 * ny
+        print("min max ystars < npix", min(ystars), max(ystars))
         # because of Gaussian smoothing, pseudo particles can go out of cic region.
         # But don't worry, np.clip is ready.
         
         ngx = np.clip(np.fix(xstars), 0, nx-1) 
         ngy = np.clip(np.fix(ystars), 0, ny-1)
-        
         indices = (ngx + ngy * nx).astype(np.int32)
 
-        mmap = np.zeros(nx * ny, dtype=float)
+        mmap = np.zeros(nx * ny, dtype=float) # should cover 4Reff.
 
         if voronoi is not None:
             count_map = np.zeros(nx * ny, dtype=float)
@@ -1007,25 +1014,30 @@ class Galaxy(object):
             xNode = np.tile(np.arange(nx),ny) # x = tile? or repeat? 
             yNode = np.repeat(np.arange(ny),nx)
             self.sigmap = sigmap.reshape(nx, ny)
+            print("min sigmap", min(self.sigmap.ravel()))
             self.vmap = vmap.reshape(nx,ny)
 
-# calculate profile by summing in bins.
-        if method == 'circ':
-            xcen = nx/2
-            ycen = ny/2
-            dist1d = np.sqrt(np.square(xNode - xcen) + np.square(yNode - ycen))
 
-            points = np.zeros(round(npix_per_reff * rscale)) # lambda calculaed over '3'Reff.
-            npoints = len(points)
-            for i in range(npoints):
-                ind = np.where((dist1d > i) & (dist1d < (i+1)))[0]
-#                print(i*rr/npoints, len(ind))
-                a = sum(mmap[ind] * dist1d[ind] * abs(vmap[ind]))
-                if a != 0:
-                    ind2 = np.where(sigmap[ind] > 0)[0]
-                    b = sum(mmap[ind[ind2]] * dist1d[ind[ind2]] 
-                            * np.sqrt(vmap[ind[ind2]]**2 + sigmap[ind[ind2]]**2))
-                    points[i] = a/b
+#------------------------------------------------------------
+# calculate profile by summing in bins.
+        mmap_tot = sum(mmap)
+        dist = np.sqrt(np.square(xNode - nx/2) + np.square(yNode - ny/2))
+        if method == 'circ':
+            def _measure_lambda(xcen, ycen, voronoi=False):
+                #xcen = nx/2
+                #ycen = ny/2
+                #dist1d = np.sqrt(np.square(xNode - xcen) + np.square(yNode - ycen))
+                dist1d = dist
+                points = np.zeros(round(npix_per_reff * rscale)) # lambda measured over '3'Reff.
+                for i in range(len(points)):
+                    ind = np.where((dist1d > i) & (dist1d < (i+1)))[0]
+                    a = sum(mmap[ind] * dist1d[ind] * abs(vmap[ind]))
+                    if a != 0:
+                        ind2 = np.where(sigmap[ind] > 0)[0]
+                        b = sum(mmap[ind[ind2]] * dist1d[ind[ind2]] 
+                                * np.sqrt(vmap[ind[ind2]]**2 + sigmap[ind[ind2]]**2))
+                        points[i] = a/b
+                return points
 
             if voronoi:
                 dd = np.sqrt( (xNode - 0.5*npix)**2 + (yNode - 0.5*npix)**2 )
@@ -1037,6 +1049,19 @@ class Galaxy(object):
                     new_arr[i_r] = new_arr[i_r] + lambdamap_v[i]
                     new_cnt[i_r] = new_cnt[i_r] + 1
             
+            self.meta.xcen = nx/2
+            self.meta.ycen = ny/2
+
+
+            result_1reff = _measure_lambda(self.meta.xcen,
+                                           self.meta.ycen,
+                                           voronoi=False)
+            result_hreff = _measure_lambda(self.meta.xcen,
+                                            self.meta.ycen,
+                                            voronoi=False)
+            result_15kpc = _measure_lambda(self.meta.xcen,
+                                           self.meta.ycen,
+                                           voronoi=False)
 
         elif method == 'ellip':
             # npix = round(gal.nstar**(1/3) * 3) # to maintain roughly same pixel density. 
@@ -1045,13 +1070,12 @@ class Galaxy(object):
             # import draw
             from Cappellari import mge
         
-            region = smp.set_region(xc=0, yc=0, zc=0, radius = 0.5 * l_img)
+            #region = smp.set_region(xc=0, yc=0, zc=0, radius = 0.5 * l_img)
 
 #            print("Reff (px)", reff / dx)
 # percentile cut of half light pixel.
-            mmap_tot = sum(mmap)
 
-            dist = np.sqrt(np.square(xNode - nx/2) + np.square(yNode - 2/ny))
+            #dist = np.sqrt(np.square(xNode - nx/2) + np.square(yNode - 2/ny))
 
             iterate_mge = False
             if iterate_mge:
@@ -1120,24 +1144,35 @@ class Galaxy(object):
                 
                 # mmap = 1D, self.mmap = mmap.reshap(nx,ny)
                 def _measure_lambda(xcen, ycen, cos, sin, sma, smi, voronoi=False):
+                    print(xcen, ycen, cos, sin, sma, smi)
                     dd = np.sqrt(((xNode-xcen)*cos + (yNode-ycen)*sin)**2/sma**2 + \
-                                 ((yNode-ycen)*cos - (xNode-xcen)*sin)**2/smi**2)
+                                 ((yNode-ycen)*cos - (xNode-xcen)*sin)**2/smi**2) * \
+                                 npix_per_reff
                     # lambda calculaed over '3'Reff.
                     points = np.zeros(round(npix_per_reff * rscale))
    
                     if verbose: print("Reff = half light?1", sum(mmap[dd < 1.0])/ sum(mmap))
-   
                     dist1d = np.sqrt(np.square(xNode - xcen) + np.square(yNode - ycen))
+                    print("max dd", max(dd))
+                    print("max dist1d", max(dist1d))
+                    print("max xNode - xcen", max(xNode-xcen))
+                    print("max yNode - ycen", max(yNode-ycen))
                     for i in range(len(points)):
-                        ind = np.where( (dd > i/reff) & (dd < (i+1)/reff))[0]
-                        if i < 16:
-                            mmapc = mmap.copy()
-                            mmapc[ind] = 100
+#                        ind = np.where( (dd > i/reff) & (dd < (i+1)/reff))[0]
+                        ind = np.where( (dd > i) & (dd < (i+1)))[0]
+#                        if i < 16:
+#                            mmapc = mmap.copy()
+#                            mmapc[ind] = 100
                             
                         if len(ind) >  0:
+                            print("got some points ", len(ind), "at" ,i)
                             a = sum(mmap[ind] * dist1d[ind] * abs(vmap[ind]))
-                            b = sum(mmap[ind] * dist1d[ind] 
-                                    * np.sqrt(np.square(vmap[ind]) + np.square(sigmap[ind])))
+                            if a != 0:
+                                ind2 = np.where(sigmap[ind] > 0)[0]
+                                b = sum(mmap[ind[ind2]] * dist1d[ind[ind2]] 
+                                        * np.sqrt(vmap[ind[ind2]]**2 + sigmap[ind[ind2]]**2))
+#                                b = sum(mmap[ind] * dist1d[ind] 
+#                                    * np.sqrt(np.square(vmap[ind]) + np.square(sigmap[ind])))
                             points[i] = a/b
 
 
@@ -1170,17 +1205,20 @@ class Galaxy(object):
    
                     return points        
 
-
-            # 50% light in one shot.
+                # 50% light in one shot.
                 dsort = np.argsort(dist)
-# level = pixel value at cumsum = 50%.
+                # level = pixel value at cumsum = 50%.
                 i_reff = np.argmax(np.cumsum(mmap[dsort]) > 0.5*mmap_tot)
                 frac =  i_reff/ len(mmap)
-            
+                
 #                print("frac1", frac)
                 f = mge.find_galaxy.find_galaxy(self.mmap, quiet=True, plot=False,
                                                 mask_shade=False,
                                                 fraction=frac)
+
+#                f.eps = 0
+#                f.theta = 0
+
                 self.meta.eps = f.eps
                 sma = npix_per_reff #/ np.sqrt(1 - self.meta.eps)
                 smi = sma * (1 - self.meta.eps)
@@ -1192,21 +1230,25 @@ class Galaxy(object):
                 self.meta.ycen = f.ymed
                 self.meta.sma = sma
                 self.meta.smi = smi
-
+             
                 result_1reff = _measure_lambda(self.meta.xcen,
                                                self.meta.ycen,
                                                cos, sin,
                                                sma, smi,
                                                voronoi=False)
-
+             
                 d_05reff = np.argmax(dsort > 0.5*dsort[i_reff]) # dsort[d_05reff] = 0.5Reff
                 frac05 = d_05reff/len(mmap)
-
+             
                 #print("frac05", frac05)
-
+             
                 f = mge.find_galaxy.find_galaxy(self.mmap, quiet=True, plot=False,
                                                 mask_shade=False,
                                                 fraction=frac05)
+                
+#                f.eps = 0
+#                f.theta = 0
+
                 self.meta.epsh = f.eps
                 sma = npix_per_reff# / np.sqrt(1 - self.meta.epsh)
                 smi = sma * (1 - self.meta.epsh)
@@ -1218,24 +1260,28 @@ class Galaxy(object):
                 self.meta.ycenh = f.ymed
                 self.meta.smah = sma
                 self.meta.smih = smi
-
+             
                 result_hreff = _measure_lambda(self.meta.xcenh,
                                                 self.meta.ycenh,
                                                 cos, sin,
                                                 sma, smi,
                                                 voronoi=False)
-
-
+             
+             
                 reff_limit = 15 #Assuming possible largest Reff = 15kpc.
                 #d_15reff = np.argmax(dsort > reff_limit) # dsort[d_05reff] = 0.5Reff
                 #frac15 = d_15reff/len(mmap)
                 frac15 = np.pi / self.meta.rscale_lambda**2 * (15/(2*reff))**2 # fraction of 15kpc in the mmap.
                 frac15 = min([0.99, frac15])
                 #print("frac15", frac15)
-
+             
                 f = mge.find_galaxy.find_galaxy(self.mmap, quiet=True, plot=False,
                                                 mask_shade=False,
                                                 fraction=frac15)
+             
+#                f.eps = 0
+#                f.theta = 0
+
                 self.meta.epsq = f.eps
                 sma = npix_per_reff #/ np.sqrt(1 - self.meta.epsq)
                 smi = sma * (1 - self.meta.epsq)
@@ -1247,7 +1293,6 @@ class Galaxy(object):
                 self.meta.ycenq = f.ymed
                 self.meta.smaq = sma
                 self.meta.smiq = smi
-
                 result_15kpc = _measure_lambda(self.meta.xcenq,
                                                self.meta.ycenq,
                                                cos, sin,
