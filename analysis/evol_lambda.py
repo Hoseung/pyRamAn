@@ -2,6 +2,10 @@
 
 import numpy as np
 import scipy
+import pandas as pd
+
+def load_cat(fname):
+    return pd.DataFrame(pickle.load(open(fname, "rb"))).to_records()
 
 def load_pickle(fname):
     import pickle

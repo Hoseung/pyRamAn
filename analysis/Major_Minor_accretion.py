@@ -9,6 +9,11 @@ import numpy as np
 import pickle
 import analysis.evol_lambda as evl
 import tree.ctutils as ctu
+import pandas as pd
+
+
+def load_cat(fname):
+    return pd.DataFrame(pickle.load(open(fname, "rb"))).to_records()
 
 
 class Merger():
@@ -178,7 +183,8 @@ def compile_mpgs(alltrees, idx_all, wdir='./', cdir='easy/', nout_ini=37, nout_f
         #print(i, idx)
 
     for nout in range(nout_ini, nout_fi + 1):
-        cat = pickle.load(open(wdir + cdir + 'catalog' + str(nout) + '.pickle', 'rb'))
+        cat = load_cat(wdir + cdir + 'catalog' + str(nout) + '.pickle')
+#        cat = pickle.load(open(wdir + cdir + 'catalog' + str(nout) + '.pickle', 'rb'))
         for gal in mpg_tmp:
             gal.set_data(cat, nout)
         #print(nout)
