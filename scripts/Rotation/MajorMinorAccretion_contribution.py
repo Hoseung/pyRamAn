@@ -96,7 +96,7 @@ def plot_simple(mpgs, wdir='./', suffix=""):
 
 # In[18]:
 
-def plot_hist(mpgs, wdir=wdir, suffix=""):
+def plot_hist(mpgs, wdir='./', suffix=""):
     all_mr = []
     all_delta =[]
     for gal in mpgs:
@@ -261,7 +261,7 @@ import utils.match as mtc
 nout_fi = 187
 nout_ini = 57
 cdir = 'easy_new/'
-suffix = ["10002", "04466", "29172"][2]
+suffix = ["29176","10002", "04466", "29172"][0]
 wdir = './' + suffix + '/'
 dir_out = wdir 
 # "10002"
@@ -297,11 +297,6 @@ good_gals = mma.close_gals(hh, gg, rscale=3)
 # major merger galaixies, minor merger galaxies, smooth accretion galaxies.
 
 
-# In[23]:
-
-print(" {:.2e}".format(min(alltrees.data['m'][alltrees.data['m'] > 0])))
-
-
 # Load and compile catalogs
 
 # In[6]:
@@ -316,6 +311,10 @@ tn = ad[ad['nout'] == nout_fi]
 ad['r'] *= 2e2 # code unit to Mpc/h
 
 cat = pickle.load(open(wdir + cdir + 'catalog' + str(nout_fi) + '.pickle', 'rb'))
+import pandas as pd
+cat = pd.DataFrame(cat).to_records()
+
+
 # Only good galaxies are saved in the catalogue.
 # But there is no mass cut in good_gals list.
 # And match_list_ind doest not handle cases where the array a is shorter than array b.

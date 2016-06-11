@@ -190,7 +190,7 @@ def main(wdir='./',
     
     # optional parameters ----------------------------------------------------
     lambda_method = 'ellip' 
-    galaxy_plot = True
+    galaxy_plot = False
     reorient = True
     verbose=False
     region_plot = False

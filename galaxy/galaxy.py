@@ -115,7 +115,7 @@ class Galaxy(object):
         rmax = min([np.max(rr), rmax])
         nbins = int(rmax/dr)
 
-        frequency, bins = np.histogram(r_sorted, bins = nbins, range=[0,rmax])
+        frequency, bins = np.histogram(r_sorted, bins = nbins, range=[0, rmax])
         bin_centers = bins[:-1] + 0.5 * dr # remove the rightmost boundary.
         
         m_radial = np.zeros(nbins)
@@ -1136,7 +1136,6 @@ class Galaxy(object):
                 
                 # mmap = 1D, self.mmap = mmap.reshap(nx,ny)
                 def _measure_lambda(xcen, ycen, cos, sin, sma, smi, voronoi=False):
-                    print(xcen, ycen, cos, sin, sma, smi)
                     dd = np.sqrt(((xNode-xcen)*cos + (yNode-ycen)*sin)**2/sma**2 + \
                                  ((yNode-ycen)*cos - (xNode-xcen)*sin)**2/smi**2) * \
                                  npix_per_reff
@@ -1153,15 +1152,14 @@ class Galaxy(object):
 #                            mmapc[ind] = 100
                             
                         if len(ind) >  0:
-                            print("got some points ", len(ind), "at" ,i)
                             a = sum(mmap[ind] * dist1d[ind] * abs(vmap[ind]))
-                            if a != 0:
+                            if a > 0:
                                 ind2 = np.where(sigmap[ind] > 0)[0]
                                 b = sum(mmap[ind[ind2]] * dist1d[ind[ind2]] 
                                         * np.sqrt(vmap[ind[ind2]]**2 + sigmap[ind[ind2]]**2))
 #                                b = sum(mmap[ind] * dist1d[ind] 
 #                                    * np.sqrt(np.square(vmap[ind]) + np.square(sigmap[ind])))
-                            points[i] = a/b
+                                points[i] = a/b
 
 
                     if voronoi:
