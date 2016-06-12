@@ -51,16 +51,17 @@ from analysis.cal_lambda import *
 def worker(gals, hals, out_q, info, inds,
            dump_gal=False,
            reorient=False,
-           lambda_method='ellip',
-           rscale_lambda=3,
-           npix_lambda=10,
            galaxy_plot=False,
            galaxy_plot_dir='galaxy_plot/',
            region_plot=False,
            wdir='./',
            with_DM=True,
            with_cell=True,
+           mk_gal_params={},
+           cal_lambda_params={},
            **kwargs):
+
+
 
     import galaxy.make_gal as mkg
     from galaxy import galaxy
@@ -91,7 +92,7 @@ def worker(gals, hals, out_q, info, inds,
                 gm.dm = load.rd_GM.rd_dm(info.nout, halid, wdir=wdir)
             else:
                 gm.dm = extract_dm(hh, info.nout, wdir)
-                # These are not in the final units that I want,
+                # The	se are not in the final units that I want,
                 # but in the same units as GM outputs to make later conversion steps simpler.
                 gm.dm['x'] = (gm.dm['x'] - 0.5) * info.pboxsize
                 gm.dm['y'] = (gm.dm['y'] - 0.5) * info.pboxsize
@@ -103,11 +104,7 @@ def worker(gals, hals, out_q, info, inds,
         else:
             gm.dm = None
 
-
-        gal = galaxy.Galaxy(halo = gg,
-                            radius_method='eff',
-                            info=info)
-        #print('!!!! mima vx gm.dm', min(gm.dm['vx']), max(gm.dm['vx']))
+        gal = galaxy.Galaxy(halo=gg, info=info)
         good_gal = gal.mk_gal(gm.star, gm.dm, gm.cell,
                               unit_conversion="GM",
                               verbose=False)
@@ -122,8 +119,10 @@ def worker(gals, hals, out_q, info, inds,
             #out_q.put(gal.meta)
         else:
             print("galaxy {} is made \n".format(galid))
-            lambdas = gal.cal_lambda_r_eps(npix_per_reff=npix_lambda,
-                           rscale=rscale_lambda, method='ellip', verbose=False)
+            lambdas = gal.cal_lambda_r_eps(**cal_lambda_params)
+#                           npix_per_reff=npix_lambda,
+#                           rscale=rscale_lambda, method='ellip', verbose=False)
+
             gal.meta.lambda_arr, gal.meta.lambda_arrh, gal.meta.lambda_12kpc= lambdas[0]
             gal.meta.lambda_r,   gal.meta.lambda_rh,   gal.meta.lambda_12kpc = lambdas[1]
             if galaxy_plot:
@@ -146,8 +145,9 @@ def worker(gals, hals, out_q, info, inds,
                 gal.cal_rotation_matrix(dest = [0., 1., 0.])
                 gal.reorient(dest=[0., 1., 0.], pop_nvec = ['star'],
                              pops=reori_pops, verbose=True)
-                lambdas = gal.cal_lambda_r_eps(npix_per_reff=npix_lambda,
-                                rscale=rscale_lambda, method='ellip')
+                lambdas = gal.cal_lambda_r_eps(**cal_lambda_params)
+                                #npix_per_reff=npix_lambda,
+                                #rscale=rscale_lambda, method='ellip')
 # Because lambda is measured for ALL stars,
 # B/T must also be measured for ALL stars, not only for bound stars.
                 gal.meta.lambda_arr2, gal.meta.lambda_arr2h, gal.meta.lambda_arr2q = lambdas[0]
@@ -178,16 +178,21 @@ def main(wdir='./',
     import os
     import pickle
     import tree.ctutils as ctu
-    from queue import Queue
     import pandas as pd
-    import multiprocessing as mp
- 
     
-    #multi = 1 # 
+    multi = False # 
+    if multi: 
+        import multiprocessing as mp
+    else:
+        import queue
+ 
     is_gal = True
     dump_gal = True
     nout_complete = 87 # at least complete up to z = 1
     
+    masscut_a = 1256366362.16
+    masscut_b = -20583566.5218
+
     # optional parameters ----------------------------------------------------
     lambda_method = 'ellip' 
     galaxy_plot = False
@@ -228,17 +233,42 @@ def main(wdir='./',
     nouts_dump_gal = []
     try: nouts_dump_gal
     except NameError: nouts_dump_gal = None
-
-
     #----------------------------------------------------------------------
-    mstar_min = 5e9
+
     # Only galaxies above this stellar mass at the final snapshot are considered.
-    mstar_min_plot = 5e9
+    mstar_min = 5e9
     mk_gal_rscale = 1.1 # unit of Rvir,galaxy
     #r_cluster_scale = 2.9 # maximum radius inside which galaxies are searched for
     npix=800
-    rscale_lambda = 3.0 # Reff unit.
-    npix_lambda = 5 # per 1Reff
+
+
+    # worker options
+    worker_params = {"dump_gal":False,
+                   "reorient":False,
+                   "galaxy_plot":True,
+                   "galaxy_plot_dir":out_dir + 'galaxy_plot/',
+                   "region_plot":False,
+                   "wdir":'./',
+                   "with_DM":False,
+                   "with_cell":False}
+
+    if worker_params["galaxy_plot"]:
+        if not os.path.isdir(worker_params["galaxy_plot_dir"]):
+            os.mkdir(worker_params["galaxy_plot_dir"])
+
+
+    voronoi_dict = dict(targetSN=15, plot=False, quiet=True)
+    # voronoi tesselation need many points,
+    # always use voronoi with pseudo particle option
+    cal_lambda_params = dict(npix_per_reff=5,
+                             rscale=3.0, 
+                             method='ellip',
+                             n_pseudo=60,
+                             verbose=False,
+                             voronoi=voronoi_dict,
+                             mge_interpol = True)
+
+
     lmax = 19
     ptypes=["star id pos mass vel time metal", "dm id pos mass vel"]
 
@@ -299,14 +329,13 @@ def main(wdir='./',
         f.write("Rscale cluster : " + str(r_cluster_scale))
         f.write("Rscale mk_gal : " + str(mk_gal_rscale))
         f.write("npix : " + str(npix))
-        f.write("Rscale lambda calculation : " + str(rscale_lambda))
-        f.write("npix per 1Reff for lambda calculation : " + str(npix_lambda))
+        save_dict_scalar(cal_lambda_params, f, "\n")
+        #f.write("Rscale lambda calculation : " + str(rscale_lambda))
+        #f.write("npix per 1Reff for lambda calculation : " + str(npix_lambda))
         f.write("ptypes : \n")
         for i in ptypes:
             f.write("  " + str(i) + "\n")
 
-    masscut_a = 1256366362.16
-    masscut_b = -20583566.5218
 
     for nout in nouts:
         print(nout, nout_fi)
@@ -332,69 +361,62 @@ def main(wdir='./',
         print("Mstar now, min: {:.2e} {:.2e}".format(2 * \
                     (masscut_a * info.aexp + masscut_b), mstar_min))
 
-        # Fix it, no need to load idlist.
         allgal, allhal = get_sample_gal(wdir, nout, info, prg_only_tree, mstar_min)
 
-        
 ###
 #  required quantities
 #  halo.data[] x, y, z, vx, vy, vz, m, mvir, r, rivr, id, idx, 
 #  halo.idlists
-#
-#
-#
 #
         nh = len(allgal.data)
         print("Total # galaxies to analyze",nh)
         print("# complete-tree galaxies",sum(allhal.data['idx'] > 0))
         print("# non-complete-tree galaxies",sum(allhal.data['idx'] < 0))
 
-        keywords = dict(rscale = mk_gal_rscale,
-                    verbose=verbose,
-                    mstar_min=mstar_min)#, dump_gal = dump_gal,
-    #                reorient=reorient)
 
-    #   Multiprocessing -----------------------------------------------------------
-        m = mp.Manager()
-        out_q = m.Queue()
-        print("Analyzing galaxies inside {} halos".format(nh))
+        mk_gal_params = dict(verbose=verbose,
+                             mstar_min=mstar_min,
+                             unit_conversion="GM")
 
-        # Distribute galaxies among cores
-        inds=[]
-        [inds.append([]) for i in range(ncore)]
-
-        for i in range(nh):
-            j = i % ncore
-            inds[j].append(i)
-
-        processes = [mp.Process(target=worker, args=(allgal, allhal, out_q,
-                    info, inds[i],
-                    dump_gal,
-                    reorient,
-                    lambda_method,
-                    rscale_lambda,
-                    npix_lambda,
-                    galaxy_plot,
-                    galaxy_plot_dir,
-                    region_plot, 
-                    wdir,
-                    with_DM,
-                    with_cell), kwargs=keywords) for i in range(ncore)]
-
-    
-        keywords = dict(rscale = mk_gal_rscale,
-                        verbose=verbose,
-                      mstar_min=mstar_min)#, dump_gal = dump_gal,
-    #                reorient=reorient)
-    
-        # Run processes
-        for p in processes:
-            p.start()
-        
-        # Exit the completed processes
-        for p in processes:
-            p.join()
-                
+    #   Multiprocessing --------------------------------------------------
+        if multi:
+            m = mp.Manager()
+            out_q = m.Queue()
+            print("Analyzing galaxies inside {} halos".format(nh))
+         
+            # Distribute galaxies among cores
+            inds=[]
+            [inds.append([]) for i in range(ncore)]
+         
+            for i in range(nh):
+                j = i % ncore
+                inds[j].append(i)
+         
+            processes = [mp.Process(target=worker, args=(allgal, allhal, out_q,
+                        info, inds[i],
+                        dump_gal,
+                        reorient,
+                        galaxy_plot,
+                        galaxy_plot_dir,
+                        region_plot, 
+                        wdir,
+                        with_DM,
+                        with_cell,
+                        mk_gal_params,
+                        cal_lambda_params)) for i in range(ncore)] 
+            # Run processes
+            for p in processes:
+                p.start()
+            
+            # Exit the completed processes
+            for p in processes:
+                p.join()
+        else:
+            out_q = queue.Queue()
+            worker(allgal, allhal, out_q, info, range(nh),
+                   mk_gal_params=mk_gal_params,
+                   cal_lambda_params=cal_lambda_params,
+                   **worker_params)
         
         print("----------Done---------")
     
@@ -427,10 +449,7 @@ def main(wdir='./',
         except:
             print("No filename is given.\n ")
         
-#        catalog = pd.DataFrame(dictout).to_records() 
-#        print(catalog)
         with open(fcat, 'wb') as f:
-#            pickle.dump(catalog, f)
             pickle.dump(dictout, f)
             
         s = 0

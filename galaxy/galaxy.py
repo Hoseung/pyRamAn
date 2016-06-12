@@ -13,7 +13,6 @@ Inherites halo.HaloMeta. HaloMeta does not contain
 positional and kinematic information of the halo. This is good because
 recalculated center of galaxy is likely to deviate from the center of the halo. 
 """
-#class Galaxymeta():
     
 import numpy as np
 #import  matplotlib.pyplot as plt
@@ -77,11 +76,10 @@ class Meta():
 
 class Galaxy(object):
 
-    def __init__(self, halo=None, radius_method='eff', info=None):
+    def __init__(self, halo=None, info=None):
         self.meta = Meta()
         self.set_halo(halo)
         self.info = info
-        self.meta.radius_method=radius_method
         #self.meta.id=-1 # why did I do this...?? 
 
     def set_halo(self, halo):
@@ -171,7 +169,7 @@ class Galaxy(object):
 
     
     def mk_gal(self, star, dm, cell,
-               save=False, rscale=0.5, verbose=False,
+               save=False, verbose=False,
                mstar_min=1e9,
                rmin = -1, Rgal_to_reff=5.0, method_com=1, follow_bp=None,
                unit_conversion="code", debug=False):
@@ -205,7 +203,6 @@ class Galaxy(object):
         if verbose:
             print("Making a galaxy:", self.meta.id)
             print("SAVE:", save)
-            print("RSCALE:", rscale)
             print("Halo size:", self.halo['rvir'] * self.info.pboxsize * 1000.0)
 
 
@@ -769,13 +766,15 @@ class Galaxy(object):
 
     def cal_lambda_r_eps(self,
                          npix_per_reff=5,
-                         rscale=None,
+                         rscale=3.0,
                          method='ellip',
                          verbose=False,
                          galaxy_plot_dir='./',
                          n_pseudo=1,
                          voronoi=None,
                          mge_interpol = True):
+
+
         """
         Parameters
         ----------
@@ -807,16 +806,8 @@ class Galaxy(object):
         import matplotlib.pyplot as plt 
 
         # already centered.
-        if rscale is not None:
-            self.meta.rscale_lambda = rscale
-            print("self.rscale_lambda is updated to {}.".format(rscale))
-        else:
-            rscale = self.meta.rscale_lambda
+        self.meta.rscale_lambda = rscale
             
-        if rscale is None:
-            print("Error!")
-            return
-
         reff = self.meta.reff # reff restriction must be given at earlier stage, radial_profile_cut()
         full_radius = reff * (rscale+1) # in kpc
         dx = reff / npix_per_reff # kpc/pixel
@@ -874,7 +865,6 @@ class Galaxy(object):
         
     # Construct mass map, velocity map, sigma map.
         # using NGP charge assignment
-
         # fix center explicitely.
         # 0.5 * (min + max) != center
     # stars within 4Reff.
@@ -909,11 +899,12 @@ class Galaxy(object):
         if voronoi is not None:
             i_ok = np.unique(indices) # non-zero only?
 #            print(i_ok)
-            count_map = count_map[i_ok]
+            #count_map = count_map[i_ok]
             noise_map = np.sqrt(count_map)
+            noise_map[noise_map < 1] = 1 # minimum noise for empty pixeles
  
-            xpos_regular = np.repeat(np.arange(nx),ny)[i_ok]
-            ypos_regular = np.tile(np.arange(ny),nx)[i_ok]
+            xpos_regular = np.repeat(np.arange(nx),ny)#[i_ok]
+            ypos_regular = np.tile(np.arange(ny),nx)#[i_ok]
             from Cappellari.voronoi.voronoi_2d_binning import voronoi_2d_binning
             """
             This function accepts only data on uniform grid...?
@@ -970,7 +961,6 @@ class Galaxy(object):
                 sigmap[ind] = sigmap_v[ibin]
 
             lambdamap_v = vmap_v / sigmap_v
-
 
             mmap_org = mmap 
             vmap_org = vmap 
@@ -1162,8 +1152,9 @@ class Galaxy(object):
                                 points[i] = a/b
 
 
-                    if voronoi:
-                        dd = np.sqrt( (xNode - 0.5*npix)**2 + (yNode - 0.5*npix)**2 )
+                    if voronoi == 12312312435:
+                        dd = np.sqrt((xNode - 0.5*npix)**2 + (yNode - 0.5*npix)**2) *\
+                             npix_per_reff
                         i_radius = np.fix(dd).astype(int)
                         new_arr = np.zeros(np.fix(max(dd)) + 1)
                         new_cnt = np.zeros(np.fix(max(dd)) + 1)
