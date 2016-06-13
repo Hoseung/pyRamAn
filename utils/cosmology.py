@@ -9,6 +9,17 @@ Created on Sun Jun 28 18:31:23 2015
 @author: hoseung
 """
 
+def nout2lbt(nout, nout_fi=187):
+    """
+      A very simple function assuming delta a = 0.005,
+      and nout_fi = 187 by default.
+    """
+    import astropy.cosmology as ac
+    aexp = 1 - (nout_fi - nout)*0.005
+    
+    return ac.WMAP7.lookback_time(1/aexp -1).value
+
+
 
 def time2gyr(times, z_now=None, info=None):
     """
