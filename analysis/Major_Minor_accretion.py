@@ -207,16 +207,16 @@ def Maj_min_acc_ratio(mpgs, dt=5, major_ratio=3):
 
     #        for mr, xx, delta in zip(gal.merger.mr, gal.merger.nout, gal.merger.delta):
     #            ax[0].scatter(mr, delta)
-            #print(gal.merger.mr, gal.merger.delta)
+            #print(gal.merger.mr, gal.merger.delta_l)
             i_major = np.where(gal.merger.mr <= major_ratio)[0]
             if len(i_major) > 0:
                 #print(gal.merger.delta, i_major, "M")
                 #print(gal.merger.delta[0])
-                delta_lambda_major = np.sum(gal.merger.delta[i_major])
+                delta_lambda_major = np.sum(gal.merger.delta_l[i_major])
 
             i_minor = gal.merger.mr > major_ratio
             if sum(i_minor) > 0:
-                delta_lambda_minor = sum(gal.merger.delta[i_minor])
+                delta_lambda_minor = sum(gal.merger.delta_l[i_minor])
                 #print(gal.merger.delta, i_minor, "m")
 
 
@@ -226,22 +226,30 @@ def Maj_min_acc_ratio(mpgs, dt=5, major_ratio=3):
         gal.dlM = delta_lambda_major
         gal.dlm = delta_lambda_minor
 
-  
+
+       
         
-        
-def measure_delta_lambda(mpgs, dt_before=7, dt_after=7, nout_ini=37,
+def measure_delta_lambda(mpgs, dt_before=1, dt_after=1, nout_ini=37,
                          filter_smaller=True):
     """
         Note that nout are in descending order.
         
         physical meaning of dt_after is the time for a merger to settle down.
         And, if there are multiple mergers within dt_after 
-        the effect of the larger merger and the rest are all mixed up. 
-        Then I assume that it is more reasonable to take the 'mixed' effect
-        is of the larger merger alone.
+        the effect of the larger merger and the rest are all mixed up.
+        I guess that it is more reasonable to take the 'mixed' effect
+        as the effect of the largest merger alone.
+
+        Modification
+        ------------
+
+        2016.06.14
+            dt in Gyr unit, not the number of snapshots.
         
     """
     from scipy.signal import medfilt
+    from utils.util import dgyr2dnout
+
     for gal in mpgs:
         ind_nout = gal.nouts > nout_ini
         gal.nouts = gal.nouts[ind_nout]
@@ -257,7 +265,13 @@ def measure_delta_lambda(mpgs, dt_before=7, dt_after=7, nout_ini=37,
                 i_nout = np.where(gal.nouts == xx)[0]
                 iini_nout = np.where(gal.nouts == x2)[0]
 
-                lambda_after = np.average(gal.smoothed_lambda[max([0, i_nout - dt_after]) : i_nout])
-                lambda_before = np.average(gal.smoothed_lambda[iini_nout:min([len(gal.data), iini_nout + dt_before])])
+                nout_after = dgyr2dnout(dt_after, xx)
+                nout_before = dgyr2dnout(-1 * dt_before, x2)
+
+                inout_after = np.where(gal.nouts == nout_after)[0]
+                inout_before = np.where(gal.nouts == nout_before)[0]
+
+                lambda_after = np.average(gal.smoothed_lambda[max([0, inout_after]) : i_nout])
+                lambda_before = np.average(gal.smoothed_lambda[iini_nout:min([len(gal.data), inout_before])])
                 delta_lambda.append(lambda_after - lambda_before)
             gal.merger.delta = np.array(delta_lambda)

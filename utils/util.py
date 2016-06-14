@@ -73,3 +73,32 @@ def levenshtein(s1, s2):
         previous_row = current_row
  
     return previous_row[-1]
+
+
+
+def dgyr2dnout(dt, nout_now):
+    """
+       returns nout closest to look back time at (nout) + dt.
+       dt can be either positive or negative. 
+
+       example
+       -------
+
+       >>> nout_now = 180
+       >>> nout_1gyr_earlier = dgyr2dnout(-1.0, nout_now)
+       >>> nout_1gyr_earlier
+           166
+
+    """
+    import general.defaults
+    import numpy as np
+    df = general.defaults.Default()
+    df.load_time()
+    
+    lbt = df.times["lbt"]
+    lbt_now = df.times["lbt"][df.times["nout"] == nout_now]
+    #print(np.abs(lbt - lbt_now - dt))
+    i_dt= np.argmin(np.abs(lbt - lbt_now + dt))
+    
+    return df.times["nout"][i_dt]
+
