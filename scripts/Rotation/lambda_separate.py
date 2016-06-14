@@ -152,12 +152,8 @@ def worker(gals, hals, out_q, info, inds,
 # B/T must also be measured for ALL stars, not only for bound stars.
                 gal.meta.lambda_arr2, gal.meta.lambda_arr2h, gal.meta.lambda_arr2q = lambdas[0]
                 gal.meta.lambda_r2,   gal.meta.lambda_r2h  , gal.meta.lambda_r2q   = lambdas[1]
-            if galaxy_plot:
-#                gal.cal_b2t(ptype='star',
-#                            bound_only=False,
-#                            hist=False,
-#                            proj='y')
-                gal.plot_gal(fn_save = galaxy_plot_dir + str(nout).zfill(3) \
+                if galaxy_plot:
+                    gal.plot_gal(fn_save = galaxy_plot_dir + str(nout).zfill(3) \
                                      + "_" + str(galid) + "_reori.png", ioff=True)
         out_q.put(gal.meta.__dict__)
         #print("where are you gone, dict?", out_q.get())
@@ -201,6 +197,7 @@ def main(wdir='./',
     region_plot = False
 
     verbose=False
+    log_run_detail = False
     dir_cat = out_dir
 
     if out_dir == "":
@@ -273,7 +270,7 @@ def main(wdir='./',
     ptypes=["star id pos mass vel time metal", "dm id pos mass vel"]
 
     ## halo part -----------------------------------------------------------
-    dir_out = wdir + dir_cat + '/'
+    out_dir_cat = wdir + dir_cat + '/'
 
 
     # Load complete tree -----------------------------------------------------
@@ -285,24 +282,9 @@ def main(wdir='./',
         # halo tree
         tree_path = 'halo/Trees/'
         m_halo_min = 2e10 # minimum halo mass. 
-    try:
-        alltrees = pickle.load(open(wdir + tree_path + "extended_tree.pickle", "rb" ))
-        print("Loaded an extended tree")
-    except:
-        alltrees = treemodule.CTree()
-        alltrees.load(filename= wdir + tree_path + 'tree_0_0_0.dat')
-        # Fix nout -----------------------------------------------------
-        nout_max = alltrees.data['nout'].max()
-        alltrees.data['nout'] += nout_fi - nout_max
-        print("------ NOUT fixed")
-        alltrees.data = ctu.augment_tree(alltrees.data, wdir, is_gal=is_gal)
-        print("------ tree data extended")
-        pickle.dump(alltrees, open(wdir + tree_path + "extended_tree.pickle", "wb" ))
-
-    # Reading tree done
-    td = alltrees.data
 
 
+##----------------------------------------------------------------------------------
     if read_halo_list:
         try:
             print("loading pickled halo list done:")
@@ -312,6 +294,20 @@ def main(wdir='./',
             read_halo_list = False
 
     if not read_halo_list:
+        try:
+            alltrees = pickle.load(open(wdir + tree_path + "extended_tree.pickle", "rb" ))
+            print("Loaded an extended tree")
+        except:
+            alltrees = treemodule.CTree()
+            alltrees.load(filename= wdir + tree_path + 'tree_0_0_0.dat')
+            # Fix nout -----------------------------------------------------
+            nout_max = alltrees.data['nout'].max()
+            alltrees.data['nout'] += nout_fi - nout_max
+            print("------ NOUT fixed")
+            alltrees.data = ctu.augment_tree(alltrees.data, wdir, is_gal=is_gal)
+            print("------ tree data extended")
+            pickle.dump(alltrees, open(wdir + tree_path + "extended_tree.pickle", "wb" ))
+        # Reading tree done
         info = load.info.Info(nout=nout_fi, base=wdir, load=True)
         prg_only_tree = get_sample_tree(alltrees, info,
                         wdir=wdir,
@@ -324,18 +320,20 @@ def main(wdir='./',
         pickle.dump(prg_only_tree, open(wdir + 'prg_only_tree.pickle', 'wb'))
 
 
-    with open(wdir + 'lambda_mp_status.txt', 'w') as f:
-        f.write("mstar_min = " + str(mstar_min) + "\n")
-        f.write("Rscale cluster : " + str(r_cluster_scale))
-        f.write("Rscale mk_gal : " + str(mk_gal_rscale))
-        f.write("npix : " + str(npix))
-        save_dict_scalar(cal_lambda_params, f, "\n")
-        #f.write("Rscale lambda calculation : " + str(rscale_lambda))
-        #f.write("npix per 1Reff for lambda calculation : " + str(npix_lambda))
-        f.write("ptypes : \n")
-        for i in ptypes:
-            f.write("  " + str(i) + "\n")
-
+##----------------------------------------------------------------------------------
+    if log_run_detail:
+        with open(wdir + 'lambda_mp_status.txt', 'w') as f:
+            f.write("mstar_min = " + str(mstar_min) + "\n")
+            f.write("Rscale cluster : " + str(r_cluster_scale))
+            f.write("Rscale mk_gal : " + str(mk_gal_rscale))
+            f.write("npix : " + str(npix))
+            save_dict_scalar(cal_lambda_params, f, "\n")
+            #f.write("Rscale lambda calculation : " + str(rscale_lambda))
+            #f.write("npix per 1Reff for lambda calculation : " + str(npix_lambda))
+            f.write("ptypes : \n")
+            for i in ptypes:
+                f.write("  " + str(i) + "\n")
+##----------------------------------------------------------------------------------
 
     for nout in nouts:
         print(nout, nout_fi)
@@ -349,11 +347,12 @@ def main(wdir='./',
         else:
             dump_gal = False
 
-        fcat = dir_out +"catalog" + snout + cat_suffix +".pickle"
-
+        fcat = out_dir_cat +"catalog" + snout + cat_suffix +".pickle"
         galaxy_plot_dir = out_base + 'galaxy_plot' + snout + '/'
         if not os.path.isdir(galaxy_plot_dir):
             os.mkdir(galaxy_plot_dir)
+
+##----------------------------------------------------------------------------------
 
         info = load.info.Info(nout=nout, base=wdir, load=True)
         if nout < 187:
@@ -362,12 +361,8 @@ def main(wdir='./',
                     (masscut_a * info.aexp + masscut_b), mstar_min))
 
         allgal, allhal = get_sample_gal(wdir, nout, info, prg_only_tree, mstar_min)
+##----------------------------------------------------------------------------------
 
-###
-#  required quantities
-#  halo.data[] x, y, z, vx, vy, vz, m, mvir, r, rivr, id, idx, 
-#  halo.idlists
-#
         nh = len(allgal.data)
         print("Total # galaxies to analyze",nh)
         print("# complete-tree galaxies",sum(allhal.data['idx'] > 0))
@@ -422,9 +417,9 @@ def main(wdir='./',
     
         dictout=[]
         try:
-            if not os.path.isdir(dir_out):
-                os.mkdir(dir_out)
-            f = open(dir_out + 'galaxies' + snout + '.txt', 'w')
+            if not os.path.isdir(out_dir_cat):
+                os.mkdir(out_dir_cat)
+            f = open(out_dir_cat + 'galaxies' + snout + '.txt', 'w')
             #write header
             dd =  out_q.get(timeout=0.1)
             for key in sorted(dd.keys()):

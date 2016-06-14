@@ -62,38 +62,43 @@ def _extract_cell(cell_all, xc, yc, zc, rr,
 
 # In[2]:
 
-def main(nout_ini, nout_fi, wdir='./', rcluster_scale = 2.9):
+from analysis.cal_lambda import *  
+def main(nout_ini, nout_fi, wdir='./'):#, rcluster_scale = 2.9):
     import load
     import tree.halomodule as hmo
     import numpy as np
     import os
-    
-    nouts = range(nout_fi, nout_ini, -1)
+    import pickle
+
+
+    nouts = range(nout_fi, nout_ini -1, -1)
 
 # In[15]:
-    
+    prg_only_tree = pickle.load(open(wdir + "prg_only_tree.pickle", 'rb'))
+
     for nout in nouts:
         s = load.sim.Sim(nout=nout, base=wdir, setup=True)
         s.add_hydro(load=True)
     
         info = load.info.Info(base=wdir, nout=nout)
-        gcat = hmo.Halo(base=wdir, is_gal=True, verbose=True, nout=nout)
-        hcat = hmo.Halo(base=wdir, is_gal=False, nout=nout)
+        #gcat = hmo.Halo(base=wdir, is_gal=True, verbose=True, nout=nout)
+        #hcat = hmo.Halo(base=wdir, is_gal=False, nout=nout)
     
-        cluster = hcat.data[np.argmax(hcat.data['np'])]
+        #cluster = hcat.data[np.argmax(hcat.data['np'])]
         out_dir = wdir + 'GalaxyMaker/CELL_' + str(nout).zfill(5) + '/'
         if not os.path.isdir(out_dir):
             os.mkdir(out_dir)
     
-        i_ok_gals = radial_cut(cluster['x'], cluster['y'], cluster['z'],
-                               rcluster_scale * cluster['rvir'],
-                               gcat.data['x'], gcat.data['y'], gcat.data['z'])
+        #i_ok_gals = radial_cut(cluster['x'], cluster['y'], cluster['z'],
+        #                       rcluster_scale * cluster['rvir'],
+        #                       gcat.data['x'], gcat.data['y'], gcat.data['z'])
     
-        g_ok = gcat.data[i_ok_gals]
-        for gal in g_ok:
+        #g_ok = gcat.data[i_ok_gals]
+        mstar_min = 2 * get_mstar_min(info.aexp)
+        g_ok, halos = get_sample_gal(wdir, nout, info, prg_only_tree, mstar_min)
+        for gal in g_ok.data:
             gcell = extract_gas(s.hydro.cell, gal)
             dump_cell(gcell, out_dir + "gal_cells_" + str(gal['id']).zfill(7), nout, gal['id'])
-
 
 
 if __name__ == '__main__':

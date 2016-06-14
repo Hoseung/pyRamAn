@@ -134,7 +134,7 @@ class Galaxy(object):
         den_radial_inverse = m_radial[::-1]/(2 * np.pi * bin_centers[::-1] * dr)
         if max(den_radial_inverse) < 2 * den_lim2:
             return False
-        i_r_cut2=len(m_radial) - np.argmax(den_radial_inverse > den_lim2)
+        i_r_cut2=len(m_radial) - np.argmax(den_radial_inverse > den_lim2) -1
         if debug:
             print("[galaxy.Galaxy.radial_profile_cut] m_radial \n", m_radial)
             print("[galaxy.Galaxy.radial_profile_cut] den_radial_inverse \n", den_radial_inverse)
@@ -146,6 +146,7 @@ class Galaxy(object):
         i_reff1 = np.argmax(np.cumsum(m_sorted) > (0.5*mtot1))
         self.meta.reff2 = r_sorted[i_reff2]
         self.meta.reff  = r_sorted[i_reff1]
+        #print(bin_centers, i_r_cut2, m_radial)
         self.meta.rgal2 = max([bin_centers[i_r_cut2],4*self.meta.reff2])
         self.meta.rgal  = max([bin_centers[i_r_cut1],4*self.meta.reff])#bin_centers[i_r_cut1]
 
