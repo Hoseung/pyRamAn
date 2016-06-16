@@ -42,7 +42,7 @@ class AmrHeader():
     def __init__(self):
         pass
 
-    def _read_amr_header(self, f):
+    def _read_amr_header(self, f, skip_header = True):
         """
         Make this visible from outside, and more general
         this can be used everytime you need to skip header
@@ -51,8 +51,14 @@ class AmrHeader():
         Are all header entries global quantaties?
         or varies with cpus?
         Local values must be separated from global values.
+
+        parameters
+        ----------
+        skip_header :
+            makes the core more tolerant. 
+            AMR header structure may change depending on the 
+            type of the simulation.
         """
-        skip_header = True
         h1 = read_header(f, np.dtype(
                              [('ncpu', 'i4'), ('ndim', 'i4'),
                               ('ng', 'i4', (3,)), ('nlevelmax', 'i4'),

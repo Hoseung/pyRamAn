@@ -5,7 +5,7 @@ def write_info(amr):
     #nout = amr.nout
     
     aexp = amr.aexp
-    h0 = amr.h0
+    h0 = amr.h0 * 1e-2
     rhoc = 1.88e-29
     boxlen = 1.0
     
@@ -17,10 +17,10 @@ def write_info(amr):
     f.write("\n")
     
     lineformat = ff.FortranRecordWriter('(1E23.15)')
-    
-    scale_d = amr.Om * rhoc * h0**2 / aexp**3
+
+    scale_d = amr.Om * rhoc * h0**2 / aexp**3 
     scale_t = aexp**2 / (h0*1e5/3.08e24)
-    scale_l = aexp* amr.boxlen * 3.08e24/(h0)
+    scale_l = aexp* amr.boxlen * 3.08e24/(h0) 
     
     for name, val in zip(["boxlen", "time", "aexp", "H0", "omega_m", "omega_l", "omega_k", "omega_b",
                          "unit_l", "unit_d", "unit_t"],
@@ -45,13 +45,14 @@ wdir = "./"
 import load
 #info = load.info.Info()
 #info.setup(nout=187, base=wdir)
-nouts =[354]
+#nouts = [int(input("nout"))]
+nouts = range(210, 251, 2)
 for nout in nouts:
-    s = load.sim.Sim(nout=nout, base=wdir)#, setup=True)
+    #s = load.sim.Sim(nout=nout, base=wdir)#, setup=True)
     ah = load.amr.AmrHeader()
     snout = str(nout).zfill(5)
     famr = open(wdir + "snapshots/output_"+snout+"/amr_"+snout+".out00001", 'rb')
-    ah._read_amr_header(famr)
+    ah._read_amr_header(famr, skip_header=False)
     levelmin = 7 # From other info file
 
     write_info(ah)
