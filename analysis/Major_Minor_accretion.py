@@ -228,50 +228,118 @@ def Maj_min_acc_ratio(mpgs, dt=5, major_ratio=3):
 
 
        
-        
-def measure_delta_lambda(mpgs, dt_before=1, dt_after=1, nout_ini=37,
-                         filter_smaller=True):
-    """
-        Note that nout are in descending order.
-        
-        physical meaning of dt_after is the time for a merger to settle down.
-        And, if there are multiple mergers within dt_after 
-        the effect of the larger merger and the rest are all mixed up.
-        I guess that it is more reasonable to take the 'mixed' effect
-        as the effect of the largest merger alone.
+def multipage_plot(mpgs, nout_ini=37, nout_fi = 187,
+                    wdir='./',
+                    suffix="",
+                    dt_after = 1.0,
+                    dt_before = 1.0,
+                    do_plot=True):
 
-        Modification
-        ------------
+    
+    from matplotlib.backends.backend_pdf import PdfPages
+    fig, ax = plt.subplots(1,2, sharex=True)
+    plt.subplots_adjust(hspace=0.001)
+    fig.set_size_inches(8,4)
 
-        2016.06.14
-            dt in Gyr unit, not the number of snapshots.
+    with PdfPages(wdir + 'MMA_plots' + suffix +'.pdf') as pdf:
+        measure_delta(mpgs, nout_ini=37, nout_fi = 187,
+                    wdir='./',
+                    dt_after = dt_after,
+                    dt_before = dt_before,
+                    ax=ax)
+        
+        
+        pdf.savefig()
+        ax[0].clear()
+        ax[1].clear()
+
+    #plt.show()
+    plt.close()
+    
+
+
+
+def measure_delta(mpgs, nout_ini=37, nout_fi = 187,
+                    wdir='./',
+                    dt_after = 1.0,
+                    dt_before = 1.0,
+                    ax=None):
+    """
+        Measure lambda change at every merger and draw lambda evolution with merger events.
+        time span over which average lambda value is measured is given in Gyr unit.
         
     """
+
     from scipy.signal import medfilt
-    from utils.util import dgyr2dnout
-
+    from utils.util import dgyr2dnout    
     for gal in mpgs:
         ind_nout = gal.nouts > nout_ini
         gal.nouts = gal.nouts[ind_nout]
         gal.data = gal.data[ind_nout]
         gal.smoothed_lambda = medfilt(gal.data['lambda_r'], kernel_size=5)
+        if ax is not None:
+            ax[0].plot(gal.nouts, np.log10(gal.data['mstar']), 'b:')
+            ax[0].set_xlim([50,190])
+            ax[0].set_title(str(gal.ids[0]) + ", " + str(gal.idxs[0]))
+            ax[1].plot(gal.nouts, gal.smoothed_lambda, 'black')
 
         if gal.merger is not None:
-            #if filter_smaller:            
-                #gal.merger = filter_smaller_mergers(gal.merger)
             delta_lambda =[]
-            
-            for mr, xx, x2 in zip(gal.merger.mr, gal.merger.nout, gal.merger.nout_ini):
-                i_nout = np.where(gal.nouts == xx)[0]
-                iini_nout = np.where(gal.nouts == x2)[0]
+            delta_mass = []
 
+            for mr, xx, x2 in zip(gal.merger.mr, gal.merger.nout, gal.merger.nout_ini):
+                # index of merger (final coalescence)
+                i_nout = np.where(gal.nouts == xx)[0]
+                # index of the begining of merger (as the time two galaxies overlap
+                # => rga1 + rgal2 < distance)
+                iini_nout = np.where(gal.nouts == x2)[0]
+                # snapshot number away by dt from nout
                 nout_after = dgyr2dnout(dt_after, xx)
                 nout_before = dgyr2dnout(-1 * dt_before, x2)
-
+                # indices of the snapshots.
                 inout_after = np.where(gal.nouts == nout_after)[0]
                 inout_before = np.where(gal.nouts == nout_before)[0]
 
-                lambda_after = np.average(gal.smoothed_lambda[max([0, inout_after]) : i_nout])
-                lambda_before = np.average(gal.smoothed_lambda[iini_nout:min([len(gal.data), inout_before])])
+                # if time_{merger} + dt > t_{z=0}
+                if i_nout == 0:
+                    l_inds_after = [0]
+                else:
+                    l_inds_after = range(max([0, inout_after]), i_nout)
+
+                nouts_after = gal.nouts[l_inds_after]
+                l_after = gal.smoothed_lambda[l_inds_after]
+                m_after = gal.data['mstar'][l_inds_after]
+                lambda_after = np.average(l_after)
+                mass_after = np.average(m_after)
+
+
+                l_inds_before = range(iini_nout,min([len(gal.data), inout_before]))
+                nouts_before = gal.nouts[l_inds_before]
+                l_before = gal.smoothed_lambda[l_inds_before]
+                m_before = gal.data['mstar'][l_inds_before]
+                lambda_before = np.average(l_before)
+                mass_before = np.average(m_before)
+
                 delta_lambda.append(lambda_after - lambda_before)
-            gal.merger.delta = np.array(delta_lambda)
+                delta_mass.append(mass_after - mass_before)
+
+
+                if ax is not None:
+                    ax[1].plot(nouts_after,l_after, 'g-')                                           
+                    # Check again.
+                    nn = range(min(nouts_after) - 5, min([nout_fi, max(nouts_after) + 5]))
+                    ax[1].plot(nn, [lambda_after]*len(nn), "g:")                    
+
+                    ax[1].plot(nouts_before,l_before, 'r-')
+                    nn = range(max([nout_ini, min(nouts_before) - 5]), max(nouts_before) + 5)
+                    ax[1].plot(nn, [lambda_before]*len(nn), "r:")                    
+
+                    ax[0].axvline(xx, linestyle=':')
+                    ax[0].annotate("{:.1f}".format(mr), xy=(xx,0.8))
+                    ax[1].axvline(xx, linestyle=':')
+                    ax[1].annotate("{:.1f}".format(mr), xy=(xx,0.8))
+                    ax[1].axvline(xx, linestyle=':')
+                    ax[1].axvline(x2, linestyle=':', c='g')
+
+            gal.merger.delta_l = np.array(delta_lambda)
+            gal.merger.delta_m = np.array(delta_mass)        
