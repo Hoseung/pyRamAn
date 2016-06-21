@@ -46,7 +46,7 @@ import load
 #info = load.info.Info()
 #info.setup(nout=187, base=wdir)
 #nouts = [int(input("nout"))]
-nouts = range(210, 251, 2)
+nouts = range(272, 299, 2)
 for nout in nouts:
     #s = load.sim.Sim(nout=nout, base=wdir)#, setup=True)
     ah = load.amr.AmrHeader()
