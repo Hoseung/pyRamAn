@@ -124,7 +124,7 @@ def worker(gals, hals, out_q, info, inds,
 #                           rscale=rscale_lambda, method='ellip', verbose=False)
 
             gal.meta.lambda_arr, gal.meta.lambda_arrh, gal.meta.lambda_12kpc= lambdas[0]
-            gal.meta.lambda_r,   gal.meta.lambda_rh,   gal.meta.lambda_12kpc = lambdas[1]
+            gal.meta.lambda_r,   gal.meta.lambda_rh,   gal.meta.lambda_r12kpc = lambdas[1]
             if galaxy_plot:
                 gal.plot_gal(fn_save = galaxy_plot_dir + str(nout).zfill(3) \
                                  + "_" + str(galid) + ".png", ioff=True)
