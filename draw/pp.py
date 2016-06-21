@@ -500,11 +500,33 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
             hvar="rho", field_var=None):
     """
     Accepts cell data and returns 2D projected gas map.
+     *position and dx must be in the same unit.
+
+    example
+    -------
+    1)
+    gas_map = pp_cell(gal.cell, 200, info)
+    plt.imshow(gas_map, origin="lower")
+    plt.show()
+    -> Without range or region, all cells are taken. 
+
+    2)
+    region = smp.set_region(centers=[0.,0.,0.], radius=gal.region['radius'])
+    gas_map = pp_cell(gal.cell, 200, info, region=region)
+
+    -> cells only inside the region are taken into account.
+       *It's a cubic region, not a sphere.
+
+
+    To do 
+    -----
+
+    Currently only column sum is supported. 
+    maximum value along the column, or column average option are needed.
+
     """
     import numpy as np
     from draw import ppc
-#    xh = np.asarray([0.5, 0.5, 0.5])
-    #hvar = 1
     
     field_x, field_y, field_z, \
     field_dx, field_rho,\

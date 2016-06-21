@@ -380,7 +380,7 @@ class Galaxy(object):
             self.cell['x'] = (cell['x'][icell] - xc) * self.info.pboxsize * 1000
             self.cell['y'] = (cell['y'][icell] - yc) * self.info.pboxsize * 1000
             self.cell['z'] = (cell['z'][icell] - zc) * self.info.pboxsize * 1000
-            self.cell['dx'] = cell['dx'][icell]# * self.info.pboxsize * 1000
+            self.cell['dx'] = cell['dx'][icell] * self.info.pboxsize * 1000
             self.cell['rho'] = cell['var0'][icell]
             self.cell['vx'] = cell['var1'][icell] * self.info.kms - self.meta.vxc
             self.cell['vy'] = cell['var2'][icell] * self.info.kms - self.meta.vyc

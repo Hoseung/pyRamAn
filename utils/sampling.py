@@ -112,7 +112,7 @@ def sum_region_multi(xc=[], yc=[], zc=[], radius = []):
     
 def set_region(**region):
     """
-        take any of xr, yr, zr, xc, yc, zc, ranges or centers
+        take any of xr, yr, zr, xc, yc, zc, radius, ranges or centers
         and calculate the others.
         returns a dict (or defaultdict).
 

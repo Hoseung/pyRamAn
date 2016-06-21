@@ -119,15 +119,38 @@ def rd_gal(nout, idgal, wdir="./", metal=True,
     gal.gid = header['my_number']
     gal.nout = nout
     gal.wdir = wdir
-
     return gal
+"""
+    if dm:
+        if fname is None:
+            dir_nout = "HAL_" + str(nout).zfill(5)
+            fname = wdir + 'halo/' +  dir_nout + '/hal_dms_' + idgal
+        gal.dm = rd_dm(nout, idgal, wdir=wdir)
+    else:
+        gal.dm = None
+    if cell:
+        if fname is None:
+            dir_nout = "GAL_" + str(nout).zfill(5)
+            fname = wdir + 'GalaxyMaker/' +  dir_nout + '/gal_cells_' + idgal
+        gal.cell = rd_cell(nout, idgal, wdir=wdir)
+    else:
+        gal.cell = None
+"""
 
 
-def rd_dm(nout, idgal, wdir="./", long=True):
+def rd_dm(nout, idgal, wdir="./", long=True, fname=None):
     """
 
     header xg in Mpc (physical, centered at 0.5, 0.5, 0.5 of the simualtion volume)
     """
+    if fname is None:
+        idgal = str(idgal).zfill(7)
+        dir_nout = "HAL_" + str(nout).zfill(5)      
+        fname = wdir + 'halo/' +  dir_nout + '/hal_dms_' + idgal
+    return rd_gm_dm_file(fname)   
+
+
+def rd_gm_dm_file(fname, long=True):
     # Header structure
     dtype_header = np.dtype([('my_number', 'i4'),
                              ('level', 'i4'),
@@ -147,9 +170,7 @@ def rd_dm(nout, idgal, wdir="./", long=True):
                ('id', '<i4'),
                ('m', '<f8')]
     
-    idgal = str(idgal).zfill(7)
-    dir_nout = "HAL_" + str(nout).zfill(5)      
-    with open(wdir + 'halo/' +  dir_nout + '/hal_dms_' + idgal, "rb") as f:
+    with open(fname, "rb") as f:
         header = read_header(f, dtype=dtype_header)
         header['mgal'] *= 1e11 # mass fof galaxy
         
@@ -171,15 +192,27 @@ def rd_dm(nout, idgal, wdir="./", long=True):
 
 
 
-def rd_cell(nout, idgal, wdir="./", metal=True, nchem=0):
+
+def rd_cell(nout, idgal, wdir="./", metal=True, nchem=0,
+            fname=None):
+    """
+
+    header xg in Mpc (physical, centered at 0.5, 0.5, 0.5 of the simualtion volume)
+    """
+    if fname is None:
+        idgal = str(idgal).zfill(7)
+        dir_nout = "CELL_" + str(nout).zfill(5) 
+        fname = wdir + 'GalaxyMaker/' +  dir_nout + '/gal_cells_'+ str(idgal).zfill(7)
+    return rd_gm_cell_file(nout, idgal, fname, metal=metal, nchem=nchem)
+
+
+def rd_gm_cell_file(nout, idgal, fname, metal=True, nchem=0):
     from utils import io
-    dir_nout = "CELL_" + str(nout).zfill(5)   
-    with open(wdir + 'GalaxyMaker/' +  dir_nout + '/gal_cells_'+ 
-    str(idgal).zfill(7), "rb") as f:
+    with open(fname, 'rb') as f:
         nout0 = io.read_fortran(f, dtype=np.int32, check=False)[0]
-        assert nout == nout0, "given nout ({}) and loaded nout ({}) do not match".format(nout, nout0)
+#        assert nout == nout0, "given nout ({}) and loaded nout ({}) do not match".format(nout, nout0)
         gid = io.read_fortran(f, dtype=np.int32, check=False)[0] 
-        assert idgal == gid, "given idgal ({}) and loaded idgal ({}) do not match".format(idgal, gid)
+#        assert idgal == gid, "given idgal ({}) and loaded idgal ({}) do not match".format(idgal, gid)
         
         ncell = io.read_fortran(f, dtype=np.int32, check=False)[0]
         cell = np.zeros(ncell, dtype=[('x', '<f8'),('y', '<f8'),('z', '<f8'),

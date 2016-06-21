@@ -38,9 +38,9 @@ def extract_gas(cell_all, gal, rscale=5.0):
 
 def _extract_cell(cell_all, xc, yc, zc, rr,
                   min_gas_density=0, unit="code"):
-    ind_c = np.where((np.square(cell_all['x'] - xc) + 
-                      np.square(cell_all['y'] - yc) +
-                      np.square(cell_all['z'] - zc)) < rr**2)[0]
+    ind_c = (np.square(cell_all['x'] - xc) + 
+             np.square(cell_all['y'] - yc) +
+             np.square(cell_all['z'] - zc)) < rr**2
     
     if min_gas_density > 0:
         ind_c = ind_c * (cell_all['var0'] > min_gas_density)
