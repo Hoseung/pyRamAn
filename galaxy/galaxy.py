@@ -17,8 +17,6 @@ recalculated center of galaxy is likely to deviate from the center of the halo.
 import numpy as np
 #import  matplotlib.pyplot as plt
 
-#def radial_profile_cut(star, center, mag_lim=25):
-
 def print_large_number(q):
     if isinstance(q, (int, np.int, np.int16, np.int32, np.int64)):
         return("{:d}".format(q))
@@ -96,14 +94,16 @@ class Galaxy(object):
         print([i * self.info.pboxsize * 100 for i in list(x)])
 
 
-#    def radial_profile_cut(self, den_lim=2e6, den_lim2=5e6,
     def radial_profile_cut(self, xx, yy, mm, vx, vy, vz,
                            den_lim=2e6, den_lim2=5e6,
                            mag_lim=25, nbins=100, rmax=50, dr=0.5,
                            debug=False):
         # 2D photometry. (if rotated towards +y, then use x and z)
         # now assuming +z alignment. 
+
         rr = np.sqrt(np.square(xx) + np.square(yy))# in kpc unit
+        if debug:
+            print(min(rr), max(rr), min(xx), max(xx))
 
         # Account for weights.
         i_sort = np.argsort(rr)
@@ -204,7 +204,7 @@ class Galaxy(object):
         if verbose:
             print("Making a galaxy:", self.meta.id)
             print("SAVE:", save)
-            print("Halo size:", self.halo['rvir'] * self.info.pboxsize * 1000.0)
+            print("Halo size:", self.halo['rvir'])
 
 
         # galaxy center from GalaxyMaker. - good enough.
@@ -212,7 +212,7 @@ class Galaxy(object):
         yc = self.halo['y']
         zc = self.halo['z']
 
-        if verbose: print(xc, yc, zc)
+        if verbose: print("xc, yxc,zc =", xc, yc, zc)
     
         if unit_conversion == "code":
             self.meta.xc = xc * self.info.pboxsize*1000
@@ -250,9 +250,11 @@ class Galaxy(object):
                                 mag_lim=25,
                                 nbins=int(rgal_tmp/0.5),
                                 dr=0.5,
-                                rmax=rgal_tmp)
+                                rmax=rgal_tmp,
+                                debug=debug)
 
         if not dense_enough:
+            print("Not dense enough")
             return False
         ind = np.where((np.square(star['x']) + 
                         np.square(star['y']) +
@@ -773,7 +775,8 @@ class Galaxy(object):
                          galaxy_plot_dir='./',
                          n_pseudo=1,
                          voronoi=None,
-                         mge_interpol = True):
+                         mge_interpol = False,
+                         save_result = True):
 
 
         """
@@ -1277,7 +1280,13 @@ class Galaxy(object):
                                                sma, smi,
                                                voronoi=False)
 
-
+        if save_result:
+            self.meta.lambda_arr = result_1reff
+            self.meta.lambda_r   = np.average(result_1reff[npix_per_reff])
+            self.meta.lambda_arrh= result_hreff
+            self.meta.lambda_rh  = np.average(result_hreff[npix_per_reff])
+            self.meta.lambda_12kpc = result_15kpc
+            self.meta.lambda_r12kpc =np.average(result_15kpc[npix_per_reff])
 
         return (result_1reff, result_hreff, result_15kpc),  \
                (np.average(result_1reff[npix_per_reff]),

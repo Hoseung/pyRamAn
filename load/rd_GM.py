@@ -16,7 +16,6 @@ class Header():
         
 
     
-
 class Gal():
     def __init__(self):
         """
@@ -101,15 +100,18 @@ def rd_gm_gal_file(fname, metal=True, nchem=0, long=True):
     return header, data
  
 
-def rd_gal(nout, idgal, wdir="./", metal=True, nchem=0,long=True):
+def rd_gal(nout, idgal, wdir="./", metal=True,
+          nchem=0,long=True, fname=None):
     """
-
     header xg in Mpc (physical, centered at 0.5, 0.5, 0.5 of the simualtion volume)
     """
     
-    idgal = str(idgal).zfill(7)
-    dir_nout = "GAL_" + str(nout).zfill(5)      
-    header, data = rd_gm_gal_file(wdir + 'GalaxyMaker/' +  dir_nout + '/gal_stars_' + idgal)
+    if fname is None:
+        idgal = str(idgal).zfill(7)
+        dir_nout = "GAL_" + str(nout).zfill(5)
+        fname = wdir + 'GalaxyMaker/' +  dir_nout + '/gal_stars_' + idgal
+   
+    header, data = rd_gm_gal_file(fname)
         
     gal = Gal()
     gal.star = data

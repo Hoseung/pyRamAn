@@ -68,20 +68,24 @@ def angular_momentum(star):
     return lx,ly,lz
 
 
-def gal_from_GM(nout, idgal, gcat, info, **kwargs):
+def gal_from_GM(gcat, info, nout=None, idgal=None, fname=None, **kwargs):
     from galaxy import galaxy
-    gm = load.rd_GM.rd_gal(nout, idgal)        
+    if fname is None:
+        gm = load.rd_GM.rd_gal(nout, idgal)
+    else:
+        gm = load.rd_GM.rd_gal(info.nout,0,fname=fname)
+
     if gm.star == None:
         print("no stellar particles, skipping")
         return False
+
     gm.dm = None
-    gm.cell = None 
+    gm.cell = None
     gm.star['time'] = utils.cosmology.time2gyr(gm.star['time'],
                                  z_now = info.zred,
                                  info=info)
 
     gal = galaxy.Galaxy(halo = gcat,
-                        radius_method='eff',
                         info=info)
     
     good_gal = gal.mk_gal(gm.star, gm.dm, gm.cell,
