@@ -100,7 +100,8 @@ def main(nout_ini, nout_fi, wdir='./', rcluster_scale = 2.9):
 #        mstar_min = 2 * get_mstar_min(info.aexp)
 #        g_ok, halos = get_sample_gal(wdir, nout, info, prg_only_tree, mstar_min)
 
-        for gal in g_ok.data:
+#        for gal in g_ok.data:
+        for gal in g_ok:
             print(gal['id'])
             gcell = extract_gas(s.hydro.cell, gal)
             dump_cell(gcell, out_dir + "gal_cells_" + str(gal['id']).zfill(7), nout, gal['id'])
