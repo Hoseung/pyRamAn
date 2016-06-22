@@ -59,7 +59,15 @@ class Hydro:
     def load(self, lmax=None, icpu=0):
         print("load")
         
-    def amr2cell(self, lmax=None, icpu=0, verbose=False, return_meta=False):
+    def amr2cell(self, lmax=None, icpu=0, cpu=True,
+                 verbose=False, return_meta=False):
+        """
+            parameters
+            ----------
+
+            cpu : bool
+                if True, cpu number of each cell is stored.
+        """
         from load import a2c
         nvarh = self.header.nvarh
         nlevelmax = self.header.nlevelmax
@@ -84,7 +92,9 @@ class Hydro:
         else:
             cell = a2c.a2c_load(work_dir, xmi, xma, ymi, yma, zmi, zma, lmax
                                  ,out[0], nvarh)
-            dtype_cell = [('x', '<f8'), ('y', '<f8'), ('z', '<f8'),('dx', '<f8')] 
+            dtype_cell = [('x', '<f8'), ('y', '<f8'), ('z', '<f8'), ('dx', '<f8')] 
+            if cpu:
+                dtype_cell.append(('cpu', '<f8'))
             for i in range(nvarh):
                 dtype_cell.append( ('var' + str(i), '<f8'))
 
@@ -95,6 +105,8 @@ class Hydro:
         self.cell['dx'] = cell[1]
         for i in range(nvarh):
             self.cell['var' + str(i)] = cell[2][:,i]
+        if cpu:
+            self.cell['cpu'] = cell[3]
 #        self.cell = np.rec.fromarrays([cell[0][:,0], cell[0][:,1], cell[0][:,2], cell[1],
 #                                       cell[2][:,0], cell[2][:,1], cell[2][:,2],
 #                                       cell[2][:,3], cell[2][:,4], cell[2][:,5]],

@@ -442,11 +442,7 @@ subroutine a2c_count(ngridtot, nvarh, repository, xmin, xmax, ymin, ymax, zmin, 
 end subroutine a2c_count
 
 
-
-
-
-
-subroutine a2c_load(xarr, dxarr, varr, repository, xmin, xmax, ymin, ymax, zmin, zmax, lmax, ngridtot, nvarh)
+subroutine a2c_load(xarr, dxarr, varr, cpuarr, repository, xmin, xmax, ymin, ymax, zmin, zmax, lmax, ngridtot, nvarh)
   implicit none
 
   character(LEN=*),INTENT(IN)::repository
@@ -458,6 +454,7 @@ subroutine a2c_load(xarr, dxarr, varr, repository, xmin, xmax, ymin, ymax, zmin,
   real(KIND=8),INTENT(OUT),dimension(ngridtot,3)::xarr
   real(KIND=8),INTENT(OUT),dimension(ngridtot,nvarh)::varr
   real(KIND=8),INTENT(OUT),dimension(ngridtot)::dxarr
+  integer,INTENT(OUT),dimension(ngridtot)::cpuarr
 !  allocate(xarr(1:ngridtot,1:ndim))
 !  allocate(dxarr(1:ngridtot))
 !  allocate(varr(1:ngridtot,1:nvarh))
@@ -871,6 +868,7 @@ subroutine a2c_load(xarr, dxarr, varr, repository, xmin, xmax, ymin, ymax, zmin,
                     icnt = icnt + 1
                     xarr(icnt,1:3)=x(i,1:3)
                     dxarr(icnt)=dx
+                    cpuarr(icnt) = icpu
                     varr(icnt,1:nvarh)=var(i,ind,1:nvarh)
                  end if
               end do
