@@ -38,3 +38,17 @@ def read_fortran(f, dtype, n=1, check=True):
                           % (alen, length))
     return data
 
+def prettyprint(q, precise=False):
+    if isinstance(q, (int, np.int32, np.int64)):
+        #print("int")
+        return "{:d}".format(q)
+    elif abs(q) > 1e4:
+        if precise:
+            return "{:.6e}".format(q)
+        else:
+            return "{:.3e}".format(q)
+    else:
+        if precise:
+            return "{:.6f}".format(q)
+        else:
+            return "{:.2f}".format(q)

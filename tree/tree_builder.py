@@ -55,9 +55,13 @@ def write_halo_bricks_ct(data, desc, nout, out_dir='./', is_gal=True):
         Or, just data[['id', 'Orig_halo_id', ' ', and so on]] to access multiple fields at a time.
         
         """
-        for variable in variables:
-            f.write(str(variable) + " ")
+        from utils.io import prettyprint as pp
+        for variable in variables:            
+            f.write(pp(variable, precise=True) + " ")
         f.write("\n")
+#        for variable in variables:
+#            f.write(str(variable) + " ")
+#        f.write("\n")
     
 
     if is_gal:
@@ -129,15 +133,15 @@ def convert_halo_list(nout_ini=11, nout_fi = 187, base='./',
     aexps = np.zeros(len(nouts))
     
     for inout, nout in enumerate(nouts):    
-        if True:
+        if inout==0:
             # If first snapshot, load data0.
             galcat0 = hmo.Halo(nout=nout, base=base,
                           halofinder="HM", is_gal=is_gal, return_id=True)
             data0, idlists0 = galcat0.data, galcat0.idlists
             #print(inout, nout, data0['id'])
-#        else:
-#            galcat0 = galcat1
-#            data0, idlists0 = galcat0.data, galcat0.idlists
+        else:
+            galcat0 = galcat1
+            data0, idlists0 = galcat1.data, galcat1.idlists
 
         if nout == max(nouts):
             """

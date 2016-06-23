@@ -175,7 +175,6 @@ class Halo(HaloMeta):
             self.data = data
 
     def load(self):
-        print(self.nout)
         self._check_params()
         if self.halofinder is 'Rockstar':
             self.load_rs()

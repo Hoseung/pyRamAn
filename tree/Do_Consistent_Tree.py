@@ -21,6 +21,7 @@ from tree.tree_builder import convert_halo_list
 def run(wdir ='./', nout_ini=None, is_gal=False,
         out_dir_g='GalaxyMaker/', out_dir_d='halo/'):
     base = os.path.abspath(wdir) + '/'
+    print(base)
     cluster = base.split('/')[-2]
     if is_gal:
         if nout_ini is None:
@@ -125,15 +126,16 @@ if __name__ == "__main__":
     #nout_ini=int(input("not_ini=? (12)"))
     #if nout_ini == "":
     #    nout_ini = 12
-    is_gal = True
+    is_gal = False
     nout_ini = 20
-    run(wdir = here + "/" , is_gal=is_gal, nout_ini=nout_ini,
-        out_dir_g="GalaxyMaker/")
+    #run(wdir = here + "/" , is_gal=is_gal, nout_ini=nout_ini,
+    #    out_dir_g="halo/")
+    #clusters=["29176"]
 
-
-def run_all(is_gal=True):
-    clusters=["01605", "04466", "05427", "74010", "10002", "14172",
-              "17891", "24954", "28928", "29172", "29176", "35663",
+    # 29828 -> 29830
+    clusters=["01605", "04466", "05427", "10002", "14172",
+              "17891", "24954", "28930", "29172", "35663",
               "36413", "36415", "49096", "06098", "07206", "39990"]
+def run_all(clusters, is_gal=True, nout_ini=20):
     for cluster in clusters:
         run(wdir = cluster + "/" , is_gal=is_gal, nout_ini=nout_ini)
