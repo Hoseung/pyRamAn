@@ -6,48 +6,8 @@ Created on Thu Mar 26 21:20:50 2015
 """
 
 import numpy as np
+from utils.io import skip_fortran, read_fortran
 _head_type = np.dtype('i4')
-
-def skip_fortran(f, n=1, verbose=False):
-    alen = np.fromfile(f, _head_type, 1)  # == skip
-    if verbose:
-        print("FORTRAN block length %d!=%d" % (alen))
-
-    mod_check = alen % 4
-    if mod_check != 0:
-        print("Array size is not a multiple of 4")
-
-    n = int(alen/4)
-
-    np.fromfile(f, _head_type, n)
-    # print('check',data)
-    np.fromfile(f, _head_type, 1)
-
-
-def read_fortran(f, dtype, n=1, check=True):
-    if not isinstance(dtype, np.dtype):
-        dtype = np.dtype(dtype)
-
-    length = n * dtype.itemsize
-
-    alen = np.fromfile(f, _head_type, 1)  # == skip
-
-    if alen != length:
-        if check:
-            raise IOError("Unexpected FORTRAN block length from"
-            "file {} != user given {}".format(alen, length))
-        else:
-            n = int(alen / dtype.itemsize)
-            # Force exact read (although unintended)
-
-    data = np.fromfile(f, dtype, n)  # Actual data
-
-    alen = np.fromfile(f, _head_type, 1)
-    if check:
-        if alen != length:
-            raise IOError("Unexpected FORTRAN block length (tail) %d!=%d"
-                          % (alen, length))
-    return data
 
 
 def read_header(f, dtype, check=True):

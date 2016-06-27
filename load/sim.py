@@ -9,7 +9,8 @@ Created on Tue Jan 13 23:27:16 2015
 import numpy as np
 
 class Simbase:
-    """ base    
+    """ 
+    base    
     """
     def __init__(self):
         
@@ -261,27 +262,61 @@ class Sim(Simbase):
     """
     Defines the 'host class' of part, amr, hydro, info.
 
+    Attributes
+    ----------
+
+
+    Methods
+    -------
+    setup(self, nout=None, base='./', data_dir='snapshots/',
+                   ranges=[[0.0,1.0],[0.0,1.0],[0.0,1.0]], dmo=False)
+        Setup basic parameters need for an AMR instance.
+
+    add_info(self, load=False)
+        
+    add_hydro(self, load=False, lmax=None)
+    
+    add_part(self, ptypes=[], load=False, fortran=True, dmo=False, **kwargs)
+   
+    Examples
+    --------
+    >>> import load
+    >>> s = load.sim.Sim(187, ranges=[[0.3,0.4], [0.35,0.45], [0.1,0.2]])
+    
+    Notes
+    -----
     Global information is stored in this class: 
         ndim, ncpu, base, type of simulation (DMO, zoom, and so on)
     Later it will also include .nml information.
     (Romain's git version generates such output in text files)
-
+ 
     Currently this class deals with single snapshot.
     But I hope to expand it for multiple snapshots.
-
-    .. note::
-        This is a sample note
     """
-    def __init__(self, nout=None, base='./', data_dir='snapshots/',
-                 ranges=[[0.0,1.0],[0.0,1.0],[0.0,1.0]], dmo=False
-                 , setup=False, region=None):
+    def __init__(self, nout, base='./', data_dir='snapshots/',
+                 ranges=[[0.0,1.0],[0.0,1.0],[0.0,1.0]], dmo=False, 
+                 setup=True, region=None):
+        """
+            Parameters
+            ----------
+            nout: int
+            base: str, optional
+            data_dir: str, optional
+            ranges: list, optional
+                [[xmin,xmax],[ymiin,ymax],[zmin,zmax]]
+            dmo: bool, optional
+            setup: bool, optional
+            region: (region)dict, optional
 
-        self.nout = nout            
+
+        """
+
+        self.nout = nout          
         self.set_base(base)
-        # info appreciates nout and base (not medatary, though)
+        # info appreciates nout and base (not mandatary, though)
         self.dmo = dmo
         # DMO runs are slightly different!
-        print("data_dir =", data_dir)
+        #print("data_dir =", data_dir)
         self.set_data_dir(data_dir)
         self.add_info()
         # set_data_dir and set_range needs info instance be exist.
@@ -293,12 +328,7 @@ class Sim(Simbase):
         if setup:
             self.setup(nout, base, data_dir, ranges, dmo)
 
-    def __call__(self, *args):
-        # Function emulation      
-        return self.__init__(*args)
-        self.setup(self, *args)
-
-    def all_set(self):
+    def _all_set(self):
         return (self.nout is not None) & (self.base is not None)
 
     def setup(self, nout=None, base='./', data_dir='snapshots/',
@@ -306,15 +336,15 @@ class Sim(Simbase):
         self.nout = nout
         self.set_base(base)        
         if self.nout is None:
-            print("Note that 'nout' is not set. \n use sim.Sim.set_nout(nout)")        
+            raise ValueError("Note that 'nout' is not set. \n use sim.Sim.set_nout(nout)")
         self.add_info()
-        # set_data_dir and set_range needs info instance be exist.
+        # set_data_dir and set_range needs an info instance.
         self.set_ranges(ranges)
 
-        if self.all_set():
+        if self._all_set():
             self.add_amr()
             self.set_cpus(self._hilbert_cpulist(self.info, self.ranges))
-        print(' Simulation set up.')
+        print('Simulation set up.')
 
     def set_base(self, base):
         """
@@ -333,11 +363,10 @@ class Sim(Simbase):
 
     def set_data_dir(self, data_dir):
         """
-        By default, row data is in simulation_base/snapshots/
+        By default, simulation outputs are in simulation_base/snapshots/
         """
         from os import path
         self.data_dir =  path.join(self.base, '', data_dir, '')
-#        self.info.set_data_dir(self.data_dir)
 
     def show_base(self):
         print("setting the base(working) directory to :", self.base)
@@ -345,7 +374,6 @@ class Sim(Simbase):
     def add_hydro(self, load=False, lmax=None):
         from load import hydro
         self.hydro = hydro.Hydro(self.info, self.amr)
-        print("An Hydro instance is created\n")
         if load :
             if lmax is None:
                 lmax = self.info.lmax
@@ -421,10 +449,18 @@ class Sim(Simbase):
     def show_ranges(self):
         print("Ranges = %s\n" % self.ranges)
 
-    def search_zoomin_region(self, *args, **kwargs):  # If part is not loaded yet, load particles
+    def search_zoomin_region(self, *args, **kwargs):
         """
+        Determine Zoomin region.
+        
+        Returns a spherical region encompassing maximally refined cells.
+
+        Notes
+        -----
+        If part is not given, load particles.
+
         Not only part, but also hydro or amr can be used to find the zoomin region!
-        Determine priority, amr or part?
+        But, don't want to write a new code.
         """
         if hasattr(self, 'part'):
             print("Have part")
@@ -435,8 +471,9 @@ class Sim(Simbase):
             self.set_zregion(self.amr.search_zoomin( *args, **kwargs))
 
     def set_zregion(self, zregion):
+        """
+        Set zoom-in region for Zoom-in simulations.
+        """
         self.zregion = zregion
         self.info.zregion = zregion
-
-
 

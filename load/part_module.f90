@@ -3,31 +3,6 @@ module part_load
   real(KIND=8),allocatable,dimension(:,:)::star_arr
   real(KIND=8),allocatable,dimension(:,:)::dm_arr
 contains
-  subroutine foo
-    integer k
-    if (allocated(b)) then
-       print*, "b=["
-       do k = 1,size(b,1)
-          print*, b(k,1:size(b,2))
-       enddo
-       print*, "]"
-    else
-       print*, "b is not allocated"
-    endif
-  end subroutine foo
-
-  subroutine fun
-    integer k
-    if (allocated(star_arr)) then
-       print*, "b=["
-       do k = 1,size(star_arr,1)
-          print*, star_arr(k,1:size(star_arr,2))
-       enddo
-       print*, "]"
-    else
-       print*, "star_arr is not allocated"
-    endif
-  end subroutine fun
 
   subroutine count_part(ndm_actual, nstar_actual, nsink_actual, repository, xmin, xmax, ymin, ymax, zmin, zmax)
     !--------------------------------------------------------------------------

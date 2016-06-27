@@ -11,6 +11,22 @@ def write_fortran(f, array, check=True):
     f.write(struct.pack('i', array.nbytes))
     array.tofile(f)
     f.write(struct.pack('i', array.nbytes))
+
+
+def skip_fortran(f, n=1, verbose=False):
+    alen = np.fromfile(f, _head_type, 1)  # == skip
+    if verbose:
+        print("FORTRAN block length %d!=%d" % (alen))
+
+    mod_check = alen % 4
+    if mod_check != 0:
+        print("Array size is not a multiple of 4")
+
+    n = int(alen/4)
+
+    np.fromfile(f, _head_type, n)
+    # print('check',data)
+    np.fromfile(f, _head_type, 1)
     
     
 def read_fortran(f, dtype, n=1, check=True):

@@ -8,7 +8,7 @@ subroutine count_part(ndm_actual, nstar_actual, nsink_actual, repository, xmin, 
 
   integer,INTENT(OUT)::ndm_actual, nstar_actual, nsink_actual
 
-  integer::ncpu,ndim,npart,i,j,k,icpu,ipos,nstar
+  integer::ncpu,ndim,i,j,k,icpu,ipos,nstar
   integer::ncpu2,npart2,ndim2,levelmin,levelmax,ilevel
   integer::ncpu_read
   real(KIND=8), INTENT(IN)::xmin,xmax,ymin,ymax,zmin,zmax
@@ -204,7 +204,7 @@ subroutine count_part(ndm_actual, nstar_actual, nsink_actual, repository, xmin, 
         read(1)id
         read(1) ! Skip level
         read(1)age
-	! ignore metal
+    ! ignore metal
      endif
 
      close(1)
@@ -215,10 +215,10 @@ subroutine count_part(ndm_actual, nstar_actual, nsink_actual, repository, xmin, 
               &   x(i,3)>=zmin.and.x(i,3)<=zmax)
 
           if(ok_part.and.(age(i).eq.0.0d0).and.(id(i)>0)) then
-	      ndm_actual = ndm_actual + 1
+          ndm_actual = ndm_actual + 1
           elseif(ok_part.and.(age(i).ne.0.0d0).and.(id(i)>0)) then
               nstar_actual = nstar_actual + 1
-	  elseif(ok_part.and.(age(i).eq.0.0d0).and.(id(i)<0)) then
+      elseif(ok_part.and.(age(i).eq.0.0d0).and.(id(i)<0)) then
               nsink_actual = nsink_actual + 1
           endif
      enddo
@@ -262,7 +262,7 @@ subroutine count_part(ndm_actual, nstar_actual, nsink_actual, repository, xmin, 
 
   logical::ok_part
   logical, INTENT(IN):: read_metal
-  integer::ncpu,ndim,npart,i,j,k,icpu,ipos,nstar
+  integer::ncpu,ndim,i,j,k,icpu,ipos,nstar
   integer::i_dm, i_star
   integer::ncpu2,npart2,ndim2,levelmin,levelmax,ilevel
   
@@ -449,27 +449,27 @@ subroutine count_part(ndm_actual, nstar_actual, nsink_actual, repository, xmin, 
             &   x(i,2)>=ymin.and.x(i,2)<=ymax.and. &
             &   x(i,3)>=zmin.and.x(i,3)<=zmax)
 
-	if(ok_part.and.(age(i).eq.0.0d0))then ! Sink particles are also considered as DM.
+    if(ok_part.and.(age(i).eq.0.0d0))then ! Sink particles are also considered as DM.
            i_dm = i_dm + 1
-	   dm_float(i_dm,1) = x(i,1)
-	   dm_float(i_dm,2) = x(i,2)
-	   dm_float(i_dm,3) = x(i,3)
-	   dm_float(i_dm,4) = v(i,1)
-	   dm_float(i_dm,5) = v(i,2)
-	   dm_float(i_dm,6) = v(i,3)
-	   dm_float(i_dm,7) = m(i)
-	   dm_int(i_dm) = id(i)
-        elseif(ok_part.and.(age(i).ne.0.0d0).and.(id(i)>0))then
-	   i_star = i_star + 1
-		 star_float(i_star,1) = x(i,1)
-		 star_float(i_star,2) = x(i,2)
-		 star_float(i_star,3) = x(i,3)
-		 star_float(i_star,4) = v(i,1)
-		 star_float(i_star,5) = v(i,2)
-		 star_float(i_star,6) = v(i,3)
-		 star_float(i_star,7) = m(i)
-	     star_int(i_star) = id(i)
-		star_float(i_star,8) = age(i)
+       dm_float(i_dm,1) = x(i,1)
+       dm_float(i_dm,2) = x(i,2)
+       dm_float(i_dm,3) = x(i,3)
+       dm_float(i_dm,4) = v(i,1)
+       dm_float(i_dm,5) = v(i,2)
+       dm_float(i_dm,6) = v(i,3)
+       dm_float(i_dm,7) = m(i)
+       dm_int(i_dm) = id(i)
+       elseif(ok_part.and.(age(i).ne.0.0d0).and.(id(i)>0))then
+         i_star = i_star + 1
+          star_float(i_star,1) = x(i,1)
+         star_float(i_star,2) = x(i,2)
+         star_float(i_star,3) = x(i,3)
+         star_float(i_star,4) = v(i,1)
+         star_float(i_star,5) = v(i,2)
+         star_float(i_star,6) = v(i,3)
+         star_float(i_star,7) = m(i)
+         star_int(i_star) = id(i)
+         star_float(i_star,8) = age(i)
        if(read_metal)  star_float(i_star,9) = metal(i)
 !	elseif(ok_part.and.(age(i).eq.0.0d0).and.(id(i)<0))then
 !	   sink_arr(i_sink,1) = x(i,1)

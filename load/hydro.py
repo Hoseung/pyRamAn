@@ -8,10 +8,12 @@ import numpy as np
 from load.utils import read_header, read_fortran, skip_fortran
 import load
 
+class Dummy():
+    def __init__(self):
+        pass
+
+
 class Hydro:
-    class HydroHeader():
-        def __init__(self):
-            pass
 
     def __init__(self, info, amr=None):
 
@@ -28,7 +30,7 @@ class Hydro:
 
     def _get_basic_info(self):
         f = open(self._fnbase + '00001', "rb")
-        self.header = self.HydroHeader()
+        self.header = Dummy()
         self._read_hydro_header(f)
 
     def set_info(self, info):
@@ -56,17 +58,23 @@ class Hydro:
         self.header.gamma = h1['gamma']
         self.header.nvarh = h1['nvarh']
 
-    def load(self, lmax=None, icpu=0):
-        print("load")
-        
     def amr2cell(self, lmax=None, icpu=0, cpu=True,
                  verbose=False, return_meta=False):
         """
-            parameters
-            ----------
+        Loads AMR and HYDRO and output hydro data into particle-like format(cell).
 
-            cpu : bool
-                if True, cpu number of each cell is stored.
+        Parameters
+        ----------
+        cpu : bool, optional
+            If True, cpu number of each cell is stored.
+        icpu : int, array-like, optional
+            list of cpus to load
+        lmax : int, optional
+            Limit the maximum level of hydro data returned.
+        return_meta : bool, optional
+            If True, returns meta data instead. (Why whould I want that??)
+        verbose : bool, optional
+            
         """
         from load import a2c
         nvarh = self.header.nvarh
@@ -88,7 +96,6 @@ class Hydro:
         out = a2c.a2c_count(work_dir, xmi, xma, ymi, yma, zmi, zma, lmax)
         if return_meta:
             return (out[0], work_dir, xmi, xma, ymi, yma, zmi, zma, lmax)
-
         else:
             cell = a2c.a2c_load(work_dir, xmi, xma, ymi, yma, zmi, zma, lmax
                                  ,out[0], nvarh)

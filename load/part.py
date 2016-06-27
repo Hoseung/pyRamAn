@@ -6,7 +6,7 @@ Created on Thu Mar 26 22:15:03 2015
 """
 import numpy as np
 import load
-from load.utils import read_header, read_fortran
+from utils.io import read_header, read_fortran
 
 """
 pt = []

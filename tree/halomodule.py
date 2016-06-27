@@ -34,76 +34,102 @@ MODIFICATIONS:
 """
 
 class HaloMeta():
-    """HaloMeta class.
+    """
+    HaloMeta class.
+
+
     all except halofinder output.
 
+
+    Attributes
+    ---------
  
-    Parameters
-    ----------
-    nout : snapshot number, int
-    base : working directory, str
-    info : info object
-    halofinder : "RS" or "HM". Full names also work. case insensitive.
- 
-    Examples
-    --------
-    It is better to specify nout, base, halofinder from the beginning. 
-    All three are necessary to load a halo output
-    
-    >>> h = tree.halomodule.Halo(nout=132, halofinder="RS", base='~/data/AGN2/')    
-    
-    given nout and base, info is autoloaded if not explicitely given.
-    
+    Methods
+    -------
+    set_info(self, info)
+    set_nout(self, nout)
+
+    set_halofinder(self, halofinder)
+
+
+
+
+
     """
     def __init__(self, nout=None, base='./', info=None, halofinder='HM',
                  load=True, is_gal=False, return_id=False, outdir=None,
                  verbose=False):
-       self.nout = nout
-       self.verbose = verbose
-       self.set_base(base)
-       self.info = None
-       self.set_info(info=info)
-       self.run_params = {"none":None}
-       if isinstance(halofinder, str):
-           self.set_halofinder(halofinder)
-       self.aexp = 0.0
-       self.age = 0.0
-       self.sim = {"none":None}
-       self.nhalo = 0
-       self.nsub = 0
-       self.npart_all = 0
-       self.massp = 0 # in case of single level DMO run.
-       self.unit={"mass":None, "lengh":None, "velocity":None}
-       self.is_gal = is_gal
-       if return_id is False:
-           self.return_id = False
-       else:
-           if hasattr(return_id, "__len__"):
-               # String also has __len__, but let's just ignore such cases.
-               self.return_id_list = return_id
-           else:
-               self.return_id_list = None # None = load all halo's ids.
-           self.return_id = True
+        """
+        Parameters
+        ----------
+        nout : int
+            snapshot number
+        base : str
+            working directory
+        info : info object
 
-       if outdir is None:
-           if is_gal:
-               self.gal_find_dir = 'GalaxyMaker/'
-           else:
-               self.dm_find_dir= 'halo/'
-       else:
-           if is_gal:
-               self.gal_find_dir = outdir
-           else:
-               self.dm_find_dir= outdir
-       
-       try:
-           self.set_nout(nout)
-       except:
-           pass
+        halofinder : {"RS", "HM"}
+            Full names also work. case insensitive.
+  
 
-       if load:
-           self.load()
-       
+        Examples
+        --------
+        It is better to specify nout, base, halofinder from the beginning. 
+        All three are necessary to load a halo output
+        
+        >>> h = tree.halomodule.Halo(nout=132, halofinder="RS", base='~/data/AGN2/')    
+        
+        given nout and base, info is autoloaded if not explicitely given.
+
+        """
+
+        self.nout = nout
+        self.verbose = verbose
+        self.base = base
+        self.info = None
+        self.set_info(info=info)
+        self.run_params = {"none":None}
+        if isinstance(halofinder, str):
+            self.set_halofinder(halofinder)
+        self.aexp = 0.0
+        self.age = 0.0
+        self.sim = {"none":None}
+        self.nhalo = 0
+        self.nsub = 0
+        self.npart_all = 0
+        self.massp = 0 # in case of single level DMO run.
+        self.unit={"mass":None, "lengh":None, "velocity":None}
+        self.is_gal = is_gal
+        if return_id is False:
+            self.return_id = False
+        else:
+            if hasattr(return_id, "__len__"):
+                # String also has __len__, but let's just ignore such cases.
+                self.return_id_list = return_id
+            else:
+                self.return_id_list = None # None = load all halo's ids.
+            self.return_id = True
+        
+        if outdir is None:
+            if is_gal:
+                self.gal_find_dir = 'GalaxyMaker/'
+            else:
+                self.dm_find_dir= 'halo/'
+        else:
+            if is_gal:
+                self.gal_find_dir = outdir
+            else:
+                self.dm_find_dir= outdir
+        
+        try:
+            self.set_nout(nout)
+        except:
+            pass
+        
+        if load:
+            self.load()
+
+
     def set_info(self, info):
         if info is None:
             try:
@@ -114,6 +140,7 @@ class HaloMeta():
         else:
             self.info = info
 
+
     def _load_info(self):
         import load.info
         if self.verbose: 
@@ -121,6 +148,7 @@ class HaloMeta():
             print("[Halo.load_info] nout = {}, base ={}".format(self.nout, self.base))
         self.info = load.info.Info(nout=self.nout, base=self.base, load=True)    
         if self.verbose : print("[Halo.load_info] info is loaded")
+
 
     def set_halofinder(self, halofinder):
         from utils import util
@@ -135,34 +163,27 @@ class HaloMeta():
             answer = None
         self.halofinder = answer
 
-    def set_base(self, base):
-        self.base = base
-
-    def set_sim(self, sim):
-        # nouts and aexps
-       pass
 
     def set_nout(self, nout):
         self.nout = nout
         self._set_aexp(nout)
 
-    def _set_aexp(self, nout):
-#        self.aexp =
-        pass       
-        
 
 class Halo(HaloMeta):
     """
+    Class to hold Halo finder catalog.
+
     HM :
         r = distance of the furthest particle from the center of the halo.
         rvir = radius where the density is 200 times the _______?
+
     Notes
     -----
-       Rockstar halo id starts from 0. CT id too.
+    Rockstar halo id starts from 0. CT id too.
+    For the details of Halofinders refer Aubert 2004, Behroozi 2013.
+
 
     """
-#    def __init__(self):  __ini__ is also inherited from HaloMet
-
     def _check_params(self):
         assert (self.base is not None), "No working directory given : {}".format(self.base)
         assert (self.nout is not None), "No nout given : {}".format(self.nout)
@@ -190,29 +211,6 @@ class Halo(HaloMeta):
         
             self.normalize()
 
-    """
-    def load_hm_sav(self, nout=None, base=None, info=None):
-        if nout is None:
-            nout = self.nout
-        if base is None:
-            base = self.base
-        snout = str(self.nout).zfill(3)
-        try:
-            self.data = readsav(base + 'halo/halo' + snout + '.sav')['h']
-            from scipy.io.idl import readsav
-        except:
-            print("Cannot specify a file to read")
-            print("trying to read {0}".format(base + 'halo/halo' + snout + '.sav'))
-            print("+++++++++++++++++++++++")
-
-        self.refactor_hm()
-        if info is not None:
-            self.set_info(info)
-#        print("load done")
-        self.normalize()
-        # load .sav file
-    """
-
     def load_hm(self, nout=None, base=None, info=None):
         if nout is None:
             nout = self.nout
@@ -227,16 +225,16 @@ class Halo(HaloMeta):
         try:
             dtype_halo = [('np', '<i4'), ('id', '<i4'), ('level', '<i4'),
                           ('host', '<i4'), ('sub', '<i4'), ('nsub', '<i4'),
-                        ('nextsub', '<i4'),
-                        ('m', '<f4'), ('mvir', '<f4'),
-                        ('r', '<f4'), ('rvir', '<f4'), 
-                        ('tvir', '<f4'), ('cvel', '<f4'), 
-                        ('x', '<f4'), ('y', '<f4'), ('z', '<f4'),
-                        ('vx', '<f4'), ('vy', '<f4'), ('vz', '<f4'),
-                        ('ax', '<f4'), ('ay', '<f4'), ('az', '<f4'),
-                        ('sp', '<f4'), ('idx', '<i4'),
-                        ('p_rho', '<f4'),('p_c', '<f4'), 
-                        ('energy', '<f8', (3,)), ('radius', '<f8', (4,))]
+                          ('nextsub', '<i4'),
+                          ('m', '<f4'), ('mvir', '<f4'),
+                          ('r', '<f4'), ('rvir', '<f4'), 
+                          ('tvir', '<f4'), ('cvel', '<f4'), 
+                          ('x', '<f4'), ('y', '<f4'), ('z', '<f4'),
+                          ('vx', '<f4'), ('vy', '<f4'), ('vz', '<f4'),
+                          ('ax', '<f4'), ('ay', '<f4'), ('az', '<f4'),
+                          ('sp', '<f4'), ('idx', '<i4'),
+                          ('p_rho', '<f4'),('p_c', '<f4'), 
+                          ('energy', '<f8', (3,)), ('radius', '<f8', (4,))]
 
             if self.is_gal:
                 dtype_halo += [('sig', '<f4'), ('sigbulge', '<f4'),
@@ -278,7 +276,7 @@ class Halo(HaloMeta):
                     = ang[:,0],ang[:,1],ang[:,2]
             self.data['r'] = radius[::4].copy()
 
-#            copy so that memory are continuous. (right?)
+#           copy so that memory is continuous. (Not tested!)
             self.data['rvir'],self.data['mvir'], \
                     self.data['tvir'],self.data['cvel'] = vir[::4].copy(),\
                 vir[1::4].copy(),vir[2::4].copy(),vir[3::4].copy()
@@ -317,15 +315,15 @@ class Halo(HaloMeta):
 
             dtype_halo = [('np', '<i4'), ('id', '<i4'), ('level', '<i4'),
                           ('host', '<i4'), ('sub', '<i4'), ('nsub', '<i4'),
-                        ('nextsub', '<i4'),
-                        ('m', '<f4'), ('mvir', '<f4'),
-                        ('r', '<f4'), ('rvir', '<f4'), 
-                        ('tvir', '<f4'), ('cvel', '<f4'), 
-                        ('x', '<f4'), ('y', '<f4'), ('z', '<f4'),
-                        ('vx', '<f4'), ('vy', '<f4'), ('vz', '<f4'),
-                        ('ax', '<f4'), ('ay', '<f4'), ('az', '<f4'),
-                        ('sp', '<f4'), ('idx', '<i4'),
-                        ('p_rho', '<f4'),('p_c', '<f4')]
+                          ('nextsub', '<i4'),
+                          ('m', '<f4'), ('mvir', '<f4'),
+                          ('r', '<f4'), ('rvir', '<f4'), 
+                          ('tvir', '<f4'), ('cvel', '<f4'), 
+                          ('x', '<f4'), ('y', '<f4'), ('z', '<f4'),
+                          ('vx', '<f4'), ('vy', '<f4'), ('vz', '<f4'),
+                          ('ax', '<f4'), ('ay', '<f4'), ('az', '<f4'),
+                          ('sp', '<f4'), ('idx', '<i4'),
+                          ('p_rho', '<f4'),('p_c', '<f4')]
             if self.is_gal:
                 dtype_halo += [('sig', '<f4'), ('sigbulge', '<f4'),
                                ('mbulge', '<f4'), ('hosthalo', '<i4')]
@@ -400,7 +398,7 @@ class Halo(HaloMeta):
 
     def refactor_hm(self):
         """
-        refactor HaloMaker halo into Rockstar format. (mainly names are modified.)
+        refactor HaloMaker halo into Rockstar format. (mostly name modifications.)
         """
         import numpy as np
         data = self.data
@@ -424,15 +422,16 @@ class Halo(HaloMeta):
                   float64, float64, float64, float64, float64, float64"
 
         self.data = np.rec.fromarrays([data["HNU"][0], data["NP"][0],
-                                 data["M"][0], data["MVIR"][0],
-                                 data["R"][0], data["RVIR"][0],
-                                 data["P"][0][0], data["P"][0][1], data["P"][0][2],
-                                 data["V"][0][0], data["V"][0][1], data["V"][0][2],
-                                 data["HHOST"][0][0], data["HHOST"][0][1],
-                                 data["HHOST"][0][2], data["HHOST"][0][3], data["HHOST"][0][4],
-                                 data["SP"][0][0], data["SP"][0][1], data["SP"][0][2],
-                                 data["ANG"][0][0], data["ANG"][0][1], data["ANG"][0][2]],
-                                 dtype = dtypes)
+                      data["M"][0], data["MVIR"][0],
+                      data["R"][0], data["RVIR"][0],
+                      data["P"][0][0], data["P"][0][1], data["P"][0][2],
+                      data["V"][0][0], data["V"][0][1], data["V"][0][2],
+                      data["HHOST"][0][0], data["HHOST"][0][1],
+                      data["HHOST"][0][2], data["HHOST"][0][3],
+                      data["HHOST"][0][4],
+                      data["SP"][0][0], data["SP"][0][1], data["SP"][0][2],
+                      data["ANG"][0][0], data["ANG"][0][1], data["ANG"][0][2]],
+                      dtype = dtypes)
         self.data.dtype.names = names
 
     def normalize(self):

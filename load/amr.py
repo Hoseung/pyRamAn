@@ -176,7 +176,6 @@ class AmrHeader():
         self.nstep = h2['nsteps'][0]
         self.nstep_coarse = h2['nsteps'][1]
 
-
         self.const = h20['cmr'][0]
         self.mass_tot0 = h20['cmr'][1]
         self.rho_tot = h20['cmr'][2]
@@ -205,9 +204,19 @@ class AmrHeader():
         self.flag1 = h4['flag1']
         self.cpu_map = h4['cpu_map']
 
+
 class Amr():
+    """
+    AMR class, which is required by Hydro class.
+    """
 
     def __init__(self, info):
+        """
+        Parameters
+        ----------
+        info : load.info.Info class
+
+        """
         snout = str(info.nout).zfill(5)
         self.info = info
         self._fnbase = info.data_dir + 'output_' + snout + '/amr_' + snout + '.out'
@@ -217,17 +226,18 @@ class Amr():
         self.header._read_amr_header(f)
         f.close()
 
-    def keys(self):
-        from pprint import pprint
-        pprint(vars(self))
-
     def _load_mesh(f, ndim=3):
         for i in np.arange(ndim):
             read_fortran(f, np.dtype('f8'))
             
     def get_zoomin(self, scale=1.0):
         """
-        Returns position of maximally refined cells.
+        Returns a spherical region encompassing maximally refined cells.
+
+        Parameters
+        ----------
+        scale : float
+            The radius of the returned sphere is scaled by 'scale'.
         
         """
         from utils import sampling
@@ -241,26 +251,29 @@ class Amr():
         zc = 0.5 * sum(zr)
 
         radius = 0.5 * max([xr[1]-xr[0], yr[1]-yr[0], zr[1]-zr[0]]) * scale
-        print(radius)
-        d = sampling.set_region(centers=[xc, yc, zc], radius=radius)
+        #print(radius)
+        return sampling.set_region(centers=[xc, yc, zc], radius=radius)
 
-        return(d)
 
     def load(self, verbose=False):
         """
-# need some information from info file.
+        Load AMR data.
 
-The building block of FTT AMR is an oct, which is a group of 8 cells and data
-either associate with cells or the oct(called 'mesh' in IDL analysis routine).
-An Oct consists of (level, xyz coordinates, poiner to the parent,
-pointer to 6 neighbouring parents, pointer to child oct)
+        Need info file.
 
-cpu map and refinement map is additionaly needed to restart a simulation.
-octs of the same level are written at once. (So you need to loop over ilevel)
+        Notes
+        -----
+        The building block of FTT AMR is an oct, which is a group of 8 cells and data
+        either associate with cells or the oct(called 'mesh' in IDL analysis routine).
+        An Oct consists of (level, xyz coordinates, poiner to the parent,
+        pointer to 6 neighbouring parents, pointer to child oct)
 
-#####
-##### Think about when you will need to load the amr file.
-##### It's rather unclear!
+        cpu map and refinement map is additionaly needed to restart a simulation.
+        octs of the same level are written at once. (So you need to loop over ilevel)
+
+        <Todo>
+        Think about when you will need to load the amr file.
+        It's rather unclear!
     """
 
         # global header variables are available.
