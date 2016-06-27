@@ -1,4 +1,5 @@
-Hoseung Choi's repo.
+Hoseung Choi's repo. 
+Now transfered to GEM TEAM repository
 
 Analysis tool for my RAMSES cluster runs, written in Python3.
 
