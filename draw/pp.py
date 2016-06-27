@@ -222,7 +222,8 @@ def den2d(x, y, z, m, npix, region=None, proj='z',
     val_ok = (field > vmin/ ppddxx) * (field < vmax / ppddxx)
     field[val_ok] = field[val_ok] * ppddxx
     # normalize into solar mass / kpc^2
-    print("minmax field after crop and converting into physical unit", field[val_ok].min(), field[val_ok].max())
+    if verbose:
+        print("minmax field after crop and converting into physical unit", field[val_ok].min(), field[val_ok].max())
 
     return(field)
 
@@ -669,6 +670,9 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
         print(mass[100:110])
         print(sden[100:110])
         
-    
-    return resize(ppc.col_over_denom(iin, ixl, ixr, iyl, iyr, mass, sden, nx, ny, column), [npix,npix])
+    #print(nx, ny, npix)
+    return resize(ppc.col_over_denom(iin,
+            ixl, ixr, iyl, iyr,
+            mass, sden,
+            nx, ny, column), [npix,npix])
 

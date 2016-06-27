@@ -75,7 +75,7 @@ def gal_from_GM(gcat, info, nout=None, idgal=None, fname=None, **kwargs):
     else:
         gm = load.rd_GM.rd_gal(info.nout,0,fname=fname)
 
-    if gm.star == None:
+    if gm.star is None:
         print("no stellar particles, skipping")
         return False
 

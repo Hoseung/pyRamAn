@@ -34,7 +34,6 @@ class MapImg():
         self.ptype = ptype
 
     def set_data(self, data=None):
-        print("Updating data")
         self.data = data
 
     def set_proj(self, proj):

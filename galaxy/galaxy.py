@@ -833,7 +833,8 @@ class Galaxy(object):
 #               np.square(self.star['z'])) < np.square(reff * (rscale + 1))
 
         n_frac = sum(ind)/self.meta.nstar*100
-        print("{:.2f}% of stellar particles selected".format(n_frac))
+        if verbose : 
+            print("{:.2f}% of stellar particles selected".format(n_frac))
         if n_frac < 10:
             print("min max x", min(self.star['x']), max(self.star['x']))
             print("min max y", min(self.star['y']), max(self.star['y']))
