@@ -28,6 +28,14 @@ galaxy.galaxy_mp module
     :undoc-members:
     :show-inheritance:
 
+galaxy.lambda_functions module
+------------------------------
+
+.. automodule:: galaxy.lambda_functions
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 galaxy.make_gal module
 ----------------------
 

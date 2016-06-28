@@ -9,7 +9,6 @@ pyclusterevol
    galaxy
    general
    load
-   setup
    tree
    utils
    zoom

@@ -7,6 +7,5 @@ from utils import util
 from utils import match
 from utils import sampling
 from utils import prettyplot
-from utils import util_tmp
 from utils import catalogs
-from utils import io
+from utils import io_module

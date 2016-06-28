@@ -42,7 +42,7 @@ class HaloMeta():
 
 
     Attributes
-    ---------
+    ----------
  
     Methods
     -------
@@ -50,8 +50,6 @@ class HaloMeta():
     set_nout(self, nout)
 
     set_halofinder(self, halofinder)
-
-
 
 
 
@@ -520,7 +518,6 @@ class Halo(HaloMeta):
         1) all meta data will be overwritten.
         2) ind specifies the part of .data to be inherited.
 
-        Last modified
         """
         if ind is None:
             ind = range(len(old_halo.data))

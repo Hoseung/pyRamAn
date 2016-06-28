@@ -28,14 +28,6 @@ utils.catalogs module
     :undoc-members:
     :show-inheritance:
 
-utils.cic module
-----------------
-
-.. automodule:: utils.cic
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 utils.cosmology module
 ----------------------
 
@@ -52,18 +44,10 @@ utils.custom_utils module
     :undoc-members:
     :show-inheritance:
 
-utils.cythonfn module
----------------------
+utils.io_module module
+----------------------
 
-.. automodule:: utils.cythonfn
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-utils.io module
----------------
-
-.. automodule:: utils.io
+.. automodule:: utils.io_module
     :members:
     :undoc-members:
     :show-inheritance:
@@ -112,14 +96,6 @@ utils.util module
 -----------------
 
 .. automodule:: utils.util
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-utils.util_tmp module
----------------------
-
-.. automodule:: utils.util_tmp
     :members:
     :undoc-members:
     :show-inheritance:

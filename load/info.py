@@ -5,7 +5,6 @@ Created on Thu Mar 26 21:10:48 2015
 @author: hoseung
 """
 import numpy as np
-#import load as ld
 
 class Info:
     def __init__(self, nout = None, base = './',

@@ -28,14 +28,6 @@ load.info module
     :undoc-members:
     :show-inheritance:
 
-load.load_org module
---------------------
-
-.. automodule:: load.load_org
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 load.part module
 ----------------
 

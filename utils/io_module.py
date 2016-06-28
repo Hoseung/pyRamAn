@@ -1,6 +1,5 @@
-
-import numpy as np
 import struct
+import numpy as np
 _head_type = np.dtype('i4')
 
 def write_fortran(f, array, check=True):

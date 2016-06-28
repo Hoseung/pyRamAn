@@ -6,7 +6,7 @@ Created on Thu Mar 26 21:20:50 2015
 """
 
 import numpy as np
-from utils.io import skip_fortran, read_fortran
+from utils.io_module import skip_fortran, read_fortran
 _head_type = np.dtype('i4')
 
 
