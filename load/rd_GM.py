@@ -207,7 +207,7 @@ def rd_cell(nout, idgal, wdir="./", metal=True, nchem=0,
 
 
 def rd_gm_cell_file(nout, idgal, fname, metal=True, nchem=0):
-    from utils import io
+    import  utils.io_module as io
     with open(fname, 'rb') as f:
         nout0 = io.read_fortran(f, dtype=np.int32, check=False)[0]
 #        assert nout == nout0, "given nout ({}) and loaded nout ({}) do not match".format(nout, nout0)
