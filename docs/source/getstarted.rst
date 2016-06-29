@@ -1,4 +1,3 @@
-
 Getting Started
 ============================================================================
 
@@ -6,38 +5,29 @@ Prerequisites
 ---------------------------------------------------------------------------
 Some python packages are needed.
 
-
-I recommend using virtualenv.::
-   $ virtualenv venv
-Where 'venv' is the name of a new directory inside which packages are installed.
-
-
-
-As you can see in the above equation, with the *x* variable representing our genome list of integers, the *f(x)* shows our evaluation function, which is the sum of '0' values in the list. For example, if we have a list with 10 elements like this: ::
-   
-   x = [1, 2, 3, 8, 0, 2, 0, 4, 1, 0]
+- I recommend using virtualenv. ::
+  
+  $ virtualenv -p  python3 venv
+  $ source venv/bin/activate
 
 
-we will get the raw score [#rawscore]_ value of 3, or *f(x)* = 3. It's very simple to understand. Now, let's code this.
+- Then install packages ::
 
-We will define our :term:`evaluation function` **"eval_func"** as: ::
+  (venv) $ pip3 install numpy scipy matplotlib pandas astropy pyfits ipython
 
-   # This function is the evaluation function, we want
-   # to give high score to more zero'ed chromosomes
-   def eval_func(chromosome):
-      score = 0.0
+  ** There are a few scripts using h5py, or vispy. But let's just ignore them. 
 
-      # iterate over the chromosome elements (items)
-      for value in chromosome:
-         if value==0:
-            score += 1.0
-      
-      return score
+- Manual compilation
 
-As you can see, this evaluation function tests each element in the list for equality with '0' and returns the proportional score value. The :class:`G1DList.G1DList` chromosome is not a python list by itself but it encapsulates one and exposes the methods for this list, like the iterator used in the above loop.
-The next step is the creation of a :term:`sample genome` [#samplegenome]_ for the Genetic Algorithm. We can define our genome as this: ::
+  Small part of codes are written in Fortran, Cython, or C++. 
+  I don't know how to automatically compile them, yet. ::
 
-   # Genome instance
-   genome = G1DList.G1DList(20)
+   $ load/compile_f2py.sh
+   $ load/compile_part.sh
+   $ cd draw
+   $ python3 setup.py build_ext --inplace
+   $ cd ../tree/load_c/
+   $ python3 setup.py build_ext --inplace
+   $ cd ../uitls/
+   $ python3 setup.py build_ext --inplace
 
-   # The evaluator function (objective function)
