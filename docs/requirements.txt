@@ -1,2 +1,5 @@
 numpydoc
 autodoc
+cython
+pandas
+astropy
