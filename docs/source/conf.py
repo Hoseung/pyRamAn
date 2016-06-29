@@ -31,12 +31,12 @@ sys.path.insert(0, os.path.abspath('~/Work/pyclusterevol/'))
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
-    'sphinx.ext.autosummary',
     'sphinx.ext.todo',
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
     'numpydoc',
 ]
+#'sphinx.ext.autosummary',
 numpydoc_show_class_members = False
 
 
