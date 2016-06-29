@@ -11,4 +11,3 @@ pyclusterevol
    load
    tree
    utils
-   zoom

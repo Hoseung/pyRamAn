@@ -65,10 +65,10 @@ def all_gals_org(treedata, final_gals, nout_ini=None, nout_fi=None):
 
 def all_gals(treedata, final_gals, nout_ini=None, nout_fi=None):
     """
-       build a list of all progenitors of the final_gals from nout_fi up to nout_ini
-       [ [final_gals (at nout = nout_fi) ], 
-         [all progenitors of final gals at nout = nout_fi -1],
-         [ '' at the at nout = nout_fi -2 ], ...]
+    build a list of all progenitors of the final_gals from nout_fi up to nout_ini
+    [ [final_gals (at nout = nout_fi) ], 
+    [all progenitors of final gals at nout = nout_fi -1],
+    [ '' at the at nout = nout_fi -2 ], ...]
     """
     if nout_ini == None:
         nout_ini = min(treedata['nout'])
@@ -220,13 +220,13 @@ def get_sample_tree(alltrees,
                     m_halo_min = 5e9,
                     nout_complete = 87):
     """
-        Returns a list of galaxies of interest over snapshots
+    Returns a list of galaxies of interest over snapshots
 
-        Todo
-        ----
-        Add host halo property by runing associate_gal_hal() routine,
-        so that all information needed to make a Galaxy instance is
-        contained. (2016/06/06) 
+    Todo
+    ----
+    Add host halo property by runing associate_gal_hal() routine,
+    so that all information needed to make a Galaxy instance is
+    contained. (2016/06/06) 
     """
     import load
     import tree.ctutils as ctu

@@ -2,7 +2,7 @@
 """
 Created on Sat Apr  4 21:50:05 2015
 
-Defines classes for plot.
+(Going to) define classes for plot.
 2d density map, 3D particle distribuion and so on.
 Along with the data, some meta data should accompany.
 
@@ -58,7 +58,8 @@ class MapImg():
             self.xlabel = "x position [Mpc]"
 
     def show_data(self):
-        """ Simple projection of the data
+        """ 
+        Simple projection of the data
         """
         import matplotlib.pyplot as plt
         plt.imshow(self.data)
@@ -67,7 +68,7 @@ class MapImg():
     def pickle_data(self, fout=None):
         import pickle
         if fout is None:
-            pass
+            return
         with open(fout, 'wb') as f:
             pickle.dump(self, f)
 
@@ -87,7 +88,7 @@ class MapImg():
         Works with both particle map and hydro map.
         But hydro map requires vmax and vmin to be explicitely given.
         
-        -------
+        
         To do: give reasonable vmin and vmax also for hydro map
         
         """

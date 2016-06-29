@@ -36,14 +36,6 @@ load.part module
     :undoc-members:
     :show-inheritance:
 
-load.part2sharedarr module
---------------------------
-
-.. automodule:: load.part2sharedarr
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 load.rd_GM module
 -----------------
 

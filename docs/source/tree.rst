@@ -11,26 +11,10 @@ Subpackages
 Submodules
 ----------
 
-tree.CTree module
------------------
-
-.. automodule:: tree.CTree
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 tree.Do_Consistent_Tree module
 ------------------------------
 
 .. automodule:: tree.Do_Consistent_Tree
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-tree.Load_bricks_all module
----------------------------
-
-.. automodule:: tree.Load_bricks_all
     :members:
     :undoc-members:
     :show-inheritance:

@@ -368,7 +368,9 @@ def resize(X,shape=None):
 
 def pp_colden(cell, npix, info, proj="z", verbose=False, autosize=False):
     """
-    incomplete!! 
+    Warning
+    -------
+    incomplete. 
     column density is simpler (no need to divide by projected mass.)
     """
     import numpy as np
@@ -505,25 +507,20 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
 
     example
     -------
-    1)
-    gas_map = pp_cell(gal.cell, 200, info)
-    plt.imshow(gas_map, origin="lower")
-    plt.show()
+    >>> gas_map = pp_cell(gal.cell, 200, info)
+    >>> plt.imshow(gas_map, origin="lower")
+    >>> plt.show()
     -> Without range or region, all cells are taken. 
 
-    2)
-    region = smp.set_region(centers=[0.,0.,0.], radius=gal.region['radius'])
-    gas_map = pp_cell(gal.cell, 200, info, region=region)
-
+    >>> region = smp.set_region(centers=[0.,0.,0.], radius=gal.region['radius'])
+    >>> gas_map = pp_cell(gal.cell, 200, info, region=region)
     -> cells only inside the region are taken into account.
        *It's a cubic region, not a sphere.
 
 
-    To do 
-    -----
-
-    Currently only column sum is supported. 
-    maximum value along the column, or column average option are needed.
+    Note
+    ----
+    To do: Currently only column sum is supported. maximum value along the column, or column average option are needed.
 
     """
     import numpy as np

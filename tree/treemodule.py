@@ -180,22 +180,11 @@ def rs2codeunit(rst):
     """
     import numpy as np
     nouts = np.unique(rst['nout'])
-#    wdir = '/home/hoseung/Work/data/AGN2/'
     for nout in nouts:
-#        inow = np.where(rst['nout'] eq nout)
-#        info = load.info.Info(base = wdir, nout=nout)
-
-#%%
         dir_halo = base + "rhalo/rockstar_halos/"
         f_tree = base + "rhalo/tree.pickle"
         with open(f_tree, "rb") as ft:
             rstree = pickle.load(ft)
-
-#inout = np.where(rstree['nout'] eq 81)
-#print(rstree['x'][inout])
-
             rstree['x'] *= 200/199.632011
             rstree['y'] *= 200/199.632011
             rstree['z'] *= 200/199.632011
-
-#print(hall.)    

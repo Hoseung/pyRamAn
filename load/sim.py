@@ -5,10 +5,9 @@ Created on Tue Jan 13 23:27:16 2015
 @author: hoseung
 """
 
-# coding: utf-8
 import numpy as np
 
-class Simbase:
+class Simbase():
     """ 
     base    
     """
@@ -22,12 +21,12 @@ class Simbase:
         print("An AMR instance is created\n")
 
     def _hilbert_cpulist(self, info, ranges):
-        '''
+        """
         After determining cpu numbers, read the cpu files and cut off data
         that are outside ranges.
         -> cpu files contain data points within a given ragnes
         BUT! they also contain other data points outside the ragnes.
-        '''
+        """
         if not(hasattr(self, 'amr')):
             print("No AMR instance,")
             print("Loading one...")
@@ -256,20 +255,14 @@ class Simbase:
         else:
             return(res[bit])
 
-#%%
-# Sim class has (logically linked) classes: Info, Part, Amr
 class Sim(Simbase):
     """
     Defines the 'host class' of part, amr, hydro, info.
 
-    Attributes
-    ----------
-
 
     Methods
     -------
-    setup(self, nout=None, base='./', data_dir='snapshots/',
-                   ranges=[[0.0,1.0],[0.0,1.0],[0.0,1.0]], dmo=False)
+    setup(self, nout=None, base='./', data_dir='snapshots/', ranges=[[0.0,1.0],[0.0,1.0],[0.0,1.0]], dmo=False)
         Setup basic parameters need for an AMR instance.
 
     add_info(self, load=False)

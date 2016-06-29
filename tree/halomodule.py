@@ -77,7 +77,7 @@ class HaloMeta():
         
         >>> h = tree.halomodule.Halo(nout=132, halofinder="RS", base='~/data/AGN2/')    
         
-        given nout and base, info is autoloaded if not explicitely given.
+        given nout and base, info is auto-loaded if not explicitely given.
 
         """
 

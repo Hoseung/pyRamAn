@@ -84,14 +84,6 @@ utils.sampling module
     :undoc-members:
     :show-inheritance:
 
-utils.setup module
-------------------
-
-.. automodule:: utils.setup
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 utils.util module
 -----------------
 

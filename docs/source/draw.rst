@@ -28,22 +28,6 @@ draw.ppc module
     :undoc-members:
     :show-inheritance:
 
-draw.ppp module
----------------
-
-.. automodule:: draw.ppp
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-draw.setup module
------------------
-
-.. automodule:: draw.setup
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 
 Module contents
 ---------------
