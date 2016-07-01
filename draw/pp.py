@@ -668,6 +668,8 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
         print(sden[100:110])
         
     #print(nx, ny, npix)
+    # if ppc.col_over_denom throw an type missmatch error,
+    # compile the ppc module locally once more.
     return resize(ppc.col_over_denom(iin,
             ixl, ixr, iyl, iyr,
             mass, sden,

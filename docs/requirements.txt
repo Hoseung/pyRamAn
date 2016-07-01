@@ -3,3 +3,4 @@ autodoc
 cython
 pandas
 astropy
+PyQt5
