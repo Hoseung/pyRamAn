@@ -105,7 +105,6 @@ def rd_gal(nout, idgal, wdir="./", metal=True,
     """
     header xg in Mpc (physical, centered at 0.5, 0.5, 0.5 of the simualtion volume)
     """
-    
     if fname is None:
         idgal = str(idgal).zfill(7)
         dir_nout = "GAL_" + str(nout).zfill(5)
@@ -128,13 +127,6 @@ def rd_gal(nout, idgal, wdir="./", metal=True,
         gal.dm = rd_dm(nout, idgal, wdir=wdir)
     else:
         gal.dm = None
-    if cell:
-        if fname is None:
-            dir_nout = "GAL_" + str(nout).zfill(5)
-            fname = wdir + 'GalaxyMaker/' +  dir_nout + '/gal_cells_' + idgal
-        gal.cell = rd_cell(nout, idgal, wdir=wdir)
-    else:
-        gal.cell = None
 """
 
 
@@ -191,12 +183,10 @@ def rd_gm_dm_file(fname, long=True):
     return data
 
 
-
-
 def rd_cell(nout, idgal, wdir="./", metal=True, nchem=0,
             fname=None):
     """
-
+    A warpper of rd_gm_cell_file that (only) provides the file name. 
     header xg in Mpc (physical, centered at 0.5, 0.5, 0.5 of the simualtion volume)
     """
     if fname is None:
@@ -207,6 +197,10 @@ def rd_cell(nout, idgal, wdir="./", metal=True, nchem=0,
 
 
 def rd_gm_cell_file(nout, idgal, fname, metal=True, nchem=0):
+    """
+    Read GalaxyMaker format cell dump data into Recarray.
+    No unit conversion performed.
+    """
     import  utils.io_module as io
     with open(fname, 'rb') as f:
         nout0 = io.read_fortran(f, dtype=np.int32, check=False)[0]

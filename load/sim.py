@@ -364,7 +364,17 @@ class Sim(Simbase):
     def show_base(self):
         print("setting the base(working) directory to :", self.base)
 
-    def add_hydro(self, load=False, lmax=None):
+    def add_hydro(self, load=True, lmax=None):
+        """
+        Add a hydro instance to the simulation instance. 
+
+        parameters
+        ----------
+        lmax : int
+            maximum AMR level of hydro variable retrieved. 
+        load : bool
+            If false, an hydro instance is added without cell data.
+        """
         from load import hydro
         self.hydro = hydro.Hydro(self.info, self.amr)
         if load :
@@ -379,9 +389,9 @@ class Sim(Simbase):
         self.info = info.Info(self.nout, self.base, load=load, data_dir = self.data_dir)
 #        self.info.setup()
 
-    def add_part(self, ptypes=[], load=False, fortran=True, dmo=False, **kwargs):
+    def add_part(self, ptypes=[], load=True, fortran=True, dmo=False, **kwargs):
         """
-        Add particle instance to the simulation instance. 
+        Add a particle instance to the simulation instance. 
         Requires types of particles and particle data.
         load = True  to load actual data on creating the instance
 

@@ -136,29 +136,6 @@ def cic(value, x, nx, y=None, ny=1, z=None, nz=1,
 
 
 
-    def update_field_vals_old(field, totalweight, a, b, c, value, debug=True, norm_integer=False):
-        """ This updates the field array (and the totweight array if
-        average is True).
-
-        The elements to update and their values are inferred from
-        a,b,c and value.
-        """
-        #print('Updating field vals')
-        # indices for field - doesn't include all combinations
-        indices = a['ind'] + b['ind'] * nx + c['ind'] * nxny
-        # weight per coordinate
-        weights = a['weight'] * b['weight'] * c['weight']
-        # Don't modify the input value array, just rebind the name.
-        value = weights * value
-        if average:
-            for i,ind in enumerate(indices):
-                field[ind] += value[i]
-                totalweight[ind] += weights[i]
-        else:
-            for i, ind in enumerate(indices):
-                field[ind] += value[i]
-                if debug: print(ind, weights[i], value[i], field[ind])
-
 
     nx, ny, nz = (int(i) for i in (nx, ny, nz))
     nxny = nx * ny
@@ -190,17 +167,26 @@ def cic(value, x, nx, y=None, ny=1, z=None, nz=1,
         totalweight = np.zeros(nx * ny * nz, np.float32)
     else:
         totalweight = None
+        
 
-    update_field_vals(field, totalweight, x1, y1, z1, value, debug=debug)
-    update_field_vals(field, totalweight, x2, y1, z1, value, debug=debug)
+    update_field_vals(field, totalweight, x1, y1, z1,
+            nx, ny, value, average)
+    update_field_vals(field, totalweight, x2, y1, z1,
+            nx, ny, value, average)
     if y is not None:
-        update_field_vals(field, totalweight, x1, y2, z1, value, debug=debug)
-        update_field_vals(field, totalweight, x2, y2, z1, value, debug=debug)
+        update_field_vals(field, totalweight, x1, y2, z1,
+                nx, ny, value, average)
+        update_field_vals(field, totalweight, x2, y2, z1,
+                nx, ny, value, average)
         if z is not None:
-            update_field_vals(field, totalweight, x1, y1, z2, value, debug=debug)
-            update_field_vals(field, totalweight, x2, y1, z2, value, debug=debug)
-            update_field_vals(field, totalweight, x1, y2, z2, value, debug=debug)
-            update_field_vals(field, totalweight, x2, y2, z2, value, debug=debug)
+            update_field_vals(field, totalweight, x1, y1, z2,
+                    nx, ny, value, average)
+            update_field_vals(field, totalweight, x2, y1, z2,
+                    nx, ny, value, average)
+            update_field_vals(field, totalweight, x1, y2, z2,
+                    nx, ny, value, average)
+            update_field_vals(field, totalweight, x2, y2, z2,
+                    nx, ny, value, average)
 
     if average:
         good = totalweight > 0
@@ -208,3 +194,25 @@ def cic(value, x, nx, y=None, ny=1, z=None, nz=1,
 
     return field.reshape((nx, ny, nz)).squeeze()
 
+    def update_field_vals_old(field, totalweight, a, b, c, value, debug=True, norm_integer=False):
+        """ This updates the field array (and the totweight array if
+        average is True).
+
+        The elements to update and their values are inferred from
+        a,b,c and value.
+        """
+        #print('Updating field vals')
+        # indices for field - doesn't include all combinations
+        indices = a['ind'] + b['ind'] * nx + c['ind'] * nxny
+        # weight per coordinate
+        weights = a['weight'] * b['weight'] * c['weight']
+        # Don't modify the input value array, just rebind the name.
+        value = weights * value
+        if average:
+            for i,ind in enumerate(indices):
+                field[ind] += value[i]
+                totalweight[ind] += weights[i]
+        else:
+            for i, ind in enumerate(indices):
+                field[ind] += value[i]
+                if debug: print(ind, weights[i], value[i], field[ind])

@@ -67,7 +67,7 @@ def part2den(part, info, region=None, proj='z', npix=800, ptype=None,
     """
 
     import numpy as np
-    from draw import img_obj, pp
+    from draw import img_obj
     
     if region is None:
         import utils.sampling as smp
@@ -87,11 +87,11 @@ def part2den(part, info, region=None, proj='z', npix=800, ptype=None,
     if len(ind_ok) > 0:
         img = img_obj.MapImg(info=info, proj=proj, npix=npix, ptype=ptype)
         img.set_region(region)
-        img.set_data(pp.den2d(part["x"][ind_ok] + offset[0],
-                              part["y"][ind_ok] + offset[1],
-                              part["z"][ind_ok] + offset[2],
-                              part["m"][ind_ok], npix, region=None, proj=proj,
-                              cic=True, norm_integer=True, hist=hist, **kwargs))
+        img.set_data(den2d(part["x"][ind_ok] + offset[0],
+                           part["y"][ind_ok] + offset[1],
+                           part["z"][ind_ok] + offset[2],
+                           part["m"][ind_ok], npix, region=None, proj=proj,
+                           cic=True, norm_integer=True, hist=hist, **kwargs))
         return img
     else:
         return False
@@ -630,20 +630,20 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
     iyr = np.round(yr / mindx).astype(np.int32) - iymi -1
     iin = np.where((ixr >= 0) & (ixl <= nx-1) & (iyr >= 0) & (iyl <= ny-1))[0].astype(np.int32)
     # What does it mean?
-    """
-    fd = np.where(ixl < 0)[0]
+    
+    fd = ixl < 0
     if len(fd) > 0:
         ixl[fd] = 0
-    fd = np.where(ixr > nx - 1)[0]
+    fd = ixr > nx - 1
     if len(fd) > 0:
         ixr[fd] = nx -1
-        fd = np.where(ixl < 0)[0]
+        fd = ixl < 0
     if len(fd) > 0:
         ixl[fd] = 0
-    fd = np.where(ixl < 0)[0]
+    fd = ixl < 0
     if len(fd) > 0:
         ixl[fd] = 0
-    """
+    
     ixl[ixl < 0] = 0
     ixr[ixr > nx -1] = nx -1
     iyl[iyl < 0] = 0
