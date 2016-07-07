@@ -268,7 +268,7 @@ def gas_mass(gal, info):
 def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
             column=False, region=None, sigrange=1,
             xmin=None, xmax=None, ymin=None, ymax=None,
-            hvar="rho", field_var=None):
+            hvar="rho", smoothing=False):
     """
     Accepts cell data and returns 2D projected gas map.
      *position and dx must be in the same unit.
@@ -356,28 +356,42 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
     # mass/L**2 = rho*L
     # sden differs with hydro variable type.
 
-    if column:
+    if hvar == "rho" and column:
         sden = cell[hvar][val]*dx*(scale_d*scale_l)*0.76/1.66e-24
     else:
-        if field_var is None:
-            if hvar == "rho":
-                sden = cell[field_rho][val]**2*dx*scale_nH
-            if hvar == "temp":
-                sden = cell[field_temp][val]*scale_T2
-            if hvar == "metal":
-                sden = cell[field_temp][val]*dx*cell.var5[val]/0.02
+        if hvar == "rho":
+            sden = cell[field_rho][val]**2*dx*scale_nH
+        if hvar == "temp":
+            field = field_temp
+            sden = cell[field][val]*scale_T2
+        if hvar == "metal":
+            field = field_metal
+            sden = cell[field_rho][val] * dx * cell[field][val]/0.02
+        if hvar == 'vx':
+            field = field_vx
+            sden = cell[field_rho][val] * dx * cell[field][val]
+            print("VXVXVX")
+        if hvar == 'vy':
+            field = field_vy
+            sden = cell[field_rho][val] * dx * cell[field][val]
+            print("VYVYVY")
+        if hvar == 'vz':
+            field = field_vz
+            sden = cell[field_rho][val] * dx * cell[field][val]
+            print("VZVZVZ")
         else:
-            sden = cell[field_var][val]
+            sden = cell[hvar][val]
+            # without column density, sden is divided by column mass.
+            # pixel-wise average velocity = the sum of density-weighted velocity / density sum
 
     mass = cell[field_rho][val]*dx
-    mass.transpose()
+    #mass.transpose()
 
     mindx = min(dx)
 
     xmi = np.floor(xmi0/mindx)*mindx
     xma = np.ceil(xma0/mindx)*mindx
     nx = np.round((xma-xmi-mindx)/mindx).astype(np.int32)
-
     ymi = np.floor(ymi0/mindx)*mindx
     yma = ymi + mindx*nx + mindx
     ny = np.round((yma-ymi-mindx)/mindx).astype(np.int32)
@@ -389,6 +403,13 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
 
     #dx_dot = (xma0-xmi0)/npix
 #    lv_skip = np.floor(-1. * np.log10(dx_dot)/np.log10(2)) - 1
+
+
+    if smoothing:
+        lv = -np.round(np.log10(dx)/np.log1092)
+        levelmin = min(lv)
+        levelmax = max(lv)
+
     # Assum no smoothing.
     ixmi = np.round(xmi/mindx).astype(np.int32) # int
     iymi = np.round(ymi/mindx).astype(np.int32)
@@ -403,6 +424,12 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
     iyl = np.round(yl / mindx).astype(np.int32) - iymi
     iyr = np.round(yr / mindx).astype(np.int32) - iymi -1
     iin = np.where((ixr >= 0) & (ixl <= nx-1) & (iyr >= 0) & (iyl <= ny-1))[0].astype(np.int32)
+
+
+    if smoothing:
+        ixc = (ixl + ixr)/2
+        iyc = (iyl + iyr)/2
+        idxc = (ixr - ixl+1)
     # What does it mean?
     """
     fd = np.where(ixl < 0)[0]
@@ -438,8 +465,10 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
         print("dimensions of \n mass = {}, \n sden = {}, and nx, ny are {}, {}".format(\
         mass.shape, sden.shape, nx, ny))
         print(all(np.isfinite(mass)), all(np.isfinite(sden)))
-        print(mass[100:110])
-        print(sden[100:110])
+        print(mass[10:30])
+        print(sden[10:30])
+        print(field)
+        print(cell[field][val][10:30])
 
     #print(nx, ny, npix)
     return resize(ppc.col_over_denom(iin,
