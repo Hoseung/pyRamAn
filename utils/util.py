@@ -4,8 +4,6 @@ Created on Thu Jan 29 00:26:50 2015
 
 @author: hoseung
 """
-# Particle utilities
-
 def point2range(cx,r):
     return [[cx[0]-r,cx[0]+r],[cx[1]-r,cx[1]+r],[cx[2]-r,cx[2]+r]]
 
@@ -28,7 +26,7 @@ def fuzzymatch(s, answer_list, threshold=2):
     Returns an answer among a list of answers that best matches given string.
     Maximum levenshtein distance is 2 by default. 
     
-    Based on http://streamhacker.com/2011/10/31/fuzzy-string-matching-python/
+    Refer to http://streamhacker.com/2011/10/31/fuzzy-string-matching-python/
     """
     for answer in answer_list:
         if normalize(answer) == normalize(s):

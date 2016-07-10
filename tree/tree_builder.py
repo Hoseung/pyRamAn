@@ -9,9 +9,10 @@ import numpy as np
 
 def write_halo_bricks_ct(data, desc, nout, out_dir='./', is_gal=True):
     """
-        format
-        ------
-        #ID DescID Mass Vmax Vrms Radius Rs Np X Y Z VX VY VZ JX JY JZ Spin
+        Notes
+        -----
+        output in the following format: 
+          #ID DescID Mass Vmax Vrms Radius Rs Np X Y Z VX VY VZ JX JY JZ Spin
                
         ID: the halo ID, which must be unique across a single snapshot and must be at least 0.
         DescID: the halo's descendant id at the next timestep. If no descendant exists, this should be -1.
@@ -36,20 +37,16 @@ def write_halo_bricks_ct(data, desc, nout, out_dir='./', is_gal=True):
         Spin: Dimensionless spin parameter; may be set to 0 if not available.
         
         
-        output file name
-        out_xyz.list (out_1.list, ..., out_100.list, ...)
+        output file name:
+          out_xyz.list (out_1.list, ..., out_100.list, ...)
         
         
-        Note 1) 
-            No Nans and Inf are allowed.
-            
-        Note 2) 
-            You also need a list of snapshot numbers and aexps.
-            
-        Note 3)
-            Works for both GalaxyMaker and HaloMaker.
-
+        *   No Nans and Inf are allowed.
+        **  You also need a list of snapshot numbers and aexps.
+        *** Works for both GalaxyMaker and HaloMaker.
     """
+
+
     def write_variables(f, variables):
         """
         Or, just data[['id', 'Orig_halo_id', ' ', and so on]] to access multiple fields at a time.
@@ -100,8 +97,8 @@ def write_scale(nouts, aexps, out_dir='./'):
 # convert HM/GM output
 def convert_halo_list(nout_ini=11, nout_fi = 187, base='./',
                       out_dir='./', is_gal=False,
-                       nmax_fracmax_ratio=2.0, nmax_fracmax_ratio2=1.2,
-                       frac_max_small=0.3):
+                      nmax_fracmax_ratio=2.0, nmax_fracmax_ratio2=1.2,
+                      frac_max_small=0.3):
     """
         Generate halo catalog with descendant ID.
         
@@ -133,7 +130,7 @@ def convert_halo_list(nout_ini=11, nout_fi = 187, base='./',
     aexps = np.zeros(len(nouts))
     
     for inout, nout in enumerate(nouts):    
-        if inout==0:
+        if inout == 0:
             # If first snapshot, load data0.
             galcat0 = hmo.Halo(nout=nout, base=base,
                           halofinder="HM", is_gal=is_gal, return_id=True)

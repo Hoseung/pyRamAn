@@ -76,12 +76,22 @@ class Part(load.sim.Simbase):
 # Otherwise, a method may fail to find an object to act on.
 # This is called 'Object consistency'
     def __init__(self, info, dmo=False, ptypes=None, base='./', 
-                 data_dir='snapshots/', dmref=False, dmvel=False, dmmass=True):
+                 region=None,
+                 data_dir='snapshots/', dmref=False, dmvel=False,
+                 dmmass=True):
         """        
         parameters
         ----------
         ptypes : list of particle type and information. 
                 ["dm id pos"] or ["dm id pos", "star mass vel"]
+        dmo : logical
+            If True, a faster, DMO read routine invoked (NOT distingushing particle types).
+        region : region dict
+            only part of snapshot is loaded.
+        dmref : logical
+            Set True if the snapshot has DM ref information.
+        dmvel : logical
+
         """
         self.info = info
         self.ptypes = ptypes
@@ -95,7 +105,14 @@ class Part(load.sim.Simbase):
         self.dm_with_ref = dmref
         self.dm_with_vel = dmvel
         self.dm_with_mass = dmmass
-        self.set_ranges(ranges=info.ranges)
+
+        if region is not None:
+            ranges = region['ranges']
+        if ranges is not None:
+            self.set_ranges(ranges=ranges)
+        elif info.ranges is not None:
+            self.set_ranges(ranges=info.ranges)
+    
 #        self.cpus = info.cpus
         
         self.set_fbase(self.base, data_dir)
@@ -234,7 +251,7 @@ class Part(load.sim.Simbase):
             print("Loading particles in {}-th cpu output out of {} cpus.\r"
             .format(icpu, len(self.cpus)))
 
-    def load(self, fortran=False, read_metal=True, **kwargs):
+    def load(self, fortran=True, read_metal=True, **kwargs):
         """ tests whether the files exist, and then calls load() or load_dmo()
         """
         if self.dmo:
@@ -658,14 +675,14 @@ class Part(load.sim.Simbase):
         zmi = self.info.ranges[2][0]
         zma = self.info.ranges[2][1]
         work_dir = self.info.base + '/snapshots/output_' + str(self.info.nout).zfill(5)
-        
+        print("part.cpus", self.cpus)
         ndm_actual, nstar_actual, nsink_actual = part_shared.count_part( \
-                            work_dir, xmi, xma, ymi, yma, zmi, zma)
-#        print(ndm_actual, nstar_actual, nsink_actual)
+                            work_dir, xmi, xma, ymi, yma, zmi, zma, self.cpus)
+        print(ndm_actual, nstar_actual, nsink_actual)
         self.ndm = ndm_actual
         self.nstar = nstar_actual
         self.nsink = nsink_actual
-        if self.ndm == 0 or self.nstar == 0:
+        if self.ndm == 0 and self.nstar == 0:
             return 
         """
         if return_meta is True:
@@ -679,7 +696,7 @@ class Part(load.sim.Simbase):
         nstar_actual = max([nstar_actual, 1])
         star_float, star_int, dm_float, dm_int = part_shared.load_part(
                 nstar_actual, ndm_actual, nsink_actual,
-                work_dir, xmi, xma, ymi, yma, zmi, zma, read_metal)
+                work_dir, xmi, xma, ymi, yma, zmi, zma, read_metal, self.cpus)
 
         dtype_star = [('x', '<f8'), ('y', '<f8'), ('z', '<f8'),
                       ('vx', '<f8'), ('vy', '<f8'), ('vz', '<f8'),

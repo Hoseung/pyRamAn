@@ -1,4 +1,4 @@
-subroutine count_part(ndm_actual, nstar_actual, nsink_actual, repository, xmin, xmax, ymin, ymax, zmin, zmax)
+subroutine count_part(ndm_actual, nstar_actual, nsink_actual, repository, xmin, xmax, ymin, ymax, zmin, zmax, cpu_list)
   !--------------------------------------------------------------------------
   ! Ce programme calcule la carte de densite surfacique projetee
   ! des particules de matiere noire d'une simulation RAMSES. 
@@ -8,166 +8,39 @@ subroutine count_part(ndm_actual, nstar_actual, nsink_actual, repository, xmin, 
 
   integer,INTENT(OUT)::ndm_actual, nstar_actual, nsink_actual
 
-  integer::ncpu,ndim,i,j,k,icpu,ipos,nstar
-  integer::ncpu2,npart2,ndim2,levelmin,levelmax,ilevel
+  integer::i,,icpu,ipos,nstar
+  integer::ncpu2,npart2,ndim2
   integer::ncpu_read
   real(KIND=8), INTENT(IN)::xmin,xmax,ymin,ymax,zmin,zmax
-  integer::imin,imax,jmin,jmax,kmin,kmax,lmin!,npart_actual
-  real(KIND=8)::deltax,boxlen
   real(KIND=8),dimension(:,:),allocatable::x
   real(KIND=8),dimension(:)  ,allocatable::age
   integer,dimension(:)  ,allocatable::id
   character(LEN=5)::nchar,ncharcpu
-  character(LEN=80)::ordering
   character(LEN=128)::nomfich,repository
   logical::ok_part
 
   ! CPU list
-  integer::impi,ndom,bit_length,maxdom
-  integer,dimension(1:8)::idom,jdom,kdom,cpu_min,cpu_max
-  real(KIND=8),dimension(1:8)::bounding,bounding_min,bounding_max
-  real(KIND=8)::dkey,order_min,dmax
-  real(kind=8)::aexp
-  real(kind=8),dimension(:),allocatable::bound_key
-  logical,dimension(:),allocatable::cpu_read
 !  integer,dimension(:),allocatable, INTENT(OUT)::cpu_list 
 !  -> No!, you can not return an assumed-size array. 
-  integer,dimension(:),allocatable::cpu_list 
+  integer,dimension(:),INTENT(IN)::cpu_list 
   !-----------------------------------------------
   ! Lecture du fichier particules au format RAMSES
   !-----------------------------------------------
   ipos=INDEX(repository,'output_')
   nchar=repository(ipos+7:ipos+13)
 
-  write(*,*)'Reading info'
-
-  nomfich=TRIM(repository)//'/info_'//TRIM(nchar)//'.txt'
-  write(*,*)nomfich
-  open(unit=10,file=nomfich,form='formatted',status='old')
-  read(10,'(13x,I11)')ncpu
-  read(10,'(13x,I11)')ndim
-  read(10,'(13x,I11)')levelmin
-  read(10,'(13x,I11)')levelmax
-  read(10,*)
-  read(10,*)
-  read(10,*)
-
-  read(10,'(13x,E23.15)')boxlen
-  read(10,'(13x,E23.15)')
-  read(10,'(13x,E23.15)')aexp
-  read(10,*)
-  read(10,*)
-  read(10,*)
-  read(10,*)
-  read(10,*)
-  read(10,*)
-  read(10,*)
-  read(10,*)
-  read(10,*)
-
-  read(10,'(14x,A80)'),ordering
-  write(*,'(" ordering type=",A20)'),TRIM(ordering)
-  read(10,*)
-  allocate(cpu_list(1:ncpu))
-  if(TRIM(ordering).eq.'hilbert')then
-     allocate(bound_key(0:ncpu))
-     allocate(cpu_read(1:ncpu))
-     cpu_read=.false.
-     do impi=1,ncpu
-        read(10,'(I8,1X,E23.15,1X,E23.15)')i,bound_key(impi-1),bound_key(impi)
-     end do
-  endif
-  close(10)
-
-  !-----------------------
-  ! Get cpu list
-  !-----------------------
-  if(TRIM(ordering).eq.'hilbert')then
-
-     dmax=max(xmax-xmin,ymax-ymin,zmax-zmin)
-     do ilevel=1,levelmax
-        deltax=0.5d0**ilevel
-        if(deltax.lt.dmax)exit
-     end do
-     lmin=ilevel
-     bit_length=lmin-1
-     maxdom=2**bit_length
-     imin=0; imax=0; jmin=0; jmax=0; kmin=0; kmax=0
-     if(bit_length>0)then
-        imin=int(xmin*dble(maxdom))
-        imax=imin+1
-        jmin=int(ymin*dble(maxdom))
-        jmax=jmin+1
-        kmin=int(zmin*dble(maxdom))
-        kmax=kmin+1
-     endif
-     
-     dkey=(dble(2**(levelmax+1)/dble(maxdom)))**ndim
-     ndom=1
-     if(bit_length>0)ndom=8
-     idom(1)=imin; idom(2)=imax
-     idom(3)=imin; idom(4)=imax
-     idom(5)=imin; idom(6)=imax
-     idom(7)=imin; idom(8)=imax
-     jdom(1)=jmin; jdom(2)=jmin
-     jdom(3)=jmax; jdom(4)=jmax
-     jdom(5)=jmin; jdom(6)=jmin
-     jdom(7)=jmax; jdom(8)=jmax
-     kdom(1)=kmin; kdom(2)=kmin
-     kdom(3)=kmin; kdom(4)=kmin
-     kdom(5)=kmax; kdom(6)=kmax
-     kdom(7)=kmax; kdom(8)=kmax
-     
-     do i=1,ndom
-        if(bit_length>0)then
-           call hilbert3d(idom(i),jdom(i),kdom(i),bounding(1),bit_length,1)
-           order_min=bounding(1)
-        else
-           order_min=0.0d0
-        endif
-        bounding_min(i)=(order_min)*dkey
-        bounding_max(i)=(order_min+1.0D0)*dkey
-     end do
-     cpu_min=0; cpu_max=0
-     do impi=1,ncpu
-        do i=1,ndom
-           if (   bound_key(impi-1).le.bounding_min(i).and.&
-                & bound_key(impi  ).gt.bounding_min(i))then
-              cpu_min(i)=impi
-           endif
-           if (   bound_key(impi-1).lt.bounding_max(i).and.&
-                & bound_key(impi  ).ge.bounding_max(i))then
-              cpu_max(i)=impi
-           endif
-        end do
-     end do
-     
-     ncpu_read=0
-     do i=1,ndom
-        do j=cpu_min(i),cpu_max(i)
-           if(.not. cpu_read(j))then
-              ncpu_read=ncpu_read+1
-              cpu_list(ncpu_read)=j
-              cpu_read(j)=.true.
-           endif
-        enddo
-     enddo
-  else
-     ncpu_read=ncpu
-     do j=1,ncpu
-        cpu_list(j)=j
-     end do
-  end  if
-
 ! read part
 !  npart_actual=0
   ndm_actual=0
   nstar_actual=0
   nsink_actual=0
+  ncpu_read = size(cpu_list)
+  !write(*,*) ncpu_read
 
-  do k=1,ncpu_read
-     write(*,*)cpu_list(k)
-  enddo
+  !write(*,*)"cpu list fortran got"
+  !do k=1,ncpu_read
+  !   write(*,*)cpu_list(k)
+  !enddo
 
   do k=1,ncpu_read
      icpu=cpu_list(k)
@@ -184,7 +57,6 @@ subroutine count_part(ndm_actual, nstar_actual, nsink_actual, repository, xmin, 
      read(1)
      read(1)
 
-!     allocate(m(1:npart2))
      allocate(id(1:npart2))
      if(nstar>0)then ! age and id to distinguish star, DM, and sink.
         allocate(age(1:npart2))
@@ -192,14 +64,12 @@ subroutine count_part(ndm_actual, nstar_actual, nsink_actual, repository, xmin, 
      allocate(x(1:npart2,1:ndim2)) 
      ! Position to select particles insdie the region of interest
      ! Read position
-!     do i=1,ndim
      read(1)x(1:npart2,1)
      read(1)x(1:npart2,2)
      read(1)x(1:npart2,3)
-!     end do
 
      ! Skip velocity
-     do i=1,ndim
+     do i=1,ndim2
         read(1) !age
      end do
      ! Skip mass
@@ -226,7 +96,6 @@ subroutine count_part(ndm_actual, nstar_actual, nsink_actual, repository, xmin, 
               nsink_actual = nsink_actual + 1
           endif
      enddo
-!     npart_actual = npart_actual + npart2
      deallocate(x,id)
      if(nstar>0)deallocate(age)
   enddo
@@ -234,181 +103,49 @@ subroutine count_part(ndm_actual, nstar_actual, nsink_actual, repository, xmin, 
   end subroutine
 
 
-  subroutine load_part(star_float, star_int, dm_float, dm_int, nstar_actual, ndm_actual, nsink_actual, repository, &
-             & xmin, xmax, ymin, ymax, zmin, zmax, read_metal)
+  subroutine load_part(star_float, star_int, dm_float, dm_int, nstar_actual, &
+             & ndm_actual, nsink_actual, repository, &
+             & xmin, xmax, ymin, ymax, zmin, zmax, read_metal, cpu_list)
+
+  real(KIND=8), INTENT(IN)::xmin,xmax,ymin,ymax,zmin,zmax
+  integer,INTENT(IN)::ndm_actual, nstar_actual, nsink_actual
+  integer,dimension(:),INTENT(IN)::cpu_list
+  logical, INTENT(IN):: read_metal
+
 
   real(KIND=8),dimension(:,:),allocatable::x,v
   real(KIND=8),dimension(:)  ,allocatable::m,age,metal
   integer,dimension(:)  ,allocatable::id
   character(LEN=5)::nchar,ncharcpu
-  character(LEN=80)::ordering
   character(LEN=128)::nomfich,repository
-
-  real(KIND=8), INTENT(IN)::xmin,xmax,ymin,ymax,zmin,zmax
-  integer,INTENT(IN)::ndm_actual, nstar_actual, nsink_actual
-
-
-  ! CPU list
-  integer::impi,ndom,bit_length,maxdom
-  integer,dimension(1:8)::idom,jdom,kdom,cpu_min,cpu_max
-  real(KIND=8),dimension(1:8)::bounding,bounding_min,bounding_max
-  real(KIND=8)::dkey,order_min,dmax
-  real(kind=8)::aexp
-  real(kind=8),dimension(:),allocatable::bound_key
-  logical,dimension(:),allocatable::cpu_read
-  integer,dimension(:),allocatable::cpu_list
 
   real(KIND=8),INTENT(OUT),dimension(nstar_actual,9)::star_float
   integer(KIND=4),INTENT(OUT),dimension(nstar_actual)::star_int
   real(KIND=8),INTENT(OUT),dimension(ndm_actual + nsink_actual,7)::dm_float
   integer(KIND=4),INTENT(OUT),dimension(ndm_actual + nsink_actual)::dm_int
-!  real(KIND=8),INTENT(OUT),dimension(:,:),allocatable::sink_arr
 
   logical::ok_part
-  logical, INTENT(IN):: read_metal
-  integer::ncpu,ndim,i,j,k,icpu,ipos,nstar
+  integer::i,k,icpu,ipos,nstar
   integer::i_dm, i_star
-  integer::ncpu2,npart2,ndim2,levelmin,levelmax,ilevel
+  integer::ncpu2,npart2,ndim2
   
-!  allocate(star_arr(1:nstar_actual,10)) ! id,x,y,z,vx,vy,vz,mass,age,metal
-!  allocate(dm_arr(1:ndm_actual,8)) ! id,x,y,z,vx,vy,vz,mass
-
-!  if(nsink_actual > 0) allocate(sink_arr(1:nsink_actual,8)) ! id,x,y,z,vx,vy,vz,mass
-
   ! CPU list
-
   ipos=INDEX(repository,'output_')
   nchar=repository(ipos+7:ipos+13)
-
-  write(*,*)'Reading info'
-
-  nomfich=TRIM(repository)//'/info_'//TRIM(nchar)//'.txt'
-  write(*,*)nomfich
-  open(unit=10,file=nomfich,form='formatted',status='old')
-  read(10,'(13x,I11)')ncpu
-  read(10,'(13x,I11)')ndim
-  read(10,'(13x,I11)')levelmin
-  read(10,'(13x,I11)')levelmax
-  read(10,*)
-  read(10,*)
-  read(10,*)
-
-  read(10,'(13x,E23.15)')boxlen
-  read(10,'(13x,E23.15)')
-  read(10,'(13x,E23.15)')aexp
-  read(10,*)
-  read(10,*)
-  read(10,*)
-  read(10,*)
-  read(10,*)
-  read(10,*)
-  read(10,*)
-  read(10,*)
-  read(10,*)
-
-  read(10,'(14x,A80)'),ordering
-  write(*,'(" ordering type=",A20)'),TRIM(ordering)
-  read(10,*)
-  allocate(cpu_list(1:ncpu))
-  if(TRIM(ordering).eq.'hilbert')then
-     allocate(bound_key(0:ncpu))
-     allocate(cpu_read(1:ncpu))
-     cpu_read=.false.
-     do impi=1,ncpu
-        read(10,'(I8,1X,E23.15,1X,E23.15)')i,bound_key(impi-1),bound_key(impi)
-     end do
-  endif
-  close(10)
-
-  !-----------------------
-  ! Get cpu list
-  !-----------------------
-  if(TRIM(ordering).eq.'hilbert')then
-
-     dmax=max(xmax-xmin,ymax-ymin,zmax-zmin)
-     do ilevel=1,levelmax
-        deltax=0.5d0**ilevel
-        if(deltax.lt.dmax)exit
-     end do
-     lmin=ilevel
-     bit_length=lmin-1
-     maxdom=2**bit_length
-     imin=0; imax=0; jmin=0; jmax=0; kmin=0; kmax=0
-     if(bit_length>0)then
-        imin=int(xmin*dble(maxdom))
-        imax=imin+1
-        jmin=int(ymin*dble(maxdom))
-        jmax=jmin+1
-        kmin=int(zmin*dble(maxdom))
-        kmax=kmin+1
-     endif
-     
-     dkey=(dble(2**(levelmax+1)/dble(maxdom)))**ndim
-     ndom=1
-     if(bit_length>0)ndom=8
-     idom(1)=imin; idom(2)=imax
-     idom(3)=imin; idom(4)=imax
-     idom(5)=imin; idom(6)=imax
-     idom(7)=imin; idom(8)=imax
-     jdom(1)=jmin; jdom(2)=jmin
-     jdom(3)=jmax; jdom(4)=jmax
-     jdom(5)=jmin; jdom(6)=jmin
-     jdom(7)=jmax; jdom(8)=jmax
-     kdom(1)=kmin; kdom(2)=kmin
-     kdom(3)=kmin; kdom(4)=kmin
-     kdom(5)=kmax; kdom(6)=kmax
-     kdom(7)=kmax; kdom(8)=kmax
-     
-     do i=1,ndom
-        if(bit_length>0)then
-           call hilbert3d(idom(i),jdom(i),kdom(i),bounding(1),bit_length,1)
-           order_min=bounding(1)
-        else
-           order_min=0.0d0
-        endif
-        bounding_min(i)=(order_min)*dkey
-        bounding_max(i)=(order_min+1.0D0)*dkey
-     end do
-     cpu_min=0; cpu_max=0
-     do impi=1,ncpu
-        do i=1,ndom
-           if (   bound_key(impi-1).le.bounding_min(i).and.&
-                & bound_key(impi  ).gt.bounding_min(i))then
-              cpu_min(i)=impi
-           endif
-           if (   bound_key(impi-1).lt.bounding_max(i).and.&
-                & bound_key(impi  ).ge.bounding_max(i))then
-              cpu_max(i)=impi
-           endif
-        end do
-     end do
-     
-     ncpu_read=0
-     do i=1,ndom
-        do j=cpu_min(i),cpu_max(i)
-           if(.not. cpu_read(j))then
-              ncpu_read=ncpu_read+1
-              cpu_list(ncpu_read)=j
-              cpu_read(j)=.true.
-           endif
-        enddo
-     enddo
-  else
-     ncpu_read=ncpu
-     do j=1,ncpu
-        cpu_list(j)=j
-     end do
-  end  if
 
   ! Store particles
   i_dm = 0
   i_star = 0
   i_sink = 0
+
+  ncpu_read = size(cpu_list)
+
   do k=1,ncpu_read
      icpu=cpu_list(k)
      call title(icpu,ncharcpu)
      nomfich=TRIM(repository)//'/part_'//TRIM(nchar)//'.out'//TRIM(ncharcpu)
      open(unit=1,file=nomfich,status='old',form='unformatted')
+!     write(*,*)'Processing file '//TRIM(nomfich)
      read(1)ncpu2
      read(1)ndim2
      read(1)npart2
@@ -423,18 +160,18 @@ subroutine count_part(ndm_actual, nstar_actual, nsink_actual, repository, xmin, 
      allocate(v(1:npart2,1:ndim2)) 
      allocate(id(1:npart2))
 !    if(nstar>0)then ! age and id to distinguish star, DM, and sink.
-        allocate(age(1:npart2))
+     allocate(age(1:npart2))
      if(read_metal)then
         allocate(metal(1:npart2))
      endif
      ! Position to select particles insdie the region of interest
      ! Read position
-     do i=1,ndim
+     do i=1,ndim2
        read(1)x(1:npart2,i)
      end do
 
      ! Read velocity
-     do i=1,ndim
+     do i=1,ndim2
        read(1)v(1:npart2,i)
      end do
 
@@ -475,21 +212,11 @@ subroutine count_part(ndm_actual, nstar_actual, nsink_actual, repository, xmin, 
          star_int(i_star) = id(i)
          star_float(i_star,8) = age(i)
        if(read_metal)  star_float(i_star,9) = metal(i)
-!	elseif(ok_part.and.(age(i).eq.0.0d0).and.(id(i)<0))then
-!	   sink_arr(i_sink,1) = x(i,1)
-!	   sink_arr(i_sink,2) = x(i,2)
-!	   sink_arr(i_sink,3) = x(i,3)
-!	   sink_arr(i_sink,4) = v(i,1)
-!	   sink_arr(i_sink,5) = v(i,2)
-!	   sink_arr(i_sink,6) = v(i,3)
-!	   sink_arr(i_sink,7) = m(i)
-!	   sink_arr(i_sink,8) = id(i)
-!           i_sink = i_sink + 1
         endif
      end do
      deallocate(x,v,m,id)
-     if(nstar>0)deallocate(age)
-       if(read_metal)deallocate(metal)
+     deallocate(age)
+     if(read_metal)deallocate(metal)
   end do
 
 end subroutine  

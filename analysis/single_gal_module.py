@@ -240,6 +240,8 @@ def gas_mass(gal, info):
     from scipy.stats import binned_statistic
 
     cell = gal.cell
+    if len(cell) < 100:
+        return 0
     gasmass = gal.gasmass
     gmass = gas_cell_mass(cell, info)
     

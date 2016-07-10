@@ -45,7 +45,7 @@ contains
     ipos=INDEX(repository,'output_')
     nchar=repository(ipos+7:ipos+13)
   
-    write(*,*)'Reading info'
+    write(*,*)'Load_fotran: Reading info'
   
     nomfich=TRIM(repository)//'/info_'//TRIM(nchar)//'.txt'
     write(*,*)nomfich
@@ -170,6 +170,10 @@ contains
     ndm_actual=0
     nstar_actual=0
     nsink_actual=0
+
+    do k=1,ncpu_read
+       write(*,*) cpu_list(k)
+    end do
   
     do k=1,ncpu_read
        icpu=cpu_list(k)
