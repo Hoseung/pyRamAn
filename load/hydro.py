@@ -23,7 +23,15 @@ class Hydro(load.sim.Simbase):
     and inherite the base class to define Hydro, Part, and Amr class.
     """
 
-    def __init__(self, info, amr=None, region=None):
+    def __init__(self, info, amr=None, region=None, ranges=None):
+        """
+        Parameters
+        ----------
+        region : dict-like
+            d
+        ranges : array-like (3 by 2)
+            region preceeds(?) ranges.
+        """
 
         snout = str(info.nout).zfill(5)
         # file name
@@ -37,7 +45,6 @@ class Hydro(load.sim.Simbase):
             self.set_ranges(ranges=ranges)
         elif info.ranges is not None:
             self.set_ranges(ranges=info.ranges)
-
 
         try:
             self.amr = amr
@@ -55,18 +62,16 @@ class Hydro(load.sim.Simbase):
 
     def set_ranges(self, ranges=None):
         if ranges is None:
-            ranges = self.ranges
+            ranges = self.info.ranges
         nr = np.asarray(ranges)
         if not(nr.shape[0] == 3 and nr.shape[1] == 2):
             # Because actual operation on the given input(ranges)
             # does not take place soon, it's not a good place to use
-            # try & except clause. There is nothing to try yet.
-            print(' Error!')
-            print('Shape of ranges is wrong:', nr.shape)
-            print('example : [[0.1,0.3],[0.2,0.4],[0.6,0.8]] \n')
+            # try & except clause. There is nothing to try yet.           
+            raise ValueError('Shape of ranges is wrong: {} \n example : [[0.1,0.3],[0.2,0.4],[0.6,0.8]] \n'.format(nr.shape))
         else:
-            self.ranges = ranges
-            self.set_cpus(self._hilbert_cpulist(self.info, self.ranges))
+            self.info.ranges = ranges
+            self.set_cpus(self._hilbert_cpulist(self.info, self.info.ranges))
 
 
     def set_cpus(self, cpus):
@@ -110,7 +115,7 @@ class Hydro(load.sim.Simbase):
         cpu : bool, optional
             If True, cpu number of each cell is stored.
         icpu : int, array-like, optional
-            list of cpus to load
+            list of cpus to load, has no effect... 
         lmax : int, optional
             Limit the maximum level of hydro data returned.
         return_meta : bool, optional
@@ -134,7 +139,7 @@ class Hydro(load.sim.Simbase):
         zmi, zma = self.info.ranges[2]
 #        zma = self.info.ranges[2][1]
         work_dir = self.info.base + '/' + self.out_dir + 'output_' + str(self.info.nout).zfill(5)
-        
+        print(xmi, xma, ymi, yma, zmi,zma)        
         out = a2c.a2c_count(work_dir, xmi, xma, ymi, yma, zmi, zma, lmax)
         if return_meta:
             return (out[0], work_dir, xmi, xma, ymi, yma, zmi, zma, lmax)
