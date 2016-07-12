@@ -76,7 +76,7 @@ class Part(load.sim.Simbase):
 # Otherwise, a method may fail to find an object to act on.
 # This is called 'Object consistency'
     def __init__(self, info, dmo=False, ptypes=None, base='./', 
-                 region=None,
+                 region=None, ranges=None,
                  data_dir='snapshots/', dmref=False, dmvel=False,
                  dmmass=True):
         """        
@@ -112,6 +112,8 @@ class Part(load.sim.Simbase):
             self.set_ranges(ranges=ranges)
         elif info.ranges is not None:
             self.set_ranges(ranges=info.ranges)
+        else:
+            self.set_ranges(ranges=[[0,1]]*3)
     
 #        self.cpus = info.cpus
         

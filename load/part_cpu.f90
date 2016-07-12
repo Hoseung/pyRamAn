@@ -8,7 +8,7 @@ subroutine count_part(ndm_actual, nstar_actual, nsink_actual, repository, xmin, 
 
   integer,INTENT(OUT)::ndm_actual, nstar_actual, nsink_actual
 
-  integer::i,,icpu,ipos,nstar
+  integer::i,k,icpu,ipos,nstar
   integer::ncpu2,npart2,ndim2
   integer::ncpu_read
   real(KIND=8), INTENT(IN)::xmin,xmax,ymin,ymax,zmin,zmax

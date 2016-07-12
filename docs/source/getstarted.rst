@@ -39,6 +39,9 @@ Manual compilation
    $ python3 setup.py build_ext --inplace
 
 
+Examples
+---------------------------------------
+
 Loading simulation raw data
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 By default, wdir='./' or base='./' for all methods/funcionts. 
@@ -55,11 +58,7 @@ So it is convenient to start analysis under a cluster directory (for example, /d
    array([ 0.03143702,  0.04156503,  0.15768691, ...,  0.49851362,
         0.06658726,  0.0774503 ])
    
-   * No real field names are given to the hydro variables.
-
-Units
-^^^^^
-To be updated.
+   * No REAL field names are given to the hydro variables. Number and types of variable changes among versions of RAMSES: number of hydrovariable is a compile-time parameter. So there is no robust naming convention.
 
 
 Loading Halo/GalaxyMaker catalogues
@@ -76,9 +75,14 @@ To load the cataloguse::
          4.12808602e+10,   6.30470042e+10,   4.08385952e+08,
 
 
-Units
-^^^^^
-To be updated.
+Raw data and GalaxyMaker dump
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+GalaxyMaker/HaloMaker dump files have different units. 
+
+.. literalinclude:: /examples/Raw_and_dump.py
+  :language: python3
+         
+         
 
 
 
@@ -88,8 +92,8 @@ Loading Halo/Galaxy tree
 
 
 
-Basic plottings
-^^^^^^^^^^^^^^^
+Basic plotings
+^^^^^^^^^^^^^^
 particle density
 hydro variables
 halo 

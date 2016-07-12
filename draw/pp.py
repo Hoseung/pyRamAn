@@ -526,16 +526,12 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
     import numpy as np
     from draw import ppc
     
-    field_x, field_y, field_z, \
-    field_dx, field_rho,\
-    field_vx, field_vy, field_vz, \
-    field_temp, field_metal = cell.dtype.names
-        
+
     sig = 1.0
     sigrange = sig * 2# what is sigrange?
 
-    x = cell[field_x]
-    y = cell[field_y]
+    x = cell["x"]
+    y = cell["y"]
 #    z = cell.z
 #    di = [0, 1]  # What is this?
 #    zh = xh[2]  # what is this?
@@ -554,12 +550,12 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
     if yma0 is None:
         yma0 = max(y)
        
-    xl = x - cell.dx/2*sigrange # array as long as x
-    xr = x + cell.dx/2*sigrange
-    yl = y - cell.dx/2*sigrange
-    yr = y + cell.dx/2*sigrange
+    xl = x - cell['dx']/2*sigrange # array as long as x
+    xr = x + cell['dx']/2*sigrange
+    yl = y - cell['dx']/2*sigrange
+    yr = y + cell['dx']/2*sigrange
 
-    maxdx = max(cell.dx)
+    maxdx = max(cell['dx'])
 
 # Assuming no slice.
     tol = maxdx #
@@ -576,7 +572,7 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
     scale_nH = info.unit_nH
     scale_T2 = info.unit_T2
 
-    dx = cell[field_dx][val]
+    dx = cell["dx"][val]
 
 # No max, no column
     # mass/L**2 = rho*L
@@ -587,15 +583,15 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
     else:
         if field_var is None:
             if hvar == "rho":
-                sden = cell[field_rho][val]**2*dx*scale_nH
+                sden = cell[hvar][val]**2*dx*scale_nH
             if hvar == "temp":
-                sden = cell[field_temp][val]*scale_T2
+                sden = cell[hvar][val]*scale_T2
             if hvar == "metal":
-                sden = cell[field_temp][val]*dx*cell.var5[val]/0.02            
+                sden = cell[havr][val]*dx*cell.var5[val]/0.02            
         else:
             sden = cell[field_var][val]
 
-    mass = cell[field_rho][val]*dx
+    mass = cell["rho"][val]*dx
     mass.transpose()
 
     mindx = min(dx)
