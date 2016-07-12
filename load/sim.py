@@ -9,7 +9,7 @@ import numpy as np
 
 class Simbase():
     """ 
-    base ....
+    base    
     """
     def __init__(self):
         
@@ -364,7 +364,7 @@ class Sim(Simbase):
     def show_base(self):
         print("setting the base(working) directory to :", self.base)
 
-    def add_hydro(self, load=True, lmax=None):
+    def add_hydro(self, load=True, lmax=None, region=None, ranges=None):
         """
         Add a hydro instance to the simulation instance. 
 
@@ -376,7 +376,7 @@ class Sim(Simbase):
             If false, an hydro instance is added without cell data.
         """
         from load import hydro
-        self.hydro = hydro.Hydro(self.info, self.amr)
+        self.hydro = hydro.Hydro(self.info, self.amr, region=region, ranges=ranges)
         if load :
             if lmax is None:
                 lmax = self.info.lmax
