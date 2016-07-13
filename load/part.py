@@ -78,7 +78,7 @@ class Part(load.sim.Simbase):
     def __init__(self, info, dmo=False, ptypes=None, base='./', 
                  region=None, ranges=None,
                  data_dir='snapshots/', dmref=False, dmvel=False,
-                 dmmass=True):
+                 dmmass=True, load=False):
         """        
         parameters
         ----------
@@ -129,6 +129,9 @@ class Part(load.sim.Simbase):
                                                  ('nsink', 'i4')])
         self._get_basic_info()
         # Depending on user's choice, generate dm, star, sink classes
+
+        if load:
+            self.load()
 
     def mass2msun(self):
         for ptype in self.pt:
@@ -670,12 +673,12 @@ class Part(load.sim.Simbase):
     def load_fortran(self, return_meta=False, read_metal=True):
         from load import part_shared
         print("Loading by fortran module")
-        xmi = self.info.ranges[0][0]
-        xma = self.info.ranges[0][1]
-        ymi = self.info.ranges[1][0]
-        yma = self.info.ranges[1][1]
-        zmi = self.info.ranges[2][0]
-        zma = self.info.ranges[2][1]
+        xmi = self.ranges[0][0]
+        xma = self.ranges[0][1]
+        ymi = self.ranges[1][0]
+        yma = self.ranges[1][1]
+        zmi = self.ranges[2][0]
+        zma = self.ranges[2][1]
         work_dir = self.info.base + '/snapshots/output_' + str(self.info.nout).zfill(5)
         print("part.cpus", self.cpus)
         ndm_actual, nstar_actual, nsink_actual = part_shared.count_part( \
@@ -700,37 +703,39 @@ class Part(load.sim.Simbase):
                 nstar_actual, ndm_actual, nsink_actual,
                 work_dir, xmi, xma, ymi, yma, zmi, zma, read_metal, self.cpus)
 
-        dtype_star = [('x', '<f8'), ('y', '<f8'), ('z', '<f8'),
-                      ('vx', '<f8'), ('vy', '<f8'), ('vz', '<f8'),
-                      ('m', '<f8'), ('time', '<f8'), ('id', '<i4')]
-        if read_metal:
-            dtype_star.extend(('metal', '<f8'))
+        if 'star' in self.pt:
+            dtype_star = [('x', '<f8'), ('y', '<f8'), ('z', '<f8'),
+                          ('vx', '<f8'), ('vy', '<f8'), ('vz', '<f8'),
+                          ('m', '<f8'), ('time', '<f8'), ('id', '<i4')]
+            if read_metal:
+                dtype_star.extend(('metal', '<f8'))
+         
+            self.star = np.zeros(self.nstar, dtype=dtype_star)
+            self.star['x'] = star_float[:,0]
+            self.star['y'] = star_float[:,1]
+            self.star['z'] = star_float[:,2]
+            self.star['vx'] = star_float[:,3]
+            self.star['vy'] = star_float[:,4]
+            self.star['vz'] = star_float[:,5]
+            self.star['m'] = star_float[:,6]
+            self.star['time'] = star_float[:,7]
+            if read_metal:
+                self.star['metal'] = star_float[:,8]
+            self.star['id'] = star_int[:]
 
-        self.star = np.zeros(self.nstar, dtype=dtype_star)
-        self.star['x'] = star_float[:,0]
-        self.star['y'] = star_float[:,1]
-        self.star['z'] = star_float[:,2]
-        self.star['vx'] = star_float[:,3]
-        self.star['vy'] = star_float[:,4]
-        self.star['vz'] = star_float[:,5]
-        self.star['m'] = star_float[:,6]
-        self.star['time'] = star_float[:,7]
-        if read_metal:
-            self.star['metal'] = star_float[:,8]
-        self.star['id'] = star_int[:]
-
-        dtype_dm = [('x', '<f8'), ('y', '<f8'), ('z', '<f8'),('vx', '<f8'),
-                    ('vy', '<f8'), ('vz', '<f8'), ('m', '<f8'), ('id', '<i4')]
-
-        self.dm = np.zeros(self.ndm + self.nsink, dtype=dtype_dm)
-        self.dm['x'] = dm_float[:,0]
-        self.dm['y'] = dm_float[:,1]
-        self.dm['z'] = dm_float[:,2]
-        self.dm['vx'] = dm_float[:,3]
-        self.dm['vy'] = dm_float[:,4]
-        self.dm['vz'] = dm_float[:,5]
-        self.dm['m'] = dm_float[:,6]
-        self.dm['id'] = dm_int[:]
+        if 'dm' in self.pt:
+            dtype_dm = [('x', '<f8'), ('y', '<f8'), ('z', '<f8'),('vx', '<f8'),
+                        ('vy', '<f8'), ('vz', '<f8'), ('m', '<f8'), ('id', '<i4')]
+         
+            self.dm = np.zeros(self.ndm + self.nsink, dtype=dtype_dm)
+            self.dm['x'] = dm_float[:,0]
+            self.dm['y'] = dm_float[:,1]
+            self.dm['z'] = dm_float[:,2]
+            self.dm['vx'] = dm_float[:,3]
+            self.dm['vy'] = dm_float[:,4]
+            self.dm['vz'] = dm_float[:,5]
+            self.dm['m'] = dm_float[:,6]
+            self.dm['id'] = dm_int[:]
 
         print("Fortran-reading done")
         # now, how to deallocate it?

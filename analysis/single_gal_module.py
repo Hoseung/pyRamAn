@@ -24,7 +24,8 @@ def gal_file_list(prg_this, galidx, GM_dir = './GalaxyMaker/'):
         if this_gal['phantom'] == 1:
             continue
         galid = this_gal['Orig_halo_id'][0]
-        file_list.append(gal_dir + "gal_stars_" + str(nout).zfill(3) + "_" + str(galid).zfill(7))
+        file_list.append(gal_dir + "gal_stars_" + str(nout).zfill(3) \
+                         + "_" + str(galid).zfill(7))
 
     return file_list
 
@@ -68,32 +69,6 @@ def angular_momentum(star):
     return lx,ly,lz
 
 
-def gal_from_GM(gcat, info, nout=None, idgal=None, fname=None, **kwargs):
-    from galaxy import galaxy
-    if fname is None:
-        gm = load.rd_GM.rd_gal(nout, idgal)
-    else:
-        gm = load.rd_GM.rd_gal(info.nout,0,fname=fname)
-
-    if gm.star is None:
-        print("no stellar particles, skipping")
-        return False
-
-    gm.dm = None
-    gm.cell = None
-    gm.star['time'] = utils.cosmology.time2gyr(gm.star['time'],
-                                 z_now = info.zred,
-                                 info=info)
-
-    gal = galaxy.Galaxy(halo = gcat,
-                        info=info)
-    
-    good_gal = gal.mk_gal(gm.star, gm.dm, gm.cell,
-                          unit_conversion="GM",
-                          **kwargs)
-    return gal
-
-
 def draw_plot(gal, cat, ax, ax_hist, smoothed_lambda=True):
     #ax = ax.ravel()
     t_min = min(gal.star['time'])
@@ -103,7 +78,7 @@ def draw_plot(gal, cat, ax, ax_hist, smoothed_lambda=True):
     ax[0].plot(nout2lbt(cat.nouts), cat.data['mstar'])
     ax_hist.hist(gal.star['time'], histtype='step')
     if smoothed_lambda:
-        ax[2].plot(nout2lbt(cat.nouts), cat.smoothed_lambda)# cat.data['lambda_r'])
+        ax[2].plot(nout2lbt(cat.nouts), cat.smoothed_lambda)
     else:
         ax[2].plot(nout2lbt(cat.nouts), cat.data['lambda_r'])
 
@@ -135,7 +110,8 @@ def draw_plot(gal, cat, ax, ax_hist, smoothed_lambda=True):
 
 
 def new_old_gals(galid_at_187, prgt):
-    galidx = prgt["id"][(prgt["nout"] == 187) * (prgt["Orig_halo_id"] == galid_at_187)][0]
+    galidx = prgt["id"][(prgt["nout"] == 187) * (prgt["Orig_halo_id"] \
+             == galid_at_187)][0]
     prg_this = ctu.extract_main_tree(prgt, galidx)
     #prg_this['Orig_halo_id'][[0,100]]
     #prg_this['nout'][[0,100]]
@@ -175,7 +151,6 @@ def load_prg_gal_data222(gg, info):
     nout = prg_this['nout'][inout]
     return gal_from_GM(gg, info, nout=nout, idgal=idgal)
 
-
 def load_prg_gal_data(gg, info, fname=None):
     convert_gm_to_halo(gg, info)
     if prg_this['phantom'][inout] == 1:
@@ -190,6 +165,7 @@ def gal_from_GM(gcat, info, nout=None, idgal=None, fname=None,
         gm = load.rd_GM.rd_gal(nout, idgal)
     else:
         gm = load.rd_GM.rd_gal(info.nout,0,fname=fname)
+        galid = gm.header['my_number']
 
     if gm.star == None:
         print("no stellar particles, skipping")
@@ -202,9 +178,7 @@ def gal_from_GM(gcat, info, nout=None, idgal=None, fname=None,
     gcat['y'] /= info.cboxsize
     gcat['z'] /= info.cboxsize
     #print("Cat x", gcat['x'])
-    gal = galaxy.Galaxy(halo = gcat,
-                        info=info)
-
+    gal = galaxy.Galaxy(halo = gcat, info=info)
     
     if dm:
         fname_dm = fname.replace("stars", "dms")
@@ -212,12 +186,26 @@ def gal_from_GM(gcat, info, nout=None, idgal=None, fname=None,
     else:
         gm.dm = None
     
-    if cell:
+    if cell == "GM":
         fname_cell = fname.replace("stars", "cells")
         gm.cell = load.rd_GM.rd_cell(info.nout, 0, fname = fname_cell)
         # unit of "rho" is not touched.
-    else:
-        gm.cell = None
+    elif cell == "raw":
+        from load.hydro import Hydro
+        import utils.sampling as smp
+        centers = gm.header['xg'] /info.pboxsize + 0.5
+         
+        radius = 0.5 * max([gm.star['x'].ptp(), gm.star['y'].ptp(), \
+                           gm.star['z'].ptp()])/info.pboxsize
+
+        region = smp.set_region(centers=centers, radius=1.5*radius)
+        hh = Hydro(info, region=region, load=True)
+        gm.cell = hh.cell
+        gm.cell["x"] = (gm.cell["x"] + 0.5) * info.pboxsize
+        gm.cell["y"] = (gm.cell["y"] + 0.5) * info.pboxsize
+        gm.cell["z"] = (gm.cell["z"] + 0.5) * info.pboxsize
+        gm.cell['dx'] *= info.pboxsize
+
         
     good_gal = gal.mk_gal(gm.star, gm.dm, gm.cell,
                           unit_conversion="GM",

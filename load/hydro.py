@@ -23,7 +23,7 @@ class Hydro(load.sim.Simbase):
     and inherite the base class to define Hydro, Part, and Amr class.
     """
 
-    def __init__(self, info, amr=None, region=None, ranges=None):
+    def __init__(self, info, amr=None, region=None, ranges=None, load=False):
         """
         Parameters
         ----------
@@ -50,6 +50,8 @@ class Hydro(load.sim.Simbase):
             self.amr = amr
         except NameError:
             print("Load amr first! \n")
+        if load:
+            self.amr2cell(ranges=self.info.ranges)
 
     def _get_basic_info(self):
         f = open(self._fnbase + '00001', "rb")
@@ -129,7 +131,7 @@ class Hydro(load.sim.Simbase):
         if lmax is None:
             lmax = nlevelmax
 
-        print(' >>> working resolution (lmax) =', lmax)
+        if verbose: print(' >>> working resolution (lmax) =', lmax)
 
         # Set ranges
         xmi, xma = self.info.ranges[0]
@@ -139,13 +141,17 @@ class Hydro(load.sim.Simbase):
         zmi, zma = self.info.ranges[2]
 #        zma = self.info.ranges[2][1]
         work_dir = self.info.base + '/' + self.out_dir + 'output_' + str(self.info.nout).zfill(5)
-        print(xmi, xma, ymi, yma, zmi,zma)        
+        if verbose: print(xmi, xma, ymi, yma, zmi,zma)
         out = a2c.a2c_count(work_dir, xmi, xma, ymi, yma, zmi, zma, lmax)
+        # I want to calculate domain in python,
+        # so that a2c only does loading part.
+        #if xmi > 0:
+        #    print(
         if return_meta:
             return (out[0], work_dir, xmi, xma, ymi, yma, zmi, zma, lmax)
         else:
-            cell = a2c.a2c_load(work_dir, xmi, xma, ymi, yma, zmi, zma, lmax
-                                 ,out[0], nvarh)
+            cell = a2c.a2c_load(work_dir, xmi, xma, ymi, yma, zmi, zma,\
+                                lmax, out[0], nvarh)
             dtype_cell = [('x', '<f8'), ('y', '<f8'), ('z', '<f8'), ('dx', '<f8')] 
             if cpu:
                 dtype_cell.append(('cpu', '<f8'))

@@ -41,13 +41,6 @@ class Info:
         # Function emulation      
         return self.__init__(*args)
 
-#    def _print(s, *args):
-#        print(args)
-#        #print("info: " + s + args)
-#    When *args accepts sim.data_dir, I get the following error message:
-#    "Info object can't be implicitly converted into string.
-#    Isn't it a string..?
-
     def all_set(self):
         return (self.nout is not None) & (self.base is not None)
 
@@ -62,13 +55,6 @@ class Info:
                 except:
                     print("Info file name is not given. ")
                     print("Current value is :", self.fn)
-
-#    def set_data_dir(self, data_dir, verbpse=False):
-#        from os import path
-#        self.data_dir =  path.join(self.base, '', data_dir, '')
-#        self.data_dir = self.base + 'snapshots/'
-#        if verbose:
-#            print("Update::",self.data_dir)
 
     def _set_base(self, base):
         self.base = base
