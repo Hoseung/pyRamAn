@@ -231,9 +231,10 @@ def pp_halo(h, npix, rscale=1.0, region=None, ind=None, axes=None,
             name=False, radius="rvir",
             verbose=False, new_axes=False,
             fontsize=10, linewidth=1.0,
-            color_field=None, **kwargs):
+            color_field=None,
+            cmap="RdYlBu_r",**kwargs):
     """
-    plot halo circles on the current/given/new axes.
+    plot halos as circles on the current/given/new axes.
     
     Parameters
     ----------
@@ -254,8 +255,14 @@ def pp_halo(h, npix, rscale=1.0, region=None, ind=None, axes=None,
     new_axes : Boolean, default = False
         If True, make a new axes and plot halos onto it. 
         If axes is None and new_axes is False, then axes = plt.gca()
-       
-    Unless only halos are being plotted, it is better to pass a region. 
+    
+    Notes
+    -----
+    1. Region does NOT modify x,y labels. 
+       It would be better to modify labels outside.
+    2. Unless only halos are being plotted, it is better to pass a region. 
+
+
     """
     import matplotlib.pyplot as plt
     from draw import pp
@@ -271,12 +278,12 @@ def pp_halo(h, npix, rscale=1.0, region=None, ind=None, axes=None,
 
     # use pp_halo rather then the script below.
     if axes is None:
-        if new_axes:
-            fig = plt.figure()
-            # is it OK to created a new figure object and not return it?
-            axes = fig.add_subplot(111)
-        else:
-            axes = plt.gca()
+#        if new_axes:
+#            fig = plt.figure()
+#            # is it OK to created a new figure object and not return it?
+#            axes = fig.add_subplot(111)
+#        else:
+        axes = plt.gca()
     
     if ind is None:
         if region is None:
@@ -287,7 +294,7 @@ def pp_halo(h, npix, rscale=1.0, region=None, ind=None, axes=None,
             xspan = np.ptp(hd['x'][ind])
             yspan = np.ptp(hd['y'][ind])
         else:
-            # If reion is given, plot only the halos inside the region.
+            # If reion is given, only plot halos inside the region.
             # The size of region is retained. 
             # image area does not shrink to fit only valid halos.
             ind = np.where((hd['x'] > region["xr"][0]) &
@@ -301,7 +308,7 @@ def pp_halo(h, npix, rscale=1.0, region=None, ind=None, axes=None,
             xspan = np.ptp(region["xr"])
             yspan = np.ptp(region["yr"])
     else:
-        # if ind is a boolean array, convert it to index array.        
+        # if ind is a boolean array, convert it to an index array.
         if ind.dtype == 'bool':
             ind = np.arange(len(ind))[ind]
         
@@ -333,7 +340,7 @@ def pp_halo(h, npix, rscale=1.0, region=None, ind=None, axes=None,
     #else:
         #kwargs.update({"colors": None})
     pp.circle_scatter(axes, x, y, r, facecolors='none',
-                      linewidth=linewidth, **kwargs)
+                      linewidth=linewidth, cmap=cmap, **kwargs)
 
     axes.set_xlim([min(x), max(x)])
     axes.set_ylim([min(y), max(y)])
