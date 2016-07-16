@@ -139,20 +139,6 @@ class Part(load.sim.Simbase):
             if max(part["m"]) < 100:
                 part["m"] *= self.info.msun
 
-    def set_ranges(self, ranges=None):
-        if ranges is None:
-            ranges = self.ranges
-        nr = np.asarray(ranges)
-        if not(nr.shape[0] == 3 and nr.shape[1] == 2):
-            # Because actual operation on the given input(ranges)
-            # does not take place soon, it's not a good place to use
-            # try & except clause. There is nothing to try yet.
-            print(' Error!')
-            print('Shape of ranges is wrong:', nr.shape)
-            print('example : [[0.1,0.3],[0.2,0.4],[0.6,0.8]] \n')
-        else:
-            self.ranges = ranges
-            self.set_cpus(self._hilbert_cpulist(self.info, self.ranges))
 
     def set_base(self, base):
         """
@@ -169,14 +155,6 @@ class Part(load.sim.Simbase):
         from os import path
         snout = str(self.info.nout).zfill(5)
         self._fbase = path.abspath(path.join(self.base, data_dir +'output_' + snout + '/part_' + snout + '.out'))
-
-    def set_cpus(self, cpus):
-        self.cpus = cpus
-        try:
-            print("Updating info.cpus")
-            self.info._set_cpus(self.get_cpus())
-        except AttributeError:
-            print("No info._set_cpus attribute??")
 
     def setwhattoread(self, ptypes):
         """
@@ -680,10 +658,9 @@ class Part(load.sim.Simbase):
         zmi = self.ranges[2][0]
         zma = self.ranges[2][1]
         work_dir = self.info.base + '/snapshots/output_' + str(self.info.nout).zfill(5)
-        print("part.cpus", self.cpus)
         ndm_actual, nstar_actual, nsink_actual = part_shared.count_part( \
                             work_dir, xmi, xma, ymi, yma, zmi, zma, self.cpus)
-        print(ndm_actual, nstar_actual, nsink_actual)
+        #print(ndm_actual, nstar_actual, nsink_actual)
         self.ndm = ndm_actual
         self.nstar = nstar_actual
         self.nsink = nsink_actual

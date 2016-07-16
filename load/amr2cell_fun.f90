@@ -1,4 +1,4 @@
-subroutine a2c_count(ngridtot, nvarh, repository, xmin, xmax, ymin, ymax, zmin, zmax, lmax)!, nx_sample, ny_sample, nz_sample)
+subroutine a2c_count(ngridtot, nvarh, repository, xmin, xmax, ymin, ymax, zmin, zmax, lmax, cpu_list)
   !--------------------------------------------------------------------------
   ! Ce programme calcule le cube cartesien pour les
   ! variables hydro d'une simulation RAMSES. 
@@ -7,30 +7,25 @@ subroutine a2c_count(ngridtot, nvarh, repository, xmin, xmax, ymin, ymax, zmin, 
   implicit none
 
   character(LEN=*),INTENT(IN)::repository
-  character(LEN=128)::nomfich!,outfich="test.dat"
+  character(LEN=128)::nomfich
   real(KIND=8),INTENT(IN)::xmin,xmax,ymin,ymax,zmin,zmax
-!  real(KIND=8)::xmin=0,xmax=1,ymin=0,ymax=1,zmin=0,zmax=1
   integer     ,INTENT(IN)::lmax
+  integer,dimension(:),INTENT(IN)::cpu_list
   integer     ,INTENT(OUT)::ngridtot
 ! default value from python side is 0.
 
-  integer::ndim,n,i,j,k,twotondim,ncoarse,type=0,ii
-  integer::ivar,nvar,ncpu,ncpuh,nboundary,ngrid_current
-  integer::nx,ny,nz,ilevel,idim,jdim,kdim,icell
-  integer::nlevelmax,ilevel1,ngrid1!,ngridtot
-  integer::nlevelmaxs,nlevel,iout
-  integer::ind,ipos,ngrida,ngridh,ilevela,ilevelh,icnt
-  integer::ngridmax,nstep_coarse,icpu,ncpu_read
-  real::boxlen!,boxlen2
-  real::t!,aexp,hexp!,t2,aexp2,hexp2
+  integer::ndim,i,j,k,twotondim
+  integer::ivar,ncpu,nboundary
+  integer::nx,ny,nz,ilevel,idim
+  integer::nlevelmax,ngrida
+  integer::ind,ipos
+  integer::ngridmax,icpu,ncpu_read
+  real::boxlen
 
-  integer::ngrid,imin,imax,jmin,jmax,kmin,kmax
-  integer,INTENT(OUT)::nvarh!,nx2,ny2,nz2,ngridmax2,ndimh,nlevelmaxh
-  integer::ix,iy,iz,ndom,impi,bit_length,maxdom
-  integer::nx_full,ny_full,nz_full,lmin,levelmin
-  integer,dimension(1:8)::idom,jdom,kdom,cpu_min,cpu_max
-  real(KIND=8),dimension(1:8)::bounding_min,bounding_max,bounding
-  real(KIND=8)::dkey,dmax,dummy,order_min
+  integer::imin,imax,jmin,jmax,kmin,kmax
+  integer,INTENT(OUT)::nvarh
+  integer::ix,iy,iz
+  integer::nx_full,ny_full,nz_full
   real(KIND=8)::xxmin,xxmax,yymin,yymax,zzmin,zzmax,dx,dx2
   real(KIND=8),dimension(:,:),allocatable::x,xg
 
@@ -40,16 +35,11 @@ subroutine a2c_count(ngridtot, nvarh, repository, xmin, xmax, ymin, ymax, zmin, 
   real(KIND=8),dimension(1:3)::xbound=(/0d0,0d0,0d0/)
   character(LEN=5)::nchar,ncharcpu
   character(LEN=80)::ordering
-  logical::ok,ok_part,ok_cell,aa
-  real(KIND=8),dimension(:),allocatable::bound_key
-  logical,dimension(:),allocatable::cpu_read
-  integer,dimension(:),allocatable::cpu_list
+  logical::ok,ok_cell
 
   type level
      integer::ilevel
      integer::ngrid
-!     real(KIND=4),dimension(:,:,:),pointer::cube
-!    Unlike amr2cube, here separate arrays are used to store variables.
      integer::imin
      integer::imax
      integer::jmin
@@ -58,13 +48,11 @@ subroutine a2c_count(ngridtot, nvarh, repository, xmin, xmax, ymin, ymax, zmin, 
      integer::kmax
   end type level
 
-  type(level),dimension(1:100)::grid
+   
+  type(level),dimension(1:50)::grid
 
-  ! Temporary space for reading labels from the info file.
-  character(LEN=128)::temp_label
-
-!  call read_params
-
+  ncpu_read = size(cpu_list)
+  
   !-----------------------------------------------
   ! Lecture du fichier hydro au format RAMSES
   !-----------------------------------------------
@@ -91,7 +79,7 @@ subroutine a2c_count(ngridtot, nvarh, repository, xmin, xmax, ymin, ymax, zmin, 
   read(10)nlevelmax
   read(10)ngridmax
   read(10)nboundary
-  read(10)ngrid_current
+  read(10)
   read(10)boxlen
   close(10)
   twotondim=2**ndim
@@ -101,139 +89,9 @@ subroutine a2c_count(ngridtot, nvarh, repository, xmin, xmax, ymin, ymax, zmin, 
   allocate(ngridlevel(1:ncpu,1:nlevelmax))
   if(nboundary>0)allocate(ngridbound(1:nboundary,1:nlevelmax))
 
-  if(ndim==2)then
-     write(*,*)'Output file contains 2D data'
-     write(*,*)'Aborting'
-     stop
-  endif
-
-  nomfich=TRIM(repository)//'/info_'//TRIM(nchar)//'.txt'
-  open(unit=10,file=nomfich,form='formatted',status='old')
-  read(10,*)
-  read(10,*)
-  read(10,'(A13,I11)')temp_label,levelmin
-  read(10,*)
-  read(10,*)
-  read(10,*)
-  read(10,*)
-
-  read(10,*)
-  read(10,'(A13,E23.15)')temp_label,t
-  read(10,*)
-  read(10,*)
-  read(10,*)
-  read(10,*)
-  read(10,*)
-  read(10,*)
-  read(10,*)
-  read(10,*)
-  read(10,*)
-  read(10,*)
-
-  read(10,'(A14,A80)')temp_label,ordering
-  write(*,'(XA14,A20)')temp_label,TRIM(ordering)
-  read(10,*)
-  allocate(cpu_list(1:ncpu))
-  if(TRIM(ordering).eq.'hilbert')then
-     allocate(bound_key(0:ncpu))
-     allocate(cpu_read(1:ncpu))
-     cpu_read=.false.
-     do impi=1,ncpu
-        read(10,'(I8,1X,E23.15,1X,E23.15)')i,bound_key(impi-1),bound_key(impi)
-     end do
-  endif
-  close(10)
-
-  !-----------------------
-  ! Map parameters
-  !-----------------------
-!  if(lmax==0)then
-!     lmax=nlevelmax
-!  endif
-  write(*,*)'time=',t
-  write(*,*)'Working resolution =',2**lmax
   xxmin=xmin ; xxmax=xmax
   yymin=ymin ; yymax=ymax
   zzmin=zmin ; zzmax=zmax
-
-  if(TRIM(ordering).eq.'hilbert')then
-
-     dmax=max(xxmax-xxmin,yymax-yymin,zzmax-zzmin)
-     do ilevel=1,lmax
-        dx=0.5d0**ilevel
-        if(dx.lt.dmax)exit
-     end do
-     lmin=ilevel
-     bit_length=lmin-1
-     maxdom=2**bit_length
-     imin=0; imax=0; jmin=0; jmax=0; kmin=0; kmax=0
-     if(bit_length>0)then
-        imin=int(xxmin*dble(maxdom))
-        imax=imin+1
-        jmin=int(yymin*dble(maxdom))
-        jmax=jmin+1
-        kmin=int(zzmin*dble(maxdom))
-        kmax=kmin+1
-     endif
-
-     dkey=(dble(2**(nlevelmax+1)/dble(maxdom)))**ndim
-     ndom=1
-     if(bit_length>0)ndom=8
-     idom(1)=imin; idom(2)=imax
-     idom(3)=imin; idom(4)=imax
-     idom(5)=imin; idom(6)=imax
-     idom(7)=imin; idom(8)=imax
-     jdom(1)=jmin; jdom(2)=jmin
-     jdom(3)=jmax; jdom(4)=jmax
-     jdom(5)=jmin; jdom(6)=jmin
-     jdom(7)=jmax; jdom(8)=jmax
-     kdom(1)=kmin; kdom(2)=kmin
-     kdom(3)=kmin; kdom(4)=kmin
-     kdom(5)=kmax; kdom(6)=kmax
-     kdom(7)=kmax; kdom(8)=kmax
-     
-     do i=1,ndom
-        if(bit_length>0)then
-!           call hilbert3d(idom(i),jdom(i),kdom(i),order_min,bit_length,1)
-           call hilbert3d(idom(i),jdom(i),kdom(i),bounding(1),bit_length,1)
-           order_min=bounding(1)
-        else
-           order_min=0.0d0
-        endif
-        bounding_min(i)=(order_min)*dkey
-        bounding_max(i)=(order_min+1.0D0)*dkey
-     end do
-     
-     cpu_min=0; cpu_max=0
-     do impi=1,ncpu
-        do i=1,ndom
-           if (   bound_key(impi-1).le.bounding_min(i).and.&
-                & bound_key(impi  ).gt.bounding_min(i))then
-              cpu_min(i)=impi
-           endif
-           if (   bound_key(impi-1).lt.bounding_max(i).and.&
-                & bound_key(impi  ).ge.bounding_max(i))then
-              cpu_max(i)=impi
-           endif
-        end do
-     end do
-     
-     ncpu_read=0
-     do i=1,ndom
-        do j=cpu_min(i),cpu_max(i)
-           if(.not. cpu_read(j))then
-              ncpu_read=ncpu_read+1
-              cpu_list(ncpu_read)=j
-              cpu_read(j)=.true.
-           endif
-        enddo
-     enddo
-  else
-     ncpu_read=ncpu
-     do j=1,ncpu
-        cpu_list(j)=j
-     end do
-  end if
 
   !-----------------------------
   ! Compute hierarchy
@@ -260,10 +118,6 @@ subroutine a2c_count(ngridtot, nvarh, repository, xmin, xmax, ymin, ymax, zmin, 
   !-----------------------------------------------
   ! Compute array size
   !----------------------------------------------
-!  nomfich=TRIM(outfich)
-!  write(*,*)'Writing file '//TRIM(nomfich)
-!  open(unit=20,file=nomfich,form='formatted')
-
   ! Loop over processor files
   ngridtot = 0
   do k=1,ncpu_read
@@ -273,7 +127,6 @@ subroutine a2c_count(ngridtot, nvarh, repository, xmin, xmax, ymin, ymax, zmin, 
      ! Open AMR file and skip header
      nomfich=TRIM(repository)//'/amr_'//TRIM(nchar)//'.out'//TRIM(ncharcpu)
      open(unit=10,file=nomfich,status='old',form='unformatted')
-!     write(*,*)'Processing file '//TRIM(nomfich)
      do i=1,21
         read(10)
      end do
@@ -385,11 +238,7 @@ subroutine a2c_count(ngridtot, nvarh, repository, xmin, xmax, ymin, ymax, zmin, 
               ! Read hydro variables
               do ind=1,twotondim
                  do ivar=1,nvarh
-!                    if(j.eq.icpu)then
-!                       read(11)var(:,ind,ivar)
-!                    else
-                       read(11)
-!                    end if
+                    read(11)
                  end do
               end do
            end if
@@ -437,60 +286,49 @@ subroutine a2c_count(ngridtot, nvarh, repository, xmin, xmax, ymin, ymax, zmin, 
      close(10)
      close(11)
   end do
-  write(*,*)"ngridtot",ngridtot
 
 end subroutine a2c_count
 
 
-subroutine a2c_load(xarr, dxarr, varr, cpuarr, repository, xmin, xmax, ymin, ymax, zmin, zmax, lmax, ngridtot, nvarh)
+subroutine a2c_load(xarr, dxarr, varr, cpuarr, repository, xmin, xmax, ymin, ymax, zmin, zmax, lmax, ngridtot, nvarh, cpu_list)
   implicit none
 
-  character(LEN=*),INTENT(IN)::repository
-  character(LEN=128)::nomfich
-  real(KIND=8),INTENT(IN)::xmin,xmax,ymin,ymax,zmin,zmax
-  integer     ,INTENT(IN)::lmax,ngridtot
+  integer,dimension(:),INTENT(IN)::cpu_list
+  character(len=*),intent(in)::repository
+  character(len=128)::nomfich
+  real(kind=8),intent(in)::xmin,xmax,ymin,ymax,zmin,zmax
+  integer     ,intent(in)::lmax,ngridtot
 ! default value from python side is 0.
 
-  real(KIND=8),INTENT(OUT),dimension(ngridtot,3)::xarr
-  real(KIND=8),INTENT(OUT),dimension(ngridtot,nvarh)::varr
-  real(KIND=8),INTENT(OUT),dimension(ngridtot)::dxarr
-  integer,INTENT(OUT),dimension(ngridtot)::cpuarr
-!  allocate(xarr(1:ngridtot,1:ndim))
-!  allocate(dxarr(1:ngridtot))
-!  allocate(varr(1:ngridtot,1:nvarh))
+  real(kind=8),intent(out),dimension(ngridtot,3)::xarr
+  real(kind=8),intent(out),dimension(ngridtot,nvarh)::varr
+  real(kind=8),intent(out),dimension(ngridtot)::dxarr
+  integer,intent(out),dimension(ngridtot)::cpuarr
 
-  integer::ndim,n,i,j,k,twotondim,ncoarse,type=0,ii
-  integer::ivar,nvar,ncpu,ncpuh,nboundary,ngrid_current
-  integer::nx,ny,nz,ilevel,idim,jdim,kdim,icell
-  integer::nlevelmax,ilevel1,ngrid1!,ngridtot
-  integer::nlevelmaxs,nlevel,iout
-  integer::ind,ipos,ngrida,ngridh,ilevela,ilevelh,icnt
-  integer::ngridmax,nstep_coarse,icpu,ncpu_read
-  real::boxlen,t
+  integer::ndim,i,j,k,twotondim
+  integer::ivar,ncpu,nboundary
+  integer::nx,ny,nz,ilevel,idim
+  integer::nlevelmax
+  integer::ind,ipos,ngrida,icnt
+  integer::ngridmax,icpu,ncpu_read
+!  real::boxlen,t
 
-  integer::ngrid,imin,imax,jmin,jmax,kmin,kmax
+  integer::imin,imax,jmin,jmax,kmin,kmax
   integer::nvarh
-  integer::ix,iy,iz,ndom,impi,bit_length,maxdom
-  integer::nx_full,ny_full,nz_full,lmin,levelmin
-  integer,dimension(1:8)::idom,jdom,kdom,cpu_min,cpu_max
-  real(KIND=8),dimension(1:8)::bounding_min,bounding_max,bounding
-  real(KIND=8)::dkey,dmax,dummy,order_min
-  real(KIND=8)::xxmin,xxmax,yymin,yymax,zzmin,zzmax,dx,dx2
-  real(KIND=8),dimension(:,:),allocatable::x,xg
-  real(KIND=8),dimension(:,:,:),allocatable::var
+  integer::ix,iy,iz
+  integer::nx_full,ny_full,nz_full
+  real(kind=8)::xxmin,xxmax,yymin,yymax,zzmin,zzmax,dx,dx2
+  real(kind=8),dimension(:,:),allocatable::x,xg
+  real(kind=8),dimension(:,:,:),allocatable::var
 
-  real(KIND=8),dimension(:)  ,allocatable::rho
+  real(kind=8),dimension(:)  ,allocatable::rho
   logical,dimension(:)  ,allocatable::ref
-!  integer,dimension(:)  ,allocatable::isp
   integer,dimension(:,:),allocatable::son,ngridfile,ngridlevel,ngridbound
-  real(KIND=8),dimension(1:8,1:3)::xc
-  real(KIND=8),dimension(1:3)::xbound=(/0d0,0d0,0d0/)
-  character(LEN=5)::nchar,ncharcpu
-  character(LEN=80)::ordering
-  logical::ok,ok_part,ok_cell,aa
-  real(KIND=8),dimension(:),allocatable::bound_key
-  logical,dimension(:),allocatable::cpu_read
-  integer,dimension(:),allocatable::cpu_list
+  real(kind=8),dimension(1:8,1:3)::xc
+  real(kind=8),dimension(1:3)::xbound=(/0d0,0d0,0d0/)
+  character(len=5)::nchar,ncharcpu
+  character(len=80)::ordering
+  logical::ok,ok_cell
 
   type level
      integer::ilevel
@@ -504,10 +342,10 @@ subroutine a2c_load(xarr, dxarr, varr, cpuarr, repository, xmin, xmax, ymin, yma
      integer::kmax
   end type level
 
-  type(level),dimension(1:100)::grid
+  type(level),dimension(1:50)::grid
 
   ! Temporary space for reading labels from the info file.
-  character(LEN=128)::temp_label
+!  character(LEN=128)::temp_label
 
 !  call read_params
 
@@ -537,8 +375,8 @@ subroutine a2c_load(xarr, dxarr, varr, cpuarr, repository, xmin, xmax, ymin, yma
   read(10)nlevelmax
   read(10)ngridmax
   read(10)nboundary
-  read(10)ngrid_current
-  read(10)boxlen
+!  read(10)ngrid_current
+!  read(10)boxlen
   close(10)
   twotondim=2**ndim
   xbound=(/dble(nx/2),dble(ny/2),dble(nz/2)/)
@@ -547,139 +385,15 @@ subroutine a2c_load(xarr, dxarr, varr, cpuarr, repository, xmin, xmax, ymin, yma
   allocate(ngridlevel(1:ncpu,1:nlevelmax))
   if(nboundary>0)allocate(ngridbound(1:nboundary,1:nlevelmax))
 
-  if(ndim==2)then
-     write(*,*)'Output file contains 2D data'
-     write(*,*)'Aborting'
-     stop
-  endif
-
-  nomfich=TRIM(repository)//'/info_'//TRIM(nchar)//'.txt'
-  open(unit=10,file=nomfich,form='formatted',status='old')
-  read(10,*)
-  read(10,*)
-  read(10,'(A13,I11)')temp_label,levelmin
-  read(10,*)
-  read(10,*)
-  read(10,*)
-  read(10,*)
-
-  read(10,*)
-  read(10,'(A13,E23.15)')temp_label,t
-  read(10,*)
-  read(10,*)
-  read(10,*)
-  read(10,*)
-  read(10,*)
-  read(10,*)
-  read(10,*)
-  read(10,*)
-  read(10,*)
-  read(10,*)
-
-  read(10,'(A14,A80)')temp_label,ordering
-  write(*,'(XA14,A20)')temp_label,TRIM(ordering)
-  read(10,*)
-  allocate(cpu_list(1:ncpu))
-  if(TRIM(ordering).eq.'hilbert')then
-     allocate(bound_key(0:ncpu))
-     allocate(cpu_read(1:ncpu))
-     cpu_read=.false.
-     do impi=1,ncpu
-        read(10,'(I8,1X,E23.15,1X,E23.15)')i,bound_key(impi-1),bound_key(impi)
-     end do
-  endif
-  close(10)
-
-  !-----------------------
-  ! Map parameters
-  !-----------------------
-!  if(lmax==0)then
-!     lmax=nlevelmax
+!  if(ndim==2)then
+!     write(*,*)'Output file contains 2D data'
+!     write(*,*)'Aborting'
+!     stop
 !  endif
-  write(*,*)'time=',t
-  write(*,*)'Working resolution =',2**lmax
+
   xxmin=xmin ; xxmax=xmax
   yymin=ymin ; yymax=ymax
   zzmin=zmin ; zzmax=zmax
-
-  if(TRIM(ordering).eq.'hilbert')then
-
-     dmax=max(xxmax-xxmin,yymax-yymin,zzmax-zzmin)
-     do ilevel=1,lmax
-        dx=0.5d0**ilevel
-        if(dx.lt.dmax)exit
-     end do
-     lmin=ilevel
-     bit_length=lmin-1
-     maxdom=2**bit_length
-     imin=0; imax=0; jmin=0; jmax=0; kmin=0; kmax=0
-     if(bit_length>0)then
-        imin=int(xxmin*dble(maxdom))
-        imax=imin+1
-        jmin=int(yymin*dble(maxdom))
-        jmax=jmin+1
-        kmin=int(zzmin*dble(maxdom))
-        kmax=kmin+1
-     endif
-
-     dkey=(dble(2**(nlevelmax+1)/dble(maxdom)))**ndim
-     ndom=1
-     if(bit_length>0)ndom=8
-     idom(1)=imin; idom(2)=imax
-     idom(3)=imin; idom(4)=imax
-     idom(5)=imin; idom(6)=imax
-     idom(7)=imin; idom(8)=imax
-     jdom(1)=jmin; jdom(2)=jmin
-     jdom(3)=jmax; jdom(4)=jmax
-     jdom(5)=jmin; jdom(6)=jmin
-     jdom(7)=jmax; jdom(8)=jmax
-     kdom(1)=kmin; kdom(2)=kmin
-     kdom(3)=kmin; kdom(4)=kmin
-     kdom(5)=kmax; kdom(6)=kmax
-     kdom(7)=kmax; kdom(8)=kmax
-     
-     do i=1,ndom
-        if(bit_length>0)then
-!           call hilbert3d(idom(i),jdom(i),kdom(i),order_min,bit_length,1)
-           call hilbert3d(idom(i),jdom(i),kdom(i),bounding(1),bit_length,1)
-           order_min=bounding(1)
-        else
-           order_min=0.0d0
-        endif
-        bounding_min(i)=(order_min)*dkey
-        bounding_max(i)=(order_min+1.0D0)*dkey
-     end do
-     
-     cpu_min=0; cpu_max=0
-     do impi=1,ncpu
-        do i=1,ndom
-           if (   bound_key(impi-1).le.bounding_min(i).and.&
-                & bound_key(impi  ).gt.bounding_min(i))then
-              cpu_min(i)=impi
-           endif
-           if (   bound_key(impi-1).lt.bounding_max(i).and.&
-                & bound_key(impi  ).ge.bounding_max(i))then
-              cpu_max(i)=impi
-           endif
-        end do
-     end do
-     
-     ncpu_read=0
-     do i=1,ndom
-        do j=cpu_min(i),cpu_max(i)
-           if(.not. cpu_read(j))then
-              ncpu_read=ncpu_read+1
-              cpu_list(ncpu_read)=j
-              cpu_read(j)=.true.
-           endif
-        enddo
-     enddo
-  else
-     ncpu_read=ncpu
-     do j=1,ncpu
-        cpu_list(j)=j
-     end do
-  end if
 
   !-----------------------------
   ! Compute hierarchy
@@ -708,6 +422,7 @@ subroutine a2c_load(xarr, dxarr, varr, cpuarr, repository, xmin, xmax, ymin, yma
   icnt=0
 
   ! Loop over processor files
+  ncpu_read = size(cpu_list)
   do k=1,ncpu_read
      icpu=cpu_list(k)
      call title(icpu,ncharcpu)
@@ -891,456 +606,6 @@ subroutine a2c_load(xarr, dxarr, varr, cpuarr, repository, xmin, xmax, ymin, yma
 end subroutine
 
 
-
-
-subroutine a2c_load_shared(dataarr, repository, xmin, xmax, ymin, ymax, zmin, zmax, lmax, ngridtot, nvarh)
-  implicit none
-
-  character(LEN=*),INTENT(IN)::repository
-  character(LEN=128)::nomfich
-  real(KIND=8),INTENT(IN)::xmin,xmax,ymin,ymax,zmin,zmax
-  integer     ,INTENT(IN)::lmax!,ngridtot
-! default value from python side is 0.
-
-  real(KIND=8),INTENT(INOUT),dimension(ngridtot,10)::dataarr
-!  real(KIND=8),INTENT(INOUT)::dataarr
-
-  integer::ndim,n,i,j,k,twotondim,ncoarse,type=0,ii
-  integer::ivar,nvar,ncpu,ncpuh,nboundary,ngrid_current
-  integer::nx,ny,nz,ilevel,idim,jdim,kdim,icell
-  integer::nlevelmax,ilevel1,ngrid1!,ngridtot
-  integer::nlevelmaxs,nlevel,iout
-  integer::ind,ipos,ngrida,ngridh,ilevela,ilevelh,icnt
-  integer::ngridmax,nstep_coarse,icpu,ncpu_read
-  real::boxlen,t
-
-  integer::ngrid,imin,imax,jmin,jmax,kmin,kmax
-  integer::nvarh, ngridtot
-  integer::ix,iy,iz,ndom,impi,bit_length,maxdom
-  integer::nx_full,ny_full,nz_full,lmin,levelmin
-  integer,dimension(1:8)::idom,jdom,kdom,cpu_min,cpu_max
-  real(KIND=8),dimension(1:8)::bounding_min,bounding_max,bounding
-  real(KIND=8)::dkey,dmax,dummy,order_min
-  real(KIND=8)::xxmin,xxmax,yymin,yymax,zzmin,zzmax,dx,dx2
-  real(KIND=8),dimension(:,:),allocatable::x,xg
-  real(KIND=8),dimension(:,:,:),allocatable::var
-
-  real(KIND=8),dimension(:)  ,allocatable::rho
-  logical,dimension(:)  ,allocatable::ref
-!  integer,dimension(:)  ,allocatable::isp
-  integer,dimension(:,:),allocatable::son,ngridfile,ngridlevel,ngridbound
-  real(KIND=8),dimension(1:8,1:3)::xc
-  real(KIND=8),dimension(1:3)::xbound=(/0d0,0d0,0d0/)
-  character(LEN=5)::nchar,ncharcpu
-  character(LEN=80)::ordering
-  logical::ok,ok_part,ok_cell,aa
-  real(KIND=8),dimension(:),allocatable::bound_key
-  logical,dimension(:),allocatable::cpu_read
-  integer,dimension(:),allocatable::cpu_list
-
-  type level
-     integer::ilevel
-     integer::ngrid
-     real(KIND=4),dimension(:,:,:),pointer::cube
-     integer::imin
-     integer::imax
-     integer::jmin
-     integer::jmax
-     integer::kmin
-     integer::kmax
-  end type level
-
-  type(level),dimension(1:100)::grid
-
-  ! Temporary space for reading labels from the info file.
-  character(LEN=128)::temp_label
-
-!  call read_params
-
-  !-----------------------------------------------
-  ! Lecture du fichier hydro au format RAMSES
-  !-----------------------------------------------
-  ipos=INDEX(repository,'output_')
-  nchar=repository(ipos+7:ipos+13)
-  nomfich=TRIM(repository)//'/hydro_'//TRIM(nchar)//'.out00001'
-  inquire(file=nomfich, exist=ok) ! verify input file 
-  if ( .not. ok ) then
-     print *,TRIM(nomfich)//' not found.'
-     stop
-  endif
-  nomfich=TRIM(repository)//'/amr_'//TRIM(nchar)//'.out00001'
-  inquire(file=nomfich, exist=ok) ! verify input file 
-  if ( .not. ok ) then
-     print *,TRIM(nomfich)//' not found.'
-     stop
-  endif
-
-  nomfich=TRIM(repository)//'/amr_'//TRIM(nchar)//'.out00001'
-  open(unit=10,file=nomfich,status='old',form='unformatted')
-  read(10)ncpu
-  read(10)ndim
-  read(10)nx,ny,nz
-  read(10)nlevelmax
-  read(10)ngridmax
-  read(10)nboundary
-  read(10)ngrid_current
-  read(10)boxlen
-  close(10)
-  twotondim=2**ndim
-  xbound=(/dble(nx/2),dble(ny/2),dble(nz/2)/)
-
-  allocate(ngridfile(1:ncpu+nboundary,1:nlevelmax))
-  allocate(ngridlevel(1:ncpu,1:nlevelmax))
-  if(nboundary>0)allocate(ngridbound(1:nboundary,1:nlevelmax))
-
-  if(ndim==2)then
-     write(*,*)'Output file contains 2D data'
-     write(*,*)'Aborting'
-     stop
-  endif
-
-  nomfich=TRIM(repository)//'/info_'//TRIM(nchar)//'.txt'
-  open(unit=10,file=nomfich,form='formatted',status='old')
-  read(10,*)
-  read(10,*)
-  read(10,'(A13,I11)')temp_label,levelmin
-  read(10,*)
-  read(10,*)
-  read(10,*)
-  read(10,*)
-
-  read(10,*)
-  read(10,'(A13,E23.15)')temp_label,t
-  read(10,*)
-  read(10,*)
-  read(10,*)
-  read(10,*)
-  read(10,*)
-  read(10,*)
-  read(10,*)
-  read(10,*)
-  read(10,*)
-  read(10,*)
-
-  read(10,'(A14,A80)')temp_label,ordering
-  write(*,'(XA14,A20)')temp_label,TRIM(ordering)
-  read(10,*)
-  allocate(cpu_list(1:ncpu))
-  if(TRIM(ordering).eq.'hilbert')then
-     allocate(bound_key(0:ncpu))
-     allocate(cpu_read(1:ncpu))
-     cpu_read=.false.
-     do impi=1,ncpu
-        read(10,'(I8,1X,E23.15,1X,E23.15)')i,bound_key(impi-1),bound_key(impi)
-     end do
-  endif
-  close(10)
-
-  !-----------------------
-  ! Map parameters
-  !-----------------------
-!  if(lmax==0)then
-!     lmax=nlevelmax
-!  endif
-  write(*,*)'time=',t
-  write(*,*)'Working resolution =',2**lmax
-  xxmin=xmin ; xxmax=xmax
-  yymin=ymin ; yymax=ymax
-  zzmin=zmin ; zzmax=zmax
-
-  if(TRIM(ordering).eq.'hilbert')then
-
-     dmax=max(xxmax-xxmin,yymax-yymin,zzmax-zzmin)
-     do ilevel=1,lmax
-        dx=0.5d0**ilevel
-        if(dx.lt.dmax)exit
-     end do
-     lmin=ilevel
-     bit_length=lmin-1
-     maxdom=2**bit_length
-     imin=0; imax=0; jmin=0; jmax=0; kmin=0; kmax=0
-     if(bit_length>0)then
-        imin=int(xxmin*dble(maxdom))
-        imax=imin+1
-        jmin=int(yymin*dble(maxdom))
-        jmax=jmin+1
-        kmin=int(zzmin*dble(maxdom))
-        kmax=kmin+1
-     endif
-
-     dkey=(dble(2**(nlevelmax+1)/dble(maxdom)))**ndim
-     ndom=1
-     if(bit_length>0)ndom=8
-     idom(1)=imin; idom(2)=imax
-     idom(3)=imin; idom(4)=imax
-     idom(5)=imin; idom(6)=imax
-     idom(7)=imin; idom(8)=imax
-     jdom(1)=jmin; jdom(2)=jmin
-     jdom(3)=jmax; jdom(4)=jmax
-     jdom(5)=jmin; jdom(6)=jmin
-     jdom(7)=jmax; jdom(8)=jmax
-     kdom(1)=kmin; kdom(2)=kmin
-     kdom(3)=kmin; kdom(4)=kmin
-     kdom(5)=kmax; kdom(6)=kmax
-     kdom(7)=kmax; kdom(8)=kmax
-     
-     do i=1,ndom
-        if(bit_length>0)then
-!           call hilbert3d(idom(i),jdom(i),kdom(i),order_min,bit_length,1)
-           call hilbert3d(idom(i),jdom(i),kdom(i),bounding(1),bit_length,1)
-           order_min=bounding(1)
-        else
-           order_min=0.0d0
-        endif
-        bounding_min(i)=(order_min)*dkey
-        bounding_max(i)=(order_min+1.0D0)*dkey
-     end do
-     
-     cpu_min=0; cpu_max=0
-     do impi=1,ncpu
-        do i=1,ndom
-           if (   bound_key(impi-1).le.bounding_min(i).and.&
-                & bound_key(impi  ).gt.bounding_min(i))then
-              cpu_min(i)=impi
-           endif
-           if (   bound_key(impi-1).lt.bounding_max(i).and.&
-                & bound_key(impi  ).ge.bounding_max(i))then
-              cpu_max(i)=impi
-           endif
-        end do
-     end do
-     
-     ncpu_read=0
-     do i=1,ndom
-        do j=cpu_min(i),cpu_max(i)
-           if(.not. cpu_read(j))then
-              ncpu_read=ncpu_read+1
-              cpu_list(ncpu_read)=j
-              cpu_read(j)=.true.
-           endif
-        enddo
-     enddo
-  else
-     ncpu_read=ncpu
-     do j=1,ncpu
-        cpu_list(j)=j
-     end do
-  end if
-
-  !-----------------------------
-  ! Compute hierarchy
-  !-----------------------------
-  do ilevel=1,lmax
-     nx_full=2**ilevel
-     ny_full=2**ilevel
-     nz_full=2**ilevel
-     imin=int(xxmin*dble(nx_full))+1
-     imax=int(xxmax*dble(nx_full))+1
-     jmin=int(yymin*dble(ny_full))+1
-     jmax=int(yymax*dble(ny_full))+1
-     kmin=int(zzmin*dble(nz_full))+1
-     kmax=int(zzmax*dble(nz_full))+1
-     grid(ilevel)%imin=imin
-     grid(ilevel)%imax=imax
-     grid(ilevel)%jmin=jmin
-     grid(ilevel)%jmax=jmax
-     grid(ilevel)%kmin=kmin
-     grid(ilevel)%kmax=kmax
-  end do
-
-  !------------------------------------------------
-  ! Allocate arrays
-  !------------------------------------------------
-  icnt=0
-
-!  nomfich=TRIM(outfich)
-!  write(*,*)'Writing file '//TRIM(nomfich)
-!  open(unit=20,file=nomfich,form='formatted')
-
-  ! Loop over processor files
-  do k=1,ncpu_read
-     icpu=cpu_list(k)
-     call title(icpu,ncharcpu)
-
-     ! Open AMR file and skip header
-     nomfich=TRIM(repository)//'/amr_'//TRIM(nchar)//'.out'//TRIM(ncharcpu)
-     open(unit=10,file=nomfich,status='old',form='unformatted')
-     !write(*,*)'Processing file '//TRIM(nomfich)
-     do i=1,21
-        read(10)
-     end do
-     ! Read grid numbers
-     read(10)ngridlevel
-     ngridfile(1:ncpu,1:nlevelmax)=ngridlevel
-     read(10)
-     if(nboundary>0)then
-        do i=1,2
-           read(10)
-        end do
-        read(10)ngridbound
-        ngridfile(ncpu+1:ncpu+nboundary,1:nlevelmax)=ngridbound
-     endif
-     read(10)
-! ROM: comment the single follwing line for old stuff
-     read(10)
-     if(TRIM(ordering).eq.'bisection')then
-        do i=1,5
-           read(10)
-        end do
-     else
-        read(10)
-     endif
-     read(10)
-     read(10)
-     read(10)
-
-     ! Open HYDRO file and skip header
-     nomfich=TRIM(repository)//'/hydro_'//TRIM(nchar)//'.out'//TRIM(ncharcpu)
-     open(unit=11,file=nomfich,status='old',form='unformatted')
-     read(11)
-     read(11)!nvarh
-     read(11)
-     read(11)
-     read(11)
-     read(11)
-
-     ! Loop over levels
-     do ilevel=1,lmax
-
-        ! Geometry
-        dx=0.5**ilevel
-        dx2=0.5*dx
-        nx_full=2**ilevel
-        ny_full=2**ilevel
-        nz_full=2**ilevel
-        do ind=1,twotondim
-           iz=(ind-1)/4
-           iy=(ind-1-4*iz)/2
-           ix=(ind-1-2*iy-4*iz)
-           xc(ind,1)=(dble(ix)-0.5D0)*dx
-           xc(ind,2)=(dble(iy)-0.5D0)*dx
-           xc(ind,3)=(dble(iz)-0.5D0)*dx
-        end do
-
-        ! Allocate work arrays
-        ngrida=ngridfile(icpu,ilevel)
-        grid(ilevel)%ngrid=ngrida
-        if(ngrida>0)then
-           allocate(xg(1:ngrida,1:ndim))
-           allocate(son(1:ngrida,1:twotondim))
-           allocate(var(1:ngrida,1:twotondim,1:nvarh))
-           allocate(x  (1:ngrida,1:ndim))
-           allocate(rho(1:ngrida))
-           allocate(ref(1:ngrida))
-        endif
-
-        ! Loop over domains
-        do j=1,nboundary+ncpu
-
-           ! Read AMR data
-           if(ngridfile(j,ilevel)>0)then
-              read(10) ! Skip grid index
-              read(10) ! Skip next index
-              read(10) ! Skip prev index
-              ! Read grid center
-              do idim=1,ndim
-                 if(j.eq.icpu)then
-                    read(10)xg(:,idim)
-                 else
-                    read(10)
-                 endif
-              end do
-              read(10) ! Skip father index
-              do ind=1,2*ndim
-                 read(10) ! Skip nbor index
-              end do
-              ! Read son index
-              do ind=1,twotondim
-                 if(j.eq.icpu)then
-                    read(10)son(:,ind)
-                 else
-                    read(10)
-                 end if
-              end do
-              ! Skip cpu map
-              do ind=1,twotondim
-                 read(10)
-              end do
-              ! Skip refinement map
-              do ind=1,twotondim
-                 read(10)
-              end do
-           endif
-
-           ! Read HYDRO data
-           read(11)
-           read(11)
-           if(ngridfile(j,ilevel)>0)then
-              ! Read hydro variables
-              do ind=1,twotondim
-                 do ivar=1,nvarh
-                    if(j.eq.icpu)then
-                       read(11)var(:,ind,ivar)
-                    else
-                       read(11)
-                    end if
-                 end do
-              end do
-           end if
-        end do
-
-        ! Compute map
-        if(ngrida>0)then
-
-           ! Loop over cells
-           do ind=1,twotondim
-
-              ! Compute cell center
-              do i=1,ngrida
-                 x(i,1)=(xg(i,1)+xc(ind,1)-xbound(1))
-                 x(i,2)=(xg(i,2)+xc(ind,2)-xbound(2))
-                 x(i,3)=(xg(i,3)+xc(ind,3)-xbound(3))
-              end do
-              ! Check if cell is refined
-              do i=1,ngrida
-                 ref(i)=son(i,ind)>0.and.ilevel<lmax
-              end do
-              ! Store data cube
-              do i=1,ngrida
-                 ok_cell= .not.ref(i).and. &
-                      & (x(i,1)+dx2)>=xmin.and.&
-                      & (x(i,2)+dx2)>=ymin.and.&
-                      & (x(i,3)+dx2)>=zmin.and.&
-                      & (x(i,1)-dx2)<=xmax.and.&
-                      & (x(i,2)-dx2)<=ymax.and.&
-                      & (x(i,3)-dx2)<=zmax
-                 if(ok_cell)then
-                    icnt = icnt + 1
-                    dataarr(icnt,1:3)=x(i,1:3)
-                    dataarr(icnt,4)=dx
-                    dataarr(icnt,5:4+nvarh)=var(i,ind,1:nvarh)
-                 end if
-              end do
-
-           end do
-           ! End loop over cell
-
-           deallocate(xg,son,var,ref,rho,x)
-        endif
-     
-     end do
-     ! End loop over levels
-
-     close(10)
-     close(11)
-
-  end do
-  ! End loop over cpus
-
-!  write(*,*)ngridtot
-
-end subroutine
-
 !=======================================================================
 subroutine title(n,nchar)
 !=======================================================================
@@ -1467,3 +732,4 @@ end subroutine hilbert3d
 !================================================================
 !================================================================
 !================================================================
+

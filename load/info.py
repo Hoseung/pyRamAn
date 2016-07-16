@@ -67,7 +67,7 @@ class Info:
         self.ranges = ranges
 
     def _set_cpus(self, cpus):
-        self.cpus = cpus
+        self.cpus = np.array(cpus)
 
     def set_fn(self, fn, verbose=False):
         self.fn = fn
@@ -175,7 +175,7 @@ class Info:
                 arr2.append(float(str.split(f.readline(), '=')[1]))
             self._cal_units(arr1, arr2)
             self.hilbertkey = np.zeros((2, self.ncpu_tot + 1),
-                                       dtype=np.float32)
+                                       dtype=np.float64)
             f.readline()
             f.readline()
             f.readline()
