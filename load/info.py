@@ -14,6 +14,7 @@ class Info:
             df = defaults.Default()
             data_dir = df.dir_snapshot
         self.data_dir = data_dir
+        self.fn = None
         
         if nout is not None or base is not None or fn is not None:
             self.setup(nout=nout, base=base, fn=fn)
@@ -47,7 +48,8 @@ class Info:
     def update_fn(self, fn=None):
         import os
         try:
-            self.fn = os.path.join(self.base, self.data_dir) + 'output_' + self.snout + '/info_' + self.snout + '.txt'
+            snout = str(self.nout).zfill(5)
+            self.fn = os.path.join(self.base, self.data_dir) + 'output_' + snout + '/info_' + snout + '.txt'
         except:
             if self.nout is None and self.base is None:
                 try:
@@ -157,7 +159,8 @@ class Info:
             else:
                 self._set_nout(nout)
 
-        self.update_fn()
+        if self.fn is None:
+            self.update_fn()
         if verbose:
             print(self.fn)
 

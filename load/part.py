@@ -108,7 +108,10 @@ class Part(load.sim.Simbase):
         self.ncpu = 0
         self.nstar = 0
         self.nsink = 0
-        self.set_base(base)
+        try:
+            self.set_base(info.base)
+        except:
+            self.set_base(base)
         self.data_dir = data_dir
         self.setwhattoread(ptypes)
         self.dmo = dmo
