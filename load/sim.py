@@ -313,7 +313,11 @@ class Sim(Simbase):
             If false, an hydro instance is added without cell data.
         """
         from load import hydro
-        self.hydro = hydro.Hydro(self.info, self.amr, region=region, ranges=ranges)
+        self.hydro = hydro.Hydro(info=self.info,
+                                 amr=self.amr,
+                                 base=self.base,
+                                 region=region,
+                                 ranges=ranges)
         if load :
             if lmax is None:
                 lmax = self.info.lmax
@@ -342,7 +346,11 @@ class Sim(Simbase):
             self.dmo = True
         from load import part
         print("Types of particles you want to load are: ", ptypes)
-        self.part = part.Part(self.info, ptypes=ptypes, data_dir=self.data_dir, dmo=self.dmo, **kwargs)
+        self.part = part.Part(info=self.info,
+                              ptypes=ptypes,
+                              data_dir=self.data_dir,
+                              dmo=self.dmo,
+                              base=self.base, **kwargs)
         print("A particle instance is created\n")
 
         if load:

@@ -37,7 +37,7 @@ class Dummy():
         pass
 
 class Gal():
-    def __init__(self, nout, idgal, idhal = -1, load=True, info=None):
+    def __init__(self, nout, idgal, wdir='./', idhal = -1, load=True, info=None):
         """
         
         Parameters
@@ -58,7 +58,7 @@ class Gal():
         self.units.dm = Units()
         self.units.cell = Units()
         self.units.header = Units()
-        self.wdir = './'
+        self.wdir = wdir
         self.info = Dummy()
         self.set_info(info)
         if load:
@@ -85,6 +85,7 @@ class Gal():
     def set_info(self, info=None):
         if info is None:
             from load.info import Info
+            print("rd_GM.wdir", self.wdir)
             self.info = Info(self.nout, base=self.wdir)
         #self._get_minimal_info(info) 
         # Most of the information are needed. 
@@ -266,7 +267,7 @@ def rd_gal(nout, idgal, wdir="./", metal=True,
     print("[rd_GM.rd_gal] fname=", fname)
     header, data = rd_gm_star_file(fname)
         
-    gal = Gal(nout, idgal, load=False)
+    gal = Gal(nout, idgal, wdir=wdir, load=False)
     gal.star = data
     gal.header = header
     gal.gid = header['my_number']
