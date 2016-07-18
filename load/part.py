@@ -75,11 +75,11 @@ class Part(load.sim.Simbase):
 # Rule of thumb: initialize everything in __init__
 # Otherwise, a method may fail to find an object to act on.
 # This is called 'Object consistency'
-    def __init__(self, info, dmo=False, ptypes=None, base='./', 
+    def __init__(self, nout=None, info=None, dmo=False, ptypes=None, base='./', 
                  region=None, ranges=None,
                  data_dir='snapshots/', dmref=False, dmvel=False,
                  dmmass=True, load=False):
-        """        
+        """
         parameters
         ----------
         ptypes : list of particle type and information. 
@@ -92,8 +92,18 @@ class Part(load.sim.Simbase):
             Set True if the snapshot has DM ref information.
         dmvel : logical
 
+        Notes
+        -----
+        info is required for domain decomposition.
+
         """
+
+        if info is None:
+            assert nout is not None, "either info or onut is required"
+            from load.info import Info
+            info = Info(nout=nout)
         self.info = info
+        self.nout = info.nout
         self.ptypes = ptypes
         self.ncpu = 0
         self.nstar = 0
@@ -110,12 +120,12 @@ class Part(load.sim.Simbase):
             ranges = region['ranges']
         if ranges is not None:
             self.set_ranges(ranges=ranges)
-        elif info.ranges is not None:
-            self.set_ranges(ranges=info.ranges)
         else:
-            self.set_ranges(ranges=[[0,1]]*3)
+            try:
+                self.set_ranges(ranges=self.info.ranges)
+            except:
+                self.set_ranges(ranges=[[0,1]]*3)
     
-#        self.cpus = info.cpus
         
         self.set_fbase(self.base, data_dir)
         # header structure
@@ -134,6 +144,9 @@ class Part(load.sim.Simbase):
             self.load()
 
     def mass2msun(self):
+        """
+        No use case?
+        """
         for ptype in self.pt:
             part = getattr(self, ptype)
             if max(part["m"]) < 100:
@@ -153,7 +166,7 @@ class Part(load.sim.Simbase):
             Sets Working directory.
         """
         from os import path
-        snout = str(self.info.nout).zfill(5)
+        snout = str(self.nout).zfill(5)
         self._fbase = path.abspath(path.join(self.base, data_dir +'output_' + snout + '/part_' + snout + '.out'))
 
     def setwhattoread(self, ptypes):
@@ -246,10 +259,8 @@ class Part(load.sim.Simbase):
                 self.load_general(self, **kwargs)
 
     def get_dmo_ntot(self):
-#        ranges = self.info.ranges
         ranges = self.ranges
         ndm_tot = 0
-#        for icpu in self.info.cpus:
         for icpu in self.cpus:
             with open(self._fbase + str(icpu).zfill(5), "rb") as f:
             # skip header
@@ -279,9 +290,8 @@ class Part(load.sim.Simbase):
         # function argument is evaluated on function defining time,
         # So you can't pass the actual value of self.info instance
         if ranges is None:
-            ranges = self.info.ranges
+            ranges = self.ranges
         # Total particle number from selected cpus.
-#        npart_arr = self._get_npart_arr(self.info.cpus)
         npart_arr = self._get_npart_arr(self.cpus)
         if verbose:
             print("Loading particle... \n ranges:", ranges)
@@ -293,7 +303,6 @@ class Part(load.sim.Simbase):
         self.dm = np.recarray(ndm_tot, dtype=dtype)
         i_skip_dm = 0
 
-#        for icpu in self.info.cpus:
         for icpu in self.cpus:
             if verbose:
                 self.print_cpu(icpu)
@@ -402,16 +411,12 @@ class Part(load.sim.Simbase):
         self.star.z = np.zeros(self.ndm, dtype='f8')                
         '''
         if ranges is None:
-#            ranges = self.info.ranges
             ranges = self.ranges
         print("Loading particle... \n ranges:", ranges)
         # Total particle number from selected cpus.
 #        npart_tot
-#        npart_arr = self._get_npart_arr(self.info.cpus)
         npart_arr = self._get_npart_arr(self.cpus)
-#        print(self.info.cpus)
         print('npart_arr:', npart_arr)
-        #npart_tot = sum(npart_arr)
 
         if hasattr(self.ptypes, "dm"):
             i_skip_dm = 0
@@ -657,7 +662,7 @@ class Part(load.sim.Simbase):
         yma = self.ranges[1][1]
         zmi = self.ranges[2][0]
         zma = self.ranges[2][1]
-        work_dir = self.info.base + '/snapshots/output_' + str(self.info.nout).zfill(5)
+        work_dir = self.base + '/snapshots/output_' + str(self.nout).zfill(5)
         ndm_actual, nstar_actual, nsink_actual = part_shared.count_part( \
                             work_dir, xmi, xma, ymi, yma, zmi, zma, self.cpus)
         #print(ndm_actual, nstar_actual, nsink_actual)

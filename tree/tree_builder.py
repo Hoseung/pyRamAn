@@ -52,7 +52,7 @@ def write_halo_bricks_ct(data, desc, nout, out_dir='./', is_gal=True):
         Or, just data[['id', 'Orig_halo_id', ' ', and so on]] to access multiple fields at a time.
         
         """
-        from utils.io import prettyprint as pp
+        from utils.io_module import prettyprint as pp
         for variable in variables:            
             f.write(pp(variable, precise=True) + " ")
         f.write("\n")

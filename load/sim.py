@@ -17,16 +17,16 @@ class Simbase():
         pass
     
     def add_amr(self):
-        from load import amr
-        self.amr = amr.Amr(self.info)
-        print("An AMR instance is created\n")
+        from load.amr import Amr
+        self.amr = Amr(self.info)
+        print("An AMR instance is created\n", self.__class__.__name__)
 
     def get_cpus(self):
         return self.cpus
 
     def set_cpus(self, cpus):
         self.cpus = np.array(cpus)
-        #print("Updating info.cpus")
+        print("Updating info.cpus")
         #self.info._set_cpus(self.get_cpus())
 
     def show_cpus(self):
@@ -43,10 +43,10 @@ class Simbase():
             print('example : [[0.1,0.3],[0.2,0.4],[0.6,0.8]] \n')
         else:
             self.ranges = ranges
-            try:
-                self.info._set_ranges(self.ranges)
-            except AttributeError:
-                print("There is no info._set_ranges attribute")
+#            try:
+#                self.info._set_ranges(self.ranges)
+#            except AttributeError:
+#                print("There is no info._set_ranges attribute")
             self.set_cpus(self._hilbert_cpulist(self.info, self.ranges))
 
     
@@ -59,11 +59,12 @@ class Simbase():
         """
 
         from load.a2c import hilbert3d
-
+        from load.amr import Amr
         if not(hasattr(self, 'amr')):
-            print("No AMR instance,")
-            print("Loading one...")
-            self.add_amr()
+            print("[sim._hilbert_cpulist] No AMR instance,")
+            print("[sim._hilbert_cpulist] Loading one...")
+            self.amr = Amr(self.info)
+
         nlevelmax = self.amr.header.nlevelmax
         nboundary = self.amr.header.nboundary
         ndim = self.info.ndim
@@ -191,100 +192,6 @@ class Simbase():
         return np.sort(cpu_list)
 
 
-
-    def deprecated_hilbert3d(self, x, y, z, bit_length, npoint):
-        '''
-        Calculate hilbert doamin decomposition
-        '''
-        state_diagram = np.zeros((8, 2, 12), dtype=np.int)
-        state_diagram[:, 0, 0] = [1, 2, 3, 2, 4, 5, 3, 5]
-        state_diagram[:, 1, 0] = [0, 1, 3, 2, 7, 6, 4, 5]
-        state_diagram[:, 0, 1] = [2, 6, 0, 7, 8, 8, 0, 7]
-        state_diagram[:, 1, 1] = [0, 7, 1, 6, 3, 4, 2, 5]
-        state_diagram[:, 0, 2] = [0, 9, 10, 9, 1, 1, 11, 11]
-        state_diagram[:, 1, 2] = [0, 3, 7, 4, 1, 2, 6, 5]
-        state_diagram[:, 0, 3] = [6, 0, 6, 11, 9, 0, 9, 8]
-        state_diagram[:, 1, 3] = [2, 3, 1, 0, 5, 4, 6, 7]
-        state_diagram[:, 0, 4] = [11, 11, 0, 7, 5, 9, 0, 7]
-        state_diagram[:, 1, 4] = [4, 3, 5, 2, 7, 0, 6, 1]
-        state_diagram[:, 0, 5] = [4, 4, 8, 8, 0, 6, 10, 6]
-        state_diagram[:, 1, 5] = [6, 5, 1, 2, 7, 4, 0, 3]
-        state_diagram[:, 0, 6] = [5, 7, 5, 3, 1, 1, 11, 11]
-        state_diagram[:, 1, 6] = [4, 7, 3, 0, 5, 6, 2, 1]
-        state_diagram[:, 0, 7] = [6, 1, 6, 10, 9, 4, 9, 10]
-        state_diagram[:, 1, 7] = [6, 7, 5, 4, 1, 0, 2, 3]
-        state_diagram[:, 0, 8] = [10, 3, 1, 1, 10, 3, 5, 9]
-        state_diagram[:, 1, 8] = [2, 5, 3, 4, 1, 6, 0, 7]
-        state_diagram[:, 0, 9] = [4, 4, 8, 8, 2, 7, 2, 3]
-        state_diagram[:, 1, 9] = [2, 1, 5, 6, 3, 0, 4, 7]
-        state_diagram[:, 0, 10] = [7, 2, 11, 2, 7, 5, 8, 5]
-        state_diagram[:, 1, 10] = [4, 5, 7, 6, 3, 2, 0, 1]
-        state_diagram[:, 0, 11] = [10, 3, 2, 6, 10, 3, 4, 4]
-        state_diagram[:, 1, 11] = [6, 1, 7, 0, 5, 2, 4, 3]
-
-        i_bit_mask = np.zeros(3 * bit_length)
-        ind = np.arange(bit_length)
-#       order      = dblarr(npoint)
-
-        for ip in range(npoint):  # check if loop range is valid.
-            # convert to binary
-            x_bit_mask = self._btest(x[ip], bit_length - 1, True)
-            y_bit_mask = self._btest(y[ip], bit_length - 1, True)
-            z_bit_mask = self._btest(z[ip], bit_length - 1, True)
-
-            # interleave bits
-            i_bit_mask[3 * ind + 2] = x_bit_mask
-            i_bit_mask[3 * ind + 1] = y_bit_mask
-            i_bit_mask[3 * ind + 0] = z_bit_mask
-
-            # build Hilbert ordering using state diagram
-            cstate = 0
-            # from bit_length -1 to 0 in descending order.
-            for i in range(bit_length - 1, -1, -1):
-                b2 = 0
-                if (i_bit_mask[3 * i + 2]):
-                    b2 = 1
-                b1 = 0
-                if (i_bit_mask[3 * i + 1]):
-                    b1 = 1
-                b0 = 0
-                if (i_bit_mask[3 * i + 0]):
-                    b0 = 1
-                sdigit = b2 * 4 + b1 * 2 + b0
-
-                nstate = state_diagram[sdigit, 0, cstate]
-                hdigit = state_diagram[sdigit, 1, cstate]
-                i_bit_mask[3 * i + 2] = self._btest(hdigit, 2, p_all=False)
-                i_bit_mask[3 * i + 1] = self._btest(hdigit, 1, p_all=False)
-                i_bit_mask[3 * i + 0] = self._btest(hdigit, 0, p_all=False)
-                cstate = nstate
-
-            # save Hilbert key as double precision real
-            order = [0.0] * npoint
-            for i in range(3 * bit_length):
-                b0 = 0
-                if (i_bit_mask[i]):
-                    b0 = 1
-                order[ip] += b0 * (2**i)
-        return order
-
-    def _btest(self, tmp, bit, p_all=False):
-        nbit = bit
-        if (not p_all and tmp != 0):
-            tmp2 = int(np.log2(tmp))+1
-            if (tmp2 > nbit):
-                nbit = tmp2
-
-        res = [0]*(nbit+1)
-
-        for j in np.arange(nbit + 1, 0, -1) - 1:
-            res[j] = np.int(tmp / 2**j)
-            tmp -= res[j] * 2**j
-
-        if (p_all):
-            return(res)
-        else:
-            return(res[bit])
 
 class Sim(Simbase):
     """

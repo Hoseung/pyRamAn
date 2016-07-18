@@ -6,14 +6,14 @@ Created on Thu Mar 26 21:32:55 2015
 """
 import numpy as np
 from load.utils import read_header, read_fortran, skip_fortran
-import load
+from load.sim import Simbase
 
 class Dummy():
     def __init__(self):
         pass
 
 
-class Hydro(load.sim.Simbase):
+class Hydro(Simbase):
     """
     
     Notes
@@ -23,7 +23,7 @@ class Hydro(load.sim.Simbase):
     and inherite the base class to define Hydro, Part, and Amr class.
     """
 
-    def __init__(self, info, amr=None, region=None, ranges=None, load=False):
+    def __init__(self, nout=None, info=None, amr=None, region=None, ranges=None, load=False):
         """
         Parameters
         ----------
@@ -32,6 +32,13 @@ class Hydro(load.sim.Simbase):
         ranges : array-like (3 by 2)
             region preceeds(?) ranges.
         """
+        if info is None:
+            assert nout is not None, "either info or onut is required"
+            from load.info import Info
+            print("[Hydro.__init__] Loading info")
+            info = Info(nout=nout)
+        self.info = info
+        self.nout = info.nout
 
         snout = str(info.nout).zfill(5)
         # file name
@@ -49,9 +56,10 @@ class Hydro(load.sim.Simbase):
         try:
             self.amr = amr
         except NameError:
-            print("Load amr first! \n")
+            print("Loading amr first! \n")
+
         if load:
-            self.amr2cell(ranges=self.info.ranges)
+            self.amr2cell()
 
     def _get_basic_info(self):
         f = open(self._fnbase + '00001', "rb")
@@ -112,9 +120,9 @@ class Hydro(load.sim.Simbase):
 
         if ranges is not None: self.set_ranges(ranges=ranges)
         # Set ranges
-        xmi, xma = self.info.ranges[0]
-        ymi, yma = self.info.ranges[1]
-        zmi, zma = self.info.ranges[2]
+        xmi, xma = self.ranges[0]
+        ymi, yma = self.ranges[1]
+        zmi, zma = self.ranges[2]
 
         work_dir = self.info.base + '/' + self.out_dir + 'output_' + str(self.info.nout).zfill(5)
         if verbose:

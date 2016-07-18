@@ -9,6 +9,8 @@ import pickle
 import load
 import tree.halomodule as hmo
 import general
+from load.part import Part
+from load.hydro import Hydro
 
 #%%
 def get_mstar_min(aexp):
@@ -422,7 +424,40 @@ def not_all_galaxies_have_hosthalo(allhal, allgal):
     allhal.idlists = newlist
 
 
-def extract_dm(halo, nout, wdir):
+def extract_dm(halo, info, wdir, region=None):
+    """
+    Load and return DM paticles at the location of the halo.
+    But unlike HaloMaker dump files, subhalos may be included.
+    """
+    if region is None:
+        import utils.sampling as smp
+        region = smp.set_region(xc=halo['x'],
+                                yc=halo['y'],
+                                zc=halo['z'],
+                                radius=halo['r'])
+    part = Part(info, region=region,
+                 base=wdir,
+                 ptypes=["dm id pos vel"],
+                 load=True)
+    return part.dm
+
+
+def extract_cell(halo, info, wdir, region=None, rscale=1.0):
+    if region is None:
+        import utils.sampling as smp
+        region = smp.set_region(xc=halo['x'],
+                                yc=halo['y'],
+                                zc=halo['z'],
+                                radius=halo['r']*rscale)
+
+    hh = Hydro(info=info, region=region,
+               base=wdir,
+               load=True)
+
+    return hh.cell
+
+
+def extract_dm_old(halo, nout, wdir):
     import utils.sampling as smp
     region = smp.set_region(xc=halo['x'],
                             yc=halo['y'],

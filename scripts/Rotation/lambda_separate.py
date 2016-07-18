@@ -35,6 +35,13 @@
         catalog now stored in dict, before transformed into pd.Dataframe().to_records()
         All modules are now moved to another file.
  
+    2016.07.18
+        worker(rscale_extract_cell=1.0) added. 
+        At least all the gas inside the DM halo of a galaxy should be considered.
+        gas inside the size of "stellar" galaxy has little correlation to the
+        total amount of gas physically related to a galaxy. 
+        Gas is colisional, and thus pressure can hold the gas even more extended than
+        the virial radius.        
 
 """
 import matplotlib
@@ -45,6 +52,7 @@ import collections
 from galaxy import galaxy
 import pickle
 import load
+from load.hydro import Hydro
 
 from analysis.cal_lambda import *
 
@@ -59,9 +67,8 @@ def worker(gals, hals, out_q, info, inds,
            with_cell=True,
            mk_gal_params={},
            cal_lambda_params={},
+           rscale_extract_cell=1.0,
            **kwargs):
-
-
 
     import galaxy.make_gal as mkg
     from galaxy import galaxy
@@ -84,14 +91,15 @@ def worker(gals, hals, out_q, info, inds,
         # print('!!!! mima vx in gm', min(gm.star['vx']), max(gm.star['vx']))
 
         if with_cell:
-            gm.cell = load.rd_GM.rd_cell(info.nout, galid, wdir=wdir)
+            #gm.cell = load.rd_GM.rd_cell(info.nout, galid, wdir=wdir)
+            gm.cell = extract_celll(hh, info, wdir, rscale=rscale_extract_cell)
         else:
             gm.cell = None
         if with_DM:
             if halid > 0 :
                 gm.dm = load.rd_GM.rd_dm(info.nout, halid, wdir=wdir)
             else:
-                gm.dm = extract_dm(hh, info.nout, wdir)
+                gm.dm = extract_dm(hh, info, wdir)
                 # The	se are not in the final units that I want,
                 # but in the same units as GM outputs to make later conversion steps simpler.
                 gm.dm['x'] = (gm.dm['x'] - 0.5) * info.pboxsize
@@ -260,9 +268,9 @@ def main(wdir='./',
     cal_lambda_params = dict(npix_per_reff=5,
                              rscale=3.0, 
                              method='ellip',
-                             n_pseudo=60,
+                             n_pseudo=1,
                              verbose=False,
-                             voronoi=voronoi_dict,
+                             voronoi=None,#voronoi_dict,
                              mge_interpol = True)
 
 
