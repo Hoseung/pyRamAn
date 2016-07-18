@@ -75,11 +75,11 @@ class Part(load.sim.Simbase):
 # Rule of thumb: initialize everything in __init__
 # Otherwise, a method may fail to find an object to act on.
 # This is called 'Object consistency'
-    def __init__(self, info, dmo=False, ptypes=None, base='./', 
+    def __init__(self, nout=None, info=None, dmo=False, ptypes=None, base='./', 
                  region=None, ranges=None,
                  data_dir='snapshots/', dmref=False, dmvel=False,
-                 dmmass=True):
-        """        
+                 dmmass=True, load=False):
+        """
         parameters
         ----------
         ptypes : list of particle type and information. 
@@ -92,8 +92,18 @@ class Part(load.sim.Simbase):
             Set True if the snapshot has DM ref information.
         dmvel : logical
 
+        Notes
+        -----
+        info is required for domain decomposition.
+
         """
+
+        if info is None:
+            assert nout is not None, "either info or onut is required"
+            from load.info import Info
+            info = Info(nout=nout)
         self.info = info
+        self.nout = info.nout
         self.ptypes = ptypes
         self.ncpu = 0
         self.nstar = 0
@@ -110,12 +120,12 @@ class Part(load.sim.Simbase):
             ranges = region['ranges']
         if ranges is not None:
             self.set_ranges(ranges=ranges)
-        elif info.ranges is not None:
-            self.set_ranges(ranges=info.ranges)
         else:
-            self.set_ranges(ranges=[[0,1]]*3)
+            try:
+                self.set_ranges(ranges=self.info.ranges)
+            except:
+                self.set_ranges(ranges=[[0,1]]*3)
     
-#        self.cpus = info.cpus
         
         self.set_fbase(self.base, data_dir)
         # header structure
@@ -130,26 +140,18 @@ class Part(load.sim.Simbase):
         self._get_basic_info()
         # Depending on user's choice, generate dm, star, sink classes
 
+        if load:
+            self.load()
+
     def mass2msun(self):
+        """
+        No use case?
+        """
         for ptype in self.pt:
             part = getattr(self, ptype)
             if max(part["m"]) < 100:
                 part["m"] *= self.info.msun
 
-    def set_ranges(self, ranges=None):
-        if ranges is None:
-            ranges = self.ranges
-        nr = np.asarray(ranges)
-        if not(nr.shape[0] == 3 and nr.shape[1] == 2):
-            # Because actual operation on the given input(ranges)
-            # does not take place soon, it's not a good place to use
-            # try & except clause. There is nothing to try yet.
-            print(' Error!')
-            print('Shape of ranges is wrong:', nr.shape)
-            print('example : [[0.1,0.3],[0.2,0.4],[0.6,0.8]] \n')
-        else:
-            self.ranges = ranges
-            self.set_cpus(self._hilbert_cpulist(self.info, self.ranges))
 
     def set_base(self, base):
         """
@@ -164,16 +166,8 @@ class Part(load.sim.Simbase):
             Sets Working directory.
         """
         from os import path
-        snout = str(self.info.nout).zfill(5)
+        snout = str(self.nout).zfill(5)
         self._fbase = path.abspath(path.join(self.base, data_dir +'output_' + snout + '/part_' + snout + '.out'))
-
-    def set_cpus(self, cpus):
-        self.cpus = cpus
-        try:
-            print("Updating info.cpus")
-            self.info._set_cpus(self.get_cpus())
-        except AttributeError:
-            print("No info._set_cpus attribute??")
 
     def setwhattoread(self, ptypes):
         """
@@ -265,10 +259,8 @@ class Part(load.sim.Simbase):
                 self.load_general(self, **kwargs)
 
     def get_dmo_ntot(self):
-#        ranges = self.info.ranges
         ranges = self.ranges
         ndm_tot = 0
-#        for icpu in self.info.cpus:
         for icpu in self.cpus:
             with open(self._fbase + str(icpu).zfill(5), "rb") as f:
             # skip header
@@ -298,9 +290,8 @@ class Part(load.sim.Simbase):
         # function argument is evaluated on function defining time,
         # So you can't pass the actual value of self.info instance
         if ranges is None:
-            ranges = self.info.ranges
+            ranges = self.ranges
         # Total particle number from selected cpus.
-#        npart_arr = self._get_npart_arr(self.info.cpus)
         npart_arr = self._get_npart_arr(self.cpus)
         if verbose:
             print("Loading particle... \n ranges:", ranges)
@@ -312,7 +303,6 @@ class Part(load.sim.Simbase):
         self.dm = np.recarray(ndm_tot, dtype=dtype)
         i_skip_dm = 0
 
-#        for icpu in self.info.cpus:
         for icpu in self.cpus:
             if verbose:
                 self.print_cpu(icpu)
@@ -421,16 +411,12 @@ class Part(load.sim.Simbase):
         self.star.z = np.zeros(self.ndm, dtype='f8')                
         '''
         if ranges is None:
-#            ranges = self.info.ranges
             ranges = self.ranges
         print("Loading particle... \n ranges:", ranges)
         # Total particle number from selected cpus.
 #        npart_tot
-#        npart_arr = self._get_npart_arr(self.info.cpus)
         npart_arr = self._get_npart_arr(self.cpus)
-#        print(self.info.cpus)
         print('npart_arr:', npart_arr)
-        #npart_tot = sum(npart_arr)
 
         if hasattr(self.ptypes, "dm"):
             i_skip_dm = 0
@@ -670,17 +656,16 @@ class Part(load.sim.Simbase):
     def load_fortran(self, return_meta=False, read_metal=True):
         from load import part_shared
         print("Loading by fortran module")
-        xmi = self.info.ranges[0][0]
-        xma = self.info.ranges[0][1]
-        ymi = self.info.ranges[1][0]
-        yma = self.info.ranges[1][1]
-        zmi = self.info.ranges[2][0]
-        zma = self.info.ranges[2][1]
-        work_dir = self.info.base + '/snapshots/output_' + str(self.info.nout).zfill(5)
-        print("part.cpus", self.cpus)
+        xmi = self.ranges[0][0]
+        xma = self.ranges[0][1]
+        ymi = self.ranges[1][0]
+        yma = self.ranges[1][1]
+        zmi = self.ranges[2][0]
+        zma = self.ranges[2][1]
+        work_dir = self.base + '/snapshots/output_' + str(self.nout).zfill(5)
         ndm_actual, nstar_actual, nsink_actual = part_shared.count_part( \
                             work_dir, xmi, xma, ymi, yma, zmi, zma, self.cpus)
-        print(ndm_actual, nstar_actual, nsink_actual)
+        #print(ndm_actual, nstar_actual, nsink_actual)
         self.ndm = ndm_actual
         self.nstar = nstar_actual
         self.nsink = nsink_actual
@@ -700,37 +685,39 @@ class Part(load.sim.Simbase):
                 nstar_actual, ndm_actual, nsink_actual,
                 work_dir, xmi, xma, ymi, yma, zmi, zma, read_metal, self.cpus)
 
-        dtype_star = [('x', '<f8'), ('y', '<f8'), ('z', '<f8'),
-                      ('vx', '<f8'), ('vy', '<f8'), ('vz', '<f8'),
-                      ('m', '<f8'), ('time', '<f8'), ('id', '<i4')]
-        if read_metal:
-            dtype_star.extend(('metal', '<f8'))
+        if 'star' in self.pt:
+            dtype_star = [('x', '<f8'), ('y', '<f8'), ('z', '<f8'),
+                          ('vx', '<f8'), ('vy', '<f8'), ('vz', '<f8'),
+                          ('m', '<f8'), ('time', '<f8'), ('id', '<i4')]
+            if read_metal:
+                dtype_star.extend(('metal', '<f8'))
+         
+            self.star = np.zeros(self.nstar, dtype=dtype_star)
+            self.star['x'] = star_float[:,0]
+            self.star['y'] = star_float[:,1]
+            self.star['z'] = star_float[:,2]
+            self.star['vx'] = star_float[:,3]
+            self.star['vy'] = star_float[:,4]
+            self.star['vz'] = star_float[:,5]
+            self.star['m'] = star_float[:,6]
+            self.star['time'] = star_float[:,7]
+            if read_metal:
+                self.star['metal'] = star_float[:,8]
+            self.star['id'] = star_int[:]
 
-        self.star = np.zeros(self.nstar, dtype=dtype_star)
-        self.star['x'] = star_float[:,0]
-        self.star['y'] = star_float[:,1]
-        self.star['z'] = star_float[:,2]
-        self.star['vx'] = star_float[:,3]
-        self.star['vy'] = star_float[:,4]
-        self.star['vz'] = star_float[:,5]
-        self.star['m'] = star_float[:,6]
-        self.star['time'] = star_float[:,7]
-        if read_metal:
-            self.star['metal'] = star_float[:,8]
-        self.star['id'] = star_int[:]
-
-        dtype_dm = [('x', '<f8'), ('y', '<f8'), ('z', '<f8'),('vx', '<f8'),
-                    ('vy', '<f8'), ('vz', '<f8'), ('m', '<f8'), ('id', '<i4')]
-
-        self.dm = np.zeros(self.ndm + self.nsink, dtype=dtype_dm)
-        self.dm['x'] = dm_float[:,0]
-        self.dm['y'] = dm_float[:,1]
-        self.dm['z'] = dm_float[:,2]
-        self.dm['vx'] = dm_float[:,3]
-        self.dm['vy'] = dm_float[:,4]
-        self.dm['vz'] = dm_float[:,5]
-        self.dm['m'] = dm_float[:,6]
-        self.dm['id'] = dm_int[:]
+        if 'dm' in self.pt:
+            dtype_dm = [('x', '<f8'), ('y', '<f8'), ('z', '<f8'),('vx', '<f8'),
+                        ('vy', '<f8'), ('vz', '<f8'), ('m', '<f8'), ('id', '<i4')]
+         
+            self.dm = np.zeros(self.ndm + self.nsink, dtype=dtype_dm)
+            self.dm['x'] = dm_float[:,0]
+            self.dm['y'] = dm_float[:,1]
+            self.dm['z'] = dm_float[:,2]
+            self.dm['vx'] = dm_float[:,3]
+            self.dm['vy'] = dm_float[:,4]
+            self.dm['vz'] = dm_float[:,5]
+            self.dm['m'] = dm_float[:,6]
+            self.dm['id'] = dm_int[:]
 
         print("Fortran-reading done")
         # now, how to deallocate it?

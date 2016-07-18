@@ -19,8 +19,9 @@ Install packages ::
 
   (venv) $ pip3 install numpy scipy matplotlib pandas astropy pyfits ipython cython
 
-  ** There are a few scripts using h5py, or vispy.
+   There are a few scripts using h5py, or vispy.
    But let's just ignore them. 
+   sphinx, numpydoc and autodoc are needed to build this document.
 
 
 Manual compilation
@@ -83,6 +84,12 @@ GalaxyMaker/HaloMaker dump files have different units.
   :language: python3
          
          
+Raw data and GalaxyMaker dump2
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+In slightly neater way.
+
+.. literalinclude:: /examples/Raw_and_dump2.py
+  :language: python3
 
 
 

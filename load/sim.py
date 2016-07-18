@@ -7,30 +7,64 @@ Created on Tue Jan 13 23:27:16 2015
 
 import numpy as np
 
+
+
 class Simbase():
     """ 
     base    
     """
     def __init__(self):
-        
         pass
     
     def add_amr(self):
-        from load import amr
-        self.amr = amr.Amr(self.info)
-        print("An AMR instance is created\n")
+        from load.amr import Amr
+        self.amr = Amr(self.info)
+        print("An AMR instance is created\n", self.__class__.__name__)
 
+    def get_cpus(self):
+        return self.cpus
+
+    def set_cpus(self, cpus):
+        self.cpus = np.array(cpus)
+        print("Updating info.cpus")
+        #self.info._set_cpus(self.get_cpus())
+
+    def show_cpus(self):
+        print(" ncpus : %s \n" % self.get_cpus())
+
+    def set_ranges(self, ranges=[[0, 1], [0, 1], [0, 1]]):
+        nr = np.asarray(ranges)
+        if not(nr.shape[0] == 3 and nr.shape[1] == 2):
+            # Because actual operation on the given input(ranges)
+            # does not take place soon, it's not a good place to use
+            # try & except clause. There is nothing to try yet.
+            print(' Error!')
+            print('Shape of ranges is wrong:', nr.shape)
+            print('example : [[0.1,0.3],[0.2,0.4],[0.6,0.8]] \n')
+        else:
+            self.ranges = ranges
+#            try:
+#                self.info._set_ranges(self.ranges)
+#            except AttributeError:
+#                print("There is no info._set_ranges attribute")
+            self.set_cpus(self._hilbert_cpulist(self.info, self.ranges))
+
+    
     def _hilbert_cpulist(self, info, ranges):
         """
-        After determining cpu numbers, read the cpu files and cut off data
+        After determining cpus, read the cpu files and cut off data
         that are outside ranges.
         -> cpu files contain data points within a given ragnes
         BUT! they also contain other data points outside the ragnes.
         """
+
+        from load.a2c import hilbert3d
+        from load.amr import Amr
         if not(hasattr(self, 'amr')):
-            print("No AMR instance,")
-            print("Loading one...")
-            self.add_amr()
+            print("[sim._hilbert_cpulist] No AMR instance,")
+            print("[sim._hilbert_cpulist] Loading one...")
+            self.amr = Amr(self.info)
+
         nlevelmax = self.amr.header.nlevelmax
         nboundary = self.amr.header.nboundary
         ndim = self.info.ndim
@@ -68,7 +102,7 @@ class Simbase():
         dmax = max([xxmax-xxmin, yymax-yymin, zzmax-zzmin])
         for ilevel in range(1, lmax):
             dx = 0.5**ilevel
-            if (dx <= dmax):
+            if (dx < dmax):
                 lmin = ilevel
                 break
 
@@ -81,7 +115,7 @@ class Simbase():
         kmin = 0
         kmax = 0
 
-        if (bit_length >= 0):
+        if (bit_length > 0):
             imin = int(xxmin * maxdom)
             imax = imin + 1
             jmin = int(yymin * maxdom)
@@ -91,24 +125,31 @@ class Simbase():
 
         dkey = (2**(nlevelmax+1)/maxdom)**(ndim)
         ndom = 1
-        if (bit_length > 0):
-            ndom = 8
+        if (bit_length > 0): ndom = 8
         idom = np.zeros(9)
         jdom = np.zeros(9)
         kdom = np.zeros(9)
-        idom[1] = imin; idom[2] = imax; idom[3] = imin; idom[4] = imax
-        idom[5] = imin; idom[6] = imax; idom[7] = imin; idom[8] = imax
-        jdom[1] = jmin; jdom[2] = jmin; jdom[3] = jmax; jdom[4] = jmax
-        jdom[5] = jmin; jdom[6] = jmin; jdom[7] = jmax; jdom[8] = jmax
-        kdom[1] = kmin; kdom[2] = kmin; kdom[3] = kmin; kdom[4] = kmin
-        kdom[5] = kmax; kdom[6] = kmax; kdom[7] = kmax; kdom[8] = kmax
+        idom[1] = imin; idom[2] = imax
+        idom[3] = imin; idom[4] = imax
+        idom[5] = imin; idom[6] = imax
+        idom[7] = imin; idom[8] = imax
+        jdom[1] = jmin; jdom[2] = jmin
+        jdom[3] = jmax; jdom[4] = jmax
+        jdom[5] = jmin; jdom[6] = jmin
+        jdom[7] = jmax; jdom[8] = jmax
+        kdom[1] = kmin; kdom[2] = kmin
+        kdom[3] = kmin; kdom[4] = kmin
+        kdom[5] = kmax; kdom[6] = kmax
+        kdom[7] = kmax; kdom[8] = kmax
 
         bounding_min = np.zeros(9)
         bounding_max = np.zeros(9)
 
         for i in range(1, ndom + 1):
             if bit_length > 0:
-                order_min = self._hilbert3d([idom[i]], [jdom[i]], [kdom[i]],
+                #order_min = self._hilbert3d([idom[i]], [jdom[i]], [kdom[i]],
+                #                            bit_length, 1)
+                order_min = hilbert3d([idom[i]], [jdom[i]], [kdom[i]],
                                             bit_length, 1)
                 # order_min, array or single variable??
                 # Will it be vectorized??
@@ -129,10 +170,10 @@ class Simbase():
         for impi in range(1, ncpu + 1):
             for i in range(1, ndom + 1):
                 if ((bound_key[impi - 1] <= bounding_min[i]) and
-                   (bound_key[impi] > bounding_min[i])):
+                    (bound_key[impi    ] >  bounding_min[i])):
                     cpu_min[i] = impi
-                if ((bound_key[impi - 1] < bounding_max[i]) and
-                   (bound_key[impi] >= bounding_max[i])):
+                if ((bound_key[impi - 1] <  bounding_max[i]) and
+                    (bound_key[impi    ] >= bounding_max[i])):
                     cpu_max[i] = impi
 
         ncpu_read = 0
@@ -145,115 +186,12 @@ class Simbase():
                     cpu_list[ncpu_read] = j
                     cpu_read[j] = 1
 
-        for ilevel in range(1, lmax + 1):
-            nx_full = 2**ilevel
-            ny_full = 2**ilevel
-            nz_full = 2**ilevel
-            imin = xxmin * (nx_full) + 1
-            imax = xxmax * (nx_full) + 1
-            jmin = yymin * (ny_full) + 1
-            jmax = yymax * (ny_full) + 1
-            kmin = zzmin * (nz_full) + 1
-            kmax = zzmax * (nz_full) + 1
-
 # Sort cpu_list in descending npart order for memory efficiency
         cpu_list = cpu_list[cpu_list > 0]  # crop empty part
 
         return np.sort(cpu_list)
 
-    def _hilbert3d(self, x, y, z, bit_length, npoint):
-        '''
-        Calculate hilbert doamin decomposition
-        '''
-        state_diagram = np.zeros((8, 2, 12), dtype=np.int)
-        state_diagram[:, 0, 0] = [1, 2, 3, 2, 4, 5, 3, 5]
-        state_diagram[:, 1, 0] = [0, 1, 3, 2, 7, 6, 4, 5]
-        state_diagram[:, 0, 1] = [2, 6, 0, 7, 8, 8, 0, 7]
-        state_diagram[:, 1, 1] = [0, 7, 1, 6, 3, 4, 2, 5]
-        state_diagram[:, 0, 2] = [0, 9, 10, 9, 1, 1, 11, 11]
-        state_diagram[:, 1, 2] = [0, 3, 7, 4, 1, 2, 6, 5]
-        state_diagram[:, 0, 3] = [6, 0, 6, 11, 9, 0, 9, 8]
-        state_diagram[:, 1, 3] = [2, 3, 1, 0, 5, 4, 6, 7]
-        state_diagram[:, 0, 4] = [11, 11, 0, 7, 5, 9, 0, 7]
-        state_diagram[:, 1, 4] = [4, 3, 5, 2, 7, 0, 6, 1]
-        state_diagram[:, 0, 5] = [4, 4, 8, 8, 0, 6, 10, 6]
-        state_diagram[:, 1, 5] = [6, 5, 1, 2, 7, 4, 0, 3]
-        state_diagram[:, 0, 6] = [5, 7, 5, 3, 1, 1, 11, 11]
-        state_diagram[:, 1, 6] = [4, 7, 3, 0, 5, 6, 2, 1]
-        state_diagram[:, 0, 7] = [6, 1, 6, 10, 9, 4, 9, 10]
-        state_diagram[:, 1, 7] = [6, 7, 5, 4, 1, 0, 2, 3]
-        state_diagram[:, 0, 8] = [10, 3, 1, 1, 10, 3, 5, 9]
-        state_diagram[:, 1, 8] = [2, 5, 3, 4, 1, 6, 0, 7]
-        state_diagram[:, 0, 9] = [4, 4, 8, 8, 2, 7, 2, 3]
-        state_diagram[:, 1, 9] = [2, 1, 5, 6, 3, 0, 4, 7]
-        state_diagram[:, 0, 10] = [7, 2, 11, 2, 7, 5, 8, 5]
-        state_diagram[:, 1, 10] = [4, 5, 7, 6, 3, 2, 0, 1]
-        state_diagram[:, 0, 11] = [10, 3, 2, 6, 10, 3, 4, 4]
-        state_diagram[:, 1, 11] = [6, 1, 7, 0, 5, 2, 4, 3]
 
-        i_bit_mask = np.zeros(3 * bit_length)
-        ind = np.arange(bit_length)
-#       order      = dblarr(npoint)
-
-        for ip in range(npoint):  # check if loop range is valid.
-            # convert to binary
-            x_bit_mask = self._btest(x[ip], bit_length - 1, True)
-            y_bit_mask = self._btest(y[ip], bit_length - 1, True)
-            z_bit_mask = self._btest(z[ip], bit_length - 1, True)
-
-            # interleave bits
-            i_bit_mask[3 * ind + 2] = x_bit_mask
-            i_bit_mask[3 * ind + 1] = y_bit_mask
-            i_bit_mask[3 * ind + 0] = z_bit_mask
-
-            # build Hilbert ordering using state diagram
-            cstate = 0
-            # from bit_length -1 to 0 in descending order.
-            for i in range(bit_length - 1, -1, -1):
-                b2 = 0
-                if (i_bit_mask[3 * i + 2]):
-                    b2 = 1
-                b1 = 0
-                if (i_bit_mask[3 * i + 1]):
-                    b1 = 1
-                b0 = 0
-                if (i_bit_mask[3 * i + 0]):
-                    b0 = 1
-                sdigit = b2 * 4 + b1 * 2 + b0
-
-                nstate = state_diagram[sdigit, 0, cstate]
-                hdigit = state_diagram[sdigit, 1, cstate]
-                i_bit_mask[3 * i + 2] = self._btest(hdigit, 2, p_all=False)
-                i_bit_mask[3 * i + 1] = self._btest(hdigit, 1, p_all=False)
-                i_bit_mask[3 * i + 0] = self._btest(hdigit, 0, p_all=False)
-                cstate = nstate
-
-            # save Hilbert key as double precision real
-            order = [0.0] * npoint
-            for i in range(3 * bit_length):
-                b0 = 0
-                if (i_bit_mask[i]):
-                    b0 = 1
-                order[ip] += b0 * (2**i)
-        return order
-
-    def _btest(self, tmp, bit, p_all=False):
-        nbit = bit
-        if (not p_all and tmp != 0):
-            tmp2 = int(np.log2(tmp))+1
-            if (tmp2 > nbit):
-                nbit = tmp2
-
-        res = [0]*(nbit+1)
-
-        for j in np.arange(nbit + 1, 0, -1) - 1:
-            res[j] = np.int(tmp / 2**j)
-            tmp -= res[j] * 2**j
-
-        if (p_all):
-            return(res)
-        else:
-            return(res[bit])
 
 class Sim(Simbase):
     """
@@ -309,7 +247,6 @@ class Sim(Simbase):
         # info appreciates nout and base (not mandatary, though)
         self.dmo = dmo
         # DMO runs are slightly different!
-        #print("data_dir =", data_dir)
         self.set_data_dir(data_dir)
         self.add_info()
         # set_data_dir and set_range needs info instance be exist.
@@ -416,41 +353,6 @@ class Sim(Simbase):
         else:
             print("Use part.load() to load particle")
 
-    def get_cpus(self):
-        return self.cpus
-
-    def set_cpus(self, cpus):
-        self.cpus = cpus
-        try:
-            print("Updating info.cpus")
-            self.info._set_cpus(self.get_cpus())
-        except AttributeError:
-            print("No info._set_cpus attribute??")
-        #self.show_cpus()
-
-    def show_cpus(self):
-        print(" ncpus : %s \n" % self.get_cpus())
-
-    def set_ranges(self, ranges=[[0, 1], [0, 1], [0, 1]]):
-        nr = np.asarray(ranges)
-        if not(nr.shape[0] == 3 and nr.shape[1] == 2):
-            # Because actual operation on the given input(ranges)
-            # does not take place soon, it's not a good place to use
-            # try & except clause. There is nothing to try yet.
-            print(' Error!')
-            print('Shape of ranges is wrong:', nr.shape)
-            print('example : [[0.1,0.3],[0.2,0.4],[0.6,0.8]] \n')
-        else:
-            self.ranges = ranges
-            try:
-                self.info._set_ranges(self.ranges)
-            except AttributeError:
-                print("There is no info._set_ranges attribute")
-            self.show_ranges()
-            self.set_cpus(self._hilbert_cpulist(self.info, self.ranges))
-
-    def show_ranges(self):
-        print("Ranges = %s\n" % self.ranges)
 
     def search_zoomin_region(self, *args, **kwargs):
         """
