@@ -39,7 +39,7 @@ class Dummy():
 class Gal():
     def __init__(self, nout, idgal, wdir='./', idhal = -1, load=True, info=None):
         """
-        
+		salfjsadsadj
         Parameters
         ----------
         load : logical (Default = True)
@@ -117,14 +117,14 @@ class Gal():
         if info is not None and not hasattr(self.info, "unit_l"):
             self._get_minimal_info(info) 
         if star == "gm":
-            self.header, self.star = _rd_gal(self.nout, self.gid, wdir="./", metal=True)
+            self.header, self.star = _rd_gal(self.nout, self.gid, wdir=self.wdir, metal=True)
             self.units.star.set_system("gm")
             if self.info is not None:
                 self.center_code = self.header['xg'] / self.info.pboxsize + 0.5
                 self.get_rgal()
                 self.region = sampling.set_region(centers=self.center_code, radius=1.5*self.rgal)
         if dm == "gm":
-            self.dm = rd_dm(self.nout, self.gid, wdir="./")
+            self.dm = rd_dm(self.nout, self.gid, wdir=self.wdir)
             self.units.dm.set_system("gm")
         elif dm == 'raw':
             from load.part import Part
@@ -133,7 +133,7 @@ class Gal():
             self.dm = pp.dm
             self.units.dm.set_system("code")
         if cell == "gm":
-            self.cell = rd_cell(self.nout, self.gid, wdir="./", metal=True)
+            self.cell = rd_cell(self.nout, self.gid, wdir=self.wdir, metal=True)
             self.units.cell.set_system("gm")
         elif cell == "raw":
             from load.hydro import Hydro
