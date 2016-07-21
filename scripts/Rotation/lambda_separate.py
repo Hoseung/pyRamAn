@@ -176,7 +176,8 @@ def main(wdir='./',
          cat_suffix="",
          r_cluster_scale=2.9,
          with_DM=False,
-         with_cell=False):
+         with_cell=False,
+         n_pseudo=60):
 
     from tree import treemodule
     import os
@@ -268,7 +269,7 @@ def main(wdir='./',
     cal_lambda_params = dict(npix_per_reff=5,
                              rscale=3.0, 
                              method='ellip',
-                             n_pseudo=1,
+                             n_pseudo=n_pseudo,
                              verbose=False,
                              voronoi=None,#voronoi_dict,
                              mge_interpol = True)

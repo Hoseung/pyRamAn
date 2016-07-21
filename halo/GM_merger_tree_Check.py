@@ -69,48 +69,6 @@ def recursive_tree(idx, tt, nstep, ax, x0, y0, dx, mass_unit=1e10):
                 recursive_tree(i, tt, nstep - 1, ax, x, y0 + 1, dx, mass_unit=mass_unit)
 
 
-# In[2]:
-
-from tree import treemodule
-from tree import treeutils
-import pickle
-import numpy as np
-
-alltrees = treemodule.CTree()
-wdir = '/home/hoseung/Work/data/05427/'
-is_gal = True
-
-if is_gal:
-    # Galaxy tree
-    tree_path = 'GalaxyMaker/Trees/'
-else:
-    # halo tree
-    tree_path = 'halo/Trees/'
-
-load_extended_tree = False
-    
-if load_extended_tree:    
-    try:
-        alltrees = pickle.load(open(wdir + tree_path + "extended_tree.pickle", "rb" ))
-        print("Loaded an extended tree")
-    except:
-        load_extended_tree = False
-
-if not load_extended_tree:
-    """
-        info file of each snapshot are required.
-    """
-    alltrees = treemodule.CTree()
-    alltrees.load(filename= wdir + tree_path + 'tree_0_0_0.dat')
-    # Fix nout -----------------------------------------------------
-    nout_max = alltrees.data['nout'].max()
-    alltrees.data['nout'] += 187 - nout_max
-    print("------ NOUT fixed")
-    alltrees.data = ctu.augment_tree(alltrees.data, wdir, is_gal=is_gal)
-    print("------ tree data extended")
-
-
-
 # In[4]:
 
 def extract_main_tree(treedata, idx=None, verbose=False):
@@ -151,7 +109,18 @@ def plot_atree(atree, galid):
     plt.savefig(wdir + "mergertrees/" + sidgal + '.png')
 
 
-# In[5]:
+# In[2]:
+
+from tree import treemodule
+from tree import treeutils
+import pickle
+import numpy as np
+
+alltrees = treemodule.CTree()
+wdir = './'
+
+
+alltrees = treemodule.load_tree(wdir)
 
 import matplotlib.pyplot as plt
 
