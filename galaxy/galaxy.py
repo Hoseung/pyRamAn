@@ -12,6 +12,14 @@ Measure ICL fraction by merger channel
 Inherites halo.HaloMeta. HaloMeta does not contain 
 positional and kinematic information of the halo. This is good because
 recalculated center of galaxy is likely to deviate from the center of the halo. 
+
+
+ATTENTION!!
+
+with RdYlDu color mpa, empty cells in the velocity map are yellow. 
+cells with no mass should be NaN, not 0. 
+Fix it
+
 """
     
 import numpy as np
@@ -1861,6 +1869,7 @@ class Galaxy(object):
             tick_locator = ticker.MaxNLocator(nbins=3)
             cb.locator = tick_locator
             cb.update_ticks()
+            im.set_cmap('RdYlBu')
             ax.set_title("velocity map")
             ax.set_xlabel("["+ r'$R/R_{eff}$'+"]")
             ax.set_xticks(np.linspace(0, len(self.mmap), num=3))

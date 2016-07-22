@@ -127,7 +127,7 @@ class Gal():
             self.units.dm.set_system("gm")
         elif dm == 'raw':
             from load.part import Part
-            pp = Part(self.info, ptypes=['dm id pos vel'],
+            pp = Part(info=self.info, ptypes=['dm id pos vel'],
                   region=self.region, load=True)
             self.dm = pp.dm
             self.units.dm.set_system("code")
@@ -136,7 +136,7 @@ class Gal():
             self.units.cell.set_system("gm")
         elif cell == "raw":
             from load.hydro import Hydro
-            hh = Hydro(self.info, region=self.region)
+            hh = Hydro(info=self.info, region=self.region)
             hh.amr2cell()
             self.cell = hh.cell
             self.units.cell.set_system("code")

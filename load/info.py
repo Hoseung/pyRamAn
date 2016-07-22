@@ -14,7 +14,7 @@ class Info:
             df = defaults.Default()
             data_dir = df.dir_snapshot
         self.data_dir = data_dir
-        self.fn = None
+        self.fn = fn
         
         if nout is not None or base is not None or fn is not None:
             self.setup(nout=nout, base=base, fn=fn)

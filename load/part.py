@@ -99,8 +99,9 @@ class Part(load.sim.Simbase):
         """
 
         if info is None:
-            assert nout is not None, "either info or onut is required"
+            assert nout is not None, "either info or nout is required"
             from load.info import Info
+            print("CCCC",nout)
             info = Info(nout=nout)
         self.info = info
         self.nout = info.nout
