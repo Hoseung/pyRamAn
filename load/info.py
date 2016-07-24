@@ -8,13 +8,15 @@ import numpy as np
 
 class Info:
     def __init__(self, nout = None, base = './',
-                 fn = None, load=True, data_dir=None):
+                 fn = None, load=True, data_dir=None,
+                 cosmological=True):
         if data_dir is None:
             from general import defaults
             df = defaults.Default()
             data_dir = df.dir_snapshot
         self.data_dir = data_dir
         self.fn = fn
+        self.cosmological = cosmological
         
         if nout is not None or base is not None or fn is not None:
             self.setup(nout=nout, base=base, fn=fn)
@@ -132,7 +134,8 @@ class Info:
         self.ob = rarr[7]
         self.msun = scale_d*scale_l**3/m_sun
         self.cboxsize = self.H0 * self.pboxsize / self.aexp * 1e-2
-        self.tGyr = utils.cosmology.time2gyr(rarr[1], z_now = self.zred, info = self)
+        if self.cosmological:
+            self.tGyr = utils.cosmology.time2gyr(rarr[1], z_now = self.zred, info = self)
 
     def keys(self):
         from pprint import pprint

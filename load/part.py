@@ -475,12 +475,17 @@ class Part(load.sim.Simbase):
                 # star particles have positive creation time.. no!
                 # mostly positive ID, but young stars
                 # (before SN burst) have negative IDs.
-                i_star = (abs(t_temp) != 0.0) # negative creation time for young star!
-                i_dm = np.logical_and(id_temp > 0, t_temp == 0)
+                if self.cosmology:
+                    i_star = (abs(t_temp) != 0.0) # negative creation time for young star!
+                    i_dm = np.logical_and(id_temp > 0, t_temp == 0)
                 # Sink (BH) particles have negative ID and creation time 0.
-                i_sink = np.logical_and(id_temp < 0, t_temp == 0)
+                    i_sink = np.logical_and(id_temp < 0, t_temp == 0)
+                else:
+                    i_star = (abs(t_temp) != 0.0) # negative creation time for young star!
+                    i_dm = np.logical_and(id_temp > 0, t_temp == 0)
+                    
                 
-                # Dark Matter particles have 0 creatino time, positive ID
+                # Dark Matter particles have 0 creation time, positive ID
                 nstar_icpu = sum(i_star)
                 ndm_icpu = sum(i_dm)
                 nsink_icpu = sum(i_sink)
