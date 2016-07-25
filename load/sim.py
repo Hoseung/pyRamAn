@@ -226,7 +226,7 @@ class Sim(Simbase):
     """
     def __init__(self, nout, base='./', data_dir='snapshots/',
                  ranges=[[0.0,1.0],[0.0,1.0],[0.0,1.0]], dmo=False, 
-                 setup=True, region=None):
+                 setup=True, region=None, cosmological=True):
         """
             Parameters
             ----------
@@ -246,7 +246,7 @@ class Sim(Simbase):
         self.set_base(base)
         # info appreciates nout and base (not mandatary, though)
         self.dmo = dmo
-        # DMO runs are slightly different!
+        self.cosmological = cosmological
         self.set_data_dir(data_dir)
         self.add_info()
         # set_data_dir and set_range needs info instance be exist.
@@ -327,7 +327,11 @@ class Sim(Simbase):
             
     def add_info(self, load=False):
         from load import info
-        self.info = info.Info(self.nout, self.base, load=load, data_dir = self.data_dir)
+        self.info = info.Info(self.nout,
+                              self.base,
+                              load=load,
+                              data_dir = self.data_dir,
+                              cosmological = self.cosmological)
 #        self.info.setup()
 
     def add_part(self, ptypes=[], load=True, fortran=True, dmo=False, **kwargs):
