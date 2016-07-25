@@ -13,8 +13,8 @@ class Simbase():
     """ 
     base    
     """
-    def __init__(self):
-        pass
+    def __init__(self, cosmology=True):
+        self.cosmology=cosmology
     
     def add_amr(self):
         from load.amr import Amr

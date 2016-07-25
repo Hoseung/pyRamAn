@@ -75,10 +75,17 @@ class Part(load.sim.Simbase):
 # Rule of thumb: initialize everything in __init__
 # Otherwise, a method may fail to find an object to act on.
 # This is called 'Object consistency'
+#
+# Part inherits from Simbase, but if I define __init__ once again here,
+# the __init__ methods of Simbase and Part does not merge. 
+# (Think about it, that's very strange).
+# Instead, Simbase.__init__ is overridden.
+#
+#
     def __init__(self, nout=None, info=None, dmo=False, ptypes=None, base='./', 
                  region=None, ranges=None,
                  data_dir='snapshots/', dmref=False, dmvel=False,
-                 dmmass=True, load=False):
+                 dmmass=True, load=False, cosmo=True):
         """
         parameters
         ----------
@@ -98,14 +105,14 @@ class Part(load.sim.Simbase):
 
         """
 
+        self.cosmo = cosmo
         if info is None:
             assert nout is not None, "either info or nout is required"
             from load.info import Info
-            print("CCCC",nout)
-            info = Info(nout=nout)
+            info = Info(nout=nout, cosmo=self.cosmo)
         self.info = info
         self.nout = info.nout
-        self.ptypes = ptypes
+        #self.ptypes = ptypes
         self.ncpu = 0
         self.nstar = 0
         self.nsink = 0
@@ -189,11 +196,13 @@ class Part(load.sim.Simbase):
             self.pqset.update(pp.split()[1:])
 
         self.ptypes = Ptypes(self.pt, self.pq)   
-# Check if there is dm / star / sink in quantities list
-# or mass, id, vel, and so on in ptype list.
-# Only exact match (lower or upper case) works. No tolerence for errata.
+    # Check if there is dm / star / sink in quantities list
+    # or mass, id, vel, and so on in ptype list.
+    # Only exact match (lower or upper case) works. No tolerence for errata.
         quantities = set(["mass", "id", "vel", "ref", "time", "metal"])
-        self.pqset.intersection_update(quantities) # any elements not listed in qunatities are removed.
+        self.pqset.intersection_update(quantities) 
+        # any elements not listed in qunatities are removed.
+
 
     def setDmQuantities(self, vel=False, mass=True, ref=False):
         self.dm_with_vel = vel
@@ -579,10 +588,11 @@ class Part(load.sim.Simbase):
             t_temp = read_fortran(f, np.dtype('f8'), npart_icpu)[range_ok]
 
             # metal
-            if "metal" in self.pqset:
-                z_temp = read_fortran(f, np.dtype('f8'), npart_icpu)[range_ok]
-            else:
-                read_fortran(f, np.dtype('f8'), npart_icpu)
+            if self.cosmo:
+                if "metal" in self.pqset:
+                    z_temp = read_fortran(f, np.dtype('f8'), npart_icpu)[range_ok]
+                else:
+                    read_fortran(f, np.dtype('f8'), npart_icpu)
 
             # distinguish sink / dm / star
             # non star : t == 0
