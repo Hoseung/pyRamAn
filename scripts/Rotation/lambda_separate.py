@@ -92,7 +92,7 @@ def worker(gals, hals, out_q, info, inds,
 
         if with_cell:
             #gm.cell = load.rd_GM.rd_cell(info.nout, galid, wdir=wdir)
-            gm.cell = extract_celll(hh, info, wdir, rscale=rscale_extract_cell)
+            gm.cell = extract_cell(hh, info, wdir, rscale=rscale_extract_cell)
         else:
             gm.cell = None
         if with_DM:
@@ -168,15 +168,24 @@ def worker(gals, hals, out_q, info, inds,
 
 
 def main(wdir='./',
-         ncore=4,
+         ncore=1,
          nout_ini=37,
          nout_end=187,
          read_halo_list=True,
          out_dir="",
          cat_suffix="",
          r_cluster_scale=2.9,
-         with_DM=False,
-         with_cell=False):
+         is_gal = True,
+         n_pseudo=60,
+         w_dump_gal=False,
+         w_reorient=False,
+         w_galaxy_plot=True,
+         w_galaxy_plot_dir= 'galaxy_plot/',
+         w_region_plot=False,
+         w_wdir='./',
+         w_with_DM=False,
+         w_with_cell=False,
+         ):
 
     from tree import treemodule
     import os
@@ -184,32 +193,45 @@ def main(wdir='./',
     import tree.ctutils as ctu
     import pandas as pd
     
-    multi = False # 
+
+    verbose=False
+    log_run_detail = False
+
+
+    # worker options
+    worker_params = {"dump_gal":       w_dump_gal,
+                     "reorient":       w_reorient,
+                     "galaxy_plot":    w_galaxy_plot,
+                     "galaxy_plot_dir":out_dir + w_galaxy_plot_dir,
+                     "region_plot":    w_region_plot,
+                     "wdir":           w_wdir,
+                     "with_DM":        w_with_DM,
+                     "with_cell":      w_with_cell
+                    }
+    multi = False                                             
+    if ncore > 1: multi=True
     if multi: 
         import multiprocessing as mp
     else:
         import queue
  
-    is_gal = True
-    dump_gal = True
+    dir_cat = out_dir
+
+    #dump_gal = True
     nout_complete = 87 # at least complete up to z = 1
     
     masscut_a = 1256366362.16
     masscut_b = -20583566.5218
 
     # optional parameters ----------------------------------------------------
-    lambda_method = 'ellip' 
-    galaxy_plot = False
-    reorient = True
-    verbose=False
-    region_plot = False
+    #lambda_method = 'ellip' 
+    #galaxy_plot = False
+    #reorient = True
+    #region_plot = False
 
-    verbose=False
-    log_run_detail = False
-    dir_cat = out_dir
 
     if out_dir == "":
-        out_dir = "out_/"
+        out_dir = "out_default/"
 
     if out_dir[-1] != '/':
         out_dir = out_dir + '/'
@@ -245,17 +267,8 @@ def main(wdir='./',
     mk_gal_rscale = 1.1 # unit of Rvir,galaxy
     #r_cluster_scale = 2.9 # maximum radius inside which galaxies are searched for
     npix=800
-
-
-    # worker options
-    worker_params = {"dump_gal":False,
-                   "reorient":False,
-                   "galaxy_plot":True,
-                   "galaxy_plot_dir":out_dir + 'galaxy_plot/',
-                   "region_plot":False,
-                   "wdir":'./',
-                   "with_DM":False,
-                   "with_cell":False}
+    lmax = 19
+    ptypes=["star id pos mass vel time metal", "dm id pos mass vel"]
 
     if worker_params["galaxy_plot"]:
         if not os.path.isdir(worker_params["galaxy_plot_dir"]):
@@ -268,14 +281,12 @@ def main(wdir='./',
     cal_lambda_params = dict(npix_per_reff=5,
                              rscale=3.0, 
                              method='ellip',
-                             n_pseudo=1,
+                             n_pseudo=n_pseudo,
                              verbose=False,
                              voronoi=None,#voronoi_dict,
                              mge_interpol = True)
 
 
-    lmax = 19
-    ptypes=["star id pos mass vel time metal", "dm id pos mass vel"]
 
     ## halo part -----------------------------------------------------------
     out_dir_cat = wdir + dir_cat + '/'
@@ -342,7 +353,6 @@ def main(wdir='./',
             for i in ptypes:
                 f.write("  " + str(i) + "\n")
 ##----------------------------------------------------------------------------------
-
     for nout in nouts:
         print(nout, nout_fi)
 
@@ -361,7 +371,6 @@ def main(wdir='./',
             os.mkdir(galaxy_plot_dir)
 
 ##----------------------------------------------------------------------------------
-
         info = load.info.Info(nout=nout, base=wdir, load=True)
         if nout < 187:
             mstar_min = 2 * get_mstar_min(info.aexp)
@@ -397,14 +406,14 @@ def main(wdir='./',
          
             processes = [mp.Process(target=worker, args=(allgal, allhal, out_q,
                         info, inds[i],
-                        dump_gal,
-                        reorient,
-                        galaxy_plot,
-                        galaxy_plot_dir,
-                        region_plot, 
-                        wdir,
-                        with_DM,
-                        with_cell,
+                        w_dump_gal,
+                        w_reorient,
+                        w_galaxy_plot,
+                        out_dir + w_galaxy_plot_dir, 
+                        w_region_plot,
+                        w_wdir,
+                        w_with_DM,
+                        w_with_cell,
                         mk_gal_params,
                         cal_lambda_params)) for i in range(ncore)] 
             # Run processes

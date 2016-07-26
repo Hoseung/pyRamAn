@@ -1,6 +1,5 @@
 import numpy as np
 import utils.sampling as smp
-
 import collections
 from galaxy import galaxy
 import utils.match as mtc
@@ -451,7 +450,7 @@ def extract_cell(halo, info, wdir, region=None, rscale=1.0):
                                 radius=halo['r']*rscale)
 
     hh = Hydro(info=info, region=region,
-               base=wdir,
+#               base=wdir,
                load=True)
 
     return hh.cell
