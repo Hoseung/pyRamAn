@@ -484,14 +484,10 @@ class Part(load.sim.Simbase):
                 # star particles have positive creation time.. no!
                 # mostly positive ID, but young stars
                 # (before SN burst) have negative IDs.
-                if self.cosmology:
-                    i_star = (abs(t_temp) != 0.0) # negative creation time for young star!
-                    i_dm = np.logical_and(id_temp > 0, t_temp == 0)
+                i_star = (abs(t_temp) != 0.0) # negative creation time for young star!
+                i_dm = np.logical_and(id_temp > 0, t_temp == 0)
                 # Sink (BH) particles have negative ID and creation time 0.
-                    i_sink = np.logical_and(id_temp < 0, t_temp == 0)
-                else:
-                    i_star = (abs(t_temp) != 0.0) # negative creation time for young star!
-                    i_dm = np.logical_and(id_temp > 0, t_temp == 0)
+                i_sink = np.logical_and(id_temp < 0, t_temp == 0)
                     
                 
                 # Dark Matter particles have 0 creation time, positive ID
@@ -524,7 +520,7 @@ class Part(load.sim.Simbase):
         # Or, hasattr(self, 'sink')
         if 'sink' in self.pt:        
             dtype = self._get_dtype("sink")
-            self.sink = np.recarray(nsink_tot * 2109, dtype=dtype)
+            self.sink = np.recarray(nsink_tot, dtype=dtype)
             i_skip_sink = 0
 
         self.ndm = ndm_tot
@@ -533,7 +529,7 @@ class Part(load.sim.Simbase):
 
         print("Total DM particle %d" % ndm_tot)
         print("Total star particle %d" % nstar_tot)
-        print("Total sink particle %d" % nsink_tot)
+        print("Total sink particle %d (/2109)" % nsink_tot)
 
 
         # iterate over files to read in data
