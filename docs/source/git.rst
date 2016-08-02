@@ -24,4 +24,14 @@ For example, if you made a change to files on a server and pushed the modificati
 But forgotten doing so, you again start to modify a file on your laptop and realize that you are doing something redundant and you could simply pull from the repository. Then you can use "chekcout --" to revert the file so that you can pull from the repo. 
 
 
+Remove last commit ::
+
+    $ git reset --hard HEAD~1
+    
+    or
+
+    $ git reset --hard HEAD~10
+
+to remove last 10 commits. 
+
 

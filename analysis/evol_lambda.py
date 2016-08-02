@@ -47,7 +47,6 @@ class MainPrg():
 
 
     def fill_missing_data(self):
-        import numpy as np
         assert (self.ids[-1] != 0)
         # position angles cannot be linearly interpolated.
         # skip.
@@ -65,13 +64,13 @@ class MainPrg():
                          "sfr","sma","smah","smaq","smi","smih","smiq","ssfr",
                          "vxc", "vyc", "vzc", "xc", "yc", "zc"]
 
-        i_good_max = max(np.where(self.data["reff"] > 0)[0])
-        i_bad = np.where(self.data['idx'] == 0)[0]
+        i_good_max = max(np.where(gal.data["reff"] > 0)[0])
+        i_bad = np.where(gal.data['idx'] == 0)[0]
         i_bad = i_bad[i_bad < i_good_max]
         if len(i_bad) > 0:
             for field in filled_fields:
                 # do not modify index and id fields.
-                arr = self.data[field] # it's a view.
+                arr = gal.data[field] # it's a view.
 
                 for i_b in i_bad:
                     # neighbouring array might also be empty. Search for closest valid element.
@@ -86,11 +85,10 @@ class MainPrg():
                     arr[i_b] = (arr[i_b -1] + arr[i_b +1])/2.
 
 
-                
+
 # In[2]:
 
 def fixed_ind_Lr(gal):
-    import numpy as np
     nnouts = len(gal.nouts)
     ind_reff_fix = np.zeros(nnouts, dtype='i4')
 
@@ -110,7 +108,6 @@ def fixed_ind_Lr(gal):
 
 
 def smoothed_reff(cat, nout_merger):
-    import numpy as np
     """
     returns "representative" lambda at each nout by assuming monotonic change in Reff. 
     During merger, Reff can fluctuate, and if has no physical meaning to infer Labda at Reff during merger stage. 

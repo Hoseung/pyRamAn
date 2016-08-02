@@ -13,8 +13,8 @@ class Simbase():
     """ 
     base    
     """
-    def __init__(self, cosmology=True):
-        self.cosmology=cosmology
+    def __init__(self, cosmo=True):
+        self.cosmo=cosmo
     
     def add_amr(self):
         from load.amr import Amr
@@ -226,7 +226,7 @@ class Sim(Simbase):
     """
     def __init__(self, nout, base='./', data_dir='snapshots/',
                  ranges=[[0.0,1.0],[0.0,1.0],[0.0,1.0]], dmo=False, 
-                 setup=True, region=None, cosmological=True):
+                 setup=True, region=None, cosmo=True):
         """
             Parameters
             ----------
@@ -246,7 +246,7 @@ class Sim(Simbase):
         self.set_base(base)
         # info appreciates nout and base (not mandatary, though)
         self.dmo = dmo
-        self.cosmological = cosmological
+        self.cosmo = cosmo
         self.set_data_dir(data_dir)
         self.add_info()
         # set_data_dir and set_range needs info instance be exist.
@@ -301,7 +301,8 @@ class Sim(Simbase):
     def show_base(self):
         print("setting the base(working) directory to :", self.base)
 
-    def add_hydro(self, load=True, lmax=None, region=None, ranges=None):
+    def add_hydro(self, load=True, lmax=None, region=None, ranges=None,
+                  cpu=False):
         """
         Add a hydro instance to the simulation instance. 
 
@@ -315,13 +316,13 @@ class Sim(Simbase):
         from load import hydro
         self.hydro = hydro.Hydro(info=self.info,
                                  amr=self.amr,
-                                 base=self.base,
+#                                 base=self.base,
                                  region=region,
                                  ranges=ranges)
         if load :
             if lmax is None:
                 lmax = self.info.lmax
-            self.hydro.amr2cell(lmax=lmax)
+            self.hydro.amr2cell(lmax=lmax, cpu=cpu)
         else:
             print("Use hydro.amr2cell() to load hydro variables")
             
@@ -331,7 +332,7 @@ class Sim(Simbase):
                               self.base,
                               load=load,
                               data_dir = self.data_dir,
-                              cosmological = self.cosmological)
+                              cosmo = self.cosmo)
 #        self.info.setup()
 
     def add_part(self, ptypes=[], load=True, fortran=True, dmo=False, **kwargs):
@@ -354,7 +355,8 @@ class Sim(Simbase):
                               ptypes=ptypes,
                               data_dir=self.data_dir,
                               dmo=self.dmo,
-                              base=self.base, **kwargs)
+                              base=self.base,
+                              cosmo=self.cosmo, **kwargs)
         print("A particle instance is created\n")
 
         if load:
