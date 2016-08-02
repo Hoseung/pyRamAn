@@ -88,7 +88,7 @@ else:
     # halo tree
     tree_path = 'halo/Trees/'
 
-load_extended_tree = False
+load_extended_tree = True
     
 if load_extended_tree:    
     try:

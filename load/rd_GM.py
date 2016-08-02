@@ -37,7 +37,7 @@ class Dummy():
         pass
 
 class Gal():
-    def __init__(self, nout, idgal, wdir='./', idhal = -1, load=True, info=None):
+    def __init__(self, nout, idgal, wdir='./', idhal = -1, load=True, info=None, rscale=1.5):
         """
         
         Parameters
@@ -59,8 +59,9 @@ class Gal():
         self.units.cell = Units()
         self.units.header = Units()
         self.wdir = wdir
-        self.info = Dummy()
+        #self.info = Dummy()
         self.set_info(info)
+        self.rscale=rscale
         if load:
             self.load()
 
@@ -104,24 +105,65 @@ class Gal():
             self.rgal = 0.5 * max([self.star['x'].ptp(), self.star['y'].ptp(), self.star['z'].ptp()]) / self.info.pboxsize
             
 
-    def load(self, star="gm", dm="gm", cell="gm", info=None):
+    def load(self, star="gm", dm="gm", cell="gm", info=None, rscale=None):
         """
 
         Notes
         -----
-        when loading raw the choice of data 1.5 * rgal, where rgal is the maximum ptp() of stellar particles,
-        is arbitrary. I don't know how to GUESS where the galaxy gas component will truncate.
+        when loading raw data the choice of data 1.5 * rgal,
+        where rgal is the maximum ptp() of stellar particles, is arbitrary. 
+        I don't know how to GUESS where the galaxy gas component will truncate.
+
+        Info must be available by this time.
+        If not, load one.
+
+
+        
+        >>> GM_gal.header.dtype
+        >>> dtype([('my_number', '<i4'), ('level', '<i4'), ('mgal', '<f8'), ('xg', '<f8', (3,)), ('vg', '<f8', (3,)), ('lg', '<f8', (3,)), ('npart', '<i4')])
+
+        >>> hmo.Halo().data.dtype
+        >>> dtype((numpy.record, [('np', '<i4'), ('id', '<i4'), ('level', '<i4'), ('host', '<i4'), ('sub', '<i4'), ('nsub', '<i4'), ('nextsub', '<i4'), ('m', '<f4'), ('mvir', '<f4'), ('r', '<f4'), ('rvir', '<f4'), ('tvir', '<f4'), ('cvel', '<f4'), ('x', '<f4'), ('y', '<f4'), ('z', '<f4'), ('vx', '<f4'), ('vy', '<f4'), ('vz', '<f4'), ('ax', '<f4'), ('ay', '<f4'), ('az', '<f4'), ('sp', '<f4'), ('idx', '<i4'), ('p_rho', '<f4'), ('p_c', '<f4'), ('energy', '<f8', (3,)), ('radius', '<f8', (4,))]))
         """
         from utils import sampling
+        #if info is None and self.info is None:
+        #    self.
         if info is not None and not hasattr(self.info, "unit_l"):
             self._get_minimal_info(info) 
+
+        if rscale is not None:
+            self.rscale = rscale
         if star == "gm":
             self.header, self.star = _rd_gal(self.nout, self.gid, wdir=self.wdir, metal=True)
             self.units.star.set_system("gm")
             if self.info is not None:
                 self.center_code = self.header['xg'] / self.info.pboxsize + 0.5
                 self.get_rgal()
-                self.region = sampling.set_region(centers=self.center_code, radius=1.5*self.rgal)
+                self.region = sampling.set_region(centers=self.center_code,
+                                                  radius=self.rscale * self.rgal)
+        elif star == "raw":
+            # load catalog
+            import tree.halomodule as hmo
+            gcat = hmo.Halo(nout=self.nout, base=self.wdir, is_gal=True)
+            thisgal = gcat.data[gcat.data["id"] == self.gid]
+            # In which format should the header be?
+            # Raw
+
+            # Header is originally a numpy array, but a dict should be enough.
+            self.header = dict(my_number = thisgal["np"],
+                               mgal = thisgal["id"],
+                               xg = (thisgal["x"], thisgal["y"], thisgal["z"]),
+                               vg = (thisgal["vx"], thisgal["vy"], thisgal["vz"]),
+                               npart = thisgal["np"])
+            self.rgal = thisgal["r"] # in code unit.
+            self.region = sampling.set_region(centers=self.header["xg"],
+                                              radius=self.rscale * self.rgal)
+            from load.part import Part
+            pp = Part(info=self.info, ptypes=['star id pos vel time metal'],
+                      region=self.region, load=True)
+            self.star = pp.star
+            self.units.star.set_system("code")
+
         if dm == "gm":
             self.dm = rd_dm(self.nout, self.gid, wdir=self.wdir)
             self.units.dm.set_system("gm")

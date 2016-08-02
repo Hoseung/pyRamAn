@@ -110,7 +110,6 @@ def plot_atree(atree, galid):
 
 
 # In[2]:
-
 from tree import treemodule
 from tree import treeutils
 import pickle
@@ -151,16 +150,10 @@ if not load_extended_tree:
     print("------ tree data extended")
 
 
-
-# In[4]:
-
-# In[5]:
-
 import matplotlib.pyplot as plt
 
 nout_fi = 187
 nout_ini = 37
-
 
 i_final = np.where(alltrees.data["nout"] == nout_fi)
 ttt_sub = alltrees.data[i_final]
@@ -211,7 +204,6 @@ for galid in final_gals:
     ax[1].set_title(sidgal + ", " + str(atree[0]['Orig_halo_id']))
     #fig.show()
     plt.savefig(wdir + "mergertrees/" + sidgal + '.png')
-#    plt.clf()
     plt.close()
 
 

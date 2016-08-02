@@ -16,7 +16,7 @@ recalculated center of galaxy is likely to deviate from the center of the halo.
 
 ATTENTION!!
 
-with RdYlDu color mpa, empty cells in the velocity map are yellow. 
+with RdYlDu color map, empty cells in the velocity map are yellow. 
 cells with no mass should be NaN, not 0. 
 Fix it
 

@@ -219,7 +219,7 @@ class Amr():
         """
         snout = str(info.nout).zfill(5)
         self.info = info
-        self._fnbase = info.data_dir + 'output_' + snout + '/amr_' + snout + '.out'
+        self._fnbase = info.base + info.data_dir + 'output_' + snout + '/amr_' + snout + '.out'
         f = open(self._fnbase + '00001', "rb")
 
         self.header = AmrHeader()

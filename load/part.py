@@ -127,6 +127,8 @@ class Part(load.sim.Simbase):
         self.dm_with_vel = dmvel
         self.dm_with_mass = dmmass
 
+        self.set_fbase(self.base, data_dir)
+
         if region is not None:
             ranges = region['ranges']
         if ranges is not None:
@@ -137,8 +139,6 @@ class Part(load.sim.Simbase):
             except:
                 self.set_ranges(ranges=[[0,1]]*3)
     
-        
-        self.set_fbase(self.base, data_dir)
         # header structure
         self._ramses_particle_header = np.dtype([('ncpu', 'i4'),
                                                  ('ndim', 'i4'),
@@ -705,8 +705,8 @@ class Part(load.sim.Simbase):
                           ('vx', '<f8'), ('vy', '<f8'), ('vz', '<f8'),
                           ('m', '<f8'), ('time', '<f8'), ('id', '<i4')]
             if read_metal:
-                dtype_star.extend(('metal', '<f8'))
-         
+                dtype_star.append(('metal', '<f8'))
+
             self.star = np.zeros(self.nstar, dtype=dtype_star)
             self.star['x'] = star_float[:,0]
             self.star['y'] = star_float[:,1]

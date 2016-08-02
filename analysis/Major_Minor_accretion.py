@@ -11,13 +11,12 @@ import analysis.evol_lambda as evl
 import tree.ctutils as ctu
 import pandas as pd
 
+class Merger():
+    pass
+
 
 def load_cat(fname):
     return pd.DataFrame(pickle.load(open(fname, "rb"))).to_records()
-
-
-class Merger():
-    pass
 
 
 def get_tick_locations(org_range, x_range):
@@ -33,17 +32,20 @@ def get_tick_locations(org_range, x_range):
 
 
 
-def find_merger_epochs(alltrees, idx_all, mpgs, nout_ini=37, dist_gal_scale=2,
-                       mass_ratio="early"):
+def find_merger_epochs(alltrees, 
+                        idx_all, 
+                        mpgs, 
+                        nout_ini=37, 
+                        dist_gal_scale=2,
+                        mass_ratio="early"):
     """
-    
-        parameter
-        ---------
-        dist_gal_scale 
-            if two galaxies are closer than dist_gal_scale * (sum of raidus of the two),
-            that epoch is the nout_init_merger.
-        nout_ini
-            blabla
+    parameter
+    ---------
+    dist_gal_scale 
+        if two galaxies are closer than dist_gal_scale * (sum of raidus of the two),
+        that epoch is the nout_init_merger.
+    nout_ini
+        blabla
     """
     verbose=False
     gal_list=[]
@@ -66,7 +68,6 @@ def find_merger_epochs(alltrees, idx_all, mpgs, nout_ini=37, dist_gal_scale=2,
         pos[0,:] = main['x']
         pos[1,:] = main['y']
         pos[2,:] = main['z']
-
 
         mass_ratios_single = np.zeros(len(main))
         nout_inits = np.zeros(len(main))
@@ -95,8 +96,8 @@ def find_merger_epochs(alltrees, idx_all, mpgs, nout_ini=37, dist_gal_scale=2,
 
                 dd = np.sqrt(np.square(pos[0,i_main_ok] - satellite['x']) \
                              + np.square(pos[1,i_main_ok] - satellite['y'])
-                             + np.square(pos[2,i_main_ok] - satellite['z']))
-                rgal_tot = main['r'][i_main_ok] + satellite['r']
+                             + np.square(pos[2,i_main_ok] - satellite['z'])) * 1e3 # in kpc
+                rgal_tot = main['rvir'][i_main_ok] + satellite['rvir']
                 #print(" Galaxy sizes : main {}, and the second {}, and the sum {}".format(
                 #        main['r'][i_main_ok], satellite['r'], rgal_tot))
                 #print(" dd :", dd)
@@ -227,7 +228,7 @@ def Maj_min_acc_ratio(mpgs, dt=5, major_ratio=3):
         gal.dlm = delta_lambda_minor
 
 
-       
+
 def multipage_plot(mpgs, nout_ini=37, nout_fi = 187,
                     wdir='./',
                     suffix="",
@@ -265,9 +266,11 @@ def measure_delta(mpgs, nout_ini=37, nout_fi = 187,
                     dt_before = 1.0,
                     ax=None):
     """
-        Measure lambda change at every merger and draw lambda evolution with merger events.
-        time span over which average lambda value is measured is given in Gyr unit.
-        
+    Measure lambda change at every merger and draw lambda evolution with merger events.
+    time span over which average lambda value is measured is given in Gyr unit.
+
+
+    smoothing is done elsewhere.         
     """
 
     from scipy.signal import medfilt
@@ -276,7 +279,7 @@ def measure_delta(mpgs, nout_ini=37, nout_fi = 187,
         ind_nout = gal.nouts > nout_ini
         gal.nouts = gal.nouts[ind_nout]
         gal.data = gal.data[ind_nout]
-        gal.smoothed_lambda = medfilt(gal.data['lambda_r'], kernel_size=5)
+#        gal.smoothed_lambda = medfilt(gal.data['lambda_r'], kernel_size=5)
         if ax is not None:
             ax[0].plot(gal.nouts, np.log10(gal.data['mstar']), 'b:')
             ax[0].set_xlim([50,190])
@@ -343,3 +346,41 @@ def measure_delta(mpgs, nout_ini=37, nout_fi = 187,
 
             gal.merger.delta_l = np.array(delta_lambda)
             gal.merger.delta_m = np.array(delta_mass)        
+
+
+
+def smooth(x, beta=5, window_len=20, monotonic=False, clip_tail_zeros=True):
+    """ 
+    kaiser window smoothing.
+    
+    If len(x) < window_len, window_len is overwritten to be len(x).
+    This ensures to return valid length fo array, but with modified window size.
+       
+    
+    beta = 5 : Similar to a Hamming
+    
+    
+    """
+    if clip_tail_zeros:
+        x = x[:max(np.where(x > 0)[0])+1]
+    
+    if monotonic:
+        """
+        if there is an overall slope, smoothing may result in offset.
+        compensate for that. 
+        """
+        slope, intercept, r_value, p_value, std_err = scipy.stats.linregress(x, y=np.arange(len(x)))
+        xx = np.arange(len(x)) * slope + intercept
+        x = x - xx
+    
+    # extending the data at beginning and at the end
+    # to apply the window at the borders
+    window_len = min([window_len, len(x)])
+    s = np.r_[x[window_len-1:0:-1], x, x[-1:-window_len:-1]] # concatenate along 0-th axis.
+    # periodic boundary.
+    w = np.kaiser(window_len,beta)
+    y = np.convolve(w/w.sum(), s, mode='valid')
+    if monotonic: 
+        return y[int(window_len)/2:len(y)-int(window_len/2) + 1] + xx
+    else:
+        return y[int(window_len)/2:len(y)-int(window_len/2) + 1]
