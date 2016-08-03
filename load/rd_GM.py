@@ -105,7 +105,8 @@ class Gal():
             self.rgal = 0.5 * max([self.star['x'].ptp(), self.star['y'].ptp(), self.star['z'].ptp()]) / self.info.pboxsize
             
 
-    def load(self, star="gm", dm="gm", cell="gm", info=None, rscale=None):
+    def load(self, star="gm", dm="gm", cell="gm",
+             info=None, rscale=None, radius=None):
         """
 
         Notes
@@ -156,8 +157,11 @@ class Gal():
                                vg = (thisgal["vx"], thisgal["vy"], thisgal["vz"]),
                                npart = thisgal["np"])
             self.rgal = thisgal["r"] # in code unit.
+            if radius is None:
+                radius = self.rgal
+
             self.region = sampling.set_region(centers=self.header["xg"],
-                                              radius=self.rscale * self.rgal)
+                                              radius=self.rscale * radius)
             from load.part import Part
             pp = Part(info=self.info, ptypes=['star id pos vel time metal'],
                       region=self.region, load=True)

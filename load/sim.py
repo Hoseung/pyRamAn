@@ -100,6 +100,7 @@ class Simbase():
         zzmax = ranges[2][1]
 
         dmax = max([xxmax-xxmin, yymax-yymin, zzmax-zzmin])
+#        lmin = lmax # sometimes even smallest dx is larger than the region size.
         for ilevel in range(1, lmax):
             dx = 0.5**ilevel
             if (dx < dmax):
