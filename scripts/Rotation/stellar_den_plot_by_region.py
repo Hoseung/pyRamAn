@@ -13,13 +13,14 @@ class Merger():
         pass
 
 wdir = './'
+outdir = wdir + "stellar_density_evol/"
 rscale = 1.0
 mpgs = pickle.load(open(wdir + "main_prgs.pickle", "rb"))
 radius = 0.001
 
 for gg in mpgs:
     fig, ax = plt.subplots(1, sharex=True)
-    with PdfPages(wdir + 'stellar_density_map_'+ \
+    with PdfPages(outdir + 'stellar_density_map_'+ \
                   str(gg.ids[0]) + "_" + \
                   str(gg.idxs[0].astype(int)) + '.pdf') as pdf:
 

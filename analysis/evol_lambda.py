@@ -64,13 +64,13 @@ class MainPrg():
                          "sfr","sma","smah","smaq","smi","smih","smiq","ssfr",
                          "vxc", "vyc", "vzc", "xc", "yc", "zc"]
 
-        i_good_max = max(np.where(gal.data["reff"] > 0)[0])
-        i_bad = np.where(gal.data['idx'] == 0)[0]
+        i_good_max = max(np.where(self.data["reff"] > 0)[0])
+        i_bad = np.where(self.data['idx'] == 0)[0]
         i_bad = i_bad[i_bad < i_good_max]
         if len(i_bad) > 0:
             for field in filled_fields:
                 # do not modify index and id fields.
-                arr = gal.data[field] # it's a view.
+                arr = self.data[field] # it's a view.
 
                 for i_b in i_bad:
                     # neighbouring array might also be empty. Search for closest valid element.

@@ -297,7 +297,8 @@ class Sim(Simbase):
         By default, simulation outputs are in simulation_base/snapshots/
         """
         from os import path
-        self.data_dir =  path.join(self.base, '', data_dir, '')
+        #self.data_dir =  path.join(self.base, '', data_dir, '')
+        self.data_dir = path.join('', data_dir, '')
 
     def show_base(self):
         print("setting the base(working) directory to :", self.base)
