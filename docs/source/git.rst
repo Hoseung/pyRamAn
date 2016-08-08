@@ -2,6 +2,8 @@
 Git quick summary
 =================
 
+Set up a new repo
+-----------------
 
 To setup git repo on a new machine, clone the bitbucket repo :: 
     
@@ -16,12 +18,15 @@ Then to/from which branch you will push/pull. ::
     $ git --set-upstream remote_name branch_name
 
 
-To discard modification to a file/files ::
+Revert recent modifications
+---------------------------
+
+Discard modification to a file/files ::
 
     $ git checkout -- file.name(s)
 
 For example, if you made a change to files on a server and pushed the modification.
-But forgotten doing so, you again start to modify a file on your laptop and realize that you are doing something redundant and you could simply pull from the repository. Then you can use "chekcout --" to revert the file so that you can pull from the repo. 
+But forgotten doing so, you again start to modify a file on your laptop and realize that you are doing something redundant and you could simply pull from the repository. Then you can use "chekcout --" to revert the file so that you can pull from the repo.
 
 
 Remove last commit ::
@@ -32,6 +37,20 @@ Remove last commit ::
 
     $ git reset --hard HEAD~10
 
-to remove last 10 commits. 
+to remove last 10 commits.
+
+Overwrite local with remote
+---------------------------
+::
+
+    $ git fetch --all
+    $ git reset --hard remote/branch (i.e., origin/Hoseung)
+    $ git pull 
 
 
+
+Show modifications made to the current commit
+---------------------------------------------
+::
+
+    $ git diff

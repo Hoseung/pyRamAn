@@ -12,14 +12,18 @@ class Merger():
     def __init__(self):
         pass
 
+import os 
 wdir = './'
 outdir = wdir + "stellar_density_evol/"
+if not os.path.isdir(outdir):
+    os.mkdir(outdir)
+
 rscale = 1.0
 mpgs = pickle.load(open(wdir + "main_prgs.pickle", "rb"))
 radius = 0.001
 
-for gg in mpgs:
-    fig, ax = plt.subplots(1, sharex=True)
+fig, ax = plt.subplots(1, sharex=True)
+for gg in mpgs[81:]:
     with PdfPages(outdir + 'stellar_density_map_'+ \
                   str(gg.ids[0]) + "_" + \
                   str(gg.idxs[0].astype(int)) + '.pdf') as pdf:
