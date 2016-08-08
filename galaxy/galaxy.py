@@ -1910,7 +1910,7 @@ class Galaxy(object):
         if fn_save is None:
             fn_save = "galaxy_plot" + str(self.meta.id).zfill(5) + ".png"
 
-        plt.savefig(fn_save, dpi=200)
+        plt.savefig(fn_save, dpi=144)
         plt.close()
        
     def save_gal(self, base='./'):
