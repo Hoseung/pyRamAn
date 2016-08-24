@@ -211,14 +211,21 @@ def Maj_min_acc_ratio(mpgs, dt=5, major_ratio=3):
             #print(gal.merger.mr, gal.merger.delta_l)
             i_major = np.where(gal.merger.mr <= major_ratio)[0]
             if len(i_major) > 0:
-                #print(gal.merger.delta, i_major, "M")
-                #print(gal.merger.delta[0])
-                delta_lambda_major = np.sum(gal.merger.delta_l[i_major])
+                #print(gal.merger.mr, gal.merger.delta_l, i_major, "M")
+                delta_lambda_major = 0
+                for iii in i_major:
+                    if gal.merger.delta_l[iii] > -1:
+                        delta_lambda_major += gal.merger.delta_l[iii]
+                    #delta_lambda_major = np.sum(gal.merger.delta_l[i_major])
 
-            i_minor = gal.merger.mr > major_ratio
-            if sum(i_minor) > 0:
-                delta_lambda_minor = sum(gal.merger.delta_l[i_minor])
-                #print(gal.merger.delta, i_minor, "m")
+            i_minor = np.where(gal.merger.mr > major_ratio)[0]
+            delta_lambda_minor = 0
+            if len(i_minor) > 0:
+                #print(gal.merger.delta_l, i_minor, "m")
+                for iii in i_minor:
+                    if gal.merger.delta_l[iii] > -1:
+                        delta_lambda_minor += gal.merger.delta_l[iii]
+#                    delta_lambda_minor = sum(gal.merger.delta_l[i_minor])
 
 
         delta_lambda_other = delta_lambda_tot - delta_lambda_major - delta_lambda_minor
