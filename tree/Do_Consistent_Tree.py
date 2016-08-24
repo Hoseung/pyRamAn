@@ -19,21 +19,29 @@ from tree.tree_builder import convert_halo_list
 
 
 def run(wdir ='./', nout_ini=None, is_gal=False,
-        out_dir_g='GalaxyMaker/', out_dir_d='halo/'):
+        out_dir_g='GalaxyMaker/', out_dir_d='halo/',
+        iap=False):
     base = os.path.abspath(wdir) + '/'
     print(base)
     cluster = base.split('/')[-2]
-    if is_gal:
-        if nout_ini is None:
-            nout_ini=11
-        out_dir = base + out_dir_g
+    if iap:
+        from glob import glob
+        tl = glob(wdir + 'GalaxyMaker/gal/tree_bricks*')
+        nout_list = [int(tt[0].split("_bricks")[1]) for tt in tl]
     else:
-        if nout_ini is None:
-            nout_ini=7
-        out_dir = base + out_dir_d
+        if is_gal:
+            if nout_ini is None:
+                nout_ini=11
+            out_dir = base + out_dir_g
+        else:
+            if nout_ini is None:
+                nout_ini=7
+            out_dir = base + out_dir_d
+        nout_list = None
 
 
-    convert_halo_list(nout_ini=nout_ini, nout_fi = 187,
+    convert_halo_list(nout_ini=nout_ini, nout_fi=187,
+                      nout_list=nout_list,
                       base=base, out_dir=out_dir, is_gal=is_gal,
                       nmax_fracmax_ratio=1.01,
                       nmax_fracmax_ratio2=1.00,
