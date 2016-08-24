@@ -27,17 +27,18 @@ def run(wdir ='./', nout_ini=None, is_gal=False,
     if iap:
         from glob import glob
         tl = glob(wdir + 'GalaxyMaker/gal/tree_bricks*')
-        nout_list = [int(tt[0].split("_bricks")[1]) for tt in tl]
+        nout_list = [int(tt.split("_bricks")[1]) for tt in tl]
     else:
-        if is_gal:
-            if nout_ini is None:
-                nout_ini=11
-            out_dir = base + out_dir_g
-        else:
-            if nout_ini is None:
-                nout_ini=7
-            out_dir = base + out_dir_d
         nout_list = None
+
+    if is_gal:
+        if nout_ini is None:
+            nout_ini=11
+        out_dir = base + out_dir_g
+    else:
+        if nout_ini is None:
+            nout_ini=7
+        out_dir = base + out_dir_d
 
 
     convert_halo_list(nout_ini=nout_ini, nout_fi=187,

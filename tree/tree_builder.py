@@ -130,7 +130,7 @@ def convert_halo_list(nout_ini=11, nout_fi = 187, base='./',
     
     if nout_list is None:
         nout_list = range(nout_ini, nout_fi + 1)
-    aexps = np.zeros(len(nouts))
+    aexps = np.zeros(len(nout_list))
     
     for inout, nout in enumerate(nout_list):
         if inout == 0:
@@ -143,7 +143,7 @@ def convert_halo_list(nout_ini=11, nout_fi = 187, base='./',
             galcat0 = galcat1
             data0, idlists0 = galcat1.data, galcat1.idlists
 
-        if nout == max(nouts):
+        if nout == max(nout_list):
             """
                 Desc = -1
             """
@@ -252,4 +252,4 @@ def convert_halo_list(nout_ini=11, nout_fi = 187, base='./',
         aexps[inout] = info.aexp
     
     print("Write Descscale")    
-    write_scale(nouts, aexps, out_dir = out_dir)
+    write_scale(nout_list, aexps, out_dir = out_dir)
