@@ -1,1 +1,1 @@
-f2py3 -c --fcompiler=gnu95 -m part_shared part_cpu.f90
+f2py3.5 -c -m part_shared part_cpu.f90
