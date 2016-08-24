@@ -98,7 +98,9 @@ def write_scale(nouts, aexps, out_dir='./'):
 def convert_halo_list(nout_ini=11, nout_fi = 187, base='./',
                       out_dir='./', is_gal=False,
                       nmax_fracmax_ratio=2.0, nmax_fracmax_ratio2=1.2,
-                      frac_max_small=0.3):
+                      frac_max_small=0.3,
+                      bosxize=200,
+                      nout_list=None):
     """
         Generate halo catalog with descendant ID.
         
@@ -120,16 +122,17 @@ def convert_halo_list(nout_ini=11, nout_fi = 187, base='./',
             suspected not to be the main progenitor.
             if max_np_progenitor contributes slightly more than the max frac, 
             then max_np_progenitor is considered to be the main progenitor.
-        
+        boxsize :
+            boxsize in Mpc/h
     """
     import load
     import tree.halomodule as hmo
     
-    boxsize = 200
-    nouts = range(nout_ini, nout_fi + 1)
+    if nout_list is None:
+        nout_list = range(nout_ini, nout_fi + 1)
     aexps = np.zeros(len(nouts))
     
-    for inout, nout in enumerate(nouts):    
+    for inout, nout in enumerate(nout_list):
         if inout == 0:
             # If first snapshot, load data0.
             galcat0 = hmo.Halo(nout=nout, base=base,

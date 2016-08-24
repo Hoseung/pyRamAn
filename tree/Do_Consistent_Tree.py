@@ -126,16 +126,16 @@ if __name__ == "__main__":
     #nout_ini=int(input("not_ini=? (12)"))
     #if nout_ini == "":
     #    nout_ini = 12
-    is_gal = False
+    is_gal = True
     nout_ini = 20
     #run(wdir = here + "/" , is_gal=is_gal, nout_ini=nout_ini,
     #    out_dir_g="halo/")
     #clusters=["29176"]
-
-    # 29828 -> 29830
-    clusters=["01605", "04466", "05427", "10002", "14172",
-              "17891", "24954", "28930", "29172", "35663",
-              "36413", "36415", "49096", "06098", "07206", "39990"][-1]
-def run_all(clusters, is_gal=True, nout_ini=20):
+    # 29828 -> 29830, and 28930 is incomplete
+    #["01605", "04466", "05420", "05427", "06098",
+    # "07206", "10002", "14172", "17891", "24954",
+    # "28930", "29172", "29176", "35663", "36413",
+    # "36415", "39990", "49096"]
+    clusters=["01605"]
     for cluster in clusters:
-        run(wdir = cluster + "/" , is_gal=is_gal, nout_ini=nout_ini)
+        run(wdir = here + "/" + cluster + "/" , is_gal=is_gal, nout_ini=nout_ini)
