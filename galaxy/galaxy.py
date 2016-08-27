@@ -120,8 +120,11 @@ class Galaxy(object):
 
         rmax = min([np.max(rr), rmax])
         nbins = int(rmax/dr)
+        try:
+            frequency, bins = np.histogram(r_sorted, bins = nbins, range=[0, rmax])
+        except:
+            False
 
-        frequency, bins = np.histogram(r_sorted, bins = nbins, range=[0, rmax])
         bin_centers = bins[:-1] + 0.5 * dr # remove the rightmost boundary.
         
         m_radial = np.zeros(nbins)
@@ -1202,10 +1205,15 @@ class Galaxy(object):
                 i_reff = np.argmax(np.cumsum(mmap[dsort]) > 0.5*mmap_tot)
                 frac =  i_reff/ len(mmap)
                 
-#                print("frac1", frac)
-                f = mge.find_galaxy.find_galaxy(self.mmap, quiet=True, plot=False,
+                #print("frac1", frac)
+                try:
+                    f = mge.find_galaxy.find_galaxy(self.mmap, quiet=True, plot=False,
                                                 mask_shade=False,
                                                 fraction=frac)
+                except:
+                    print("!!! an error occured !!!")
+                    return (-1, -1, -1), (-1, -1, -1)
+
 
 #                f.eps = 0
 #                f.theta = 0

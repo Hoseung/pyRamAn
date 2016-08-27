@@ -403,7 +403,6 @@ def main(wdir='./',
             for i in range(nh):
                 j = i % ncore
                 inds[j].append(i)
-         
             processes = [mp.Process(target=worker, args=(allgal, allhal, out_q,
                         info, inds[i],
                         w_dump_gal,
@@ -424,8 +423,10 @@ def main(wdir='./',
             for p in processes:
                 p.join()
         else:
+            nh = len(allgal.data)
+            inds=range(nh)
             out_q = queue.Queue()
-            worker(allgal, allhal, out_q, info, range(nh),
+            worker(allgal, allhal, out_q, info, inds,
                    mk_gal_params=mk_gal_params,
                    cal_lambda_params=cal_lambda_params,
                    **worker_params)
