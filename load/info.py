@@ -17,7 +17,9 @@ class Info:
         self.data_dir = data_dir
         self.fn = fn
         self.cosmo=cosmo
-        
+        if fn is not None:    	
+            nout = int(fn.split("info_")[1].split(".txt")[0])
+
         if nout is not None or base is not None or fn is not None:
             self.setup(nout=nout, base=base, fn=fn)
         if load:
@@ -34,7 +36,7 @@ class Info:
         except:
             print("info: BASE is not given")
 
-        self.update_fn(fn)
+        if fn is None: self.update_fn(fn)
  
         if self.all_set():
             self.read_info()  # sets ncpu_tot,
