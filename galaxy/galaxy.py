@@ -128,7 +128,7 @@ class Galaxy(object):
         bin_centers = bins[:-1] + 0.5 * dr # remove the rightmost boundary.
         
         m_radial = np.zeros(nbins)
-        ibins = np.concatenate((np.zeros(1), np.cumsum(frequency)))
+        ibins = np.concatenate((np.zeros(1, dtype=np.int32), np.cumsum(frequency)))
 
         i_r_cut1 = nbins -1 # Maximum value
         # on rare occasions, a galaxy's stellar surface density
