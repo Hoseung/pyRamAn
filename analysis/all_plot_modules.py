@@ -232,7 +232,7 @@ def kde_sci(mpgs
         ax.yaxis.set_major_formatter(NullFormatter())
         ax.set_ylabel("relative probability", fontsize=fontsize_tick_label)
 
-    axs[2].set_xlabel(r"$\Delta \lambda_{R_{eff}}$", fontsize=fontsize_tick_label)
+    axs[2].set_xlabel(r"$\Delta \lambda_{R_{eff}}$", fontsize=fontsize_tick_label, family="Liberation Sans")
     axs[2].tick_params(labelsize=fontsize_ticks)
     axs[2].set_xlim([-0.7,0.6])
     #axs[0].legend(fontsize=12)
@@ -329,7 +329,8 @@ def do_plot(x,y, atlas,
             den_cmap = "PuBu",
             levels=None,
             fname_vs_e = "./figs/lambda_vs_e_z0",
-            d_alpha=1.0
+            d_alpha=1.0,
+            sizeOfFont=12
             ):
     import scipy.stats as st  
 
@@ -337,8 +338,15 @@ def do_plot(x,y, atlas,
     fontsize_tick_label = 8 * img_scale
     fontsize_legend = 5 * img_scale
     img_size_single_column =2.25 * img_scale
-    
-    
+
+    from matplotlib import rc, font_manager
+    fontProperties = {'family':'Liberation Sans',
+                      'weight' : 'normal', 'size' : sizeOfFont}
+    ticks_font = font_manager.FontProperties(family='Liberation Sans', style='normal',
+                   size=sizeOfFont, weight='normal', stretch='normal')
+    rc('text', usetex=True)
+    rc('font',**fontProperties)
+
     xmin = ymin = -0.05
     xmax = ymax = 0.9
 
@@ -352,9 +360,15 @@ def do_plot(x,y, atlas,
     # suppress last tick
     axmain.set_xticks(np.arange(0, xmax, 0.1))
     axmain.set_yticks(np.arange(0, ymax, 0.1))
-    axmain.set_xlabel(r"$\epsilon_{R_{e}}$", fontsize=fontsize_tick_label)
-    axmain.set_ylabel(r"$\lambda_{R_{e}}$", fontsize=fontsize_tick_label)
+    axmain.set_xlabel(r"$\epsilon_{R_{e}}$", fontsize=fontsize_tick_label, family="Liberation Sans")
+    axmain.set_ylabel(r"$\lambda_{R_{e}}$", fontsize=fontsize_tick_label)#, family="Liberation Sans")
     axmain.tick_params(axis='both', which='major', labelsize=fontsize_ticks)
+    for label in axmain.get_xticklabels():
+        label.set_fontproperties(ticks_font)
+    for label in axmain.get_yticklabels():
+        label.set_fontproperties(ticks_font)
+    #axmain.set_xticklabels(axmain.get_xticks(), family="helvetica")
+    #axmain.set_yticklabels(axmain.get_yticks(), family="helvetica")
 
     # S/R demarcation line
     sr_line_xx = np.arange(90)*0.01
@@ -396,7 +410,7 @@ def do_plot(x,y, atlas,
                              label="This work")
         fname_vs_e = fname_vs_e + "_sct"
 
-    if 1 == 1:
+    if 1 == 3:
         cfset = plot_density_map(axmain, x, y, xmin, xmax, ymin, ymax,
                             levels=levels,
                             cmap="winter",
@@ -415,7 +429,7 @@ def do_plot(x,y, atlas,
                    marker=".",
                    lw=1,
                    alpha=0.8,
-                   label=r"$ATLAS^{3D}$")    
+                   label="ATLAS" + r"$^{3D}$")    
 
     # Legend
     if 1 == 2:
@@ -437,7 +451,7 @@ def do_plot(x,y, atlas,
                       fontsize=fontsize_legend)
 
 
-    #plt.savefig(fname_vs_e + ".pdf", bbox_inches='tight')
+    plt.savefig(fname_vs_e + ".pdf", bbox_inches='tight')
     plt.savefig(fname_vs_e + ".png", bbox_inches='tight', dpi=200)
     #plt.savefig(fname_vs_e + ".svg", bbox_inches='tight')
     #plt.savefig(fname_vs_e + ".eps", bbox_inches='tight')
@@ -536,7 +550,7 @@ def modify_ticks1(zreds, aexps, ax, nout_ini, nout_fi, fontsize=12):
     #x_tick_pos = np.searchsorted(zreds[::-1], zz_target)[::-1]# + nout_ini# + nout_min
     # searchsorted requires arrays be in ascending order. 
 
-    ax.set_xlabel("Redshift", fontsize=fontsize)
+    ax.set_xlabel("Redshift", fontsize=fontsize, family="Liberation Sans")
     ax.set_xlim([0, nnouts])
 
     ax.set_xticks(x_tick_pos)#[::-1])
@@ -561,7 +575,7 @@ def modify_ticks2(zreds, aexps, ax2, nout_ini, nout_fi):
 
     ax2.set_xticks(u_age_pos)
     ax2.set_xticklabels(labels = u_age_target_str)
-    ax2.set_xlabel("Age of the universe (Gyr)")    
+    ax2.set_xlabel("Age of the universe (Gyr)", family="Liberation Sans")    
     
 
 
@@ -570,12 +584,22 @@ def plot_lambda_evol3(mpgs, fig, axs, nout_ini, nout_fi,
                      wdir_info='./',
                      density = "none",
                      cmap ="jet",
-                     img_scale=1.0):
+                     img_scale=1.0,
+                     sizeOfFont=9):
     
     fontsize_ticks = 6 * img_scale
     fontsize_tick_label = 8 * img_scale
     fontsize_legend = 5 * img_scale    
     
+    from matplotlib import rc, font_manager
+    fontProperties = {'family':'Liberation Sans',
+                      'weight' : 'normal', 'size' : sizeOfFont}
+    ticks_font = font_manager.FontProperties(family='Liberation Sans', style='normal',
+                   size=sizeOfFont, weight='normal', stretch='normal')
+    rc('text', usetex=True)
+    rc('font',**fontProperties)
+    
+
     nnouts = nout_fi - nout_ini + 1
     ngals_tot = len(mpgs)
     lambda_evol_all = np.zeros([ngals_tot, nnouts])
@@ -601,21 +625,9 @@ def plot_lambda_evol3(mpgs, fig, axs, nout_ini, nout_fi,
     aexps = np.array(aexps)
     zreds = np.array(zreds)
     
-    #ax2 = ax.twiny()
-    #modify_ticks(zreds, aexps, ax, ax2, nout_ini, nout_fi)
     modify_ticks1(zreds, aexps, axs[2], nout_ini, nout_fi, fontsize=fontsize_tick_label)
     
-    if density == "heat":
-        nbins = 20
-        lambda_range=[0., 0.8]
-        den_map = np.zeros((nbins, nnouts))
-        for i in range(nnouts):
-            den_map[:,i], ypoints = np.histogram(lambda_evol_all[:,i], bins=nbins, range=lambda_range)
-            den_map[:,i] /= den_map[:,i].max()
-        im = ax.imshow(den_map, origin="lower",
-                       cmap=cmap, 
-                       interpolation="gaussian")
-    elif density == "hexbin":
+    if density == "hexbin":
         xx = np.tile(np.arange(nnouts), ngals_tot)
         all_data = lambda_evol_all.ravel()
         ind_ok = all_data > 0.01
@@ -629,8 +641,8 @@ def plot_lambda_evol3(mpgs, fig, axs, nout_ini, nout_fi,
             ax.set_ylim([-0.1, 0.9])
             ax.set_yticks([0.0, 0.2, 0.4, 0.6, 0.8])
             ax.set_yticklabels([str(yy) for yy in yticks_ok])
-            ax.set_ylabel(r"$\lambda_{R_{eff}}$", fontsize=fontsize_tick_label)
-            ax.tick_params(axis='both', which='major', labelsize=fontsize_ticks)
+            ax.set_ylabel(r"$\lambda_{R_{eff}}$", fontsize=fontsize_tick_label, family="Liberation Sans")
+            ax.tick_params(axis='both', which='major', labelsize=fontsize_ticks, family="Liberation Sans")
             
     elif density == "kernel":
         xx = np.tile(np.arange(nnouts), ngals_tot)
@@ -642,14 +654,18 @@ def plot_lambda_evol3(mpgs, fig, axs, nout_ini, nout_fi,
         
         for ax in axs:
             ax.scatter(xx, yy, c=z, s=50, edgecolor='', cmap=cmap, rasterized=True)
-            yticks_ok=[0.0, 0.2, 0.4, 0.6, 0.8]
-            ax.set_ylim([-0.05, 0.9])
-            ax.set_yticks([0.0, 0.2, 0.4, 0.6, 0.8])
-            ax.set_yticklabels([str(yy) for yy in yticks_ok])
-            ax.set_ylabel(r"$\lambda_{R_{eff}}$", fontsize=fontsize_tick_label)
-            ax.tick_params(axis='both', which='major', labelsize=fontsize_ticks)
+#            yticks_ok=[0.0, 0.2, 0.4, 0.6, 0.8]
+#            ax.set_ylim([-0.05, 0.9])
+#            ax.set_yticks([0.0, 0.2, 0.4, 0.6, 0.8])
+#            ax.set_yticklabels([str(yy) for yy in yticks_ok])
+#            ax.set_ylabel(r"$\lambda_{R_{eff}}$", fontsize=fontsize_tick_label, family="Liberation Sans")
+#            ax.tick_params(axis='both', which='major', labelsize=fontsize_ticks)
             
-    axs[2].tick_params(axis='x', which='major', labelsize=fontsize_ticks)
+#    axs[2].tick_params(axis='x', which='major', labelsize=fontsize_ticks)
+
+
+    return zreds, aexps
+
 
 
 def simple_evol_path(gg, dt=10):
@@ -666,12 +682,13 @@ def simple_evol_path(gg, dt=10):
         lamb.append(gg.smoothed_lambda[i])
     return np.array(nout), np.array(mass), np.array(lamb)
 
-def plot_two_gals(twogals, ax, suptitle="",
+def plot_minor(twogals, ax, suptitle="",
                   normalize=True,
                   style="arrow",
                   nout_ini=37,
                   img_scale=2.0,
-                  annotate="(B )"):
+                  annotate="(B )",
+                  arrow_scale = 40):
     import matplotlib as mpl
     """
     Up to 4 galaxies in a plot
@@ -730,7 +747,7 @@ def plot_two_gals(twogals, ax, suptitle="",
                     patch = mpl.patches.FancyArrowPatch(
                         (nn[i], ll[i]), (nn[i+1],ll[i+1]),
                         arrowstyle=['->','-|>',"fancy","simple","wedge","-"][3],
-                        mutation_scale=np.sqrt(widths[i]) * 20,
+                        mutation_scale=np.sqrt(widths[i]) * arrow_scale,
 #                        lw=np.sqrt(widths[i]) * 5,
                         edgecolor=["red", "green", "yellow", "white"][igal],
                         facecolor="white",
@@ -751,7 +768,7 @@ def plot_two_gals(twogals, ax, suptitle="",
                     patch = mpl.patches.FancyArrowPatch(
                         (nn[i], ll[i]), (nn[i+1],ll[i+1]),
                         arrowstyle=['->','-|>',"fancy","simple","wedge","-"][3],
-                        mutation_scale=np.sqrt(widths[i]) * 20,
+                        mutation_scale=np.sqrt(widths[i]) * arrow_scale,
                         edgecolor=["red", "green", "yellow", "white"][igal],
                         fill=False,
                         joinstyle=['miter', 'round', 'bevel'][0],
@@ -787,16 +804,97 @@ def plot_two_gals(twogals, ax, suptitle="",
             ax.text(0.13, 0.9, suptitle, transform=ax.transAxes, fontsize=fontsize_ticks)
         else:
             print("Too short")
-    #plt.subplots_adjust(top=0.85)
-    #pdf.savefig(rasterize=True)
-    #plt.savefig("figs/" + suptitle + ".png")
-    #plt.close()
 
 
-def plot_major(twogals, ax, suptitle="",
+def plot_rest(twogals, ax,
+          suptitle="",
+          normalize=True,
+          style="arrow",
+          nout_ini=37,
+          img_scale=2.0,
+          annotate="(B )",
+          arrow_scale = 40):
+
+    import matplotlib as mpl
+    """
+    Up to 4 galaxies in a plot
+    """
+    #im = pickle.load(open("lambda_evol_all.pickle", "rb"))
+    #im.axes.set_ybound([-0.1, 0.85])
+    
+    fontsize_ticks = 6 * img_scale
+    fontsize_tick_label = 8 * img_scale
+    fontsize_legend = 5 * img_scale
+    img_size_single_column =2.25 * img_scale
+    
+    loc = [0, 0, 0, 0]
+    if len(twogals) == 2:
+        if twogals[0].smoothed_lambda[-1] < twogals[1].smoothed_lambda[-1]:
+            loc[1] = 0.65
+        else:
+            loc[0] = 0.65
+    
+    #ax.set_title(suptitle)
+    
+    for igal, gg in enumerate(twogals):
+        if len(gg.smoothed_lambda) > 100:
+            nn, mm, ll = simple_evol_path(gg)
+            nn -= nout_ini
+            if normalize:
+                widths = (mm[:-1]/mm[-1])
+            else:
+                widths = np.sqrt(mm[:-1]/1e9)
+            for i in range(len(mm)-1):
+                patch = mpl.patches.FancyArrowPatch(
+                    (nn[i], ll[i]), (nn[i+1],ll[i+1]),
+                    arrowstyle=['->','-|>',"fancy","simple","wedge","-"][3],
+                    mutation_scale=np.sqrt(widths[i]) * arrow_scale,
+#                    lw=np.sqrt(widths[i]) * 5,
+                    edgecolor=["red", "green", "yellow", "white"][igal],
+                    facecolor="white",
+                    fill=True,
+                    joinstyle=['miter', 'round', 'bevel'][0],
+                    alpha = 0.5,
+                    arrow_transmuter=None, 
+                    connectionstyle='Arc3',
+                    connector=None, 
+                    patchA=None, 
+                    patchB=None, 
+                    shrinkA=2.0, 
+                    shrinkB=2.0, 
+                    mutation_aspect=None,
+                    dpi_cor=1.0)
+                ax.add_patch(patch)
+                # Draw edge once more to have vivid edge + transparent face
+                patch = mpl.patches.FancyArrowPatch(
+                    (nn[i], ll[i]), (nn[i+1],ll[i+1]),
+                    arrowstyle=['->','-|>',"fancy","simple","wedge","-"][3],
+                    mutation_scale=np.sqrt(widths[i]) * arrow_scale,
+                    edgecolor=["red", "green", "yellow", "white"][igal],
+                    fill=False,
+                    joinstyle=['miter', 'round', 'bevel'][0],
+                    alpha = 0.3,
+                    arrow_transmuter=None, 
+                    connectionstyle='Arc3',
+                    connector=None, 
+                    patchA=None, 
+                    patchB=None, 
+                    shrinkA=2.0, 
+                    shrinkB=2.0, 
+                    mutation_aspect=None,
+                    dpi_cor=1.0)
+                ax.add_patch(patch)
+                
+        else:
+            print("Too short")
+
+
+def plot_major(twogals, ax,
+                  suptitle="",
                   normalize=True,
                   nout_ini=37,
-                  img_scale=2.0):
+                  img_scale=2.0,
+                  arrow_scale = 40):
     import matplotlib as mpl
     
     fontsize_ticks = 6 * img_scale
@@ -817,7 +915,7 @@ def plot_major(twogals, ax, suptitle="",
                 patch = mpl.patches.FancyArrowPatch(
                     (nn[i], ll[i]), (nn[i+1],ll[i+1]),
                     arrowstyle=['->','-|>',"fancy","simple","wedge","-"][3],
-                    mutation_scale=np.sqrt(widths[i]) * 20,
+                    mutation_scale=np.sqrt(widths[i]) * arrow_scale,
 #                        lw=np.sqrt(widths[i]) * 5,
                     edgecolor=["red", "green", "yellow", "white"][igal],
                     facecolor="white",
@@ -830,7 +928,7 @@ def plot_major(twogals, ax, suptitle="",
                 patch = mpl.patches.FancyArrowPatch(
                     (nn[i], ll[i]), (nn[i+1],ll[i+1]),
                     arrowstyle=['->','-|>',"fancy","simple","wedge","-"][3],
-                    mutation_scale=np.sqrt(widths[i]) * 20,
+                    mutation_scale=np.sqrt(widths[i]) * arrow_scale,
                     edgecolor=["red", "green", "yellow", "white"][igal],
                     fill=False,
                     joinstyle=['miter', 'round', 'bevel'][0],
@@ -859,6 +957,5 @@ def plot_major(twogals, ax, suptitle="",
             ax.text(0.13, 0.9, suptitle, transform=ax.transAxes, fontsize=fontsize_ticks)
         else:
             print("Too short") 
-
 
 

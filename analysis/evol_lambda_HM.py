@@ -4,10 +4,10 @@ class MainPrg():
     def __init__(self, treedata, final_gal, nout_ini=None, nout_fi=None):
         import tree.ctutils as ctu
         temp_tree = ctu.extract_main_tree(treedata, final_gal)
-        if nout_ini == None:
-            nout_ini = min(temp_tree['nout'])
-        if nout_fi == None:
-            nout_fi = max(temp_tree['nout'])            
+#        if nout_ini == None:
+#            nout_ini = min(temp_tree['nout'])
+#        if nout_fi == None:
+#            nout_fi = max(temp_tree['nout'])            
             
         self.nouts = np.arange(nout_fi, nout_ini -1, -1)
         self.idxs = temp_tree['id'] # nout_ini, nout_fi consideration needed.
