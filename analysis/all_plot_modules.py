@@ -545,8 +545,8 @@ def modify_ticks1(zreds, aexps, ax, nout_ini, nout_fi, fontsize=12):
 
     # For a given list of nouts, 
     # calculate a nice-looking set of zreds AND lookback times
-    zz_target = [0, 0.5, 1.0, 2.0]#[::-1]
-    x_tick_pos =np.array([187, 120, 87, 54]) - nout_ini
+    zz_target = [0, 0.5, 1.0, 2.0, 3.0]#[::-1]
+    x_tick_pos =np.array([187, 120, 87, 54, 37]) - nout_ini
     #x_tick_pos = np.searchsorted(zreds[::-1], zz_target)[::-1]# + nout_ini# + nout_min
     # searchsorted requires arrays be in ascending order. 
 

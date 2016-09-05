@@ -50,8 +50,11 @@ class Hydro(Simbase):
             ranges = region['ranges']
         if ranges is not None:
             self.set_ranges(ranges=ranges)
-        elif info.ranges is not None:
-            self.set_ranges(ranges=info.ranges)
+        else:
+            try:
+                self.set_ranges(ranges=info.ranges)
+            except:
+                self.set_ranges(ranges=[[0,1]]*3)
 
         try:
             self.amr = amr
