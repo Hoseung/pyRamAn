@@ -23,7 +23,14 @@ class Hydro(Simbase):
     and inherite the base class to define Hydro, Part, and Amr class.
     """
 
-    def __init__(self, nout=None, info=None, amr=None, region=None, ranges=None, load=False):
+    def __init__(self, 
+                    nout=None, 
+                    info=None, 
+                    amr=None, 
+                    region=None, 
+                    ranges=None, 
+                    load=False,
+                    cosmo=True):
         """
         Parameters
         ----------
@@ -32,29 +39,33 @@ class Hydro(Simbase):
         ranges : array-like (3 by 2)
             region preceeds(?) ranges.
         """
+        self.cosmo = cosmo
         if info is None:
             assert nout is not None, "either info or onut is required"
             from load.info import Info
             print("[Hydro.__init__] Loading info")
-            info = Info(nout=nout)
+            info = Info(nout=nout, cosmo=cosmo)
         self.info = info
         self.nout = info.nout
 
         snout = str(info.nout).zfill(5)
         # file name
         self.out_dir = 'snapshots/'
-        self._fnbase = info.base + '/' + self.out_dir + 'output_' + snout + '/hydro_' + snout + '.out'
+        self._fnbase = info.base + '/' + self.out_dir \
+                                 + 'output_' + snout \
+                                 + '/hydro_' + snout \
+                                 + '.out'
         self._get_basic_info()
         self.set_info(info)
         if region is not None:
             ranges = region['ranges']
         if ranges is not None:
             self.set_ranges(ranges=ranges)
-        else:
-            try:
+        elif hasattr(info, "ranges"):
+            if info.ranges is not None:
                 self.set_ranges(ranges=info.ranges)
-            except:
-                self.set_ranges(ranges=[[0,1]]*3)
+        else:
+            self.set_ranges([[-9e9,9e9]] * 3)
 
         try:
             self.amr = amr
