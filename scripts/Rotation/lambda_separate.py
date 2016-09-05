@@ -70,6 +70,12 @@ def worker(gals, hals, out_q, info, inds,
            rscale_extract_cell=1.0,
            **kwargs):
 
+    """
+       hals
+       Needed to extract particles from a region. 
+       unnecessary if particles are read from HaloMaker dump files.
+    """
+
     import galaxy.make_gal as mkg
     from galaxy import galaxy
 

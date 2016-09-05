@@ -531,8 +531,8 @@ def modify_ticks1(zreds, aexps, ax, nout_ini, nout_fi, fontsize=12):
 
     # For a given list of nouts, 
     # calculate a nice-looking set of zreds AND lookback times
-    zz_target = [0, 0.5, 1.0, 2.0]#[::-1]
-    x_tick_pos =np.array([187, 120, 87, 54]) - nout_ini
+    zz_target = [0, 0.5, 1.0, 2.0, 3.0]#[::-1]
+    x_tick_pos =np.array([187, 120, 87, 54, 37]) - nout_ini
     #x_tick_pos = np.searchsorted(zreds[::-1], zz_target)[::-1]# + nout_ini# + nout_min
     # searchsorted requires arrays be in ascending order. 
 
@@ -671,7 +671,8 @@ def plot_two_gals(twogals, ax, suptitle="",
                   style="arrow",
                   nout_ini=37,
                   img_scale=2.0,
-                  annotate="(B )"):
+                  annotate="(B )",
+                  arrow_scale = 40):
     import matplotlib as mpl
     """
     Up to 4 galaxies in a plot
@@ -730,7 +731,7 @@ def plot_two_gals(twogals, ax, suptitle="",
                     patch = mpl.patches.FancyArrowPatch(
                         (nn[i], ll[i]), (nn[i+1],ll[i+1]),
                         arrowstyle=['->','-|>',"fancy","simple","wedge","-"][3],
-                        mutation_scale=np.sqrt(widths[i]) * 20,
+                        mutation_scale=np.sqrt(widths[i]) * arrow_scale,
 #                        lw=np.sqrt(widths[i]) * 5,
                         edgecolor=["red", "green", "yellow", "white"][igal],
                         facecolor="white",
@@ -751,7 +752,7 @@ def plot_two_gals(twogals, ax, suptitle="",
                     patch = mpl.patches.FancyArrowPatch(
                         (nn[i], ll[i]), (nn[i+1],ll[i+1]),
                         arrowstyle=['->','-|>',"fancy","simple","wedge","-"][3],
-                        mutation_scale=np.sqrt(widths[i]) * 20,
+                        mutation_scale=np.sqrt(widths[i]) * arrow_scale,
                         edgecolor=["red", "green", "yellow", "white"][igal],
                         fill=False,
                         joinstyle=['miter', 'round', 'bevel'][0],
@@ -796,7 +797,8 @@ def plot_two_gals(twogals, ax, suptitle="",
 def plot_major(twogals, ax, suptitle="",
                   normalize=True,
                   nout_ini=37,
-                  img_scale=2.0):
+                  img_scale=2.0,
+                  arrow_scale = 40):
     import matplotlib as mpl
     
     fontsize_ticks = 6 * img_scale
@@ -817,7 +819,7 @@ def plot_major(twogals, ax, suptitle="",
                 patch = mpl.patches.FancyArrowPatch(
                     (nn[i], ll[i]), (nn[i+1],ll[i+1]),
                     arrowstyle=['->','-|>',"fancy","simple","wedge","-"][3],
-                    mutation_scale=np.sqrt(widths[i]) * 20,
+                    mutation_scale=np.sqrt(widths[i]) * arrow_scale,
 #                        lw=np.sqrt(widths[i]) * 5,
                     edgecolor=["red", "green", "yellow", "white"][igal],
                     facecolor="white",
@@ -830,7 +832,7 @@ def plot_major(twogals, ax, suptitle="",
                 patch = mpl.patches.FancyArrowPatch(
                     (nn[i], ll[i]), (nn[i+1],ll[i+1]),
                     arrowstyle=['->','-|>',"fancy","simple","wedge","-"][3],
-                    mutation_scale=np.sqrt(widths[i]) * 20,
+                    mutation_scale=np.sqrt(widths[i]) * arrow_scale,
                     edgecolor=["red", "green", "yellow", "white"][igal],
                     fill=False,
                     joinstyle=['miter', 'round', 'bevel'][0],
