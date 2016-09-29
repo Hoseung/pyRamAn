@@ -340,13 +340,14 @@ def do_plot(x,y, atlas,
     img_size_single_column =2.25 * img_scale
 
     from matplotlib import rc, font_manager
-    fontProperties = {'family':'Liberation Sans',
-                      'weight' : 'normal', 'size' : sizeOfFont}
-    ticks_font = font_manager.FontProperties(family='Liberation Sans', style='normal',
-                   size=sizeOfFont, weight='normal', stretch='normal')
-    rc('text', usetex=True)
-    rc('font',**fontProperties)
-
+#    fontProperties = {'family':'Liberation Sans',
+#                      'weight' : 'normal', 'size' : sizeOfFont}
+#    ticks_font = font_manager.FontProperties(family='Liberation Sans', style='normal',
+#                   size=sizeOfFont, weight='normal', stretch='normal')
+#    rc('text', usetex=True)
+#    rc('font',**fontProperties)
+    ticks_font = None
+    
     xmin = ymin = -0.05
     xmax = ymax = 0.9
 
@@ -363,10 +364,10 @@ def do_plot(x,y, atlas,
     axmain.set_xlabel(r"$\epsilon_{R_{e}}$", fontsize=fontsize_tick_label, family="Liberation Sans")
     axmain.set_ylabel(r"$\lambda_{R_{e}}$", fontsize=fontsize_tick_label)#, family="Liberation Sans")
     axmain.tick_params(axis='both', which='major', labelsize=fontsize_ticks)
-    for label in axmain.get_xticklabels():
-        label.set_fontproperties(ticks_font)
-    for label in axmain.get_yticklabels():
-        label.set_fontproperties(ticks_font)
+#    for label in axmain.get_xticklabels():
+#        label.set_fontproperties(ticks_font)
+#    for label in axmain.get_yticklabels():
+#        label.set_fontproperties(ticks_font)
     #axmain.set_xticklabels(axmain.get_xticks(), family="helvetica")
     #axmain.set_yticklabels(axmain.get_yticks(), family="helvetica")
 
@@ -399,7 +400,7 @@ def do_plot(x,y, atlas,
     if 1==1:
         xx,yy,z = density_map(x, y)    
         axmain.scatter(xx, yy, c=z, s=15, edgecolor='',
-                       cmap=den_cmap, rasterized=True,
+                       cmap=den_cmap, rasterized=False,
                        alpha=1.0, label="This work")
     
     if do_scatter:
@@ -424,11 +425,12 @@ def do_plot(x,y, atlas,
 
     #ATLAS3D
     axmain.scatter(atlas[:,0], atlas[:,1],
-                   s=20,
+                   s=40,
                    color=twocolors[1],
                    marker=".",
                    lw=1,
                    alpha=0.8,
+                   edgecolor='none',
                    label="ATLAS" + r"$^{3D}$")    
 
     # Legend
@@ -800,10 +802,10 @@ def plot_minor(twogals, ax, suptitle="",
                                     fontsize=fontsize_legend)
                     # text slightly further than the end of dashed lines
             #ax.annotate(suptitle, xy=(5, 0.79), fontsize=fontsize_ticks)
-            ax.text(0.05, 0.9, annotate, weight="bold",transform=ax.transAxes, fontsize=fontsize_ticks)
-            ax.text(0.13, 0.9, suptitle, transform=ax.transAxes, fontsize=fontsize_ticks)
         else:
             print("Too short")
+    ax.text(0.05, 0.9, annotate, weight="bold",transform=ax.transAxes, fontsize=fontsize_ticks)
+    ax.text(0.13, 0.9, suptitle, transform=ax.transAxes, fontsize=fontsize_ticks)
 
 
 def plot_rest(twogals, ax,
@@ -883,10 +885,11 @@ def plot_rest(twogals, ax,
                     shrinkB=2.0, 
                     mutation_aspect=None,
                     dpi_cor=1.0)
-                ax.add_patch(patch)
-                
+                ax.add_patch(patch)            
         else:
             print("Too short")
+    ax.text(0.05, 0.9, annotate, weight="bold",transform=ax.transAxes, fontsize=fontsize_ticks)
+    ax.text(0.13, 0.9, suptitle, transform=ax.transAxes, fontsize=fontsize_ticks)
 
 
 def plot_major(twogals, ax,
@@ -953,9 +956,9 @@ def plot_major(twogals, ax,
                                     fontsize=fontsize_legend)
                         # text slightly further than the end of dashed lines
             
-            ax.text(0.05, 0.9, "(A) ", weight="bold",transform=ax.transAxes, fontsize=fontsize_ticks)
-            ax.text(0.13, 0.9, suptitle, transform=ax.transAxes, fontsize=fontsize_ticks)
         else:
             print("Too short") 
+    ax.text(0.05, 0.9, "(A) ", weight="bold",transform=ax.transAxes, fontsize=fontsize_ticks)
+    ax.text(0.13, 0.9, suptitle, transform=ax.transAxes, fontsize=fontsize_ticks)
 
 

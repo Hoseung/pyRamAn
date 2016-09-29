@@ -28,8 +28,8 @@ ptype=["star pos mass"]
 refine_params = True
 dmo=False
 draw=True
-draw_halos=True
-draw_part = True
+draw_halos=False
+draw_part = False
 draw_hydro = True
 if draw_hydro:
     lmax=input("maximum level")
