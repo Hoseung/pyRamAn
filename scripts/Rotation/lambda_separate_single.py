@@ -48,7 +48,7 @@ from analysis.cal_lambda import *
 
 #%%
     
-def worker(gals, hals, out_all, out_young, out_old, info,
+def worker(gals, hals, out_all, out_young, out_old, info, i,
            dump_gal=False,
            reorient=False,
            lambda_method='ellip',
@@ -71,18 +71,19 @@ def worker(gals, hals, out_all, out_young, out_old, info,
     nout = info.nout
     #if type(inds) == int:
     #    inds = [inds]
-    inds=[0]
-    for i in inds:
+    #inds=[0]
+#    for i in inds:
+    if 1==1:
         #print(mp.current_process())
         print("\n \nThis is {}-th galaxy".format(i))
         print("halo: {}".format(hals.data['id'][i]), )
         print("gal: {}".format(gals.data['id'][i]), )
         
         gg = gals.data[i]
-        hh = hals.data[i]
+        #hh = hals.data[i]
 
         galid = gg['id']
-        halid = hh['id']
+        #halid = hh['id']
         gm = load.rd_GM.rd_gal(info.nout, galid, wdir=wdir)
         # print('!!!! mima vx in gm', min(gm.star['vx']), max(gm.star['vx']))
 
@@ -136,7 +137,8 @@ def worker(gals, hals, out_all, out_young, out_old, info,
 
         out_all.put(gal.meta.__dict__)
 
-        try:
+#        try:
+        if 1==2:
             print(" \n Now young stellar particles ({})".format(len(gm_young.star)))
             gal = _make_n_run(gg, gm_young, info, hals, i=i,
                with_DM=with_DM, with_cell=with_cell,
@@ -147,12 +149,13 @@ def worker(gals, hals, out_all, out_young, out_old, info,
                galaxy_plot=galaxy_plot)
 
             out_young.put(gal.meta.__dict__)
-        except:
-            pass
+#        except:
+#            pass
 
 
 #        if len(gm_old.star) > 1e3:
-        try:
+        if 1==2:
+#        try:
             print(" \n And old stellar particles ({})".format(len(gm_old.star)))
             gal = _make_n_run(gg, gm_old, info, hals, i=i,
                with_DM=with_DM, with_cell=with_cell,
@@ -163,8 +166,8 @@ def worker(gals, hals, out_all, out_young, out_old, info,
                galaxy_plot=galaxy_plot)
          
             out_old.put(gal.meta.__dict__)
-        except:
-            pass
+#        except:
+#            pass
 
         gal = 0
         gm = 0
@@ -183,7 +186,6 @@ def _make_n_run(gg, gm, info, hals,
                 galaxy_plot=True):
 
     gal = galaxy.Galaxy(halo = gg,
-                        radius_method='eff',
                         info=info)
     #print('!!!! mima vx gm.dm', min(gm.dm['vx']), max(gm.dm['vx']))
     good_gal = gal.mk_gal(gm.star, gm.dm, gm.cell,
@@ -403,7 +405,8 @@ def main(galidx,
     out_young = Queue()
     out_old = Queue()    
 
-
+    print(prg_only_tree["id"])
+    idx_list = prg_only_tree["id"]
     for nout in nouts:
         print(nout, nout_fi)
 
@@ -421,14 +424,14 @@ def main(galidx,
 
         allgal, allhal = get_sample_gal(wdir,
                              nout, info, prg_only_tree, mstar_min)
-
- 
+        #print(allgal.data["idx"] )
+        inds = np.where(allgal.data["idx"] == idx_list[nout_fi - nout])[0][0]
         keywords = dict(rscale = mk_gal_rscale,
                     verbose=verbose,
                     mstar_min=mstar_min)#, dump_gal = dump_gal,
 
-        worker(allgal,allhal, out_all, out_young, out_old,
-               info,
+        worker(allgal, allhal, out_all, out_young, out_old,
+               info, inds,
                dump_gal=dump_gal,
                reorient=reorient,
                lambda_method=lambda_method,

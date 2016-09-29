@@ -95,14 +95,6 @@ def nouts_from_zreds(zreds, wdir='./'):
 
     return nouts
 
-
-
-
-
-
-
-
-
 def worker(gals, hals, out_q, info, inds,
            dump_gal=False,
            reorient=False,

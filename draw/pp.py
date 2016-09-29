@@ -590,6 +590,7 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
     else:
         if field_var is None:
             if hvar == "rho":
+                hvar = "var0"
                 sden = cell[hvar][val]**2*dx*scale_nH
             if hvar == "temp":
                 sden = cell[hvar][val]*scale_T2
@@ -598,7 +599,7 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
         else:
             sden = cell[field_var][val]
 
-    mass = cell["rho"][val]*dx
+    mass = cell["var0"][val]*dx
     mass.transpose()
 
     mindx = min(dx)

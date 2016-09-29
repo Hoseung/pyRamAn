@@ -104,11 +104,10 @@ class Galaxy(object):
 
     def radial_profile_cut(self, xx, yy, mm, vx, vy, vz,
                            den_lim=2e6, den_lim2=5e6,
-                           mag_lim=25, nbins=100, rmax=20, dr=0.5,
+                           mag_lim=25, nbins=100, rmax=50, dr=0.5,
                            debug=False):
         # 2D photometry. (if rotated towards +y, then use x and z)
         # now assuming +z alignment. 
-
         rr = np.sqrt(np.square(xx) + np.square(yy))# in kpc unit
         if debug:
             print(min(rr), max(rr), min(xx), max(xx))
@@ -120,13 +119,15 @@ class Galaxy(object):
 
         rmax = min([np.max(rr), rmax])
         nbins = int(rmax/dr)
-        print(rmax, nbins)
+        try:
+            frequency, bins = np.histogram(r_sorted, bins = nbins, range=[0, rmax])
+        except:
+            False
 
-        frequency, bins = np.histogram(r_sorted, bins = nbins, range=[0, rmax])
         bin_centers = bins[:-1] + 0.5 * dr # remove the rightmost boundary.
         
         m_radial = np.zeros(nbins)
-        ibins = np.concatenate((np.zeros(1), np.cumsum(frequency)))
+        ibins = np.concatenate((np.zeros(1, dtype=np.int32), np.cumsum(frequency)))
 
         i_r_cut1 = nbins -1 # Maximum value
         # on rare occasions, a galaxy's stellar surface density
@@ -156,8 +157,8 @@ class Galaxy(object):
         self.meta.reff2 = r_sorted[i_reff2]
         self.meta.reff  = r_sorted[i_reff1]
         #print(bin_centers, i_r_cut2, m_radial)
-        self.meta.rgal2 = max([bin_centers[i_r_cut2],4*self.meta.reff2])
-        self.meta.rgal  = max([bin_centers[i_r_cut1],4*self.meta.reff])#bin_centers[i_r_cut1]
+        self.meta.rgal2 = max([bin_centers[i_r_cut2], 4*self.meta.reff2])
+        self.meta.rgal  = max([bin_centers[i_r_cut1], 4*self.meta.reff])#bin_centers[i_r_cut1]
 
 #       velocity center
 #       It is not wrong for BCGs to have very large Reff(~50kpc). 
@@ -182,7 +183,7 @@ class Galaxy(object):
                save=False, verbose=False,
                mstar_min=1e9,
                rmin = -1, Rgal_to_reff=5.0, method_com=1, follow_bp=None,
-               unit_conversion="code", debug=False):
+               unit_conversion="code", debug=False, fixed_rgal=False):
         """
             Input data in code unit.
 
@@ -214,7 +215,6 @@ class Galaxy(object):
             print("Making a galaxy:", self.meta.id)
             print("SAVE:", save)
             print("Halo size:", self.halo['rvir'])
-
 
         # galaxy center from GalaxyMaker. - good enough.
         xc = self.halo['x']
@@ -250,10 +250,11 @@ class Galaxy(object):
 #        rr_tmp = max([min([self.halo['r'], 0.0002]), 0.000015]) # larger than 3kpc/h
 
 
-        rgal_tmp = min([self.halo['r'] * self.info.pboxsize * 1000.0, 25])
+        rgal_tmp = self.halo['r'] * self.info.pboxsize * 1000.0
         if verbose: print("Rgal_tmp", rgal_tmp)
 #        self.radial_profile_cut(den_lim=1e6, den_lim2=5e6,
-        dense_enough = self.radial_profile_cut(star['x'], star['y'], star['m'],
+        if not fixed_rgal:
+            dense_enough = self.radial_profile_cut(star['x'], star['y'], star['m'],
                                 star['vx'], star['vy'], star['vz'],
                                 den_lim=1e6, den_lim2=5e6,
                                 mag_lim=25,
@@ -261,10 +262,13 @@ class Galaxy(object):
                                 dr=0.5,
                                 rmax=rgal_tmp,
                                 debug=debug)
+        else:
+            dense_enough = True
 
         if not dense_enough:
             print("Not dense enough")
             return False
+
         ind = np.where((np.square(star['x']) + 
                         np.square(star['y']) +
                         np.square(star['z'])) < self.meta.rgal**2)[0]# in kpc unit
@@ -274,10 +278,9 @@ class Galaxy(object):
 
         if debug: print('[galaxy.Galaxy.mk_gal] mima vx 1', min(self.star['vx']), max(self.star['vx']))
 
-
         self.meta.nstar = len(ind)
         self.meta.mstar = sum(self.star['m'])
-        
+
         if self.meta.mstar < mstar_min:
             print("Not enough stars: {:.2e} Msun".format(self.meta.mstar))
             print("{} Aborting... \n".format(len(self.star['m'])))
@@ -1203,10 +1206,15 @@ class Galaxy(object):
                 i_reff = np.argmax(np.cumsum(mmap[dsort]) > 0.5*mmap_tot)
                 frac =  i_reff/ len(mmap)
                 
-#                print("frac1", frac)
-                f = mge.find_galaxy.find_galaxy(self.mmap, quiet=True, plot=False,
+                #print("frac1", frac)
+                try:
+                    f = mge.find_galaxy.find_galaxy(self.mmap, quiet=True, plot=False,
                                                 mask_shade=False,
                                                 fraction=frac)
+                except:
+                    print("!!! an error occured !!!")
+                    return (-1, -1, -1), (-1, -1, -1)
+
 
 #                f.eps = 0
 #                f.theta = 0
@@ -1911,7 +1919,7 @@ class Galaxy(object):
         if fn_save is None:
             fn_save = "galaxy_plot" + str(self.meta.id).zfill(5) + ".png"
 
-        plt.savefig(fn_save, dpi=100)
+        plt.savefig(fn_save, dpi=144)
         plt.close()
        
     def save_gal(self, base='./'):
