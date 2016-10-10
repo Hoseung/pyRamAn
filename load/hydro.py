@@ -24,13 +24,15 @@ class Hydro(Simbase):
     """
 
     def __init__(self, 
-                    nout=None, 
-                    info=None, 
-                    amr=None, 
-                    region=None, 
-                    ranges=None, 
-                    load=False,
-                    cosmo=True):
+                 nout=None, 
+                 info=None, 
+                 amr=None, 
+                 region=None, 
+                 ranges=None, 
+                 load=False,
+                 cosmo=True,
+                 cpus=None,
+                 cpu_fixed=None):
         """
         Parameters
         ----------
@@ -39,6 +41,7 @@ class Hydro(Simbase):
         ranges : array-like (3 by 2)
             region preceeds(?) ranges.
         """
+        super(Hydro, self).__init__()
         self.cosmo = cosmo
         if info is None:
             assert nout is not None, "either info or onut is required"
@@ -47,6 +50,12 @@ class Hydro(Simbase):
             info = Info(nout=nout, cosmo=cosmo)
         self.info = info
         self.nout = info.nout
+        self.cpus = cpus
+        self.cpu_fixed=cpu_fixed
+        try:
+            self.ncpu = len(self.cpus)
+        except:
+            self.ncpu = 0
 
         snout = str(info.nout).zfill(5)
         # file name

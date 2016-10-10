@@ -15,6 +15,11 @@ class Simbase():
     """
     def __init__(self, cosmo=True):
         self.cosmo=cosmo
+        self.ranges=None
+        self.region=None
+        self.nout=None
+        self.cpu_fixed=False
+        self.cpus=None
     
     def add_amr(self):
         from load.amr import Amr
@@ -24,30 +29,40 @@ class Simbase():
     def get_cpus(self):
         return self.cpus
 
-    def set_cpus(self, cpus):
-        self.cpus = np.array(cpus)
-        print("Updating info.cpus")
+    def unlock_cpus(self):
+        self.cpu_fixed=False
+
+    def set_cpus(self, cpus, lock=False):
+        if not self.cpu_fixed:
+            self.cpus = np.array(cpus)
+        # Lock, but only there is a valid list of cpus.
+        if lock and self.cpus is not None:
+            self.cpu_fixed = True
+        #print("Updating info.cpus")
         #self.info._set_cpus(self.get_cpus())
 
     def show_cpus(self):
         print(" ncpus : %s \n" % self.get_cpus())
 
     def set_ranges(self, ranges=[[0, 1], [0, 1], [0, 1]]):
-        nr = np.asarray(ranges)
-        if not(nr.shape[0] == 3 and nr.shape[1] == 2):
-            # Because actual operation on the given input(ranges)
-            # does not take place soon, it's not a good place to use
-            # try & except clause. There is nothing to try yet.
-            print(' Error!')
-            print('Shape of ranges is wrong:', nr.shape)
-            print('example : [[0.1,0.3],[0.2,0.4],[0.6,0.8]] \n')
+        if ranges is not None:
+            nr = np.asarray(ranges)
+            if not(nr.shape[0] == 3 and nr.shape[1] == 2):
+                # Because actual operation on the given input(ranges)
+                # does not take place soon, it's not a good place to use
+                # try & except clause. There is nothing to try yet.
+                print(' Error!')
+                print('Shape of ranges is wrong:', nr.shape)
+                print('example : [[0.1,0.3],[0.2,0.4],[0.6,0.8]] \n')
+            else:
+                self.ranges = ranges
+    #            try:
+    #                self.info._set_ranges(self.ranges)
+    #            except AttributeError:
+    #                print("There is no info._set_ranges attribute")
+                self.set_cpus(self._hilbert_cpulist(self.info, self.ranges))
         else:
-            self.ranges = ranges
-#            try:
-#                self.info._set_ranges(self.ranges)
-#            except AttributeError:
-#                print("There is no info._set_ranges attribute")
-            self.set_cpus(self._hilbert_cpulist(self.info, self.ranges))
+            self.ranges = None
 
     
     def _hilbert_cpulist(self, info, ranges):
@@ -242,6 +257,8 @@ class Sim(Simbase):
 
 
         """
+        super(Sim,self).__init__()
+        # should call parent class' init.
 
         self.nout = nout          
         self.set_base(base)
@@ -251,11 +268,14 @@ class Sim(Simbase):
         self.set_data_dir(data_dir)
         self.add_info()
         # set_data_dir and set_range needs info instance be exist.
-#        self.set_ranges(ranges)
+        self.set_ranges(ranges)
         if region is not None:
             ranges = [[region['xc'] - region['radius'], region['xc'] + region['radius']],
                       [region['yc'] - region['radius'], region['yc'] + region['radius']],
                       [region['zc'] - region['radius'], region['zc'] + region['radius']]]
+        else:
+            self.region=None
+
         if setup:
             self.setup(nout, base, data_dir, ranges, dmo)
 
@@ -274,7 +294,8 @@ class Sim(Simbase):
 
         if self._all_set():
             self.add_amr()
-            self.set_cpus(self._hilbert_cpulist(self.info, self.ranges))
+            if self.ranges is not None:
+                self.set_cpus(self._hilbert_cpulist(self.info, self.ranges))
         print('Simulation set up.')
 
     def set_base(self, base):
@@ -304,7 +325,7 @@ class Sim(Simbase):
         print("setting the base(working) directory to :", self.base)
 
     def add_hydro(self, load=True, lmax=None, region=None, ranges=None,
-                  cpu=False):
+                  cpu=False, **kwargs):
         """
         Add a hydro instance to the simulation instance. 
 
@@ -316,11 +337,16 @@ class Sim(Simbase):
             If false, an hydro instance is added without cell data.
         """
         from load import hydro
+        if region is None:
+            region = self.region
+        if ranges is None:
+            ranges is self.ranges
         self.hydro = hydro.Hydro(info=self.info,
-                                 amr=self.amr,
-#                                 base=self.base,
+                                 cpus=self.cpus,
+                                 cpu_fixed=self.cpu_fixed,
                                  region=region,
-                                 ranges=ranges)
+                                 ranges=ranges,
+                                 amr=self.amr, **kwargs)
         if load :
             if lmax is None:
                 lmax = self.info.lmax
@@ -353,11 +379,19 @@ class Sim(Simbase):
             self.dmo = True
         from load import part
         print("Types of particles you want to load are: ", ptypes)
+
+        # To do. instead of specifying every variables, 
+        # make the Part object inherit common variables from the father class instance, sim.
+        # use inspect module?? 
         self.part = part.Part(info=self.info,
                               ptypes=ptypes,
                               data_dir=self.data_dir,
                               dmo=self.dmo,
                               base=self.base,
+                              cpus=self.cpus,
+                              cpu_fixed=self.cpu_fixed,
+                              region=self.region,
+                              ranges=self.ranges,
                               cosmo=self.cosmo, **kwargs)
         print("A particle instance is created\n")
 

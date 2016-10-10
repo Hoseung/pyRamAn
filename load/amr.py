@@ -222,7 +222,12 @@ class Amr():
         self.info = info
         
         self._fnbase = os.path.join(info.base, info.data_dir) + 'output_' + snout + '/amr_' + snout + '.out'
-        f = open(self._fnbase + '00001', "rb")
+        try:
+            f = open(self._fnbase + '00001', "rb")
+        except:
+            import glob
+            amrs = glob.glob(self._fnbase + "*")
+            f = open(amrs[0], "rb")
 
         self.header = AmrHeader()
         self.header._read_amr_header(f)

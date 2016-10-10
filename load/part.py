@@ -82,13 +82,16 @@ class Part(load.sim.Simbase):
 # Instead, Simbase.__init__ is overridden.
 #
 #
-    def __init__(self, nout=None, info=None, dmo=False, ptypes=None, base='./', 
-                 region=None, ranges=None,
+    def __init__(self, parent=None, nout=None, info=None, dmo=False, ptypes=None, base='./', 
+                 region=None, ranges=[[0,1]]*3, cpus=None,
+                 cpu_fixed=False,
                  data_dir='snapshots/', dmref=False, dmvel=False,
                  dmmass=True, load=False, cosmo=True):
         """
         parameters
         ----------
+        parent : a super class. 
+            If given, all the values of (non callable) attributes from the parent are inherited.
         ptypes : list of particle type and information. 
                 ["dm id pos"] or ["dm id pos", "star mass vel"]
         dmo : logical
@@ -104,7 +107,7 @@ class Part(load.sim.Simbase):
         info is required for domain decomposition.
 
         """
-
+        super(Part, self).__init__()
         self.cosmo = cosmo
         if info is None:
             assert nout is not None, "either info or nout is required"
@@ -113,7 +116,12 @@ class Part(load.sim.Simbase):
         self.info = info
         self.nout = info.nout
         #self.ptypes = ptypes
-        self.ncpu = 0
+        self.cpus = cpus
+        self.cpu_fixed=cpu_fixed
+        try: 
+            self.ncpu = len(self.cpus)
+        except:
+            self.ncpu = 0
         self.nstar = 0
         self.nsink = 0
         try:
@@ -137,7 +145,10 @@ class Part(load.sim.Simbase):
             try:
                 self.set_ranges(ranges=self.info.ranges)
             except:
-                self.set_ranges(ranges=[[0,1]]*3)
+                pass
+                # If range, reigon, info.ranges are all None,
+                # then the region information is meant to be omitted.
+                # probably icpu=[1,2,3] option is used.
     
         # header structure
         self._ramses_particle_header = np.dtype([('ncpu', 'i4'),
@@ -209,7 +220,13 @@ class Part(load.sim.Simbase):
         self.dm_with_ref = ref
 
     def _get_basic_info(self):
-        f = open(self._fbase + '00001', "rb")
+        try:
+            f = open(self._fbase + '00001', "rb")
+        except:
+            from glob import glob
+            parts = glob(self._fbase + "*")
+            f = open(parts[0], "rb")
+
         header = read_header(f, self._ramses_particle_header)
         self.ncpu = header['ncpu']
         self.nstar = header['nstar']
@@ -263,6 +280,7 @@ class Part(load.sim.Simbase):
     def load(self, fortran=True, read_metal=True, **kwargs):
         """ tests whether the files exist, and then calls load() or load_dmo()
         """
+        print(self.ranges, "AAAAAAA")
         if self.dmo:
             self.load_dmo(self, **kwargs)
         else:
@@ -296,9 +314,9 @@ class Part(load.sim.Simbase):
 
     def load_dmo(self, zoom=False, verbose=False, ranges=None):
         """
-        DMO run output is much simpler:
+        DMO run output is simpler:
         no time, no metal, no need to calculate number of each type of particles.
-        So it should run much faster!
+        So it should run faster!
         """
         # function argument is evaluated on function defining time,
         # So you can't pass the actual value of self.info instance
