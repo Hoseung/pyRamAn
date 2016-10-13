@@ -42,12 +42,8 @@ import load
 import tree.halomodule as hmo 
 import general
 
-
 from analysis.cal_lambda import *
 
-
-#%%
-    
 def worker(gals, hals, out_all, out_young, out_old, info, i,
            dump_gal=False,
            reorient=False,

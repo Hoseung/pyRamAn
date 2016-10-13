@@ -85,7 +85,13 @@ class Hydro(Simbase):
             self.amr2cell()
 
     def _get_basic_info(self):
-        f = open(self._fnbase + '00001', "rb")
+        try:
+            f = open(self._fbase + '00001', "rb")
+        except:
+            from glob import glob
+            hydros = glob(self._fnbase + "*")
+            f = open(hydros[0], "rb")
+
         self.header = Dummy()
         self._read_hydro_header(f)
 
@@ -153,6 +159,7 @@ class Hydro(Simbase):
             print("[hydro.amr2cell] cpus", self.cpus)
             
         out = a2c.a2c_count(work_dir, xmi, xma, ymi, yma, zmi, zma, lmax, self.cpus)
+        print("[hydro.amr2ell] a2c_count done")
 
         if return_meta:
             return (out[0], work_dir, xmi, xma, ymi, yma, zmi, zma, lmax)
