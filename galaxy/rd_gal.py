@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """
 Created on Thu Mar 10 04:50:37 2016
-
-afaflkj;fldsjl;ajd;ladsjalkdsfj
 @author: hoseung
+
+Minimal... test purpose?
+
 """
 from load.utils import read_header, read_fortran
 import numpy as np

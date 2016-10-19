@@ -106,7 +106,6 @@ class Galaxy(object):
                            debug=False):
         # 2D photometry. (if rotated towards +y, then use x and z)
         # now assuming +z alignment. 
-
         rr = np.sqrt(np.square(xx) + np.square(yy))# in kpc unit
         if debug:
             print(min(rr), max(rr), min(xx), max(xx))
@@ -118,7 +117,7 @@ class Galaxy(object):
 
         rmax = min([np.max(rr), rmax])
         nbins = int(rmax/dr)
-        print(rmax, nbins)
+        
         if nbins < 3:
             print("Too small size \n # of stars:", len(rr))
             return False
@@ -134,14 +133,27 @@ class Galaxy(object):
         # never crosses the density limit. Then i_r_cut1 = last index.
         for i in range(nbins):
             m_radial[i] = np.sum(m_sorted[ibins[i]:ibins[i+1]])
-            if (m_radial[i]/(2 * np.pi * bin_centers[i] * dr)) < den_lim:
+            # Check stellar surface density
+            sig_at_r = m_radial[i]/(2 * np.pi * bin_centers[i] * dr)
+            if debug:
+                print(sig_at_r, den_lim)
+            if sig_at_r < den_lim:
                 i_r_cut1 = i-1
                 break
         #i_r_cut2= np.argmax(m_radial/(2 * np.pi * bin_centers * dr) < den_lim2)
         # If for some reason central region is less dense,
         # profile can end at the first index.
         # Instead coming from backward, search for the point the opposite condition satisfied.
+        if debug:
+            print(rmax, nbins)
+            print("frequency", frequency)
+            print("bins", bins)
+            print("ibins", ibins)
+            print("bin centers", bin_centers)
+            print("m_radial", m_radial)
+            
         den_radial_inverse = m_radial[::-1]/(2 * np.pi * bin_centers[::-1] * dr)
+        if debug: print("den_radial_inverse", den_radial_inverse)
         if max(den_radial_inverse) < 2 * den_lim2:
             return False
         i_r_cut2=len(m_radial) - np.argmax(den_radial_inverse > den_lim2) -1
@@ -246,16 +258,10 @@ class Galaxy(object):
             star['z'] = (star['z'] - (zc - 0.5) * self.info.pboxsize)*1e3
             if 'm' in star.dtype.names:
                 star['m'] = star['m'] * 1e11 # in Msun.
-            
-#        rscale_cen = 0.25
-#        rr_tmp = min([self.halo['r'], 0.0002]) # less than 40kpc/h
-        # arbitrary! < 40kpc
-#        rr_tmp = max([min([self.halo['r'], 0.0002]), 0.000015]) # larger than 3kpc/h
 
 
         rgal_tmp = min([self.halo['r'] * self.info.pboxsize * 1000.0, 25])
         if verbose: print("Rgal_tmp", rgal_tmp)
-#        self.radial_profile_cut(den_lim=1e6, den_lim2=5e6,
         dense_enough = self.radial_profile_cut(star['x'], star['y'], star['m'],
                                 star['vx'], star['vy'], star['vz'],
                                 den_lim=1e6, den_lim2=5e6,

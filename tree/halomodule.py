@@ -182,6 +182,9 @@ class Halo(HaloMeta):
 
 
     """
+    def __init__(self):
+        super(Halo, self).__init__()
+        
     def _check_params(self):
         assert (self.base is not None), "No working directory given : {}".format(self.base)
         assert (self.nout is not None), "No nout given : {}".format(self.nout)

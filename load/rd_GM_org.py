@@ -2,13 +2,10 @@
 """
 Created on Thu Mar 10 04:50:37 2016
 
-Inherit galaxy.Galaxy class
-
 @author: hoseung
 """
 from load.utils import read_header, read_fortran
 import numpy as np
-from galaxy.galaxy import Galaxy
 
 
 class Header():
@@ -39,7 +36,7 @@ class Dummy():
     def __init__(self):
         pass
 
-class Gal(Galaxy):
+class Gal():
     def __init__(self, nout, idgal, wdir='./', idhal = -1, load=True, info=None, rscale=1.5):
         """
         
@@ -49,7 +46,6 @@ class Gal(Galaxy):
             load avaialable (star, dm, cell) data on creating a instance.
         
         """
-        super(Gal, self).__init__()
         self.star = None # data -> star
         self.header = None
         self.dm = None
