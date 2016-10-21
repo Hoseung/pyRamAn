@@ -42,7 +42,7 @@ class AmrHeader():
     def __init__(self):
         pass
 
-    def _read_amr_header(self, f, skip_header = True):
+    def _read_amr_header(self, f, skip_header = False):
         """
         Make this visible from outside, and more general
         this can be used everytime you need to skip header
@@ -113,6 +113,7 @@ class AmrHeader():
         else:
             h2 = read_header(f, dtype_h2)
             h20= read_header(f, dtype_h20)
+            self.numbl = h20["numbl"]
             skip_fortran(f)
 
         if (h1['nboundary'] > 0):
