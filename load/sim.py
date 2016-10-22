@@ -32,7 +32,13 @@ class Simbase():
     def unlock_cpus(self):
         self.cpu_fixed=False
 
-    def set_cpus(self, cpus, lock=False):
+    def set_cpus(self, cpus=None, lock=False):
+        if cpus is None:
+            if self.cpus is None:
+                print("self.cpus is None, provide cpus=")
+                return
+            else:
+                cpus = self.cpus
         if not self.cpu_fixed:
             self.cpus = np.array(cpus)
         # Lock, but only there is a valid list of cpus.
@@ -340,7 +346,7 @@ class Sim(Simbase):
         if region is None:
             region = self.region
         if ranges is None:
-            ranges is self.ranges
+            ranges = self.ranges
         self.hydro = hydro.Hydro(info=self.info,
                                  cpus=self.cpus,
                                  cpu_fixed=self.cpu_fixed,

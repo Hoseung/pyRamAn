@@ -280,7 +280,6 @@ class Part(load.sim.Simbase):
     def load(self, fortran=True, read_metal=True, **kwargs):
         """ tests whether the files exist, and then calls load() or load_dmo()
         """
-        print(self.ranges, "AAAAAAA")
         if self.dmo:
             self.load_dmo(self, **kwargs)
         else:
