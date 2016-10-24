@@ -150,7 +150,7 @@ class Hydro(Simbase):
         
         from load import a2c
         out = a2c.a2c_count(work_dir, xmi, xma, ymi, yma, zmi, zma, lmax, self.cpus)
-        print("[hydro.amr2ell] a2c_count done")
+        if verbose: print("[hydro.amr2ell] a2c_count done")
 
         if return_meta:
             return (out[0], work_dir, xmi, xma, ymi, yma, zmi, zma, lmax)

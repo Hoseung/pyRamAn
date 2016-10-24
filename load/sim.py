@@ -7,8 +7,6 @@ Created on Tue Jan 13 23:27:16 2015
 
 import numpy as np
 
-
-
 class Simbase():
     """ 
     base    
@@ -340,7 +338,8 @@ class Sim(Simbase):
         if region is None:
             region = self.region
         if ranges is None:
-            ranges is self.ranges
+            ranges = self.ranges
+
         self.hydro = hydro.Hydro(info=self.info,
                                  cpus=self.cpus,
                                  cpu_fixed=self.cpu_fixed,
