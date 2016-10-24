@@ -345,10 +345,6 @@ class Sim(Simbase):
             region = self.region
         if ranges is None:
             ranges = self.ranges
-<<<<<<< HEAD
-
-=======
->>>>>>> 1c228b5031cf80859d3f6e5e80f9c5f87d42cf6d
         self.hydro = hydro.Hydro(info=self.info,
                                  cpus=self.cpus,
                                  cpu_fixed=self.cpu_fixed,
