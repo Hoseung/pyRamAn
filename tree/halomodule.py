@@ -141,7 +141,8 @@ class HaloMeta():
 
     def _load_info(self):
         import load.info
-        if self.verbose: 
+        #if self.verbose: 
+        if True:
             print("[Halo.load_info] loading info")
             print("[Halo.load_info] nout = {}, base ={}".format(self.nout, self.base))
         self.info = load.info.Info(nout=self.nout, base=self.base, load=True)    
@@ -182,8 +183,8 @@ class Halo(HaloMeta):
 
 
     """
-    def __init__(self):
-        super(Halo, self).__init__()
+    def __init__(self, **kwargs):
+        super(Halo, self).__init__(**kwargs)
         
     def _check_params(self):
         assert (self.base is not None), "No working directory given : {}".format(self.base)
