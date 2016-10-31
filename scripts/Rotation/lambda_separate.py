@@ -47,15 +47,14 @@
 import matplotlib
 matplotlib.use("Agg")
 
-import numpy as np
+#import numpy as np
 import collections
-from galaxy import galaxy
-import pickle
+#import pickle
 import load
-from load.hydro import Hydro
+#from load.hydro import Hydro
 
 from analysis.cal_lambda import *
-from analysis.rotator_misc import nouts_from_zreds
+#from analysis.rotator_misc import nouts_from_zreds
 
 
 def worker(gals, hals, out_q, info, inds,
@@ -275,7 +274,7 @@ def main(wdir='./',
     mk_gal_rscale = 1.1 # unit of Rvir,galaxy
     #r_cluster_scale = 2.9 # maximum radius inside which galaxies are searched for
     npix=800
-    lmax = 19
+    #lmax = 19
     ptypes=["star id pos mass vel time metal", "dm id pos mass vel"]
 
     if worker_params["galaxy_plot"]:
@@ -283,7 +282,8 @@ def main(wdir='./',
             os.mkdir(worker_params["galaxy_plot_dir"])
 
 
-    voronoi_dict = dict(targetSN=15, plot=False, quiet=True)
+    #voronoi_dict = dict(targetSN=15, plot=False, quiet=True)
+    voronoi_dict=None
     # voronoi tesselation need many points,
     # always use voronoi with pseudo particle option
     cal_lambda_params = dict(npix_per_reff=5,
@@ -291,7 +291,7 @@ def main(wdir='./',
                              method='ellip',
                              n_pseudo=n_pseudo,
                              verbose=False,
-                             voronoi=None,#voronoi_dict,
+                             voronoi=voronoi_dict,
                              mge_interpol = True)
 
 
@@ -367,11 +367,6 @@ def main(wdir='./',
         snout = str(nout)
         if nout > nout_end:
             continue
-        if nout in nouts_dump_gal:
-            dump_gal = True
-            print("DUMP TRUE___________________________________")
-        else:
-            dump_gal = False
 
         fcat = out_dir_cat +"catalog" + snout + cat_suffix +".pickle"
         galaxy_plot_dir = out_base + 'galaxy_plot' + snout + '/'
@@ -473,7 +468,6 @@ def main(wdir='./',
         with open(fcat, 'wb') as f:
             pickle.dump(dictout, f)
             
-        s = 0
         # minimum stellar mass check only for the final snapshot galaxies,
         # No more mstar_min test.
         print("------------------ \n")
