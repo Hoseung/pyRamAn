@@ -101,7 +101,7 @@ class Galaxy(object):
 
 
     def radial_profile_cut(self, xx, yy, mm, vx, vy, vz,
-                           den_lim=2e6, den_lim2=5e6,
+                           den_lim=1e6, den_lim2=5e6,
                            mag_lim=25, nbins=100, rmax=20, dr=0.5,
                            debug=False):
         # 2D photometry. (if rotated towards +y, then use x and z)
@@ -260,7 +260,7 @@ class Galaxy(object):
                 star['m'] = star['m'] * 1e11 # in Msun.
 
 
-        rgal_tmp = min([self.halo['r'] * self.info.pboxsize * 1000.0, 25])
+        rgal_tmp = min([self.halo['r'] * self.info.pboxsize * 1000.0, 30])
         if verbose: print("Rgal_tmp", rgal_tmp)
         dense_enough = self.radial_profile_cut(star['x'], star['y'], star['m'],
                                 star['vx'], star['vy'], star['vz'],
@@ -1158,10 +1158,11 @@ class Galaxy(object):
 # Multiple choices for where to measure ellipticity. 
 # I need a list of MGE outputs.
 #                
-                def get_mge_out(f, frac, npix_per_reff):
+                def get_mge_out(f, frac, npix_per_reff, name):
                     sma = npix_per_reff
                     pa_rad = -1*f.theta/180*np.pi
-                    return dict({"frac":frac,
+                    return dict({"name":name,
+                                 "frac":frac,
                                  "eps":f.eps,
                                  "sma":sma,
                                  "smi":sma * (1-f.eps),
@@ -1186,15 +1187,16 @@ class Galaxy(object):
                 frac15 = min([0.99, frac15])
 
                 fracs = [frac1, frac05, frac15]
+                names = ["1Reff", "0.5Reff", "15kpc"]
                 self.meta.mge_result_list=[]
                 self.meta.lambda_result_list=[]
                 self.meta.lambda_r=[]
-                for frac in fracs:
+                for frac, name in zip(fracs, names):
                     if verbose: print("frac", frac)
                     f = mge.find_galaxy.find_galaxy(self.mmap, quiet=True, plot=False,
                                                 mask_shade=False,
                                                 fraction=frac)
-                    mge_now = get_mge_out(f, frac, npix_per_reff)                
+                    mge_now = get_mge_out(f, frac, npix_per_reff, name)
                     self.meta.mge_result_list.append(mge_now)
                     larr = _measure_lambda(mge_now, voronoi=False)
                     self.meta.lambda_result_list.append(larr)
@@ -1640,7 +1642,7 @@ class Galaxy(object):
         
          
     def plot_gal(self, npix=200, fn_save=None, ioff=True,
-                 do9plots = False, i_lambda=0, **kwargs):
+                 do9plots = False, i_lambda=0, representative="1Reff", **kwargs):
         """
             parameters
             ----------

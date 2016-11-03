@@ -361,8 +361,8 @@ def do_plot(x,y, atlas,
     # suppress last tick
     axmain.set_xticks(np.arange(0, xmax, 0.1))
     axmain.set_yticks(np.arange(0, ymax, 0.1))
-    axmain.set_xlabel(r"$\epsilon_{R_{e}}$", fontsize=fontsize_tick_label, family="Liberation Sans")
-    axmain.set_ylabel(r"$\lambda_{R_{e}}$", fontsize=fontsize_tick_label)#, family="Liberation Sans")
+    axmain.set_xlabel(r"$\epsilon_{R_{eff}}$", fontsize=fontsize_tick_label, family="Liberation Sans")
+    axmain.set_ylabel(r"$\lambda_{R_{eff}}$", fontsize=fontsize_tick_label)#, family="Liberation Sans")
     axmain.tick_params(axis='both', which='major', labelsize=fontsize_ticks)
 #    for label in axmain.get_xticklabels():
 #        label.set_fontproperties(ticks_font)
