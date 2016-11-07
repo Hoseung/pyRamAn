@@ -336,6 +336,12 @@ def pp_halo(h, npix, rscale=1.0, region=None, ind=None, axes=None,
 
     if color_field is not None:
         #colors = hd[color_field][ind]
+        # normalize!
+        # If axes is given, decide whether to keep colormap range or update.
+        # Of course, this does not modify patches already added to the axes.
+    if hasattr( )
+        if color_log:
+            
         kwargs.update({"colors": hd[color_field][ind]})
     #else:
         #kwargs.update({"colors": None})
