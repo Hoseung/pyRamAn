@@ -117,7 +117,7 @@ class HaloMeta():
             if is_gal:
                 self.gal_find_dir = outdir
             else:
-                self.dm_find_dir= outdir
+                self.dm_find_dir = outdir
         
         try:
             self.set_nout(nout)
@@ -223,7 +223,10 @@ class Halo(HaloMeta):
             fn = base + self.gal_find_dir + 'gal/tree_bricks' + snout
         else:
             fn = base + self.dm_find_dir + 'DM/tree_bricks' + snout
-        if self.verbose: print("Loading file:", fn)
+            print(fn)
+        if self.verbose: 
+            print("Loading file:", fn)
+
         try:
             dtype_halo = [('np', '<i4'), ('id', '<i4'), ('level', '<i4'),
                           ('host', '<i4'), ('sub', '<i4'), ('nsub', '<i4'),
@@ -535,4 +538,3 @@ class Halo(HaloMeta):
             self.nhalo = len(ind)
         except:
             self.nhalo = len([ind])
-

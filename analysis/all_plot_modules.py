@@ -502,6 +502,7 @@ def age2zred(lts):
     return zreds
 
 def l_at_smoothed_r(gal, npix_per_reff=5):
+    import analysis.Major_Minor_accretion as mma
     n_valid_points = sum(gal.data["reff"] > 0)
     new_l_arr = np.zeros(n_valid_points)
     new_reff = mma.smooth(gal.data["reff"])#[gal.data["reff"] > 0])

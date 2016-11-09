@@ -219,6 +219,7 @@ def set_region(**region):
             "radius":radius}
 
 class Region():
+    """ Empty class. Use set_region to make a region instead"""
     def __init__(self):
 
         pass

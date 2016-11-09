@@ -5,7 +5,7 @@ Created on Mon Mar 16 14:01:14 2015
 @author: hoseung
 """
 
-def circle_scatter(axes, x_array, y_array, radii_array,
+def circle_scatter(ax, x_array, y_array, radii_array,
                    colors=None,
                    cmap='RdYlBu_r', **kwargs):
     """
@@ -37,25 +37,25 @@ def circle_scatter(axes, x_array, y_array, radii_array,
         #p.set_facecolor('none')
         #p.set_clim([np.min(colors),np.max(colors)])
     #plt.colorbar(p,shrink=0.5)
-    axes.add_collection(p)
+    ax.add_collection(p)
     return True
 
-def square_scatter(axes, x_array, y_array, size_array, **kwargs):
+def square_scatter(ax, x_array, y_array, size_array, **kwargs):
     """
     draws square of given x,y, and lengths of side.
     """
     import matplotlib.pylab as plt
     for (x, y, size) in zip(x_array, y_array, size_array):
         square = plt.Rectangle((x-size/2,y-size/2), size, size, **kwargs)
-        axes.add_patch(square)
+        ax.add_patch(square)
     return True
 
-def polygon_scatter(axes, x_array, y_array, resolution=5, radius=0.5, **kwargs):
+def polygon_scatter(ax, x_array, y_array, resolution=5, radius=0.5, **kwargs):
     ''' resolution is number of sides of polygon '''
     from matplotlib.patches import CirclePolygon
     for x, y in zip(x_array, y_array):
         polygon = CirclePolygon((x,y), radius=radius, resolution=resolution, **kwargs)
-        axes.add_patch(polygon)
+        ax.add_patch(polygon)
     return True
 
 def part2den(part, info, region=None, proj='z', npix=800, ptype=None,
@@ -227,14 +227,17 @@ def den2d(x, y, z, m, npix, region=None, proj='z',
 
     return(field)
 
-def pp_halo(h, npix, rscale=1.0, region=None, ind=None, axes=None,
+def pp_halo(h, npix, rscale=1.0, region=None, ind=None, ax=None,
             name=False, radius="rvir",
-            verbose=False, new_axes=False,
+            verbose=False, new_ax=False,
             fontsize=10, linewidth=1.0,
             color_field=None,
+            color_log=False,
+            vmin=None, vmax=None,
+            keep_clim=True,
             cmap="RdYlBu_r",**kwargs):
     """
-    plot halos as circles on the current/given/new axes.
+    plot halos as circles on the current/given/new ax.
     
     Parameters
     ----------
@@ -250,11 +253,11 @@ def pp_halo(h, npix, rscale=1.0, region=None, ind=None, axes=None,
     ind : int array
         If ind is given, 
         only selected halos are plotted out of the bigger halo sample.
-    axes : pyplot axes instance
-        If axes is given, halos are plotted on the axes.
-    new_axes : Boolean, default = False
-        If True, make a new axes and plot halos onto it. 
-        If axes is None and new_axes is False, then axes = plt.gca()
+    ax : pyplot ax instance
+        If ax is given, halos are plotted on the ax.
+    new_ax : Boolean, default = False
+        If True, make a new ax and plot halos onto it. 
+        If ax is None and new_ax is False, then ax = plt.gca()
     
     Notes
     -----
@@ -268,8 +271,12 @@ def pp_halo(h, npix, rscale=1.0, region=None, ind=None, axes=None,
     from draw import pp
     import numpy as np
 
+    class ax_meta():
+        def __init__(self):
+            self.region=None
+            pass
+
 	# h can be either a halo.data or just a halo.
-    # 
     try:
         h.data['x']
         hd = h.data
@@ -277,14 +284,23 @@ def pp_halo(h, npix, rscale=1.0, region=None, ind=None, axes=None,
         hd = h
 
     # use pp_halo rather then the script below.
-    if axes is None:
-#        if new_axes:
+    if ax is None:
+#        if new_ax:
 #            fig = plt.figure()
 #            # is it OK to created a new figure object and not return it?
-#            axes = fig.add_subplot(111)
+#            ax = fig.add_subplot(111)
 #        else:
-        axes = plt.gca()
+        ax = plt.gca()
     
+    if not hasattr(ax, "pp_hal_meta"):
+        ax.pp_hal_meta = ax_meta()
+    elif ax.pp_hal_meta.region is not None:
+        if region is None:
+            # If the given ax already has a region defined, and
+            # no new region is explicitly given, use the region 
+            # from the ax.
+            region =ax.pp_hal_meta.region 
+
     if ind is None:
         if region is None:
             # If no region, plot all 
@@ -326,6 +342,14 @@ def pp_halo(h, npix, rscale=1.0, region=None, ind=None, axes=None,
     x = (hd["x"][ind] - xmin) / xspan * npix 
     y = (hd["y"][ind] - ymin) / yspan * npix 
     r =  hd[radius][ind]/xspan * npix * rscale # Assuing xspan == yspan
+    
+    import utils.sampling as smp
+    
+    if ax.pp_hal_meta.region is None:
+        # Keep a physical region so that I can plot multiple set of halos 
+        # in a ax consistently. 
+        ax.pp_hal_meta.region = smp.set_region(xr = (xmin, xmin+xspan),
+                                                yr = (ymin, ymin+yspan))
 
     if verbose:
         print("# of halos to plot:", len(ind))
@@ -337,25 +361,32 @@ def pp_halo(h, npix, rscale=1.0, region=None, ind=None, axes=None,
     if color_field is not None:
         #colors = hd[color_field][ind]
         # normalize!
-        # If axes is given, decide whether to keep colormap range or update.
-        # Of course, this does not modify patches already added to the axes.
-    if hasattr( )
+        # If ax is given, decide whether to keep colormap range or update.
+        # Of course, this does not modify patches already added to the ax.
         if color_log:
-            
-        kwargs.update({"colors": hd[color_field][ind]})
+            ccc = np.log10(hd[color_field][ind])
+        else:
+            ccc = hd[color_field][ind]
+        # normalize colors
+        ccc = 256 * (ccc-ccc.min()) /ccc.ptp()
+        if not (hasattr(ax, "clim") and keep_clim):
+            #ax.clim=None
+            ax.clim = ccc.min(), ccc.max()
+                    
+        print("MinMax ccc", ccc.min(), ccc.max())
+        kwargs.update({"colors": ccc})
     #else:
         #kwargs.update({"colors": None})
-    pp.circle_scatter(axes, x, y, r, facecolors='none',
+    pp.circle_scatter(ax, x, y, r, facecolors='none',
                       linewidth=linewidth, cmap=cmap, **kwargs)
 
-    axes.set_xlim([min(x), max(x)])
-    axes.set_ylim([min(y), max(y)])
+    ax.set_xlim([min(x), max(x)])
+    ax.set_ylim([min(y), max(y)])
     if name:
         for i, ii in enumerate(ind):
-            axes.annotate(str(hd["id"][ii]), (x[i],y[i]),
+            ax.annotate(str(hd["id"][ii]), (x[i],y[i]),
                               fontsize=fontsize)
-
-    return True
+    return ax
 
 
 def resize(X,shape=None):
