@@ -235,21 +235,23 @@ def pp_halo(h, npix, rscale=1.0, region=None, ind=None, ax=None,
             color_log=False,
             vmin=None, vmax=None,
             keep_clim=True,
-            cmap="RdYlBu_r",**kwargs):
+            cmap="RdYlBu_r",
+            **kwargs):
     """
     plot halos as circles on the current/given/new ax.
     
     Parameters
     ----------
-    h : tree.halomodule.Halo instance.
-        NOT Halo.data. 
+    h : tree.halomodule.Halo instance OR Halo.data is also acceptable. 
     npix : int
         number of pixels. (assuming square image)
     rscale : float, default = 1.0
         Radii of halos are magnified by rscale. 
     region : Optional[dict; see utils.sampling.set_region]
         If region is given, only halos inside the region are plotted.
-        If region and ind are both given, 
+        If region and ind are both given,
+    radius : str, (rvir by default)
+        Name of 'radius' field.   
     ind : int array
         If ind is given, 
         only selected halos are plotted out of the bigger halo sample.
@@ -258,15 +260,39 @@ def pp_halo(h, npix, rscale=1.0, region=None, ind=None, ax=None,
     new_ax : Boolean, default = False
         If True, make a new ax and plot halos onto it. 
         If ax is None and new_ax is False, then ax = plt.gca()
+    color_field: str
+        Name of field by whch value halos are colored. 
+    color_log : Boolean
+        If True, coloring by color_field is in log scale. 
+    keep_clim: Boolean
+        If True, keep the color range of given axis 
+        so that halos overplotted on top of a prexisting axis
+        has a consistent color scheme.)   
     
+    Both raw halo catalog (x=[0,1]) and tree-like catalog (x=[0,pboxsize]) are OK
+    as long as position and radius are in the same unit. 
+    ->  xrange, yrange are determined relatively.
+
+    Example
+    -------
+    >>> import tree.halomodule as hmo
+    >>> import matplotlib.pyplot as plt
+    >>> import draw
+    >>> hh = hmo.Halo(nout=187, is_gal=True)
+    >>> ax = draw.pp.pp_halo(hh, 400, edgecolor='blue')
+    >>> plt.show()
+    >>> import tree.treemodule as tmo
+    >>> gt = tmo.load_tree('./', is_gal=True)
+    >>> ax = draw.pp.pp_halo(gt.data[gt.data["nout"]==187], 400, edgecolor='green', rscale=1e-3)# rvir in kpc unit.
+    >>> plt.show()
+
     Notes
     -----
     1. Region does NOT modify x,y labels. 
-       It would be better to modify labels outside.
-    2. Unless only halos are being plotted, it is better to pass a region. 
-
-
+       better to modify labels outside.
+    2. Unless only halos are being plotted, it is better to pass a region.
     """
+
     import matplotlib.pyplot as plt
     from draw import pp
     import numpy as np
@@ -278,18 +304,25 @@ def pp_halo(h, npix, rscale=1.0, region=None, ind=None, ax=None,
 
 	# h can be either a halo.data or just a halo.
     try:
-        h.data['x']
+        try:
+            h.data['x']
+        except:
+            h.data['xc']
         hd = h.data
     except:
         hd = h
 
+    # both x and xc is fine.
+    posname=0
+    try:
+        hd["x"]
+        xn, yn, zn = "x", "y", "z"
+    except:
+        hd["xc"]
+        xn, yn, zn = "xc", "yc", "zc"
+
     # use pp_halo rather then the script below.
     if ax is None:
-#        if new_ax:
-#            fig = plt.figure()
-#            # is it OK to created a new figure object and not return it?
-#            ax = fig.add_subplot(111)
-#        else:
         ax = plt.gca()
     
     if not hasattr(ax, "pp_hal_meta"):
@@ -299,48 +332,57 @@ def pp_halo(h, npix, rscale=1.0, region=None, ind=None, ax=None,
             # If the given ax already has a region defined, and
             # no new region is explicitly given, use the region 
             # from the ax.
-            region =ax.pp_hal_meta.region 
+            region = ax.pp_hal_meta.region 
 
     if ind is None:
         if region is None:
             # If no region, plot all 
             ind = np.arange(len(hd))
-            xmin = min(hd['x'][ind])
-            ymin = min(hd['y'][ind])
-            xspan = np.ptp(hd['x'][ind])
-            yspan = np.ptp(hd['y'][ind])
+            xmin = min(hd[xn][ind] - hd[radius][ind])
+            ymin = min(hd[yn][ind] - hd[radius][ind])
+            xmax = max(hd[xn][ind] + hd[radius][ind])
+            ymax = max(hd[yn][ind] + hd[radius][ind])
+            xspan= xmax - xmin
+            yspan= ymax - ymin
+            
         else:
             # If reion is given, only plot halos inside the region.
             # The size of region is retained. 
             # image area does not shrink to fit only valid halos.
-            ind = np.where((hd['x'] > region["xr"][0]) &
-                    (hd['x'] < region["xr"][1]) &
-                    (hd['y']> region["yr"][0]) & 
-                    (hd['y'] < region["yr"][1]) &
-                    (hd['z'] > region["zr"][0]) &
-                    (hd['z'] < region["zr"][1]))[0]
+            ind = np.where( (hd[xn] > region["xr"][0]) &
+                            (hd[xn] < region["xr"][1]) &
+                            (hd[yn] > region["yr"][0]) & 
+                            (hd[yn] < region["yr"][1]) &
+                            (hd[zn] > region["zr"][0]) &
+                            (hd[zn] < region["zr"][1]))[0]
+            
             xmin = region["xr"][0]
             ymin = region["yr"][0]
             xspan = np.ptp(region["xr"])
             yspan = np.ptp(region["yr"])
+            
     else:
         # if ind is a boolean array, convert it to an index array.
         if ind.dtype == 'bool':
             ind = np.arange(len(ind))[ind]
         
         if region is None:
-            xmin = min(hd['x'][ind])
-            ymin = min(hd['y'][ind])
-            xspan = np.ptp(hd['x'][ind])
-            yspan = np.ptp(hd['y'][ind])
+            xmin = min(hd[xn][ind] - hd[radius][ind])
+            ymin = min(hd[yn][ind] - hd[radius][ind])
+            xmax = max(hd[xn][ind] + hd[radius][ind])
+            ymax = max(hd[yn][ind] + hd[radius][ind])
+            xspan= xmax - xmin
+            yspan= ymax - ymin
+            
         else:
             xmin = region["xr"][0]
             ymin = region["yr"][0]
             xspan = np.ptp(region["xr"])
             yspan = np.ptp(region["yr"])
+            
 
-    x = (hd["x"][ind] - xmin) / xspan * npix 
-    y = (hd["y"][ind] - ymin) / yspan * npix 
+    x = (hd[xn][ind] - xmin) / xspan * npix 
+    y = (hd[yn][ind] - ymin) / yspan * npix 
     r =  hd[radius][ind]/xspan * npix * rscale # Assuing xspan == yspan
     
     import utils.sampling as smp
@@ -349,7 +391,8 @@ def pp_halo(h, npix, rscale=1.0, region=None, ind=None, ax=None,
         # Keep a physical region so that I can plot multiple set of halos 
         # in a ax consistently. 
         ax.pp_hal_meta.region = smp.set_region(xr = (xmin, xmin+xspan),
-                                                yr = (ymin, ymin+yspan))
+                                                yr = (ymin, ymin+yspan),
+                                                zr = (0, 1e9))
 
     if verbose:
         print("# of halos to plot:", len(ind))
