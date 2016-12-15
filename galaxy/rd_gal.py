@@ -16,7 +16,16 @@ class Gal():
         self.header = None
 
 
-def rd_gal(nout, idgal, wdir="./", metal=True, nchem=0,long=True):
+def rd_gal(nout, idgal, wdir="GalaxyMaker/", metal=True, nchem=0,long=True):
+    """
+	Load GalaxyMaker/gal dump file 
+    returns a  header and a data. 
+    No unit conversion/translation is done. 
+    Therefore: 
+        Positions are in Mpc, centered at the center of the volume
+        Velocities are in km/s w.r.t. the volume.
+        Mass is in 1e11 Msun. 
+    """
     # Header structure
     dtype_header = np.dtype([('my_number', 'i4'),
                              ('level', 'i4'),
@@ -53,7 +62,6 @@ def rd_gal(nout, idgal, wdir="./", metal=True, nchem=0,long=True):
         data['vel'][:,1] = read_fortran(f, np.dtype('f8'), header["npart"])
         data['vel'][:,2] = read_fortran(f, np.dtype('f8'), header["npart"])
         
-        
         data['m'] = read_fortran(f, np.dtype('f8'), header["npart"]) # row-major
         data['id'] = read_fortran(f, np.dtype('i4'), header["npart"])
         data['time'] = read_fortran(f, np.dtype('f8'), header["npart"]) # row-major
@@ -63,7 +71,4 @@ def rd_gal(nout, idgal, wdir="./", metal=True, nchem=0,long=True):
                 for i in range(nchem):
                     data['cp'][:,i] = read_fortran(f, np.dtype('f8'), header["npart"])
         
-    gal = Gal()
-    gal.data = data
-    gal.header = header
-    return gal
+    return header, data

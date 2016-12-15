@@ -198,7 +198,7 @@ class Galaxy(object):
         """
             Input data in code unit.
 
-            Returns True if it is a good galaxy
+            Returns True if it is a "good" galaxy
             
             Parameters
             ----------
