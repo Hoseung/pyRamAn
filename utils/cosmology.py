@@ -53,7 +53,7 @@ def time2gyr(times, z_now=None, info=None):
     zred     = ttable['z'][0]
     aexp     = ttable['aexp'][0]
 
-    t_lback_now = np.interp(z_now, zred, tlb) 
+    t_lback_now = np.interp(z_now, zred, tlb)  # interpolation
 
     fd = np.where(times < min(tu))[0]
     if len(fd) > 0:

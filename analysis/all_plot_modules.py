@@ -73,10 +73,12 @@ def kde_sci(mpgs
     ,detected=True
     ,maj_ratio = 4
     ,excess=True
-    ,img_scale=1.0):
+    ,img_scale=1.0
+    ,examplegal=None):
     
     
     fontsize_ticks = 6 * img_scale
+    fontsize_name = 8  * img_scale
     fontsize_tick_label = 8 * img_scale
     fontsize_legend = 5 * img_scale
     
@@ -237,16 +239,36 @@ def kde_sci(mpgs
     axs[2].set_xlim([-0.7,0.6])
     #axs[0].legend(fontsize=12)
 
-    axs[0].text(0.05, 0.87, "(A)", weight="bold", transform=axs[0].transAxes, fontsize=fontsize_ticks) 
-    axs[0].text(0.15, 0.87, "All",transform=axs[0].transAxes, fontsize=fontsize_ticks)
-    axs[1].text(0.05, 0.87, "(B) ", weight="bold",transform=axs[1].transAxes, fontsize=fontsize_ticks)
+    axs[0].text(0.05, 0.87, "(A)", weight="bold", transform=axs[0].transAxes, fontsize=fontsize_name) 
+    axs[0].text(0.15, 0.87, "All",transform=axs[0].transAxes, fontsize=fontsize_name)
+    axs[1].text(0.05, 0.87, "(B) ", weight="bold",transform=axs[1].transAxes, fontsize=fontsize_name)
     axs[1].text(0.15, 0.87, r"$log_{10}M_{\star} > $ " +"{:.1f}".format(np.log10(mcut))
-                , fontsize=fontsize_ticks
+                , fontsize=fontsize_name
                 , transform=axs[1].transAxes)
-    axs[2].text(0.05, 0.87, "(C) ", weight="bold",transform=axs[2].transAxes, fontsize=fontsize_ticks)
+    axs[2].text(0.05, 0.87, "(C) ", weight="bold",transform=axs[2].transAxes, fontsize=fontsize_name)
     axs[2].text(0.15, 0.87, r"$log_{10}M_{\star} < $ " +"{:.1f}".format(np.log10(mcut))
-                , fontsize=fontsize_ticks
+                , fontsize=fontsize_name
                 , transform=axs[2].transAxes)
+
+    if examplegal is not None:
+        dls = examplegal.merger.delta_l
+        mrs = examplegal.merger.mr
+
+        for dl, mr in zip(dls, mrs):
+            if mr < maj_ratio:
+                axs[0].scatter(dl, [0.15], facecolor='r', edgecolor="w", marker="d", s=40, zorder=20)
+            else:
+                axs[0].scatter(dl, [0.15], facecolor='g', edgecolor="w", marker="d", s=40, zorder=20)
+
+        dl_tot = examplegal.data["lambda_r"][0] - examplegal.data["lambda_r"][-1]
+        axs[0].scatter(dl_tot, [0.15], facecolor='black', edgecolor="w", marker="d", s=40, zorder=20)
+        dl_o = dl_tot - sum(examplegal.merger.delta_l)
+        axs[0].scatter(dl_o, 0.15, facecolor='b', edgecolor="w", marker="d", s=40, zorder=20)
+
+        # legend
+        axs[0].scatter(0.21, 1, facecolor='none', edgecolor="black", marker="d", s=40)
+        axs[0].text(0.24, 0.95, "example galaxy", fontsize=8)
+        print("Example gal")
 
 
     plt.savefig(fname + "{:.1f}.png".format(np.log10(mcut)), dpi=200, bbox_inches="tight")
