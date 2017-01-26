@@ -1,0 +1,705 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>galaxy.lambda_functions &#8212; pyclusterevol -0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '-0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="top" title="pyclusterevol -0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">pyclusterevol -0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for galaxy.lambda_functions</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Mon May 30 15:37:03 2016</span>
+
+<span class="sd">@author: hoseung</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    MODIFICATIONS</span>
+<span class="sd">    </span>
+<span class="sd">    2015.12.03  </span>
+<span class="sd">        final_gal is removed as non-main-progenitors are also analized,</span>
+<span class="sd">        there is no 1:1 correlation between final galaxies and earlier galaxies.</span>
+<span class="sd">        </span>
+<span class="sd">    2015.12.21</span>
+<span class="sd">        Galaxies are saved in HDF format at selected nouts.</span>
+<span class="sd">        (for example, </span>
+<span class="sd">         nouts_dump_gal = [187, 154, 130, 112,  98,  87,  67,  54,  37,  20]</span>
+<span class="sd">         nouts close to zred = [0,0.2,0.4,0.6,0.8,1.0, 1.5, 2.0, 3.0, 5.0].)</span>
+<span class="sd">         </span>
+<span class="sd">    2016.01.01</span>
+<span class="sd">        idx is stored in catalog along with id.</span>
+<span class="sd">        </span>
+<span class="sd">    2016.01.02</span>
+<span class="sd">        lambdar measured after re-oriented.</span>
+
+<span class="sd">    2016.03.10</span>
+<span class="sd">        galaxy dump and catalog in the same directory.</span>
+<span class="sd">        optional suffix to the catalog file.</span>
+
+<span class="sd">    2016.03.26</span>
+<span class="sd">        Only close galaxies were accounted before (i_gal_near), - why...??</span>
+<span class="sd">        and that restriction is now gone. </span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="c1">#import matplotlib</span>
+<span class="c1">#matplotlib.use(&quot;Agg&quot;)</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span> 
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">utils.sampling</span> <span class="k">as</span> <span class="nn">smp</span>
+
+<span class="kn">from</span> <span class="nn">galaxy</span> <span class="k">import</span> <span class="n">galaxy</span>
+<span class="kn">import</span> <span class="nn">utils.match</span> <span class="k">as</span> <span class="nn">mtc</span>
+<span class="kn">import</span> <span class="nn">tree.ctutils</span> <span class="k">as</span> <span class="nn">ctu</span>
+<span class="kn">import</span> <span class="nn">tree.halomodule</span> <span class="k">as</span> <span class="nn">hmo</span> 
+
+<span class="c1">#%%</span>
+<div class="viewcode-block" id="extract_halos_within"><a class="viewcode-back" href="../../galaxy.html#galaxy.lambda_functions.extract_halos_within">[docs]</a><span class="k">def</span> <span class="nf">extract_halos_within</span><span class="p">(</span><span class="n">halos</span><span class="p">,</span> <span class="n">i_center</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">dist_in_mpc</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+    <span class="n">xc</span> <span class="o">=</span> <span class="n">halos</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">][</span><span class="n">i_center</span><span class="p">]</span>
+    <span class="n">yc</span> <span class="o">=</span> <span class="n">halos</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">][</span><span class="n">i_center</span><span class="p">]</span>
+    <span class="n">zc</span> <span class="o">=</span> <span class="n">halos</span><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">][</span><span class="n">i_center</span><span class="p">]</span>
+
+    <span class="n">xx</span> <span class="o">=</span> <span class="n">halos</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span>
+    <span class="n">yy</span> <span class="o">=</span> <span class="n">halos</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span>
+    <span class="n">zz</span> <span class="o">=</span> <span class="n">halos</span><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">]</span>
+
+    <span class="n">dd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">distance_to</span><span class="p">([</span><span class="n">xc</span><span class="p">,</span><span class="n">yc</span><span class="p">,</span><span class="n">zc</span><span class="p">],</span> <span class="p">[</span><span class="n">xx</span><span class="p">,</span><span class="n">yy</span><span class="p">,</span><span class="n">zz</span><span class="p">]),</span> <span class="n">info</span><span class="o">.</span><span class="n">pboxsize</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">dd</span> <span class="o">&lt;</span> <span class="p">(</span><span class="n">dist_in_mpc</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="distance_to"><a class="viewcode-back" href="../../galaxy.html#galaxy.lambda_functions.distance_to">[docs]</a><span class="k">def</span> <span class="nf">distance_to</span><span class="p">(</span><span class="n">xc</span><span class="p">,</span> <span class="n">xx</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">([(</span><span class="n">xc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">xx</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">xc</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">xx</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">xc</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">xx</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="all_gals_org"><a class="viewcode-back" href="../../galaxy.html#galaxy.lambda_functions.all_gals_org">[docs]</a><span class="k">def</span> <span class="nf">all_gals_org</span><span class="p">(</span><span class="n">treedata</span><span class="p">,</span> <span class="n">final_gals</span><span class="p">,</span> <span class="n">nout_ini</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nout_fi</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">       build a list of all progenitors of the final_gals from nout_fi up to nout_ini</span>
+<span class="sd">       [ [final_gals (at nout = nout_fi) ], </span>
+<span class="sd">         [all progenitors of final gals at nout = nout_fi -1],</span>
+<span class="sd">         [ &#39;&#39; at the at nout = nout_fi -2 ], ...]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">nout_ini</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">nout_ini</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">treedata</span><span class="p">[</span><span class="s1">&#39;nout&#39;</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">nout_fi</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">nout_fi</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">treedata</span><span class="p">[</span><span class="s1">&#39;nout&#39;</span><span class="p">])</span>
+
+    <span class="n">all_gals_at_nouts</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">inout</span><span class="p">,</span> <span class="n">nout</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">nout_ini</span><span class="p">,</span> <span class="n">nout_fi</span><span class="o">+</span><span class="mi">1</span><span class="p">)):</span>
+        <span class="n">all_gals_this_nout</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">tree_now</span> <span class="o">=</span> <span class="n">treedata</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">treedata</span><span class="p">[</span><span class="s1">&#39;nout&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">nout</span><span class="p">)]</span>
+
+        <span class="k">for</span> <span class="n">finalgal</span> <span class="ow">in</span> <span class="n">final_gals</span><span class="p">:</span>
+            <span class="n">i_gals_include</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">tree_now</span><span class="p">[</span><span class="s1">&#39;tree_root_id&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">finalgal</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="p">[</span><span class="n">all_gals_this_nout</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">gal</span><span class="p">)</span> <span class="k">for</span> <span class="n">gal</span> <span class="ow">in</span> <span class="n">tree_now</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">][</span><span class="n">i_gals_include</span><span class="p">]]</span>
+
+        <span class="n">all_gals_at_nouts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">all_gals_this_nout</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">all_gals_at_nouts</span></div>
+
+
+<div class="viewcode-block" id="all_gals"><a class="viewcode-back" href="../../galaxy.html#galaxy.lambda_functions.all_gals">[docs]</a><span class="k">def</span> <span class="nf">all_gals</span><span class="p">(</span><span class="n">treedata</span><span class="p">,</span> <span class="n">final_gals</span><span class="p">,</span> <span class="n">nout_ini</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nout_fi</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">       build a list of all progenitors of the final_gals from nout_fi up to nout_ini</span>
+<span class="sd">       [ [final_gals (at nout = nout_fi) ], </span>
+<span class="sd">         [all progenitors of final gals at nout = nout_fi -1],</span>
+<span class="sd">         [ &#39;&#39; at the at nout = nout_fi -2 ], ...]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">nout_ini</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">nout_ini</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">treedata</span><span class="p">[</span><span class="s1">&#39;nout&#39;</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">nout_fi</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">nout_fi</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">treedata</span><span class="p">[</span><span class="s1">&#39;nout&#39;</span><span class="p">])</span>
+
+    <span class="n">inds</span><span class="o">=</span><span class="p">[]</span>
+    <span class="k">for</span> <span class="n">finalgal</span> <span class="ow">in</span> <span class="n">final_gals</span><span class="p">:</span>
+        <span class="n">inds</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">treedata</span><span class="p">[</span><span class="s1">&#39;tree_root_id&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">finalgal</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="c1"># Add main progenitor tag</span>
+    
+    <span class="k">return</span> <span class="n">treedata</span><span class="p">[</span><span class="n">inds</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="halo_from_tree"><a class="viewcode-back" href="../../galaxy.html#galaxy.lambda_functions.halo_from_tree">[docs]</a><span class="k">def</span> <span class="nf">halo_from_tree</span><span class="p">(</span><span class="n">tree_element</span><span class="p">,</span> <span class="n">info</span><span class="p">):</span>
+    <span class="kn">import</span> <span class="nn">tree.halomodule</span> <span class="k">as</span> <span class="nn">hmo</span>
+
+    <span class="n">dtype_halo</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;i4&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;idx&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;i4&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;m&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;mvir&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span>
+              <span class="p">(</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;rvir&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span>
+              <span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;z&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span>
+              <span class="p">(</span><span class="s1">&#39;vx&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;vy&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;vz&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">)]</span>
+
+    <span class="n">cboxsize</span> <span class="o">=</span> <span class="mf">200.</span>
+
+    <span class="n">nout</span> <span class="o">=</span> <span class="n">tree_element</span><span class="p">[</span><span class="s1">&#39;nout&#39;</span><span class="p">]</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="n">hmo</span><span class="o">.</span><span class="n">Halo</span><span class="p">(</span><span class="n">nout</span><span class="o">=</span><span class="n">nout</span><span class="p">,</span> <span class="n">halofinder</span><span class="o">=</span><span class="s1">&#39;HM&#39;</span><span class="p">,</span> <span class="n">info</span><span class="o">=</span><span class="n">info</span><span class="p">,</span> <span class="n">is_gal</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">h</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">recarray</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">tree_element</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype_halo</span><span class="p">)</span>
+    <span class="n">h</span><span class="o">.</span><span class="n">nout</span> <span class="o">=</span> <span class="n">nout</span>
+
+    <span class="n">h</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;m&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tree_element</span><span class="p">[</span><span class="s1">&#39;m&#39;</span><span class="p">]</span>
+    <span class="n">h</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;mvir&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tree_element</span><span class="p">[</span><span class="s1">&#39;mvir&#39;</span><span class="p">]</span>
+    <span class="n">h</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tree_element</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="n">cboxsize</span>
+    <span class="n">h</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tree_element</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="n">cboxsize</span>
+    <span class="n">h</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tree_element</span><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="n">cboxsize</span> <span class="c1"># Mpc/h -&gt; code unit</span>
+    <span class="n">h</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;vx&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tree_element</span><span class="p">[</span><span class="s1">&#39;vx&#39;</span><span class="p">]</span>
+    <span class="n">h</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;vy&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tree_element</span><span class="p">[</span><span class="s1">&#39;vy&#39;</span><span class="p">]</span>
+    <span class="n">h</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;vz&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tree_element</span><span class="p">[</span><span class="s1">&#39;vz&#39;</span><span class="p">]</span>
+    <span class="n">h</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;r&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tree_element</span><span class="p">[</span><span class="s1">&#39;r&#39;</span><span class="p">]</span> <span class="c1"># already in code unit</span>
+    <span class="n">h</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;rvir&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tree_element</span><span class="p">[</span><span class="s1">&#39;rvir&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="p">(</span><span class="n">cboxsize</span> <span class="o">*</span> <span class="mi">1000</span><span class="p">)</span> <span class="c1"># kpc/h -&gt; code unit</span>
+    <span class="n">h</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tree_element</span><span class="p">[</span><span class="s1">&#39;Orig_halo_id&#39;</span><span class="p">]</span>
+    <span class="n">h</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;idx&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tree_element</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span>
+    <span class="n">h</span><span class="o">.</span><span class="n">aexp</span> <span class="o">=</span> <span class="n">tree_element</span><span class="p">[</span><span class="s1">&#39;aexp&#39;</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">h</span></div>
+
+<div class="viewcode-block" id="dist"><a class="viewcode-back" href="../../galaxy.html#galaxy.lambda_functions.dist">[docs]</a><span class="k">def</span> <span class="nf">dist</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">center</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">center</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">])</span> <span class="o">+</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">center</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">])</span> <span class="o">+</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">center</span><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">]))</span></div>
+
+<div class="viewcode-block" id="dist2"><a class="viewcode-back" href="../../galaxy.html#galaxy.lambda_functions.dist2">[docs]</a><span class="k">def</span> <span class="nf">dist2</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">center</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">center</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">])</span> <span class="o">+</span>
+         <span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">center</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">])</span> <span class="o">+</span>
+         <span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">center</span><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">]))</span></div>
+
+
+<div class="viewcode-block" id="find_halo_near"><a class="viewcode-back" href="../../galaxy.html#galaxy.lambda_functions.find_halo_near">[docs]</a><span class="k">def</span> <span class="nf">find_halo_near</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">center</span><span class="p">,</span> <span class="n">rscale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+    <span class="n">i_gal_ok</span> <span class="o">=</span> <span class="n">dist2</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">center</span><span class="p">)</span> <span class="o">&lt;</span>  <span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">rscale</span> <span class="o">*</span> <span class="n">center</span><span class="p">[</span><span class="s1">&#39;rvir&#39;</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">i_gal_ok</span></div>
+
+
+<div class="viewcode-block" id="unique"><a class="viewcode-back" href="../../galaxy.html#galaxy.lambda_functions.unique">[docs]</a><span class="k">def</span> <span class="nf">unique</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">):</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">))</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="n">b</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">a</span><span class="p">[</span><span class="n">b</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="get_mstar_min"><a class="viewcode-back" href="../../galaxy.html#galaxy.lambda_functions.get_mstar_min">[docs]</a><span class="k">def</span> <span class="nf">get_mstar_min</span><span class="p">(</span><span class="n">aexp</span><span class="p">):</span>
+    <span class="n">masscut_a</span> <span class="o">=</span> <span class="mf">1256366362.16</span>
+    <span class="n">masscut_b</span> <span class="o">=</span> <span class="o">-</span><span class="mf">20583566.5218</span>
+    
+    <span class="k">return</span> <span class="n">masscut_a</span> <span class="o">*</span> <span class="n">aexp</span> <span class="o">+</span> <span class="n">masscut_b</span></div>
+
+
+
+
+<div class="viewcode-block" id="associate_gal_hal"><a class="viewcode-back" href="../../galaxy.html#galaxy.lambda_functions.associate_gal_hal">[docs]</a><span class="k">def</span> <span class="nf">associate_gal_hal</span><span class="p">(</span><span class="n">allgal</span><span class="p">,</span> <span class="n">allhal</span><span class="p">,</span> <span class="n">plot_check</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">dir_out</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">    associate halos with galaxies. </span>
+<span class="sd">    Arbitrary maching parameters are used.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+    
+    <span class="k">def</span> <span class="nf">dist</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">center</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">center</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">])</span> <span class="o">+</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">center</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">])</span> <span class="o">+</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">center</span><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">]))</span>
+    
+    <span class="k">def</span> <span class="nf">distv</span><span class="p">(</span><span class="n">halo</span><span class="p">,</span> <span class="n">center</span><span class="p">):</span>
+        <span class="n">norm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">center</span><span class="p">[</span><span class="s1">&#39;vx&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">halo</span><span class="o">.</span><span class="n">vx</span><span class="p">)</span> <span class="o">+</span> 
+                       <span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">center</span><span class="p">[</span><span class="s1">&#39;vy&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">halo</span><span class="o">.</span><span class="n">vy</span><span class="p">)</span> <span class="o">+</span> 
+                       <span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">center</span><span class="p">[</span><span class="s1">&#39;vz&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">halo</span><span class="o">.</span><span class="n">vz</span><span class="p">))</span>
+    
+        <span class="k">return</span> <span class="n">norm</span>
+
+    <span class="n">i0</span><span class="o">=</span><span class="p">[]</span> <span class="c1"># matched list</span>
+    <span class="n">i1</span><span class="o">=</span><span class="p">[]</span> <span class="c1"># unmatched list</span>
+
+    <span class="n">newhals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">recarray</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">allgal</span><span class="o">.</span><span class="n">data</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">allhal</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span> <span class="c1"># equivalent with allhal.data</span>
+    
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">gal</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">allgal</span><span class="o">.</span><span class="n">data</span><span class="p">):</span>
+        <span class="n">dd</span> <span class="o">=</span> <span class="n">dist</span><span class="p">(</span><span class="n">allhal</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">gal</span><span class="p">)</span><span class="c1"># 3d distance. simply sqrt((x-xc)**2 + ...)</span>
+        <span class="n">d_sort</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">dd</span><span class="p">)</span>
+        <span class="c1"># if closest halo is closer by 0.1 than the second and close than 10kpc/h, good match.</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">dd</span><span class="p">[</span><span class="n">d_sort</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">&lt;</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">dd</span><span class="p">[</span><span class="n">d_sort</span><span class="p">[</span><span class="mi">1</span><span class="p">]])</span> <span class="ow">and</span> <span class="p">(</span><span class="n">dd</span><span class="p">[</span><span class="n">d_sort</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="n">e</span><span class="o">-</span><span class="mi">5</span><span class="p">):</span>
+            <span class="n">gal</span><span class="p">[</span><span class="s1">&#39;hosthalo&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">allhal</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">][</span><span class="n">d_sort</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+            <span class="n">i0</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="n">newhals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">allhal</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">d_sort</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+    
+        <span class="c1"># if closest halo is closer by 0.3 and than the second and closer than 5kpc/h, good match.</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">dd</span><span class="p">[</span><span class="n">d_sort</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">&lt;</span> <span class="mf">0.3</span> <span class="o">*</span> <span class="n">dd</span><span class="p">[</span><span class="n">d_sort</span><span class="p">[</span><span class="mi">1</span><span class="p">]])</span> <span class="ow">and</span> <span class="p">(</span><span class="n">dd</span><span class="p">[</span><span class="n">d_sort</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">&lt;</span> <span class="mf">2.5e-5</span><span class="p">):</span>
+            <span class="n">gal</span><span class="p">[</span><span class="s1">&#39;hosthalo&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">allhal</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">][</span><span class="n">d_sort</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+            <span class="n">i0</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="n">newhals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">allhal</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">d_sort</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># if closet than 40kpc/h and has similar velocity.</span>
+            <span class="n">dv</span> <span class="o">=</span> <span class="n">distv</span><span class="p">(</span><span class="n">allhal</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">gal</span><span class="p">)</span>
+            <span class="n">d_nomi</span> <span class="o">=</span> <span class="n">dd</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="n">e</span><span class="o">-</span><span class="mi">4</span> <span class="c1"># within 40kpc!! </span>
+            <span class="n">v_nomi</span> <span class="o">=</span> <span class="n">dv</span> <span class="o">&lt;</span> <span class="mi">150</span> 
+            <span class="n">dvnomi</span> <span class="o">=</span> <span class="n">d_nomi</span> <span class="o">*</span> <span class="n">v_nomi</span>
+            <span class="k">if</span> <span class="nb">sum</span><span class="p">(</span><span class="n">dvnomi</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">dddv</span> <span class="o">=</span> <span class="n">dd</span><span class="p">[</span><span class="n">dvnomi</span><span class="p">]</span><span class="o">/</span><span class="mi">2</span><span class="n">e</span><span class="o">-</span><span class="mi">4</span> <span class="o">+</span> <span class="n">dv</span><span class="p">[</span><span class="n">dvnomi</span><span class="p">]</span><span class="o">/</span><span class="mi">150</span>
+                <span class="n">dddv_sort</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">dddv</span><span class="p">)</span>
+                <span class="n">gal</span><span class="p">[</span><span class="s1">&#39;hosthalo&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">allhal</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">][</span><span class="n">dddv_sort</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+                <span class="n">i0</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                <span class="n">newhals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">allhal</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">dddv_sort</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># otherwise non-matched.</span>
+                <span class="n">gal</span><span class="p">[</span><span class="s1">&#39;hosthalo&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+                <span class="n">i1</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                <span class="c1"># copy galaxy catalog data to new &#39;fake&#39; halo catalog. </span>
+                <span class="n">newhals</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;x&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gal</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span>
+                <span class="n">newhals</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;y&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gal</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span>
+                <span class="n">newhals</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;z&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gal</span><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">]</span>
+                <span class="n">newhals</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;vx&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gal</span><span class="p">[</span><span class="s1">&#39;vx&#39;</span><span class="p">]</span>
+                <span class="n">newhals</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;vy&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gal</span><span class="p">[</span><span class="s1">&#39;vy&#39;</span><span class="p">]</span>
+                <span class="n">newhals</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;vz&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gal</span><span class="p">[</span><span class="s1">&#39;vz&#39;</span><span class="p">]</span>
+                <span class="n">newhals</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;r&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gal</span><span class="p">[</span><span class="s1">&#39;r&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span> <span class="c1"># arbitrary</span>
+                <span class="n">newhals</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;m&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gal</span><span class="p">[</span><span class="s1">&#39;m&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span> <span class="c1"># arbitrary</span>
+                <span class="n">newhals</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;rvir&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gal</span><span class="p">[</span><span class="s1">&#39;rvir&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span> <span class="c1"># arbitrary</span>
+                <span class="n">newhals</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;mvir&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gal</span><span class="p">[</span><span class="s1">&#39;mvir&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span> <span class="c1"># arbitrary</span>
+                <span class="c1"># small radius assumes most of the DM, gas have been lost.</span>
+                <span class="c1"># star is the only major component.</span>
+                <span class="n">newhals</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">gal</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> <span class="c1"># negative ID = fake halo.</span>
+
+    <span class="n">allhal</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">newhals</span>
+    
+    <span class="k">if</span> <span class="n">plot_check</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">draw</span> <span class="k">import</span> <span class="n">pp</span>
+        <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+        <span class="c1">#plt.ioff()</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">set_size_inches</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">10</span><span class="p">)</span>
+        <span class="n">npix</span> <span class="o">=</span> <span class="mi">1200</span>
+        <span class="n">pp</span><span class="o">.</span><span class="n">pp_halo</span><span class="p">(</span><span class="n">allhal</span><span class="p">,</span> <span class="n">npix</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">colors</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">rscale</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">pp</span><span class="o">.</span><span class="n">pp_halo</span><span class="p">(</span><span class="n">allgal</span><span class="p">,</span> <span class="n">npix</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">colors</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">rscale</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="o">-</span><span class="mi">50</span><span class="p">,</span> <span class="n">npix</span><span class="o">+</span><span class="mi">50</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="o">-</span><span class="mi">50</span><span class="p">,</span> <span class="n">npix</span><span class="o">+</span><span class="mi">50</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="s1">&#39;equal&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">dir_out</span> <span class="o">+</span> <span class="s2">&quot;associate_gal_hal.pdf&quot;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    
+    
+    <span class="k">return</span> <span class="n">allhal</span></div>
+
+    
+    <span class="c1">#%%</span>
+    <span class="c1">#import numpy as np</span>
+
+<div class="viewcode-block" id="get_sample_tree"><a class="viewcode-back" href="../../galaxy.html#galaxy.lambda_functions.get_sample_tree">[docs]</a><span class="k">def</span> <span class="nf">get_sample_tree</span><span class="p">(</span><span class="n">alltrees</span><span class="p">,</span>
+                    <span class="n">info</span><span class="p">,</span>
+                    <span class="n">wdir</span> <span class="o">=</span> <span class="s1">&#39;./&#39;</span><span class="p">,</span>
+                    <span class="n">nout_ini</span><span class="o">=</span><span class="mi">57</span><span class="p">,</span>
+                    <span class="n">nout_fi</span> <span class="o">=</span> <span class="mi">18</span><span class="p">,</span>  
+                    <span class="n">is_gal</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                    <span class="n">r_cluster_scale</span> <span class="o">=</span> <span class="mf">2.9</span><span class="p">,</span>
+                    <span class="n">m_halo_min</span> <span class="o">=</span> <span class="mi">5</span><span class="n">e9</span><span class="p">,</span>
+                    <span class="n">nout_complete</span> <span class="o">=</span> <span class="mi">87</span><span class="p">):</span>
+                            
+    <span class="n">td</span> <span class="o">=</span> <span class="n">alltrees</span><span class="o">.</span><span class="n">data</span>
+    
+    <span class="c1"># halo catalog</span>
+    <span class="n">hhal</span> <span class="o">=</span> <span class="n">hmo</span><span class="o">.</span><span class="n">Halo</span><span class="p">(</span><span class="n">base</span><span class="o">=</span><span class="n">wdir</span><span class="p">,</span> <span class="n">nout</span><span class="o">=</span><span class="n">nout_fi</span><span class="p">,</span> <span class="n">halofinder</span><span class="o">=</span><span class="s1">&#39;HM&#39;</span><span class="p">,</span> <span class="n">load</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">is_gal</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="c1"># cluster radius </span>
+    
+    <span class="n">i_center</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">hhal</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;np&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="nb">max</span><span class="p">(</span><span class="n">hhal</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;np&#39;</span><span class="p">]))[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">r_cluster</span> <span class="o">=</span> <span class="n">hhal</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;rvir&#39;</span><span class="p">][</span><span class="n">i_center</span><span class="p">]</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span> <span class="o">*</span> <span class="n">hhal</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">pboxsize</span>
+    
+    <span class="c1"># galaxies</span>
+    <span class="n">hh</span> <span class="o">=</span> <span class="n">hmo</span><span class="o">.</span><span class="n">Halo</span><span class="p">(</span><span class="n">base</span><span class="o">=</span><span class="n">wdir</span><span class="p">,</span> <span class="n">nout</span><span class="o">=</span><span class="n">nout_fi</span><span class="p">,</span> <span class="n">halofinder</span><span class="o">=</span><span class="s1">&#39;HM&#39;</span><span class="p">,</span> <span class="n">info</span><span class="o">=</span><span class="n">info</span><span class="p">,</span> <span class="n">load</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">is_gal</span><span class="o">=</span><span class="n">is_gal</span><span class="p">)</span>
+    <span class="n">i_center</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">hh</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;np&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="nb">max</span><span class="p">(</span><span class="n">hh</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;np&#39;</span><span class="p">]))[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="c1"># galaxies that are within r_cluster_scale * the cluster halo from the BCG </span>
+    <span class="c1"># (not the cluster halo center, although two must be virtually identical)</span>
+    
+    <span class="c1"># All galaxies inside the cluster radius * r_scale</span>
+    <span class="n">i_satellites</span> <span class="o">=</span> <span class="n">extract_halos_within</span><span class="p">(</span><span class="n">hh</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">i_center</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">dist_in_mpc</span> <span class="o">=</span> <span class="n">r_cluster</span> <span class="o">*</span> <span class="n">r_cluster_scale</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Total </span><span class="si">{}</span><span class="s2"> galaxies </span><span class="se">\n</span><span class="s2"> </span><span class="si">{}</span><span class="s2"> galaxies are within </span><span class="si">{}</span><span class="s2"> times the cluster virial radius, </span><span class="si">{:.2f}</span><span class="s2"> Mpc (No mass cut)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="nb">len</span><span class="p">(</span><span class="n">i_satellites</span><span class="p">),</span><span class="nb">sum</span><span class="p">(</span><span class="n">i_satellites</span><span class="p">),</span> <span class="n">r_cluster_scale</span><span class="p">,</span> <span class="n">r_cluster_scale</span> <span class="o">*</span> <span class="n">r_cluster</span><span class="p">))</span>
+    
+    <span class="c1"># Above a mass cut at nout_fi</span>
+    <span class="c1"># halos found inside the cluster and have complete tree back to nout_ini</span>
+    <span class="n">large_enough</span> <span class="o">=</span> <span class="n">hh</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;mvir&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">m_halo_min</span>
+    <span class="n">halo_list</span> <span class="o">=</span> <span class="n">hh</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">][</span><span class="n">i_satellites</span> <span class="o">*</span> <span class="n">large_enough</span><span class="p">]</span>
+    <span class="n">final_ids</span> <span class="o">=</span> <span class="n">ctu</span><span class="o">.</span><span class="n">check_tree_complete</span><span class="p">(</span><span class="n">td</span><span class="p">,</span> <span class="n">nout_complete</span><span class="p">,</span> <span class="n">nout_fi</span><span class="p">,</span> <span class="n">halo_list</span><span class="p">,</span> <span class="n">idx</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="c1"># 87: z = 1</span>
+    
+    
+    <span class="c1"># build list of progenitors (all mass)</span>
+    <span class="n">tt_final</span> <span class="o">=</span> <span class="n">td</span><span class="p">[</span><span class="n">td</span><span class="p">[</span><span class="s1">&#39;nout&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">nout_fi</span><span class="p">]</span>
+    <span class="n">final_gals_idx</span> <span class="o">=</span> <span class="p">[</span><span class="n">tt_final</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">][</span><span class="n">tt_final</span><span class="p">[</span><span class="s1">&#39;Orig_halo_id&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">final_gal</span><span class="p">]</span> <span class="k">for</span> <span class="n">final_gal</span> <span class="ow">in</span> <span class="n">final_ids</span><span class="p">]</span>
+    <span class="n">ngals</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">final_gals_idx</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot; </span><span class="si">{}</span><span class="s2"> galaxies have complete tree up to nout = </span><span class="si">{}</span><span class="s2">, above mass cut </span><span class="si">{:.2e}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ngals</span><span class="p">,</span> <span class="n">nout_complete</span><span class="p">,</span> <span class="n">m_halo_min</span><span class="p">))</span>
+    <span class="c1"># Search for all galaxies that are listed in the trees of final_gals</span>
+    <span class="n">prg_only_tree</span> <span class="o">=</span> <span class="n">all_gals</span><span class="p">(</span><span class="n">td</span><span class="p">,</span> <span class="n">final_gals_idx</span><span class="p">,</span> <span class="n">nout_fi</span><span class="o">=</span><span class="n">nout_fi</span><span class="p">,</span> <span class="n">nout_ini</span><span class="o">=</span><span class="n">nout_ini</span><span class="p">)</span>
+    <span class="c1">#all_gals_in_trees = prg_only_tree[&#39;&#39;]</span>
+
+    <span class="c1"># idx list of galaxies at the current nout (from all_gals_in_trees list)</span>
+    <span class="c1">#t_now = prg_only_tree[prg_only_tree[&#39;nout&#39;] == nout]</span>
+    <span class="c1">#idxs_tree_now = all_gals_in_trees[inout]</span>
+
+    <span class="k">return</span> <span class="n">prg_only_tree</span></div>
+
+<span class="c1">#%%</span>
+<div class="viewcode-block" id="get_sample_gal"><a class="viewcode-back" href="../../galaxy.html#galaxy.lambda_functions.get_sample_gal">[docs]</a><span class="k">def</span> <span class="nf">get_sample_gal</span><span class="p">(</span><span class="n">wdir</span><span class="p">,</span> <span class="n">nout</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">prg_only_tree</span><span class="p">,</span> <span class="n">mstar_min</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span> 
+    <span class="c1">#gals_in_tree_now = halo_from_tree(t_now[mtc.match_list_ind(t_now[&#39;id&#39;], np.array(idxs_tree_now))], info)</span>
+    <span class="n">gals_in_tree_now</span> <span class="o">=</span> <span class="n">prg_only_tree</span><span class="p">[</span><span class="n">prg_only_tree</span><span class="p">[</span><span class="s1">&#39;nout&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">nout</span><span class="p">]</span>
+    <span class="n">id_now</span> <span class="o">=</span> <span class="n">gals_in_tree_now</span><span class="p">[</span><span class="s1">&#39;Orig_halo_id&#39;</span><span class="p">]</span> <span class="c1"># this is Orig_halo_id</span>
+    
+    <span class="c1"># Galaxies near the cluster</span>
+    <span class="n">allhal</span> <span class="o">=</span> <span class="n">hmo</span><span class="o">.</span><span class="n">Halo</span><span class="p">(</span><span class="n">base</span><span class="o">=</span><span class="n">wdir</span><span class="p">,</span> <span class="n">nout</span><span class="o">=</span><span class="n">nout</span><span class="p">,</span> <span class="n">is_gal</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">halofinder</span><span class="o">=</span><span class="s1">&#39;HM&#39;</span><span class="p">,</span> <span class="n">return_id</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">load</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">cluster_now</span> <span class="o">=</span> <span class="n">allhal</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">allhal</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">()]</span>
+    
+    <span class="n">max_dist_prg</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">cluster_now</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">200</span> <span class="o">-</span> <span class="n">gals_in_tree_now</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">])</span> <span class="o">+</span> 
+                               <span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">cluster_now</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">200</span> <span class="o">-</span> <span class="n">gals_in_tree_now</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">])</span> <span class="o">+</span> 
+                               <span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">cluster_now</span><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">200</span> <span class="o">-</span> <span class="n">gals_in_tree_now</span><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">])))</span> <span class="c1"># in Mpc/h</span>
+                        
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">nout</span><span class="p">,</span> <span class="n">max_dist_prg</span><span class="p">)</span>
+    
+    <span class="c1"># unless you have &quot;perfect&quot; trees, do not rely on what tree gives you.</span>
+    <span class="c1">#mstar_min = min(gals_in_tree_now[&#39;m&#39;][(gals_in_tree_now[&#39;mmp&#39;] == 1) * (gals_in_tree_now[&#39;phantom&#39;] == 0)])</span>
+    
+    <span class="c1"># Galaxy with enough stellar mass</span>
+    <span class="c1"># -&gt; there is no stellar mass cut when building all_gals_in_trees list.</span>
+    <span class="n">allgal</span> <span class="o">=</span> <span class="n">hmo</span><span class="o">.</span><span class="n">Halo</span><span class="p">(</span><span class="n">base</span><span class="o">=</span><span class="n">wdir</span><span class="p">,</span> <span class="n">nout</span><span class="o">=</span><span class="n">nout</span><span class="p">,</span> <span class="n">is_gal</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">halofinder</span><span class="o">=</span><span class="s1">&#39;HM&#39;</span><span class="p">,</span>
+                      <span class="n">return_id</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">load</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    
+    <span class="n">dd_cat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">cluster_now</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">allgal</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">])</span> <span class="o">+</span> 
+                     <span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">cluster_now</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">allgal</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">])</span> <span class="o">+</span> 
+                     <span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">cluster_now</span><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">allgal</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">]))</span> <span class="o">*</span> <span class="mi">200</span>
+    
+    <span class="n">igal_ok_cat</span> <span class="o">=</span> <span class="p">(</span><span class="n">dd_cat</span> <span class="o">&lt;</span> <span class="n">max_dist_prg</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">allgal</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;m&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">mstar_min</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> 
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;(catalogue) # galaxies more massive than </span><span class="si">{:.2e}</span><span class="s2"> at nout =&quot;</span>
+        <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mstar_min</span><span class="p">,</span> <span class="n">nout</span><span class="p">,</span> <span class="nb">sum</span><span class="p">(</span><span class="n">igal_ok_cat</span><span class="p">)))</span>
+    
+    <span class="n">final_sample_galaxies</span> <span class="o">=</span> \
+        <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">allgal</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">igal_ok_cat</span><span class="p">][</span><span class="s1">&#39;id&#39;</span><span class="p">],</span> <span class="n">id_now</span><span class="p">)))</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> 
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot; Originally the tree selected:&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">id_now</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Total set length:&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">final_sample_galaxies</span><span class="p">))</span>
+    
+    <span class="c1"># load GalaxyMaker output again, with return_id this time.</span>
+    <span class="n">allgal</span> <span class="o">=</span> <span class="n">hmo</span><span class="o">.</span><span class="n">Halo</span><span class="p">(</span><span class="n">base</span><span class="o">=</span><span class="n">wdir</span><span class="p">,</span> <span class="n">nout</span><span class="o">=</span><span class="n">nout</span><span class="p">,</span> <span class="n">is_gal</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">halofinder</span><span class="o">=</span><span class="s1">&#39;HM&#39;</span><span class="p">,</span>
+                      <span class="n">return_id</span><span class="o">=</span><span class="n">final_sample_galaxies</span><span class="p">,</span> <span class="n">load</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;length of the original allgal: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">allgal</span><span class="o">.</span><span class="n">data</span><span class="p">)))</span>
+
+    
+    <span class="c1"># Associate galaxies with halos. </span>
+    <span class="c1"># Mark non-matching galaxies.</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> 
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Before associate_gal_hal,&quot;</span> 
+            <span class="s2">&quot;length of the original allhal: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">allhal</span><span class="o">.</span><span class="n">data</span><span class="p">)))</span>
+    <span class="n">allhal</span> <span class="o">=</span> <span class="n">associate_gal_hal</span><span class="p">(</span><span class="n">allgal</span><span class="p">,</span> <span class="n">allhal</span><span class="p">,</span> <span class="n">plot_check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">dir_out</span><span class="o">=</span><span class="n">wdir</span><span class="p">)</span>
+    <span class="c1"># there     </span>
+    
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Now, </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">allhal</span><span class="o">.</span><span class="n">data</span><span class="p">)))</span>
+    
+    <span class="c1">#print()</span>
+    <span class="c1"># load DM ids</span>
+    <span class="n">allhal</span> <span class="o">=</span> <span class="n">hmo</span><span class="o">.</span><span class="n">Halo</span><span class="p">(</span><span class="n">base</span><span class="o">=</span><span class="n">wdir</span><span class="p">,</span> <span class="n">nout</span><span class="o">=</span><span class="n">nout</span><span class="p">,</span> <span class="n">is_gal</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">halofinder</span><span class="o">=</span><span class="s1">&#39;HM&#39;</span><span class="p">,</span>
+                      <span class="n">return_id</span><span class="o">=</span><span class="n">allhal</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">],</span> <span class="n">load</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="c1"># Associate again.</span>
+    <span class="n">allhal</span> <span class="o">=</span> <span class="n">associate_gal_hal</span><span class="p">(</span><span class="n">allgal</span><span class="p">,</span> <span class="n">allhal</span><span class="p">,</span> <span class="n">plot_check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">dir_out</span><span class="o">=</span><span class="n">wdir</span><span class="p">)</span>
+
+    <span class="c1"># Add idx to catalog.</span>
+<span class="c1">#    print(gals_in_tree_now[&#39;Orig_halo_id&#39;])</span>
+<span class="c1">#    print(allgal.data[&#39;id&#39;])</span>
+    <span class="k">for</span> <span class="n">gal</span> <span class="ow">in</span> <span class="n">allgal</span><span class="o">.</span><span class="n">data</span><span class="p">:</span>
+        <span class="n">ii</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">gals_in_tree_now</span><span class="p">[</span><span class="s1">&#39;Orig_halo_id&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">gal</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ii</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">gal</span><span class="p">[</span><span class="s1">&#39;idx&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gals_in_tree_now</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">][</span><span class="n">ii</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">gal</span><span class="p">[</span><span class="s1">&#39;idx&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+<span class="c1">#    print(gal[&#39;idx&#39;])</span>
+    <span class="n">allhal</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;idx&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">allgal</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;idx&#39;</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">allgal</span><span class="p">,</span> <span class="n">allhal</span></div>
+    
+
+<span class="c1">##########################################################################</span>
+<div class="viewcode-block" id="mk_gal"><a class="viewcode-back" href="../../galaxy.html#galaxy.lambda_functions.mk_gal">[docs]</a><span class="k">def</span> <span class="nf">mk_gal</span><span class="p">(</span><span class="n">galdata</span><span class="p">,</span> <span class="n">halodata</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">star_all</span><span class="p">,</span> <span class="n">cell_all</span><span class="p">,</span> <span class="n">dm_all</span><span class="p">,</span>
+           <span class="n">star_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dm_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+           <span class="n">save</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">rscale</span><span class="o">=</span><span class="mf">1.1</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">galaxy_plot_dir</span><span class="o">=</span><span class="s1">&#39;./&#39;</span><span class="p">,</span>
+           <span class="n">npix</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span>
+           <span class="n">region_plot</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+           <span class="n">method_com</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">mstar_min</span><span class="o">=</span><span class="mi">5</span><span class="n">e9</span><span class="p">,</span> <span class="n">dump_gal</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+           <span class="n">min_gas_density</span> <span class="o">=</span> <span class="mi">1</span><span class="n">e</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Direct plot,</span>
+<span class="sd">    Create galaxy, </span>
+<span class="sd">    Calculate lambda_r (using Cappellari 2003)</span>
+<span class="sd">    Draw ed map of galaxy.</span>
+
+<span class="sd">    minimum gas densiy = mean gas density of the universe?</span>
+<span class="sd">    Galaxy center = galdata[&#39;x&#39;], [&#39;y&#39;], [&#39;z&#39;]. Not halo center.</span>
+
+<span class="sd">    To do:</span>
+<span class="sd">    extract cells by density threshold, not radial cut. </span>
+<span class="sd">    Gas extent varies a lot, and there no good single choice of radius cut. </span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;mk_gal ID&quot;</span><span class="p">,</span> <span class="n">galdata</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">])</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="kn">import</span> <span class="nn">galaxy.make_gal</span> <span class="k">as</span> <span class="nn">mkg</span>
+
+    <span class="k">if</span> <span class="n">star_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">star</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">cell</span> <span class="o">=</span> <span class="n">mkg</span><span class="o">.</span><span class="n">extract_data_old</span><span class="p">(</span><span class="n">halodata</span><span class="p">,</span> <span class="n">rscale</span><span class="o">=</span><span class="n">rscale</span><span class="p">)</span>
+        <span class="c1"># Only when not using GalaxyMaker output, &quot;not enough stars&quot; error can occur.</span>
+        <span class="k">if</span> <span class="nb">sum</span><span class="p">(</span><span class="n">star</span><span class="p">[</span><span class="s1">&#39;m&#39;</span><span class="p">])</span> <span class="o">*</span> <span class="n">info</span><span class="o">.</span><span class="n">msun</span> <span class="o">&lt;</span> <span class="n">mstar_min</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;(1) Not enough stars: </span><span class="si">{:.2f}</span><span class="s2"> Msun&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">star</span><span class="p">[</span><span class="s1">&#39;m&#39;</span><span class="p">])</span> <span class="o">*</span> <span class="n">info</span><span class="o">.</span><span class="n">msun</span><span class="p">))</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Aborting... </span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot; Not a good galaxy&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="kc">False</span>
+        <span class="k">return</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">xc_tmp</span> <span class="o">=</span> <span class="n">galdata</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span> <span class="c1"># </span>
+        <span class="n">yc_tmp</span> <span class="o">=</span> <span class="n">galdata</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span>
+        <span class="n">zc_tmp</span> <span class="o">=</span> <span class="n">galdata</span><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">]</span>
+        <span class="n">rr_tmp0</span> <span class="o">=</span> <span class="n">galdata</span><span class="p">[</span><span class="s1">&#39;r&#39;</span><span class="p">]</span>
+<span class="c1"># If memory access is the bottle neck, </span>
+<span class="c1"># There is no reason the following part need to be called</span>
+<span class="c1"># by individual process.</span>
+<span class="c1"># put it in the main body.</span>
+
+        <span class="k">if</span> <span class="n">cell_all</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ind_c</span> <span class="o">=</span> <span class="p">((</span><span class="n">cell_all</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">xc_tmp</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">cell_all</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">yc_tmp</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span>
+                    <span class="p">(</span><span class="n">cell_all</span><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">zc_tmp</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">rr_tmp0</span><span class="o">**</span><span class="mi">2</span>
+            <span class="n">ind_c</span> <span class="o">=</span> <span class="n">ind_c</span> <span class="o">*</span> <span class="p">(</span><span class="n">cell_all</span><span class="p">[</span><span class="s1">&#39;var0&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">min_gas_density</span><span class="p">)</span>
+
+            <span class="n">ind_c</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">cell_all</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">xc_tmp</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">cell_all</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">yc_tmp</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+                            <span class="o">+</span> <span class="p">(</span><span class="n">cell_all</span><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">zc_tmp</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">&lt;</span> <span class="n">rr_tmp0</span><span class="o">**</span><span class="mi">2</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">cell</span> <span class="o">=</span> <span class="n">cell_all</span><span class="p">[</span><span class="n">ind_c</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cell</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="c1">#return None</span>
+        <span class="n">star</span> <span class="o">=</span> <span class="n">star_all</span><span class="p">[</span><span class="n">mtc</span><span class="o">.</span><span class="n">match_list_ind</span><span class="p">(</span><span class="n">star_all</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">],</span> <span class="n">star_id</span><span class="p">)]</span>
+        <span class="c1"># There are a few fake halos.</span>
+        <span class="c1"># Assume a halo should have at least 64 dm particles.</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">dm_id</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">64</span><span class="p">:</span>
+            <span class="n">dm</span> <span class="o">=</span> <span class="n">dm_all</span><span class="p">[</span><span class="n">mtc</span><span class="o">.</span><span class="n">match_list_ind</span><span class="p">(</span><span class="n">dm_all</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">],</span> <span class="n">dm_id</span><span class="p">)]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">dm</span> <span class="o">=</span> <span class="n">dm_all</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">dm_all</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">xc_tmp</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span>
+                             <span class="p">(</span><span class="n">dm_all</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">yc_tmp</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span>
+                             <span class="p">(</span><span class="n">dm_all</span><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">zc_tmp</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">&lt;</span> <span class="n">halodata</span><span class="p">[</span><span class="s1">&#39;r&#39;</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="p">)[</span><span class="mi">0</span><span class="p">]]</span>
+
+
+    <span class="c1"># Direct plot ---------------------------------------------------------                                </span>
+    <span class="k">if</span> <span class="n">region_plot</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;RRRRRRRRRRRRRRegion plot&quot;</span><span class="p">)</span>
+        <span class="kn">import</span> <span class="nn">draw</span>
+        <span class="n">region</span> <span class="o">=</span> <span class="n">smp</span><span class="o">.</span><span class="n">set_region</span><span class="p">(</span><span class="n">xc</span><span class="o">=</span><span class="n">halodata</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">],</span>
+                            <span class="n">yc</span><span class="o">=</span><span class="n">halodata</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">],</span>
+                            <span class="n">zc</span><span class="o">=</span><span class="n">halodata</span><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">],</span>
+                            <span class="n">radius</span> <span class="o">=</span> <span class="n">halodata</span><span class="p">[</span><span class="s1">&#39;rvir&#39;</span><span class="p">])</span>
+
+        <span class="n">extent</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">npix</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">npix</span><span class="p">)</span>
+        <span class="n">star_map</span> <span class="o">=</span> <span class="n">draw</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">den2d</span><span class="p">(</span><span class="n">star</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">],</span><span class="n">star</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">],</span><span class="n">star</span><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">],</span><span class="n">star</span><span class="p">[</span><span class="s1">&#39;m&#39;</span><span class="p">],</span> <span class="n">npix</span><span class="p">,</span>
+                                 <span class="n">region</span><span class="o">=</span><span class="n">region</span><span class="p">,</span> <span class="n">cic</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">norm_integer</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">star_map</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="n">ls</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">npix</span><span class="p">,</span><span class="n">npix</span><span class="p">))</span>
+            <span class="n">ii</span> <span class="o">=</span> <span class="n">star_map</span> <span class="o">&gt;</span> <span class="mi">0</span>
+            <span class="n">ls</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">star_map</span><span class="p">[</span><span class="n">ii</span><span class="p">])</span> <span class="c1"># Stellar map HAS empty pixels.</span>
+            <span class="n">ls</span><span class="p">[</span><span class="n">star_map</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">ls</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">())</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">ls</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;CMRmap&quot;</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;nearest&#39;</span><span class="p">,</span> <span class="n">extent</span><span class="o">=</span><span class="n">extent</span><span class="p">)</span>
+
+        <span class="c1"># One of two should be transposed.</span>
+        <span class="c1"># But which one?</span>
+<span class="c1">#        gas_map = draw.pp.pp_cell(cell, npix, info, region=region, verbose=False)</span>
+<span class="c1">#        im2 = plt.imshow(np.transpose(np.log10(gas_map)), cmap=&quot;CMRmap&quot;, alpha=.5, interpolation=&#39;bilinear&#39;, extent=extent)</span>
+
+        <span class="n">rgal</span> <span class="o">=</span> <span class="n">region</span><span class="p">[</span><span class="s1">&#39;radius&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">info</span><span class="o">.</span><span class="n">pboxsize</span> <span class="o">*</span> <span class="mi">1</span><span class="n">e3</span>
+
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;position [kpc]&quot;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">npix</span><span class="p">,</span><span class="mi">5</span><span class="p">))</span>
+        <span class="n">xticks</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;</span><span class="si">{:.2f}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="n">rgal</span><span class="p">,</span> <span class="n">rgal</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="mi">5</span><span class="p">)]</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">(</span><span class="n">xticks</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;position [kpc]&quot;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">npix</span><span class="p">,</span><span class="mi">5</span><span class="p">))</span>
+        <span class="n">yticks</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;</span><span class="si">{:.2f}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="n">rgal</span><span class="p">,</span> <span class="n">rgal</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="mi">5</span><span class="p">)]</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_yticklabels</span><span class="p">(</span><span class="n">yticks</span><span class="p">)</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">galaxy_plot_dir</span><span class="o">+</span><span class="s2">&quot;2dmap_&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">halodata</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;.png&#39;</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">144</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+
+    <span class="c1">#Create galaxy ----------------------------------------------</span>
+    <span class="n">gal</span> <span class="o">=</span> <span class="n">galaxy</span><span class="o">.</span><span class="n">Galaxy</span><span class="p">(</span><span class="n">galdata</span><span class="p">,</span> <span class="n">radius_method</span><span class="o">=</span><span class="s1">&#39;eff&#39;</span><span class="p">,</span> <span class="n">info</span><span class="o">=</span><span class="n">info</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;gal instance&quot;</span><span class="p">,</span> <span class="n">gal</span><span class="o">.</span><span class="n">meta</span><span class="p">)</span>
+    <span class="n">good_gal</span> <span class="o">=</span> <span class="n">gal</span><span class="o">.</span><span class="n">mk_gal</span><span class="p">(</span><span class="n">star</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">cell</span><span class="p">,</span>
+                        <span class="n">mstar_min</span><span class="o">=</span><span class="n">mstar_min</span><span class="p">,</span>
+               <span class="n">rscale</span><span class="o">=</span><span class="n">rscale</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span> <span class="n">method_com</span><span class="o">=</span><span class="n">method_com</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">gal</span><span class="p">,</span> <span class="n">good_gal</span></div>
+
+
+
+
+<div class="viewcode-block" id="extract_dict_scalar"><a class="viewcode-back" href="../../galaxy.html#galaxy.lambda_functions.extract_dict_scalar">[docs]</a><span class="k">def</span> <span class="nf">extract_dict_scalar</span><span class="p">(</span><span class="n">a</span><span class="p">):</span>
+    <span class="kn">import</span> <span class="nn">collections</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">a</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">collections</span><span class="o">.</span><span class="n">Iterable</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">d</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+    <span class="k">return</span> <span class="n">d</span></div>
+
+
+<div class="viewcode-block" id="save_dict_scalar"><a class="viewcode-back" href="../../galaxy.html#galaxy.lambda_functions.save_dict_scalar">[docs]</a><span class="k">def</span> <span class="nf">save_dict_scalar</span><span class="p">(</span><span class="n">cc</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">delim</span><span class="o">=</span><span class="s2">&quot;   &quot;</span><span class="p">):</span>
+    <span class="kn">import</span> <span class="nn">collections</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">cc</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cc</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">collections</span><span class="o">.</span><span class="n">Iterable</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">cc</span><span class="p">[</span><span class="n">key</span><span class="p">])</span> <span class="o">+</span> <span class="n">delim</span><span class="p">)</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+    
+<div class="viewcode-block" id="worker"><a class="viewcode-back" href="../../galaxy.html#galaxy.lambda_functions.worker">[docs]</a><span class="k">def</span> <span class="nf">worker</span><span class="p">(</span><span class="n">gals</span><span class="p">,</span> <span class="n">hals</span><span class="p">,</span> <span class="n">out_q</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">inds</span><span class="p">,</span>
+           <span class="n">star_all</span><span class="p">,</span> <span class="n">cell_all</span><span class="p">,</span> <span class="n">dm_all</span><span class="p">,</span>
+           <span class="n">dump_gal</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+           <span class="n">reorient</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+           <span class="n">lambda_method</span><span class="o">=</span><span class="s1">&#39;ellip&#39;</span><span class="p">,</span> <span class="n">rscale_lambda</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span><span class="n">npix_lambda</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+           <span class="n">galaxy_plot</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+           <span class="n">galaxy_plot_dir</span><span class="o">=</span><span class="s1">&#39;galaxy_plot/&#39;</span><span class="p">,</span>
+           <span class="n">region_plot</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+           <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="kn">import</span> <span class="nn">galaxy.make_gal</span> <span class="k">as</span> <span class="nn">mkg</span>
+
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">inds</span><span class="p">)</span> <span class="o">==</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="n">inds</span> <span class="o">=</span> <span class="p">[</span><span class="n">inds</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">inds</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;This is </span><span class="si">{}</span><span class="s2">-th galaxy&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;halo: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">hals</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">]),</span> <span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;gal: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">gals</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">]),</span> <span class="p">)</span>
+<span class="c1">#        print(&quot;number of particles&quot;, len(gals.idlists[i]), gals.data[&#39;np&#39;][i])</span>
+        <span class="n">gal</span><span class="p">,</span> <span class="n">good_gal</span> <span class="o">=</span> <span class="n">mk_gal</span><span class="p">(</span><span class="n">gals</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                               <span class="n">hals</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                               <span class="n">info</span><span class="p">,</span>
+                               <span class="n">star_all</span><span class="p">,</span>
+                               <span class="n">cell_all</span><span class="p">,</span>
+                               <span class="n">dm_all</span><span class="p">,</span>
+                               <span class="n">star_id</span><span class="o">=</span><span class="n">gals</span><span class="o">.</span><span class="n">idlists</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                               <span class="n">dm_id</span><span class="o">=</span><span class="n">hals</span><span class="o">.</span><span class="n">idlists</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                               <span class="n">region_plot</span><span class="o">=</span><span class="n">region_plot</span><span class="p">,</span>
+                               <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">nout</span> <span class="o">=</span> <span class="n">info</span><span class="o">.</span><span class="n">nout</span>
+        <span class="n">galid</span> <span class="o">=</span> <span class="n">gal</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">id</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;galaxy </span><span class="si">{}</span><span class="s2"> is made </span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">galid</span><span class="p">))</span>
+
+        <span class="c1">#do other things</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">good_gal</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">galid</span><span class="p">,</span> <span class="s2">&quot; Not a good galaxy&quot;</span><span class="p">)</span>
+            <span class="c1">#out_q.put(gal.meta)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">lambdas</span> <span class="o">=</span> <span class="n">gal</span><span class="o">.</span><span class="n">cal_lambda_r_eps</span><span class="p">(</span><span class="n">npix_per_reff</span><span class="o">=</span><span class="n">npix_lambda</span><span class="p">,</span>
+                           <span class="n">rscale</span><span class="o">=</span><span class="n">rscale_lambda</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;ellip&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="c1"># calculate within 1.0 * reff</span>
+            <span class="n">gal</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">lambda_arr</span><span class="p">,</span> <span class="n">gal</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">lambda_arrh</span><span class="p">,</span> <span class="n">gal</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">lambda_12kpc</span><span class="o">=</span> <span class="n">lambdas</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">gal</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">lambda_r</span><span class="p">,</span>   <span class="n">gal</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">lambda_rh</span><span class="p">,</span>   <span class="n">gal</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">lambda_12kpc</span> <span class="o">=</span> <span class="n">lambdas</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">galaxy_plot</span><span class="p">:</span>
+                <span class="n">gal</span><span class="o">.</span><span class="n">plot_gal</span><span class="p">(</span><span class="n">fn_save</span> <span class="o">=</span> <span class="n">galaxy_plot_dir</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">nout</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> \
+                                 <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">galid</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.png&quot;</span><span class="p">,</span> <span class="n">ioff</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+            <span class="n">gal</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">__dict__</span><span class="p">[</span><span class="s1">&#39;idx&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hals</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;idx&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">gal</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">__dict__</span><span class="p">[</span><span class="s1">&#39;rhalo&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hals</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;rvir&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">]</span>
+
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2"> </span><span class="se">\n</span><span class="s2"> Good galaxy. ID, IDx&quot;</span><span class="p">,</span> <span class="n">galid</span><span class="p">,</span> <span class="n">gal</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">idx</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">dump_gal</span><span class="p">:</span>
+                <span class="c1"># save gal before reorientation</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">galaxy_plot_dir</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">nout</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">galid</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.h5&quot;</span><span class="p">)</span>
+                <span class="n">mkg</span><span class="o">.</span><span class="n">save_gal</span><span class="p">(</span><span class="n">gal</span><span class="p">,</span> <span class="n">galaxy_plot_dir</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">nout</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">galid</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.h5&quot;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">reorient</span><span class="p">:</span>
+                <span class="n">gal</span><span class="o">.</span><span class="n">cal_norm_vec</span><span class="p">([</span><span class="s2">&quot;star&quot;</span><span class="p">],</span> <span class="n">dest</span><span class="o">=</span><span class="p">[</span><span class="mf">0.</span><span class="p">,</span><span class="mf">1.</span><span class="p">,</span><span class="mf">0.</span><span class="p">])</span>
+                <span class="n">gal</span><span class="o">.</span><span class="n">cal_rotation_matrix</span><span class="p">(</span><span class="n">dest</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">])</span>
+                <span class="n">gal</span><span class="o">.</span><span class="n">reorient</span><span class="p">(</span><span class="n">dest</span><span class="o">=</span><span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">],</span> <span class="n">pop_nvec</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;star&#39;</span><span class="p">],</span>
+                             <span class="n">pops</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;star&#39;</span><span class="p">,</span> <span class="s1">&#39;dm&#39;</span><span class="p">],</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                <span class="n">lambdas</span> <span class="o">=</span> <span class="n">gal</span><span class="o">.</span><span class="n">cal_lambda_r_eps</span><span class="p">(</span><span class="n">npix_per_reff</span><span class="o">=</span><span class="n">npix_lambda</span><span class="p">,</span>
+                                <span class="n">rscale</span><span class="o">=</span><span class="n">rscale_lambda</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;ellip&#39;</span><span class="p">)</span>
+<span class="c1"># Because lambda is measured for ALL stars,</span>
+<span class="c1"># B/T must also be measured for ALL stars, not only for bound stars.</span>
+<span class="c1">#                print(lambdas[0],&quot;d&quot;, lambdas[1])</span>
+                <span class="n">gal</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">lambda_arr2</span><span class="p">,</span> <span class="n">gal</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">lambda_arr2h</span><span class="p">,</span> <span class="n">gal</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">lambda_arr2q</span> <span class="o">=</span> <span class="n">lambdas</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">gal</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">lambda_r2</span><span class="p">,</span>   <span class="n">gal</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">lambda_r2h</span>  <span class="p">,</span> <span class="n">gal</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">lambda_r2q</span>   <span class="o">=</span> <span class="n">lambdas</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">galaxy_plot</span><span class="p">:</span>
+<span class="c1">#                gal.cal_b2t(ptype=&#39;star&#39;,</span>
+<span class="c1">#                            bound_only=False,</span>
+<span class="c1">#                            hist=False,</span>
+<span class="c1">#                            proj=&#39;y&#39;)</span>
+                <span class="n">gal</span><span class="o">.</span><span class="n">plot_gal</span><span class="p">(</span><span class="n">fn_save</span> <span class="o">=</span> <span class="n">galaxy_plot_dir</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">nout</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> \
+                                     <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">galid</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;_reori.png&quot;</span><span class="p">,</span> <span class="n">ioff</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">out_q</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">gal</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">__dict__</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">pyclusterevol -0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2016, Hoseung.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.8.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,882 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>galaxy package &#8212; pyclusterevol -0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '-0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="top" title="pyclusterevol -0.1 documentation" href="index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">pyclusterevol -0.1 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="galaxy-package">
+<h1>galaxy package<a class="headerlink" href="#galaxy-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-galaxy.Galaxymodule">
+<span id="galaxy-galaxymodule-module"></span><h2>galaxy.Galaxymodule module<a class="headerlink" href="#module-galaxy.Galaxymodule" title="Permalink to this headline">¶</a></h2>
+<p>Created on Wed Oct 28 20:40:35 2015</p>
+<p>&#64;author: hoseung</p>
+<dl class="class">
+<dt id="galaxy.Galaxymodule.Hmgal">
+<em class="property">class </em><code class="descclassname">galaxy.Galaxymodule.</code><code class="descname">Hmgal</code><span class="sig-paren">(</span><em>fn</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/Galaxymodule.html#Hmgal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.Galaxymodule.Hmgal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-galaxy.galaxy">
+<span id="galaxy-galaxy-module"></span><h2>galaxy.galaxy module<a class="headerlink" href="#module-galaxy.galaxy" title="Permalink to this headline">¶</a></h2>
+<p>Created on Fri Apr 24 23:45:55 2015
+&#64;author: hoseung</p>
+<dl class="class">
+<dt id="galaxy.galaxy.Galaxy">
+<em class="property">class </em><code class="descclassname">galaxy.galaxy.</code><code class="descname">Galaxy</code><span class="sig-paren">(</span><em>halo=None</em>, <em>info=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy.html#Galaxy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy.Galaxy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="galaxy.galaxy.Galaxy.bound_particles">
+<code class="descname">bound_particles</code><span class="sig-paren">(</span><em>n=100</em>, <em>ptype='star'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy.html#Galaxy.bound_particles"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy.Galaxy.bound_particles" title="Permalink to this definition">¶</a></dt>
+<dd><p>save IDs of n most bound particles as galaxy.most_bound_particles.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>n</strong> : int</p>
+<blockquote>
+<div><p>number of most bound particles to be kept.</p>
+</div></blockquote>
+<p><strong>ptype</strong> : str &#8220;star&#8221; or &#8220;dm&#8221;</p>
+<blockquote class="last">
+<div><p>Type of particle.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="galaxy.galaxy.Galaxy.cal_b2t">
+<code class="descname">cal_b2t</code><span class="sig-paren">(</span><em>ptype='star'</em>, <em>disk_criterion='Abadi2003'</em>, <em>bound_only=True</em>, <em>hist=False</em>, <em>proj='z'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy.html#Galaxy.cal_b2t"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy.Galaxy.cal_b2t" title="Permalink to this definition">¶</a></dt>
+<dd><p>Measure bulge to total ratio of the galaxy.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>ptype</strong> : str</p>
+<blockquote>
+<div><p>type of particle to consider.</p>
+</div></blockquote>
+<p><strong>disk_criterion</strong> : str</p>
+<blockquote>
+<div><p>discrimination criterion. (Defaults to &#8220;Abadi2003&#8221;)</p>
+</div></blockquote>
+<p><strong>bound_only</strong> : logical</p>
+<blockquote>
+<div><p>consider bound particles only</p>
+</div></blockquote>
+<p><strong>hist</strong> : logical</p>
+<blockquote class="last">
+<div><p>if True, ellipticity histogram is returned</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="galaxy.galaxy.Galaxy.cal_bound_ptcls">
+<code class="descname">cal_bound_ptcls</code><span class="sig-paren">(</span><em>ptype='star'</em>, <em>bound50=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy.html#Galaxy.cal_bound_ptcls"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy.Galaxy.cal_bound_ptcls" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="galaxy.galaxy.Galaxy.cal_lambda_r_eps">
+<code class="descname">cal_lambda_r_eps</code><span class="sig-paren">(</span><em>npix_per_reff=5</em>, <em>rscale=3.0</em>, <em>method='ellip'</em>, <em>verbose=False</em>, <em>galaxy_plot_dir='./'</em>, <em>n_pseudo=1</em>, <em>voronoi=None</em>, <em>save_result=True</em>, <em>iterate_mge=False</em>, <em>mge_interpol=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy.html#Galaxy.cal_lambda_r_eps"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy.Galaxy.cal_lambda_r_eps" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>npix: int</strong></p>
+<blockquote>
+<div><p>number of points per 2*reff.</p>
+</div></blockquote>
+<p><strong>r:</strong></p>
+<blockquote>
+<div><p>??</p>
+</div></blockquote>
+<p><strong>rscale:</strong></p>
+<blockquote>
+<div><p>Lambda_r is calculated for annuli up to Reff*rscale.</p>
+</div></blockquote>
+<p><strong>Calculate rotation parameter(lambda_r).</strong></p>
+<p><strong>rotation parameter is calculated at all points (r &lt; rscale*self.reff)</strong></p>
+<p><strong>constructing a curve. But only the value at 0.5Reff is used as</strong></p>
+<p><strong>a representative value (Emsellem + 07).</strong></p>
+<p><strong>Values at r = 1.0 Reff is reported to behave similar to the value at 0.5Reff.</strong></p>
+<p><strong>Fixed number of pixels for all galaxies.</strong></p>
+<p><strong>boxsize = rscale * Reff * 2</strong></p>
+<p><strong>dx = Reff / npix</strong></p>
+<p><strong>npix_all = npix * rscale</strong></p>
+<p><strong>method1:</strong></p>
+<p><strong>method2:</strong></p>
+<p><strong>MGE parameters</strong></p>
+<p><strong>iterate_mge</strong> : run MGE with various light fraction</p>
+<blockquote>
+<div><p>to find out half light radius.</p>
+</div></blockquote>
+<p><strong>mge_interpol</strong> : from iterative measruements of MGE,</p>
+<blockquote class="last">
+<div><p>interpolate quantities at the half light radius.
+It&#8217;s better to interpolate when iterate_mge = True.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="galaxy.galaxy.Galaxy.cal_mgas">
+<code class="descname">cal_mgas</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy.html#Galaxy.cal_mgas"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy.Galaxy.cal_mgas" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="galaxy.galaxy.Galaxy.cal_norm_vec">
+<code class="descname">cal_norm_vec</code><span class="sig-paren">(</span><em>pop_nvec=['star'], dest=[0.0, 0.0, 1], bound_percentile=50</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy.html#Galaxy.cal_norm_vec"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy.Galaxy.cal_norm_vec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determines normal vector (rotation axis) of the galaxy.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>pop_nvec</strong> : [&#8220;name&#8221;, &#8220;of&#8221;, &#8220;species&#8221;]</p>
+<blockquote>
+<div><p>components for which normal vector is calculated.</p>
+</div></blockquote>
+<p><strong>dest</strong> : float array [3]</p>
+<blockquote>
+<div><p>direction vector the normal vector will point to.</p>
+</div></blockquote>
+<p><strong>bound_percentile :</strong></p>
+<blockquote class="last">
+<div><p>Top ?% bound particles are taken into calculation.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>&#8216;galaxy&#8217; means stellar particles by default. 
+Add self.nvec attribute and also returns nvec</p>
+<p class="rubric">Examples</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="bp">self</span><span class="o">.</span><span class="n">cal_norm_vec</span><span class="p">(</span><span class="n">pop_nvec</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;star&#39;</span><span class="p">],</span> <span class="n">dest</span><span class="o">=</span><span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">],</span> <span class="n">bound_percentile</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="galaxy.galaxy.Galaxy.cal_rotation_matrix">
+<code class="descname">cal_rotation_matrix</code><span class="sig-paren">(</span><em>nvec=None, dest=[0.0, 0.0, 1]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy.html#Galaxy.cal_rotation_matrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy.Galaxy.cal_rotation_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determine Rotation Matrix by axis-angle rotation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>nvec</strong> : normal vector.</p>
+<blockquote>
+<div><p>If not given, automatically calculated.</p>
+</div></blockquote>
+<p><strong>dest</strong> : destination vector ( not axis of rotation!).</p>
+<blockquote class="last">
+<div><p>+z direction ([0, 0, 1]) by default.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="galaxy.galaxy.Galaxy.cal_sfr">
+<code class="descname">cal_sfr</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy.html#Galaxy.cal_sfr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy.Galaxy.cal_sfr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="galaxy.galaxy.Galaxy.cal_ssfr">
+<code class="descname">cal_ssfr</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy.html#Galaxy.cal_ssfr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy.Galaxy.cal_ssfr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="galaxy.galaxy.Galaxy.cal_trivia">
+<code class="descname">cal_trivia</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy.html#Galaxy.cal_trivia"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy.Galaxy.cal_trivia" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="galaxy.galaxy.Galaxy.cal_vrot">
+<code class="descname">cal_vrot</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy.html#Galaxy.cal_vrot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy.Galaxy.cal_vrot" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="galaxy.galaxy.Galaxy.dist_map">
+<code class="descname">dist_map</code><span class="sig-paren">(</span><em>npix=40</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy.html#Galaxy.dist_map"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy.Galaxy.dist_map" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="galaxy.galaxy.Galaxy.e_vdiff">
+<code class="descname">e_vdiff</code><span class="sig-paren">(</span><em>iv</em>, <em>vxt</em>, <em>vyt</em>, <em>vzt</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy.html#Galaxy.e_vdiff"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy.Galaxy.e_vdiff" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="galaxy.galaxy.Galaxy.get_center">
+<code class="descname">get_center</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>z</em>, <em>m</em>, <em>method='default'</em>, <em>tol=1e-07</em>, <em>niter=10</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy.html#Galaxy.get_center"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy.Galaxy.get_center" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determines the center of mass of given particles.
+IDL version iteratively searches for mass weighted mean position of
+particles within gradually decreasing search radius. 
+Let&#8217;s do the same thing here.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galaxy.galaxy.Galaxy.get_center2">
+<code class="descname">get_center2</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>z</em>, <em>m</em>, <em>tol=3</em>, <em>max_iter=10</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy.html#Galaxy.get_center2"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy.Galaxy.get_center2" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="galaxy.galaxy.Galaxy.get_cov">
+<code class="descname">get_cov</code><span class="sig-paren">(</span><em>multithreaded=False</em>, <em>center_only=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy.html#Galaxy.get_cov"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy.Galaxy.get_cov" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="galaxy.galaxy.Galaxy.get_radius">
+<code class="descname">get_radius</code><span class="sig-paren">(</span><em>xx</em>, <em>yy</em>, <em>zz</em>, <em>mm</em>, <em>method</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy.html#Galaxy.get_radius"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy.Galaxy.get_radius" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method 1: Radius = Rvir_halo
+Method 2: Radius = half mass radius of given stellar particles</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galaxy.galaxy.Galaxy.mk_gal">
+<code class="descname">mk_gal</code><span class="sig-paren">(</span><em>star</em>, <em>dm</em>, <em>cell</em>, <em>save=False</em>, <em>verbose=False</em>, <em>mstar_min=1000000000.0</em>, <em>rmin=-1</em>, <em>Rgal_to_reff=5.0</em>, <em>method_com=1</em>, <em>follow_bp=None</em>, <em>unit_conversion='code'</em>, <em>debug=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy.html#Galaxy.mk_gal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy.Galaxy.mk_gal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Input data in code unit.</p>
+<p>Returns True if it is a &#8220;good&#8221; galaxy</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>Rgal_to_reff:</strong></p>
+<blockquote class="last">
+<div><p>Galaxy radius = Reff * Rgal_to_reff.
+By default, Rgal = 5*Reff. 
+(E&#8217;s have smaller R_t_r, L&#8217;s have larger.)</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>Since now (as of 2016.03) galaxy calculation is based on the GalaxyMaker results,
+let&#8217;s just believe and minimize redundant processes to determine the center of mass,
+system velocity, and to check the presence of additional components.</p>
+<p>Assuming all data in the code units.</p>
+<p>dr, bin size for radial profile cut measure, scales with exponential factor.
+Without scaling, 0.5kpc bin size is too large for ~1kpc galaxies at high-z.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galaxy.galaxy.Galaxy.physical_print">
+<code class="descname">physical_print</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy.html#Galaxy.physical_print"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy.Galaxy.physical_print" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="galaxy.galaxy.Galaxy.plot_gal">
+<code class="descname">plot_gal</code><span class="sig-paren">(</span><em>npix=200</em>, <em>fn_save=None</em>, <em>ioff=True</em>, <em>do9plots=False</em>, <em>i_lambda=0</em>, <em>representative='1Reff'</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy.html#Galaxy.plot_gal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy.Galaxy.plot_gal" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>i_lambda: int</strong></p>
+<blockquote class="last">
+<div><p>index of gal.meta.lambda_result_list to be plotted as lambda profile.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="galaxy.galaxy.Galaxy.radial_profile_cut">
+<code class="descname">radial_profile_cut</code><span class="sig-paren">(</span><em>xx</em>, <em>yy</em>, <em>mm</em>, <em>vx</em>, <em>vy</em>, <em>vz</em>, <em>den_lim=1000000.0</em>, <em>den_lim2=5000000.0</em>, <em>mag_lim=25</em>, <em>nbins=100</em>, <em>rmax=20</em>, <em>dr=0.5</em>, <em>debug=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy.html#Galaxy.radial_profile_cut"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy.Galaxy.radial_profile_cut" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="galaxy.galaxy.Galaxy.reff_main_gal">
+<code class="descname">reff_main_gal</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>z</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy.html#Galaxy.reff_main_gal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy.Galaxy.reff_main_gal" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div>Check for additional galaxy inside the region.
+If there is another galaxy, Rgal is limited to the 
+Finally returns temporary galaxy radius.</div></blockquote>
+<ol class="arabic simple">
+<li>peaks of components are far enough.</li>
+<li>minor component is larger than <a href="#id1"><span class="problematic" id="id2">`</span></a>10%&#8217; of the major component (number of stars)</li>
+</ol>
+<blockquote>
+<div><ul class="simple">
+<li>second peak is also a considerable galaxy, large enough to be considered as</li>
+</ul>
+<blockquote>
+<div>a minor merging counter part. (or minor interaction counter part.)</div></blockquote>
+</div></blockquote>
+<ol class="arabic simple" start="3">
+<li>minimum value is significantly smaller than the second peak.</li>
+</ol>
+<blockquote>
+<div><ul class="simple">
+<li>two galaxise are not closely connected.</li>
+<li>minor components are not background from a larger structure. 
+Because smooth background should not have significant peak.
+Or, a background with significant peak would be the host galaxy of this galaxy.
+If that is the case, this galaxy should not be identified as a &#8216;main&#8217; galaxy,
+and accounting for embeded satellites is another thing.</li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="galaxy.galaxy.Galaxy.reorient">
+<code class="descname">reorient</code><span class="sig-paren">(</span><em>dest=[0.0, 0.0, 1], pop_nvec=['star'], pops=['star', 'dm', 'cell'], verbose=False, debug=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy.html#Galaxy.reorient"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy.Galaxy.reorient" title="Permalink to this definition">¶</a></dt>
+<dd><p>rotate particles/cells using rotation matrix.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>dest</strong> : float array [3]</p>
+<blockquote>
+<div><p>direction vector the normal vector will point to.</p>
+</div></blockquote>
+<p><strong>pop_nvec</strong> : a list of galaxy components [&#8216;star&#8217;, &#8216;dm&#8217;, &#8216;cell&#8217;]</p>
+<blockquote>
+<div><p>target_nvec determines with respect to which the galaxy rotates.
+stellar particels / DM particles/ gas / all particles. 
+Defaults to [&#8216;star&#8217;].</p>
+</div></blockquote>
+<p><strong>verbose :</strong></p>
+<blockquote>
+<div><p>verbosity.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Nothing</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>By default, stellar particles by default.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galaxy.galaxy.Galaxy.save_gal">
+<code class="descname">save_gal</code><span class="sig-paren">(</span><em>base='./'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy.html#Galaxy.save_gal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy.Galaxy.save_gal" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="galaxy.galaxy.Galaxy.save_gal_pickle">
+<code class="descname">save_gal_pickle</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy.html#Galaxy.save_gal_pickle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy.Galaxy.save_gal_pickle" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="galaxy.galaxy.Galaxy.set_halo">
+<code class="descname">set_halo</code><span class="sig-paren">(</span><em>halo</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy.html#Galaxy.set_halo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy.Galaxy.set_halo" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="galaxy.galaxy.Galaxy.set_ptypes">
+<code class="descname">set_ptypes</code><span class="sig-paren">(</span><em>pt=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy.html#Galaxy.set_ptypes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy.Galaxy.set_ptypes" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="galaxy.galaxy.Galaxy.stellar_map">
+<code class="descname">stellar_map</code><span class="sig-paren">(</span><em>npix=400</em>, <em>proj='z'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy.html#Galaxy.stellar_map"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy.Galaxy.stellar_map" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns stellar density map.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galaxy.galaxy.Galaxy.weighted_std">
+<code class="descname">weighted_std</code><span class="sig-paren">(</span><em>values</em>, <em>weights</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy.html#Galaxy.weighted_std"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy.Galaxy.weighted_std" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="galaxy.galaxy.Meta">
+<em class="property">class </em><code class="descclassname">galaxy.galaxy.</code><code class="descname">Meta</code><a class="reference internal" href="_modules/galaxy/galaxy.html#Meta"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy.Meta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="galaxy.galaxy.Meta.show_summary">
+<code class="descname">show_summary</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy.html#Meta.show_summary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy.Meta.show_summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>prints a summary of the galaxy meta data.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="galaxy.galaxy.print_large_number">
+<code class="descclassname">galaxy.galaxy.</code><code class="descname">print_large_number</code><span class="sig-paren">(</span><em>q</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy.html#print_large_number"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy.print_large_number" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-galaxy.galaxy_mp">
+<span id="galaxy-galaxy-mp-module"></span><h2>galaxy.galaxy_mp module<a class="headerlink" href="#module-galaxy.galaxy_mp" title="Permalink to this headline">¶</a></h2>
+<p>Created on Fri Apr 24 23:45:55 2015</p>
+<p>Measure ICL fraction by merger channel</p>
+<p>&#64;author: hoseung</p>
+<p>Inherites halo.HaloMeta. HaloMeta does not contain 
+positional and kinematic information of the halo. This is good because
+recalculated center of galaxy is likely to deviate from the center of the halo.</p>
+<dl class="class">
+<dt id="galaxy.galaxy_mp.Galaxy">
+<em class="property">class </em><code class="descclassname">galaxy.galaxy_mp.</code><code class="descname">Galaxy</code><span class="sig-paren">(</span><em>halo</em>, <em>radius_method='simple'</em>, <em>info=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy_mp.html#Galaxy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy_mp.Galaxy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="galaxy.galaxy_mp.Galaxy.bound_particles">
+<code class="descname">bound_particles</code><span class="sig-paren">(</span><em>ptype='star'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy_mp.html#Galaxy.bound_particles"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy_mp.Galaxy.bound_particles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns indices of bound particles. 
+By default for stellar particles.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galaxy.galaxy_mp.Galaxy.cal_b2t">
+<code class="descname">cal_b2t</code><span class="sig-paren">(</span><em>ptype='star'</em>, <em>hist=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy_mp.html#Galaxy.cal_b2t"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy_mp.Galaxy.cal_b2t" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reorient galaxy first.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>hist :</strong></p>
+<blockquote class="last">
+<div><p>if True, ellipticity histogram is returned</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="galaxy.galaxy_mp.Galaxy.cal_lambda_r">
+<code class="descname">cal_lambda_r</code><span class="sig-paren">(</span><em>npix=30</em>, <em>rscale=3.0</em>, <em>method=2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy_mp.html#Galaxy.cal_lambda_r"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy_mp.Galaxy.cal_lambda_r" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="galaxy.galaxy_mp.Galaxy.cal_mgas">
+<code class="descname">cal_mgas</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy_mp.html#Galaxy.cal_mgas"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy_mp.Galaxy.cal_mgas" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="galaxy.galaxy_mp.Galaxy.cal_norm_vec">
+<code class="descname">cal_norm_vec</code><span class="sig-paren">(</span><em>part=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy_mp.html#Galaxy.cal_norm_vec"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy_mp.Galaxy.cal_norm_vec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determines normal vector of the given galaxy.
+&#8216;galaxy&#8217; means stellar particles by default. 
+Add self.nvec attribute and also returns nvec</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galaxy.galaxy_mp.Galaxy.cal_rotation_matrix">
+<code class="descname">cal_rotation_matrix</code><span class="sig-paren">(</span><em>nvec=None, dest=[0.0, 0.0, 1]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy_mp.html#Galaxy.cal_rotation_matrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy_mp.Galaxy.cal_rotation_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determine Rotation Matrix by axis-angle rotation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>nvec</strong> : normal vector.</p>
+<blockquote>
+<div><p>If not given, automatically calculated.</p>
+</div></blockquote>
+<p><strong>dest</strong> : destination vector ( not axis of rotation!).</p>
+<blockquote class="last">
+<div><p>+z direction ([0, 0, 1]) by default.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="galaxy.galaxy_mp.Galaxy.cal_sfr">
+<code class="descname">cal_sfr</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy_mp.html#Galaxy.cal_sfr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy_mp.Galaxy.cal_sfr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="galaxy.galaxy_mp.Galaxy.cal_ssfr">
+<code class="descname">cal_ssfr</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy_mp.html#Galaxy.cal_ssfr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy_mp.Galaxy.cal_ssfr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="galaxy.galaxy_mp.Galaxy.cal_trivia">
+<code class="descname">cal_trivia</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy_mp.html#Galaxy.cal_trivia"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy_mp.Galaxy.cal_trivia" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="galaxy.galaxy_mp.Galaxy.cal_vrot">
+<code class="descname">cal_vrot</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy_mp.html#Galaxy.cal_vrot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy_mp.Galaxy.cal_vrot" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="galaxy.galaxy_mp.Galaxy.dist_map">
+<code class="descname">dist_map</code><span class="sig-paren">(</span><em>npix=40</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy_mp.html#Galaxy.dist_map"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy_mp.Galaxy.dist_map" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="galaxy.galaxy_mp.Galaxy.e_vdiff">
+<code class="descname">e_vdiff</code><span class="sig-paren">(</span><em>iv</em>, <em>vxt</em>, <em>vyt</em>, <em>vzt</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy_mp.html#Galaxy.e_vdiff"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy_mp.Galaxy.e_vdiff" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="galaxy.galaxy_mp.Galaxy.get_center">
+<code class="descname">get_center</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>z</em>, <em>m</em>, <em>method='default'</em>, <em>tol=1e-07</em>, <em>niter=10</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy_mp.html#Galaxy.get_center"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy_mp.Galaxy.get_center" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determines the center of mass of given particles.
+IDL version was to iteratively search for mass weighted mean position of
+particles within gradually decreasing search radius. 
+Let&#8217;s do the same thing here.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galaxy.galaxy_mp.Galaxy.get_cov">
+<code class="descname">get_cov</code><span class="sig-paren">(</span><em>multithreaded=False</em>, <em>center_only=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy_mp.html#Galaxy.get_cov"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy_mp.Galaxy.get_cov" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="galaxy.galaxy_mp.Galaxy.get_cov2">
+<code class="descname">get_cov2</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy_mp.html#Galaxy.get_cov2"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy_mp.Galaxy.get_cov2" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="galaxy.galaxy_mp.Galaxy.get_radius">
+<code class="descname">get_radius</code><span class="sig-paren">(</span><em>method</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy_mp.html#Galaxy.get_radius"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy_mp.Galaxy.get_radius" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="galaxy.galaxy_mp.Galaxy.load_gal">
+<code class="descname">load_gal</code><span class="sig-paren">(</span><em>base='./'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy_mp.html#Galaxy.load_gal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy_mp.Galaxy.load_gal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load a galaxy from HDF5 file.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galaxy.galaxy_mp.Galaxy.mk_gal">
+<code class="descname">mk_gal</code><span class="sig-paren">(</span><em>star=None</em>, <em>dm=None</em>, <em>cell=None</em>, <em>save=False</em>, <em>rscale=0.3</em>, <em>verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy_mp.html#Galaxy.mk_gal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy_mp.Galaxy.mk_gal" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="galaxy.galaxy_mp.Galaxy.physical_print">
+<code class="descname">physical_print</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy_mp.html#Galaxy.physical_print"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy_mp.Galaxy.physical_print" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="galaxy.galaxy_mp.Galaxy.plot_gal">
+<code class="descname">plot_gal</code><span class="sig-paren">(</span><em>npix=400</em>, <em>wdir='./'</em>, <em>fname=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy_mp.html#Galaxy.plot_gal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy_mp.Galaxy.plot_gal" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="galaxy.galaxy_mp.Galaxy.reorient">
+<code class="descname">reorient</code><span class="sig-paren">(</span><em>part</em>, <em>modify=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy_mp.html#Galaxy.reorient"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy_mp.Galaxy.reorient" title="Permalink to this definition">¶</a></dt>
+<dd><p>part can be of any type.
+It&#8217;s stellar particles by default.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galaxy.galaxy_mp.Galaxy.save_gal">
+<code class="descname">save_gal</code><span class="sig-paren">(</span><em>base='./'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy_mp.html#Galaxy.save_gal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy_mp.Galaxy.save_gal" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="galaxy.galaxy_mp.Galaxy.save_gal_pickle">
+<code class="descname">save_gal_pickle</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy_mp.html#Galaxy.save_gal_pickle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy_mp.Galaxy.save_gal_pickle" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="galaxy.galaxy_mp.Galaxy.set_halo">
+<code class="descname">set_halo</code><span class="sig-paren">(</span><em>halo</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy_mp.html#Galaxy.set_halo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy_mp.Galaxy.set_halo" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="galaxy.galaxy_mp.Galaxy.set_ptypes">
+<code class="descname">set_ptypes</code><span class="sig-paren">(</span><em>pt=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy_mp.html#Galaxy.set_ptypes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy_mp.Galaxy.set_ptypes" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="galaxy.galaxy_mp.Galaxy.weighted_std">
+<code class="descname">weighted_std</code><span class="sig-paren">(</span><em>values</em>, <em>weights</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/galaxy_mp.html#Galaxy.weighted_std"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.galaxy_mp.Galaxy.weighted_std" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-galaxy.lambda_functions">
+<span id="galaxy-lambda-functions-module"></span><h2>galaxy.lambda_functions module<a class="headerlink" href="#module-galaxy.lambda_functions" title="Permalink to this headline">¶</a></h2>
+<p>Created on Mon May 30 15:37:03 2016</p>
+<p>&#64;author: hoseung</p>
+<dl class="function">
+<dt id="galaxy.lambda_functions.all_gals">
+<code class="descclassname">galaxy.lambda_functions.</code><code class="descname">all_gals</code><span class="sig-paren">(</span><em>treedata</em>, <em>final_gals</em>, <em>nout_ini=None</em>, <em>nout_fi=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/lambda_functions.html#all_gals"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.lambda_functions.all_gals" title="Permalink to this definition">¶</a></dt>
+<dd><p>build a list of all progenitors of the final_gals from nout_fi up to nout_ini
+[ [final_gals (at nout = nout_fi) ],</p>
+<blockquote>
+<div>[all progenitors of final gals at nout = nout_fi -1],
+[ &#8216;&#8217; at the at nout = nout_fi -2 ], ...]</div></blockquote>
+</dd></dl>
+
+<dl class="function">
+<dt id="galaxy.lambda_functions.all_gals_org">
+<code class="descclassname">galaxy.lambda_functions.</code><code class="descname">all_gals_org</code><span class="sig-paren">(</span><em>treedata</em>, <em>final_gals</em>, <em>nout_ini=None</em>, <em>nout_fi=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/lambda_functions.html#all_gals_org"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.lambda_functions.all_gals_org" title="Permalink to this definition">¶</a></dt>
+<dd><p>build a list of all progenitors of the final_gals from nout_fi up to nout_ini
+[ [final_gals (at nout = nout_fi) ],</p>
+<blockquote>
+<div>[all progenitors of final gals at nout = nout_fi -1],
+[ &#8216;&#8217; at the at nout = nout_fi -2 ], ...]</div></blockquote>
+</dd></dl>
+
+<dl class="function">
+<dt id="galaxy.lambda_functions.associate_gal_hal">
+<code class="descclassname">galaxy.lambda_functions.</code><code class="descname">associate_gal_hal</code><span class="sig-paren">(</span><em>allgal</em>, <em>allhal</em>, <em>plot_check=False</em>, <em>dir_out=''</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/lambda_functions.html#associate_gal_hal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.lambda_functions.associate_gal_hal" title="Permalink to this definition">¶</a></dt>
+<dd><p>associate halos with galaxies. 
+Arbitrary maching parameters are used.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="galaxy.lambda_functions.dist">
+<code class="descclassname">galaxy.lambda_functions.</code><code class="descname">dist</code><span class="sig-paren">(</span><em>data</em>, <em>center</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/lambda_functions.html#dist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.lambda_functions.dist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="galaxy.lambda_functions.dist2">
+<code class="descclassname">galaxy.lambda_functions.</code><code class="descname">dist2</code><span class="sig-paren">(</span><em>data</em>, <em>center</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/lambda_functions.html#dist2"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.lambda_functions.dist2" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="galaxy.lambda_functions.distance_to">
+<code class="descclassname">galaxy.lambda_functions.</code><code class="descname">distance_to</code><span class="sig-paren">(</span><em>xc</em>, <em>xx</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/lambda_functions.html#distance_to"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.lambda_functions.distance_to" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="galaxy.lambda_functions.extract_dict_scalar">
+<code class="descclassname">galaxy.lambda_functions.</code><code class="descname">extract_dict_scalar</code><span class="sig-paren">(</span><em>a</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/lambda_functions.html#extract_dict_scalar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.lambda_functions.extract_dict_scalar" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="galaxy.lambda_functions.extract_halos_within">
+<code class="descclassname">galaxy.lambda_functions.</code><code class="descname">extract_halos_within</code><span class="sig-paren">(</span><em>halos</em>, <em>i_center</em>, <em>info</em>, <em>dist_in_mpc=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/lambda_functions.html#extract_halos_within"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.lambda_functions.extract_halos_within" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="galaxy.lambda_functions.find_halo_near">
+<code class="descclassname">galaxy.lambda_functions.</code><code class="descname">find_halo_near</code><span class="sig-paren">(</span><em>data</em>, <em>center</em>, <em>rscale=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/lambda_functions.html#find_halo_near"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.lambda_functions.find_halo_near" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="galaxy.lambda_functions.get_mstar_min">
+<code class="descclassname">galaxy.lambda_functions.</code><code class="descname">get_mstar_min</code><span class="sig-paren">(</span><em>aexp</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/lambda_functions.html#get_mstar_min"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.lambda_functions.get_mstar_min" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="galaxy.lambda_functions.get_sample_gal">
+<code class="descclassname">galaxy.lambda_functions.</code><code class="descname">get_sample_gal</code><span class="sig-paren">(</span><em>wdir</em>, <em>nout</em>, <em>info</em>, <em>prg_only_tree</em>, <em>mstar_min</em>, <em>verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/lambda_functions.html#get_sample_gal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.lambda_functions.get_sample_gal" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="galaxy.lambda_functions.get_sample_tree">
+<code class="descclassname">galaxy.lambda_functions.</code><code class="descname">get_sample_tree</code><span class="sig-paren">(</span><em>alltrees</em>, <em>info</em>, <em>wdir='./'</em>, <em>nout_ini=57</em>, <em>nout_fi=18</em>, <em>is_gal=True</em>, <em>r_cluster_scale=2.9</em>, <em>m_halo_min=5000000000.0</em>, <em>nout_complete=87</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/lambda_functions.html#get_sample_tree"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.lambda_functions.get_sample_tree" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="galaxy.lambda_functions.halo_from_tree">
+<code class="descclassname">galaxy.lambda_functions.</code><code class="descname">halo_from_tree</code><span class="sig-paren">(</span><em>tree_element</em>, <em>info</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/lambda_functions.html#halo_from_tree"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.lambda_functions.halo_from_tree" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="galaxy.lambda_functions.mk_gal">
+<code class="descclassname">galaxy.lambda_functions.</code><code class="descname">mk_gal</code><span class="sig-paren">(</span><em>galdata</em>, <em>halodata</em>, <em>info</em>, <em>star_all</em>, <em>cell_all</em>, <em>dm_all</em>, <em>star_id=None</em>, <em>dm_id=None</em>, <em>save=False</em>, <em>rscale=1.1</em>, <em>verbose=False</em>, <em>galaxy_plot_dir='./'</em>, <em>npix=400</em>, <em>region_plot=False</em>, <em>method_com=2</em>, <em>mstar_min=5000000000.0</em>, <em>dump_gal=False</em>, <em>min_gas_density=0.1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/lambda_functions.html#mk_gal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.lambda_functions.mk_gal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Direct plot,
+Create galaxy, 
+Calculate lambda_r (using Cappellari 2003)
+Draw ed map of galaxy.</p>
+<p>minimum gas densiy = mean gas density of the universe?
+Galaxy center = galdata[&#8216;x&#8217;], [&#8216;y&#8217;], [&#8216;z&#8217;]. Not halo center.</p>
+<p>To do:
+extract cells by density threshold, not radial cut. 
+Gas extent varies a lot, and there no good single choice of radius cut.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="galaxy.lambda_functions.save_dict_scalar">
+<code class="descclassname">galaxy.lambda_functions.</code><code class="descname">save_dict_scalar</code><span class="sig-paren">(</span><em>cc</em>, <em>f</em>, <em>delim='   '</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/lambda_functions.html#save_dict_scalar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.lambda_functions.save_dict_scalar" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="galaxy.lambda_functions.unique">
+<code class="descclassname">galaxy.lambda_functions.</code><code class="descname">unique</code><span class="sig-paren">(</span><em>a</em>, <em>b</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/lambda_functions.html#unique"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.lambda_functions.unique" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="galaxy.lambda_functions.worker">
+<code class="descclassname">galaxy.lambda_functions.</code><code class="descname">worker</code><span class="sig-paren">(</span><em>gals</em>, <em>hals</em>, <em>out_q</em>, <em>info</em>, <em>inds</em>, <em>star_all</em>, <em>cell_all</em>, <em>dm_all</em>, <em>dump_gal=False</em>, <em>reorient=False</em>, <em>lambda_method='ellip'</em>, <em>rscale_lambda=3</em>, <em>npix_lambda=10</em>, <em>galaxy_plot=False</em>, <em>galaxy_plot_dir='galaxy_plot/'</em>, <em>region_plot=False</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/lambda_functions.html#worker"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.lambda_functions.worker" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-galaxy.make_gal">
+<span id="galaxy-make-gal-module"></span><h2>galaxy.make_gal module<a class="headerlink" href="#module-galaxy.make_gal" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="galaxy.make_gal.extract_data">
+<code class="descclassname">galaxy.make_gal.</code><code class="descname">extract_data</code><span class="sig-paren">(</span><em>halo</em>, <em>rscale=1.25</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/make_gal.html#extract_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.make_gal.extract_data" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="galaxy.make_gal.extract_data_old">
+<code class="descclassname">galaxy.make_gal.</code><code class="descname">extract_data_old</code><span class="sig-paren">(</span><em>halo</em>, <em>rscale=1.25</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/make_gal.html#extract_data_old"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.make_gal.extract_data_old" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="galaxy.make_gal.get_metadata">
+<code class="descclassname">galaxy.make_gal.</code><code class="descname">get_metadata</code><span class="sig-paren">(</span><em>clazz</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/make_gal.html#get_metadata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.make_gal.get_metadata" title="Permalink to this definition">¶</a></dt>
+<dd><p>Out of all attributes of a galaxy instance, leave only data.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="galaxy.make_gal.get_metadata2">
+<code class="descclassname">galaxy.make_gal.</code><code class="descname">get_metadata2</code><span class="sig-paren">(</span><em>adict</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/make_gal.html#get_metadata2"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.make_gal.get_metadata2" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="galaxy.make_gal.save_gal">
+<code class="descclassname">galaxy.make_gal.</code><code class="descname">save_gal</code><span class="sig-paren">(</span><em>galaxy</em>, <em>filename</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/make_gal.html#save_gal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.make_gal.save_gal" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-galaxy.rd_gal">
+<span id="galaxy-rd-gal-module"></span><h2>galaxy.rd_gal module<a class="headerlink" href="#module-galaxy.rd_gal" title="Permalink to this headline">¶</a></h2>
+<p>Created on Thu Mar 10 04:50:37 2016
+&#64;author: hoseung</p>
+<p>Minimal... test purpose?</p>
+<dl class="class">
+<dt id="galaxy.rd_gal.Gal">
+<em class="property">class </em><code class="descclassname">galaxy.rd_gal.</code><code class="descname">Gal</code><a class="reference internal" href="_modules/galaxy/rd_gal.html#Gal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.rd_gal.Gal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="galaxy.rd_gal.rd_gal">
+<code class="descclassname">galaxy.rd_gal.</code><code class="descname">rd_gal</code><span class="sig-paren">(</span><em>nout</em>, <em>idgal</em>, <em>wdir='GalaxyMaker/'</em>, <em>metal=True</em>, <em>nchem=0</em>, <em>long=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galaxy/rd_gal.html#rd_gal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galaxy.rd_gal.rd_gal" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div>Load GalaxyMaker/gal dump file</div></blockquote>
+<p>returns a  header and a data. 
+No unit conversion/translation is done. 
+Therefore:</p>
+<blockquote>
+<div>Positions are in Mpc, centered at the center of the volume
+Velocities are in km/s w.r.t. the volume.
+Mass is in 1e11 Msun.</div></blockquote>
+</dd></dl>
+
+</div>
+<div class="section" id="module-galaxy">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-galaxy" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">galaxy package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-galaxy.Galaxymodule">galaxy.Galaxymodule module</a></li>
+<li><a class="reference internal" href="#module-galaxy.galaxy">galaxy.galaxy module</a></li>
+<li><a class="reference internal" href="#module-galaxy.galaxy_mp">galaxy.galaxy_mp module</a></li>
+<li><a class="reference internal" href="#module-galaxy.lambda_functions">galaxy.lambda_functions module</a></li>
+<li><a class="reference internal" href="#module-galaxy.make_gal">galaxy.make_gal module</a></li>
+<li><a class="reference internal" href="#module-galaxy.rd_gal">galaxy.rd_gal module</a></li>
+<li><a class="reference internal" href="#module-galaxy">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/galaxy.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">pyclusterevol -0.1 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2016, Hoseung.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.8.
+    </div>
+  </body>
+</html>

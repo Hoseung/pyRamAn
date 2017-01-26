@@ -1,0 +1,329 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>tree.ctutils &#8212; pyclusterevol -0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '-0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="top" title="pyclusterevol -0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">pyclusterevol -0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for tree.ctutils</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Fri Jul 10 17:10:10 2015</span>
+
+<span class="sd">@author: hoseung</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">tree</span> <span class="k">import</span> <span class="n">treemodule</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="c1">#%%</span>
+
+<div class="viewcode-block" id="join_struct_arrays"><a class="viewcode-back" href="../../tree.html#tree.ctutils.join_struct_arrays">[docs]</a><span class="k">def</span> <span class="nf">join_struct_arrays</span><span class="p">(</span><span class="n">arrays</span><span class="p">):</span>
+    <span class="n">sizes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">a</span><span class="o">.</span><span class="n">itemsize</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">arrays</span><span class="p">])</span>
+    <span class="n">offsets</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">sizes</span><span class="o">.</span><span class="n">cumsum</span><span class="p">()]</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">arrays</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">joint</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">n</span><span class="p">,</span> <span class="n">offsets</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">offset</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">arrays</span><span class="p">,</span> <span class="n">sizes</span><span class="p">,</span> <span class="n">offsets</span><span class="p">):</span>
+        <span class="n">joint</span><span class="p">[:,</span><span class="n">offset</span><span class="p">:</span><span class="n">offset</span><span class="o">+</span><span class="n">size</span><span class="p">]</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">size</span><span class="p">)</span>
+    <span class="n">dtype</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">((</span><span class="n">a</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">descr</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">arrays</span><span class="p">),</span> <span class="p">[])</span>
+    <span class="k">return</span> <span class="n">joint</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="augment_tree"><a class="viewcode-back" href="../../tree.html#tree.ctutils.augment_tree">[docs]</a><span class="k">def</span> <span class="nf">augment_tree</span><span class="p">(</span><span class="n">treedata</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">is_gal</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add more quantities to existing tree data. </span>
+<span class="sd">        </span>
+<span class="sd">        Consistent tree (built with HM/GM output) does not provide much detail of halos/galaxies.</span>
+<span class="sd">        I need to add some more information from original HM/GM output.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">dtype_new_quantities</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;np&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;i4&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;i4&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;m&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;mvir&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span>
+                            <span class="p">(</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;rvir&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;tvir&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;cvel&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span>
+                            <span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;z&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span>
+                            <span class="p">(</span><span class="s1">&#39;vx&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;vy&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;vz&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span>
+                            <span class="p">(</span><span class="s1">&#39;ax&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;ay&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;az&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span>
+                            <span class="p">(</span><span class="s1">&#39;sp&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">)]</span>
+    <span class="k">if</span> <span class="n">is_gal</span><span class="p">:</span>
+        <span class="p">[</span><span class="n">dtype_new_quantities</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="p">[(</span><span class="s1">&#39;sig&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;sigbulge&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;mbulge&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">)]]</span>
+           
+    <span class="n">New_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">treedata</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype_new_quantities</span><span class="p">)</span>
+    <span class="kn">import</span> <span class="nn">tree.halomodule</span> <span class="k">as</span> <span class="nn">hmo</span>
+    <span class="k">for</span> <span class="n">nout</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">treedata</span><span class="p">[</span><span class="s1">&#39;nout&#39;</span><span class="p">]):</span>
+        <span class="c1"># nout and Orig_halo_id are required.</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">gal_org</span> <span class="o">=</span> <span class="n">hmo</span><span class="o">.</span><span class="n">Halo</span><span class="p">(</span><span class="n">base</span><span class="o">=</span><span class="n">base</span><span class="p">,</span> <span class="n">nout</span><span class="o">=</span><span class="n">nout</span><span class="p">,</span> <span class="n">halofinder</span><span class="o">=</span><span class="s1">&#39;HM&#39;</span><span class="p">,</span> <span class="n">load</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">is_gal</span><span class="o">=</span><span class="n">is_gal</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Can&#39;t load halo catalog</span><span class="se">\n</span><span class="s2"> Original data is not modified.&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">treedata</span>
+            
+        <span class="c1"># Before we start, remove unnecessary coulmns</span>
+        <span class="n">dtype_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">field</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">dtype_new_quantities</span><span class="p">]</span>
+        <span class="n">gal_org</span> <span class="o">=</span> <span class="n">gal_org</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">dtype_names</span><span class="p">]</span>
+        
+        <span class="n">ind_tree_this_nout</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">treedata</span><span class="p">[</span><span class="s1">&#39;nout&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">nout</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">ok_gals</span> <span class="o">=</span> <span class="n">treedata</span><span class="p">[</span><span class="s1">&#39;Orig_halo_id&#39;</span><span class="p">][</span><span class="n">ind_tree_this_nout</span><span class="p">]</span>
+        
+        <span class="c1"># Galaxies are from a snapshot. Galaxy ID list must be a unique set.</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">ok_gals</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">ok_gals</span><span class="p">))</span>
+        
+        <span class="n">ind_org_gals</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">gal_org</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">gal</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">gal</span> <span class="ow">in</span> <span class="n">ok_gals</span><span class="p">]</span>
+        
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ind</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ind_org_gals</span><span class="p">):</span>
+            <span class="k">assert</span> <span class="nb">sum</span><span class="p">(</span><span class="n">New_arr</span><span class="p">[</span><span class="n">ind_tree_this_nout</span><span class="p">[</span><span class="n">i</span><span class="p">]])</span> <span class="o">==</span> <span class="mf">0.</span> <span class="c1"># array must be empty</span>
+            <span class="n">New_arr</span><span class="p">[</span><span class="n">ind_tree_this_nout</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="o">=</span> <span class="n">gal_org</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+ 
+    <span class="c1"># Drop duplicate fields</span>
+    <span class="c1">#[&quot;id&quot;, &quot;mvir&quot;, &quot;rvir&quot;, &quot;x&quot;, &quot;y&quot;, &quot;z&quot;, &quot;vx&quot;, &quot;vy&quot;, &quot;vz&quot;]</span>
+    <span class="n">keep_fields</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;np&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="s2">&quot;tvir&quot;</span><span class="p">,</span> <span class="s2">&quot;cvel&quot;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">is_gal</span><span class="p">:</span>
+        <span class="p">[</span><span class="n">keep_fields</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;sig&#39;</span><span class="p">,</span> <span class="s1">&#39;sigbulge&#39;</span><span class="p">,</span> <span class="s1">&#39;mbulge&#39;</span><span class="p">,</span> <span class="s2">&quot;m&quot;</span><span class="p">]]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">keep_fields</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;m&quot;</span><span class="p">)</span> 
+    <span class="c1"># in case of DM halo, mvir is already passed to Ctrees  when building it.</span>
+        
+        
+    <span class="k">return</span> <span class="n">join_struct_arrays</span><span class="p">([</span><span class="n">treedata</span><span class="p">,</span> <span class="n">New_arr</span><span class="p">[</span><span class="n">keep_fields</span><span class="p">]])</span></div>
+
+
+<div class="viewcode-block" id="load_tree"><a class="viewcode-back" href="../../tree.html#tree.ctutils.load_tree">[docs]</a><span class="k">def</span> <span class="nf">load_tree</span><span class="p">(</span><span class="n">wdir</span><span class="p">,</span> <span class="n">is_gal</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">no_dump</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">load_ascii</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Basically deprecated. </span>
+<span class="sd">    Use treemodule.load_tree() instead.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">treemodule</span><span class="o">.</span><span class="n">load_tree</span><span class="p">(</span><span class="n">wdir</span><span class="p">,</span> <span class="n">is_gal</span><span class="o">=</span><span class="n">is_gal</span><span class="p">,</span> <span class="n">no_dump</span><span class="o">=</span><span class="n">no_dump</span><span class="p">,</span> <span class="n">load_ascii</span><span class="o">=</span><span class="n">load_ascii</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="get_npr"><a class="viewcode-back" href="../../tree.html#tree.ctutils.get_npr">[docs]</a><span class="k">def</span> <span class="nf">get_npr</span><span class="p">(</span><span class="n">treedata</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns number of progenitors of a given idx</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">treedata</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">idx</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">treedata</span><span class="p">[</span><span class="s1">&#39;nprog&#39;</span><span class="p">][</span><span class="n">ind</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="c1"># I want int, not a int array</span></div>
+
+
+<div class="viewcode-block" id="get_progenitors"><a class="viewcode-back" href="../../tree.html#tree.ctutils.get_progenitors">[docs]</a><span class="k">def</span> <span class="nf">get_progenitors</span><span class="p">(</span><span class="n">treedata</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">main</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns progenitors of a given halo/galaxy. </span>
+<span class="sd">        (from only one previous snapshot)</span>
+<span class="sd">    &quot;&quot;&quot;</span>    
+    <span class="k">if</span> <span class="n">main</span><span class="p">:</span>
+        <span class="n">iprgs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">treedata</span><span class="p">[</span><span class="s1">&#39;desc_id&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">idx</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">treedata</span><span class="p">[</span><span class="s1">&#39;mmp&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">treedata</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">][</span><span class="n">iprgs</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">iprgs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">treedata</span><span class="p">[</span><span class="s1">&#39;desc_id&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">idx</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">treedata</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">][</span><span class="n">iprgs</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="idx_to_ind"><a class="viewcode-back" href="../../tree.html#tree.ctutils.idx_to_ind">[docs]</a><span class="k">def</span> <span class="nf">idx_to_ind</span><span class="p">(</span><span class="n">treedata</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">treedata</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">idx</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="id_to_idx"><a class="viewcode-back" href="../../tree.html#tree.ctutils.id_to_idx">[docs]</a><span class="k">def</span> <span class="nf">id_to_idx</span><span class="p">(</span><span class="n">treedata</span><span class="p">,</span> <span class="nb">id</span><span class="p">,</span> <span class="n">nout</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">treedata</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">][</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">treedata</span><span class="p">[</span><span class="s1">&#39;Orig_halo_id&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="nb">id</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">treedata</span><span class="p">[</span><span class="s1">&#39;nout&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">nout</span><span class="p">))]</span></div>
+    
+
+<div class="viewcode-block" id="extract_a_tree"><a class="viewcode-back" href="../../tree.html#tree.ctutils.extract_a_tree">[docs]</a><span class="k">def</span> <span class="nf">extract_a_tree</span><span class="p">(</span><span class="n">alltrees</span><span class="p">,</span> <span class="n">idx_last</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns one full tree.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">alltrees</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">alltrees</span><span class="p">[</span><span class="s1">&#39;tree_root_id&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">idx_last</span><span class="p">)]</span></div>
+
+<div class="viewcode-block" id="extract_satellite"><a class="viewcode-back" href="../../tree.html#tree.ctutils.extract_satellite">[docs]</a><span class="k">def</span> <span class="nf">extract_satellite</span><span class="p">(</span><span class="n">atree</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        extract a partial tree of satellite.</span>
+<span class="sd">        Starting from a certain nout, goes back in time. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">pass</span></div>
+    
+
+<div class="viewcode-block" id="extract_main_tree"><a class="viewcode-back" href="../../tree.html#tree.ctutils.extract_main_tree">[docs]</a><span class="k">def</span> <span class="nf">extract_main_tree</span><span class="p">(</span><span class="n">treedata</span><span class="p">,</span> <span class="n">idx</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">no_subset</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a single branch/trunk of tree following only the main progenitors.</span>
+<span class="sd">        Works with both alltrees or atree.</span>
+<span class="sd">        Search until no progenitor is found. Doesn&#39;t matter how long the given tree is. </span>
+<span class="sd">        Only earlier snapshots are searched for.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">if</span> <span class="n">idx</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No idx is given&quot;</span><span class="p">)</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">treedata</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;idx = &quot;</span><span class="p">,</span> <span class="n">idx</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">no_subset</span><span class="p">:</span>
+        <span class="n">smalldata</span> <span class="o">=</span> <span class="n">treedata</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">smalldata</span> <span class="o">=</span> <span class="n">treedata</span><span class="p">[</span><span class="n">treedata</span><span class="p">[</span><span class="s1">&#39;tree_root_id&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">idx</span><span class="p">]</span>
+
+    <span class="c1">#nprg = 1</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">ind_list</span><span class="o">=</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">smalldata</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">idx</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]]</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot; idx = </span><span class="si">{}</span><span class="s2"> not found in the list :&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">idx</span><span class="p">),</span> <span class="n">smalldata</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">][:</span><span class="mi">10</span><span class="p">])</span>
+        <span class="k">raise</span>
+      
+<span class="c1">#    while nprg &gt; 0:</span>
+<span class="c1">#        idx = get_progenitors(smalldata, idx, main=True)</span>
+<span class="c1">#        ind_list.append(np.where(smalldata[&#39;id&#39;] == idx[0])[0][0])</span>
+<span class="c1">#        nprg = get_npr(smalldata, idx[0])</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">get_progenitors</span><span class="p">(</span><span class="n">smalldata</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">main</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">ind_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">smalldata</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">idx</span><span class="p">[</span><span class="mi">0</span><span class="p">])[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">break</span>
+
+
+    <span class="k">return</span> <span class="n">smalldata</span><span class="p">[</span><span class="n">ind_list</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="extract_main_tree_full"><a class="viewcode-back" href="../../tree.html#tree.ctutils.extract_main_tree_full">[docs]</a><span class="k">def</span> <span class="nf">extract_main_tree_full</span><span class="p">(</span><span class="n">atree</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        extract a FULL main tree including later snapshots.</span>
+<span class="sd">        = extract_main_tree + later snapshots</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">main_prg</span> <span class="o">=</span> <span class="n">extract_main_tree</span><span class="p">(</span><span class="n">atree</span><span class="p">,</span> <span class="n">idx</span><span class="p">)</span>
+    
+    <span class="n">nout_now</span> <span class="o">=</span> <span class="n">atree</span><span class="p">[</span><span class="s1">&#39;nout&#39;</span><span class="p">][</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">atree</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">idx</span><span class="p">)[</span><span class="mi">0</span><span class="p">]]</span>
+    <span class="n">nout_fi</span> <span class="o">=</span> <span class="n">atree</span><span class="p">[</span><span class="s1">&#39;nout&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">nout_now</span> <span class="o">&lt;</span> <span class="n">nout_fi</span><span class="p">:</span>
+        <span class="n">desc</span> <span class="o">=</span> <span class="n">idx</span>
+        <span class="n">ind_desc_list</span><span class="o">=</span><span class="p">[]</span>
+        <span class="k">while</span> <span class="n">desc</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">atree</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">desc</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">ind_desc_list</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">ind</span><span class="p">)</span>
+            <span class="n">desc</span> <span class="o">=</span> <span class="n">atree</span><span class="p">[</span><span class="s1">&#39;desc_id&#39;</span><span class="p">][</span><span class="n">ind</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">atree</span><span class="p">[</span><span class="n">ind_desc_list</span><span class="p">],</span><span class="n">main_prg</span><span class="p">))</span><span class="c1">#,axis=1)</span>
+    <span class="k">elif</span> <span class="n">nout_now</span> <span class="o">==</span> <span class="n">nout_fi</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">main_prg</span></div>
+
+
+<div class="viewcode-block" id="last_halos"><a class="viewcode-back" href="../../tree.html#tree.ctutils.last_halos">[docs]</a><span class="k">def</span> <span class="nf">last_halos</span><span class="p">(</span><span class="n">treedata</span><span class="p">,</span> <span class="n">return_ind</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="n">nout_max</span> <span class="o">=</span> <span class="n">treedata</span><span class="p">[</span><span class="s1">&#39;nout&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">return_ind</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">treedata</span><span class="p">[</span><span class="s1">&#39;nout&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">nout_max</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">treedata</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">][</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">treedata</span><span class="p">[</span><span class="s1">&#39;nout&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">nout_max</span><span class="p">)]</span></div>
+
+
+<div class="viewcode-block" id="idxs_to_ids"><a class="viewcode-back" href="../../tree.html#tree.ctutils.idxs_to_ids">[docs]</a><span class="k">def</span> <span class="nf">idxs_to_ids</span><span class="p">(</span><span class="n">alltree</span><span class="p">,</span> <span class="n">idxs</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">alltree</span><span class="p">[</span><span class="s2">&quot;Orig_halo_id&quot;</span><span class="p">][</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">alltree</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">idx</span><span class="p">)][</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">idxs</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="check_tree_complete"><a class="viewcode-back" href="../../tree.html#tree.ctutils.check_tree_complete">[docs]</a><span class="k">def</span> <span class="nf">check_tree_complete</span><span class="p">(</span><span class="n">treedata</span><span class="p">,</span> <span class="n">nout_ini</span><span class="p">,</span> <span class="n">nout_fi</span><span class="p">,</span> <span class="n">halo_list</span><span class="p">,</span>\
+                        <span class="n">idx</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    returns a list of halo IDs at nout_fi that with trees fully linked</span>
+<span class="sd">    from nout_ini to nout_fi.</span>
+<span class="sd">    </span>
+<span class="sd">    parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    idx : if False, halo_list are ids from halo bricks.</span>
+<span class="sd">    &quot;&quot;&quot;</span>    
+
+    <span class="k">if</span> <span class="n">idx</span><span class="p">:</span>
+        <span class="n">idx_list</span> <span class="o">=</span> <span class="n">halo_list</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">halos_now</span> <span class="o">=</span> <span class="n">treedata</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">treedata</span><span class="p">[</span><span class="s1">&#39;nout&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">nout_fi</span><span class="p">)]</span>
+        <span class="c1"># Not all galaxies are found in the tree.</span>
+        <span class="n">idx_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">hal</span> <span class="ow">in</span> <span class="n">halo_list</span><span class="p">:</span>
+            <span class="n">ii</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">halos_now</span><span class="p">[</span><span class="s1">&#39;Orig_halo_id&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">hal</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ii</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">idx_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">halos_now</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">][</span><span class="n">ii</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+   
+    <span class="n">complete_list</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">halo_list</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+    
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">this_hal</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">idx_list</span><span class="p">):</span>
+        <span class="n">complete</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">atree</span> <span class="o">=</span> <span class="n">extract_main_tree_full</span><span class="p">(</span><span class="n">treedata</span><span class="p">,</span> <span class="n">this_hal</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">min</span><span class="p">(</span><span class="n">atree</span><span class="p">[</span><span class="s1">&#39;nout&#39;</span><span class="p">])</span> <span class="o">&lt;=</span> <span class="n">nout_ini</span> <span class="ow">and</span> <span class="nb">max</span><span class="p">(</span><span class="n">atree</span><span class="p">[</span><span class="s1">&#39;nout&#39;</span><span class="p">])</span> <span class="o">&gt;=</span> <span class="n">nout_fi</span><span class="p">:</span>
+                <span class="n">complete</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="n">complete_list</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">complete</span>
+
+    <span class="k">return</span> <span class="n">halo_list</span><span class="p">[</span><span class="n">complete_list</span><span class="p">]</span></div>
+    
+    
+    
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">pyclusterevol -0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2016, Hoseung.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.8.
+    </div>
+  </body>
+</html>

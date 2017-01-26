@@ -1,0 +1,482 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>load.hydro &#8212; pyclusterevol -0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '-0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="top" title="pyclusterevol -0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">pyclusterevol -0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for load.hydro</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Thu Mar 26 21:32:55 2015</span>
+
+<span class="sd">@author: hoseung</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">load.sim</span> <span class="k">import</span> <span class="n">Simbase</span>
+<span class="kn">from</span> <span class="nn">load.utils</span> <span class="k">import</span> <span class="n">read_header</span>
+
+<div class="viewcode-block" id="Dummy"><a class="viewcode-back" href="../../load.html#load.hydro.Dummy">[docs]</a><span class="k">class</span> <span class="nc">Dummy</span><span class="p">():</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="Hydro"><a class="viewcode-back" href="../../load.html#load.hydro.Hydro">[docs]</a><span class="k">class</span> <span class="nc">Hydro</span><span class="p">(</span><span class="n">Simbase</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
+                 <span class="n">nout</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                 <span class="n">info</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                 <span class="n">amr</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                 <span class="n">region</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                 <span class="n">ranges</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                 <span class="n">load</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">cosmo</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                 <span class="n">cpus</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">cpu_fixed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        region : dict-like</span>
+<span class="sd">            d</span>
+<span class="sd">        ranges : array-like (3 by 2)</span>
+<span class="sd">            region preceeds(?) ranges.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Hydro</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cosmo</span> <span class="o">=</span> <span class="n">cosmo</span>
+        <span class="k">if</span> <span class="n">info</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">nout</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;either info or onut is required&quot;</span>
+            <span class="kn">from</span> <span class="nn">load.info</span> <span class="k">import</span> <span class="n">Info</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[Hydro.__init__] Loading info&quot;</span><span class="p">)</span>
+            <span class="n">info</span> <span class="o">=</span> <span class="n">Info</span><span class="p">(</span><span class="n">nout</span><span class="o">=</span><span class="n">nout</span><span class="p">,</span> <span class="n">cosmo</span><span class="o">=</span><span class="n">cosmo</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">info</span> <span class="o">=</span> <span class="n">info</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nout</span> <span class="o">=</span> <span class="n">info</span><span class="o">.</span><span class="n">nout</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cpus</span> <span class="o">=</span> <span class="n">cpus</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cpu_fixed</span><span class="o">=</span><span class="n">cpu_fixed</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ncpu</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cpus</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ncpu</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="n">snout</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">info</span><span class="o">.</span><span class="n">nout</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+        <span class="c1"># file name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">out_dir</span> <span class="o">=</span> <span class="s1">&#39;snapshots/&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fnbase</span> <span class="o">=</span> <span class="n">info</span><span class="o">.</span><span class="n">base</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_dir</span> \
+                                 <span class="o">+</span> <span class="s1">&#39;output_&#39;</span> <span class="o">+</span> <span class="n">snout</span> \
+                                 <span class="o">+</span> <span class="s1">&#39;/hydro_&#39;</span> <span class="o">+</span> <span class="n">snout</span> \
+                                 <span class="o">+</span> <span class="s1">&#39;.out&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_get_basic_info</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_info</span><span class="p">(</span><span class="n">info</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">region</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ranges</span> <span class="o">=</span> <span class="n">region</span><span class="p">[</span><span class="s1">&#39;ranges&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">ranges</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_ranges</span><span class="p">(</span><span class="n">ranges</span><span class="o">=</span><span class="n">ranges</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="s2">&quot;ranges&quot;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">info</span><span class="o">.</span><span class="n">ranges</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">set_ranges</span><span class="p">(</span><span class="n">ranges</span><span class="o">=</span><span class="n">info</span><span class="o">.</span><span class="n">ranges</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_ranges</span><span class="p">([[</span><span class="o">-</span><span class="mi">9</span><span class="n">e9</span><span class="p">,</span><span class="mi">9</span><span class="n">e9</span><span class="p">]]</span> <span class="o">*</span> <span class="mi">3</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">amr</span> <span class="o">=</span> <span class="n">amr</span>
+        <span class="k">except</span> <span class="ne">NameError</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Loading amr first! </span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">load</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">amr2cell</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_get_basic_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fbase</span> <span class="o">+</span> <span class="s1">&#39;00001&#39;</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">glob</span> <span class="k">import</span> <span class="n">glob</span>
+            <span class="n">hydros</span> <span class="o">=</span> <span class="n">glob</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fnbase</span> <span class="o">+</span> <span class="s2">&quot;*&quot;</span><span class="p">)</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">hydros</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">header</span> <span class="o">=</span> <span class="n">Dummy</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_read_hydro_header</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Hydro.set_info"><a class="viewcode-back" href="../../load.html#load.hydro.Hydro.set_info">[docs]</a>    <span class="k">def</span> <span class="nf">set_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">info</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">info</span> <span class="o">=</span> <span class="n">info</span></div>
+
+    <span class="k">def</span> <span class="nf">_read_hydro_header</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="c1"># Global</span>
+        <span class="n">h1</span> <span class="o">=</span> <span class="n">read_header</span><span class="p">(</span><span class="n">f</span><span class="p">,</span>
+                         <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span>
+                             <span class="p">[(</span><span class="s1">&#39;ncpu&#39;</span><span class="p">,</span> <span class="s1">&#39;i&#39;</span><span class="p">),</span>
+                              <span class="p">(</span><span class="s1">&#39;nvarh&#39;</span><span class="p">,</span> <span class="s1">&#39;i4&#39;</span><span class="p">),</span>
+                              <span class="p">(</span><span class="s1">&#39;ndim&#39;</span><span class="p">,</span> <span class="s1">&#39;i4&#39;</span><span class="p">),</span>
+                              <span class="p">(</span><span class="s1">&#39;nlevelmax&#39;</span><span class="p">,</span> <span class="s1">&#39;i4&#39;</span><span class="p">),</span>
+                              <span class="p">(</span><span class="s1">&#39;nboundary&#39;</span><span class="p">,</span> <span class="s1">&#39;i4&#39;</span><span class="p">),</span>
+                              <span class="p">(</span><span class="s1">&#39;gamma&#39;</span><span class="p">,</span> <span class="s1">&#39;f8&#39;</span><span class="p">)]))</span>
+
+        <span class="k">if</span> <span class="n">h1</span><span class="p">[</span><span class="s1">&#39;nboundary&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39; Periodic boundary condition&#39;</span><span class="p">)</span>
+
+        <span class="c1"># if assign</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">ncpu</span> <span class="o">=</span> <span class="n">h1</span><span class="p">[</span><span class="s1">&#39;ncpu&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">ndim</span> <span class="o">=</span> <span class="n">h1</span><span class="p">[</span><span class="s1">&#39;ndim&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">nlevelmax</span> <span class="o">=</span> <span class="n">h1</span><span class="p">[</span><span class="s1">&#39;nlevelmax&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">nboundary</span> <span class="o">=</span> <span class="n">h1</span><span class="p">[</span><span class="s1">&#39;nboundary&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">gamma</span> <span class="o">=</span> <span class="n">h1</span><span class="p">[</span><span class="s1">&#39;gamma&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">nvarh</span> <span class="o">=</span> <span class="n">h1</span><span class="p">[</span><span class="s1">&#39;nvarh&#39;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="Hydro.amr2cell"><a class="viewcode-back" href="../../load.html#load.hydro.Hydro.amr2cell">[docs]</a>    <span class="k">def</span> <span class="nf">amr2cell</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lmax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">icpu</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">cpu</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                 <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">return_meta</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">ranges</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Loads AMR and HYDRO and output hydro data into particle-like format(cell).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        cpu : bool, optional</span>
+<span class="sd">            If True, cpu number of each cell is stored.</span>
+<span class="sd">        icpu : int, array-like, optional</span>
+<span class="sd">            list of cpus to load, has no effect... </span>
+<span class="sd">        lmax : int, optional</span>
+<span class="sd">            Limit the maximum level of hydro data returned.</span>
+<span class="sd">        return_meta : bool, optional</span>
+<span class="sd">            If True, returns meta data instead. (Why would I want that??)</span>
+<span class="sd">        verbose : bool, optional</span>
+<span class="sd">            </span>
+<span class="sd">        &quot;&quot;&quot;</span>       
+        <span class="n">nvarh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">nvarh</span>
+        <span class="n">nlevelmax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">nlevelmax</span>
+        <span class="k">if</span> <span class="n">lmax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">lmax</span> <span class="o">=</span> <span class="n">nlevelmax</span>
+
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s1">&#39; &gt;&gt;&gt; working resolution (lmax) =&#39;</span><span class="p">,</span> <span class="n">lmax</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">ranges</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_ranges</span><span class="p">(</span><span class="n">ranges</span><span class="o">=</span><span class="n">ranges</span><span class="p">)</span>
+        <span class="c1"># Set ranges</span>
+        <span class="n">xmi</span><span class="p">,</span> <span class="n">xma</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ranges</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">ymi</span><span class="p">,</span> <span class="n">yma</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ranges</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">zmi</span><span class="p">,</span> <span class="n">zma</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ranges</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+
+        <span class="n">work_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">base</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_dir</span> <span class="o">+</span> <span class="s1">&#39;output_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">nout</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[hydro.amr2cell] Ranges&quot;</span><span class="p">,</span> <span class="n">xmi</span><span class="p">,</span> <span class="n">xma</span><span class="p">,</span> <span class="n">ymi</span><span class="p">,</span> <span class="n">yma</span><span class="p">,</span> <span class="n">zmi</span><span class="p">,</span><span class="n">zma</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[hydro.amr2cell] cpus&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cpus</span><span class="p">)</span>
+        
+        <span class="kn">from</span> <span class="nn">load</span> <span class="k">import</span> <span class="n">a2c</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">a2c</span><span class="o">.</span><span class="n">a2c_count</span><span class="p">(</span><span class="n">work_dir</span><span class="p">,</span> <span class="n">xmi</span><span class="p">,</span> <span class="n">xma</span><span class="p">,</span> <span class="n">ymi</span><span class="p">,</span> <span class="n">yma</span><span class="p">,</span> <span class="n">zmi</span><span class="p">,</span> <span class="n">zma</span><span class="p">,</span> <span class="n">lmax</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cpus</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[hydro.amr2ell] a2c_count done&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ranges&quot;</span><span class="p">,</span> <span class="n">xmi</span><span class="p">,</span> <span class="n">xma</span><span class="p">,</span> <span class="n">ymi</span><span class="p">,</span> <span class="n">yma</span><span class="p">,</span> <span class="n">zmi</span><span class="p">,</span> <span class="n">zma</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">return_meta</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">out</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">work_dir</span><span class="p">,</span> <span class="n">xmi</span><span class="p">,</span> <span class="n">xma</span><span class="p">,</span> <span class="n">ymi</span><span class="p">,</span> <span class="n">yma</span><span class="p">,</span> <span class="n">zmi</span><span class="p">,</span> <span class="n">zma</span><span class="p">,</span> <span class="n">lmax</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cell</span> <span class="o">=</span> <span class="n">a2c</span><span class="o">.</span><span class="n">a2c_load</span><span class="p">(</span><span class="n">work_dir</span><span class="p">,</span> <span class="n">xmi</span><span class="p">,</span> <span class="n">xma</span><span class="p">,</span> <span class="n">ymi</span><span class="p">,</span> <span class="n">yma</span><span class="p">,</span> <span class="n">zmi</span><span class="p">,</span> <span class="n">zma</span><span class="p">,</span>\
+                                <span class="n">lmax</span><span class="p">,</span> <span class="n">out</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">nvarh</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cpus</span><span class="p">)</span>
+            <span class="n">dtype_cell</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f8&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f8&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;z&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f8&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;dx&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f8&#39;</span><span class="p">)]</span> 
+            <span class="k">if</span> <span class="n">cpu</span><span class="p">:</span>
+                <span class="n">dtype_cell</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s1">&#39;cpu&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f8&#39;</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nvarh</span><span class="p">):</span>
+                <span class="n">dtype_cell</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="p">(</span><span class="s1">&#39;var&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">),</span> <span class="s1">&#39;&lt;f8&#39;</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cell</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype_cell</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cell</span><span class="p">[</span><span class="mi">0</span><span class="p">][:,</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cell</span><span class="p">[</span><span class="mi">0</span><span class="p">][:,</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cell</span><span class="p">[</span><span class="mi">0</span><span class="p">][:,</span><span class="mi">2</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">[</span><span class="s1">&#39;dx&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cell</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nvarh</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">[</span><span class="s1">&#39;var&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)]</span> <span class="o">=</span> <span class="n">cell</span><span class="p">[</span><span class="mi">2</span><span class="p">][:,</span><span class="n">i</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">cpu</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">[</span><span class="s1">&#39;cpu&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cell</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span></div>
+            
+            
+<div class="viewcode-block" id="Hydro.amr2cell_old"><a class="viewcode-back" href="../../load.html#load.hydro.Hydro.amr2cell_old">[docs]</a>    <span class="k">def</span> <span class="nf">amr2cell_old</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lmax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">icpu</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reads AMR and HYDRO and output hydro variables in particle-like data format.</span>
+<span class="sd">        Works ok.</span>
+
+<span class="sd">        Initial version: 2015. 04. 16</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+        <span class="kn">import</span> <span class="nn">load</span>
+        <span class="kn">from</span> <span class="nn">load.utils</span> <span class="k">import</span> <span class="n">read_fortran</span><span class="p">,</span> <span class="n">skip_fortran</span>
+        <span class="c1"># if both amr and hydro does not exist, create.</span>
+        <span class="c1">#################</span>
+        <span class="n">cpus</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cpus</span>
+        <span class="n">ndim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">ndim</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;CPU list:&quot;</span><span class="p">,</span> <span class="n">cpus</span><span class="p">)</span>
+        <span class="n">twotondim</span> <span class="o">=</span> <span class="mi">2</span><span class="o">**</span><span class="n">ndim</span>
+        <span class="n">nvarh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">nvarh</span>
+        <span class="n">ncpu</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">ncpu</span>
+        <span class="n">nboundary</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">nboundary</span>
+        <span class="n">nlevelmax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">nlevelmax</span>
+        <span class="k">if</span> <span class="n">lmax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">lmax</span> <span class="o">=</span> <span class="n">nlevelmax</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39; &gt;&gt;&gt; working resolution (lmax) =&#39;</span><span class="p">,</span> <span class="n">lmax</span><span class="p">)</span>
+
+        <span class="c1"># Set ranges</span>
+        <span class="n">xmi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ranges</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">xma</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ranges</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">ymi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ranges</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">yma</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ranges</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">zmi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ranges</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">zma</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ranges</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="c1"># Size of arrays</span>
+        <span class="k">if</span> <span class="n">icpu</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">listmax</span> <span class="o">=</span> <span class="n">ncpu</span>
+        <span class="k">elif</span> <span class="n">icpu</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">listmax</span> <span class="o">=</span> <span class="n">ncpu</span> <span class="o">+</span> <span class="n">nboundary</span>
+        <span class="n">ngridarr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nlevelmax</span><span class="p">,</span> <span class="n">listmax</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+
+        <span class="n">nx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">amr</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">ng</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">ny</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">amr</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">ng</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">nz</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">amr</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">ng</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">xbound</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">nx</span><span class="o">/</span><span class="mi">2</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">ny</span><span class="o">/</span><span class="mi">2</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">nz</span><span class="o">/</span><span class="mi">2</span><span class="p">)]</span>
+
+        <span class="c1"># Initialize pointer array</span>
+
+        <span class="n">nlinemax</span> <span class="o">=</span> <span class="mi">10000000</span>
+        <span class="n">xt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">nlinemax</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+        <span class="n">yt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">nlinemax</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+        <span class="n">zt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">nlinemax</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+        <span class="n">dxt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">nlinemax</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+        <span class="n">vart</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nvarh</span><span class="p">,</span> <span class="n">nlinemax</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+
+        <span class="n">nline</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">icpu</span> <span class="ow">in</span> <span class="n">cpus</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;reading&quot;</span><span class="p">,</span> <span class="n">icpu</span><span class="p">)</span>
+            <span class="c1"># Open AMR file and read header</span>
+            <span class="n">famr</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">amr</span><span class="o">.</span><span class="n">_fnbase</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">icpu</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">5</span><span class="p">),</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span>
+
+            <span class="n">header_icpu</span> <span class="o">=</span> <span class="n">load</span><span class="o">.</span><span class="n">amr</span><span class="o">.</span><span class="n">AmrHeader</span><span class="p">()</span>
+            <span class="n">header_icpu</span><span class="o">.</span><span class="n">_read_amr_header</span><span class="p">(</span><span class="n">famr</span><span class="p">)</span>
+
+            <span class="c1"># This is important ??</span>
+            <span class="n">ngridarr</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span> <span class="n">nlevelmax</span><span class="p">][</span><span class="mi">0</span><span class="p">:</span> <span class="n">ncpu</span> <span class="o">+</span> <span class="n">nboundary</span><span class="p">]</span> <span class="o">=</span> <span class="n">header_icpu</span><span class="o">.</span><span class="n">numbl</span>
+<span class="c1">#            if nboundary &gt; 0:</span>
+<span class="c1">#          ngridarr[0: nlevelmax][ncpu: ncpu + nboundary] = header_icpu.numbb</span>
+
+            <span class="c1"># because hydro file is written in fortran order</span>
+            <span class="c1"># looping over</span>
+            <span class="c1"># for ilevel</span>
+            <span class="c1">#   for icpu</span>
+            <span class="c1"># Open Hydro file and skip header</span>
+
+            <span class="n">fhydro</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fnbase</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">icpu</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">5</span><span class="p">),</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_read_hydro_header</span><span class="p">(</span><span class="n">fhydro</span><span class="p">)</span>
+
+            <span class="n">xc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">ilevel</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">lmax</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="c1"># geometry</span>
+                <span class="n">dx</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">**</span><span class="n">ilevel</span>  <span class="c1"># grid size of the current level.</span>
+                <span class="n">dx2</span> <span class="o">=</span> <span class="n">dx</span><span class="o">/</span><span class="mi">2</span>  <span class="c1"># half of the grid size of the current level.</span>
+                <span class="n">nx_full</span> <span class="o">=</span> <span class="mi">2</span><span class="o">**</span><span class="n">ilevel</span>  <span class="c1"># maximum possible number of grid cells at the given level.</span>
+                <span class="n">ny_full</span> <span class="o">=</span> <span class="mi">2</span><span class="o">**</span><span class="n">ilevel</span>
+                <span class="n">nz_full</span> <span class="o">=</span> <span class="mi">2</span><span class="o">**</span><span class="n">ilevel</span>
+                <span class="c1"># division results in floats!</span>
+                <span class="k">for</span> <span class="n">ioct</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">twotondim</span><span class="p">):</span>  <span class="c1">#  1 to 8</span>
+                    <span class="n">iz</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">ioct</span><span class="p">)</span> <span class="o">/</span> <span class="mi">4</span><span class="p">)</span>
+                    <span class="n">iy</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">ioct</span> <span class="o">-</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">iz</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+                    <span class="n">ix</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">ioct</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">iy</span> <span class="o">-</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">iz</span><span class="p">))</span>
+                    <span class="n">xc</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">ioct</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">ix</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">*</span> <span class="n">dx</span>  <span class="c1"># grid center</span>
+                    <span class="n">xc</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">ioct</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">iy</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">*</span> <span class="n">dx</span>
+                    <span class="n">xc</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="n">ioct</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">iz</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">*</span> <span class="n">dx</span>
+
+                <span class="c1"># Allocate work arrays</span>
+                <span class="n">ngrida</span> <span class="o">=</span> <span class="n">ngridarr</span><span class="p">[</span><span class="n">ilevel</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="n">icpu</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+                <span class="k">if</span> <span class="n">ngrida</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="c1"># note that index stars from 0 to reduce memory use</span>
+                    <span class="n">xg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">ndim</span><span class="p">,</span> <span class="n">ngrida</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+                    <span class="n">son</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">twotondim</span><span class="p">,</span> <span class="n">ngrida</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+                    <span class="n">var</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nvarh</span><span class="p">,</span> <span class="n">twotondim</span><span class="p">,</span> <span class="n">ngrida</span><span class="p">,),</span>
+                                   <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+                    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">ndim</span><span class="p">,</span> <span class="n">ngrida</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+<span class="c1">#                    rho = np.zeros(ngrida, dtype=np.float64)</span>
+
+<span class="c1"># Main loop, loop over doamin</span>
+                <span class="k">for</span> <span class="n">jcpu</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">nboundary</span> <span class="o">+</span> <span class="n">ncpu</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                    <span class="n">ng</span> <span class="o">=</span> <span class="n">ngridarr</span><span class="p">[</span><span class="n">ilevel</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="n">jcpu</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">ng</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span> <span class="c1"># If ng == 0, go straight to Read Hydro data</span>
+                        <span class="k">if</span> <span class="p">(</span><span class="n">verbose</span><span class="p">):</span>
+                            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Level </span><span class="si">{:2d}</span><span class="s2"> has </span><span class="si">{:6d}</span><span class="s2"> grids in proc </span><span class="si">{:4d}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ilevel</span><span class="p">,</span> <span class="n">ng</span><span class="p">,</span> <span class="n">jcpu</span><span class="p">))</span>
+<span class="c1"># SKIP</span>
+                        <span class="n">read_fortran</span><span class="p">(</span><span class="n">famr</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">ng</span><span class="p">)</span>  <span class="c1"># grid index</span>
+                        <span class="n">read_fortran</span><span class="p">(</span><span class="n">famr</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">ng</span><span class="p">)</span>  <span class="c1"># next index</span>
+                        <span class="n">read_fortran</span><span class="p">(</span><span class="n">famr</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">ng</span><span class="p">)</span>  <span class="c1"># prev index</span>
+<span class="c1"># Read gird center</span>
+                        <span class="k">for</span> <span class="n">idim</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ndim</span><span class="p">):</span>
+                            <span class="k">if</span> <span class="n">jcpu</span> <span class="o">==</span> <span class="n">icpu</span><span class="p">:</span>
+                                <span class="n">xtemp</span> <span class="o">=</span> <span class="n">read_fortran</span><span class="p">(</span><span class="n">famr</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;f8&#39;</span><span class="p">),</span> <span class="n">ng</span><span class="p">)</span>
+                                <span class="n">xg</span><span class="p">[</span><span class="n">idim</span><span class="p">][:]</span> <span class="o">=</span> <span class="n">xtemp</span>
+                            <span class="k">else</span><span class="p">:</span>
+                                <span class="n">read_fortran</span><span class="p">(</span><span class="n">famr</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;f8&#39;</span><span class="p">),</span> <span class="n">ng</span><span class="p">)</span>
+<span class="c1"># skip father index</span>
+                        <span class="n">read_fortran</span><span class="p">(</span><span class="n">famr</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">ng</span><span class="p">)</span>
+<span class="c1"># skip neighbour index ( 6 possible neighbours )</span>
+                        <span class="k">for</span> <span class="n">idim</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">ndim</span><span class="p">):</span>
+                            <span class="n">read_fortran</span><span class="p">(</span><span class="n">famr</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">ng</span><span class="p">)</span>
+<span class="c1"># Read son index ( 8 possible children, oct-tree )</span>
+                        <span class="k">for</span> <span class="n">idim</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">ndim</span><span class="p">):</span>
+                            <span class="k">if</span> <span class="n">jcpu</span> <span class="o">==</span> <span class="n">icpu</span><span class="p">:</span>
+                                <span class="n">son</span><span class="p">[</span><span class="n">idim</span><span class="p">][:]</span> <span class="o">=</span> <span class="n">read_fortran</span><span class="p">(</span><span class="n">famr</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">ng</span><span class="p">)</span>
+                            <span class="k">else</span><span class="p">:</span>
+                                <span class="n">read_fortran</span><span class="p">(</span><span class="n">famr</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">ng</span><span class="p">)</span>
+<span class="c1"># skip cpu map</span>
+                        <span class="k">for</span> <span class="n">idim</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">ndim</span><span class="p">):</span>
+                            <span class="n">read_fortran</span><span class="p">(</span><span class="n">famr</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;i4&#39;</span><span class="p">),</span> <span class="n">ng</span><span class="p">)</span>
+<span class="c1"># skip ref map</span>
+                        <span class="k">for</span> <span class="n">idim</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">ndim</span><span class="p">):</span>
+                            <span class="n">read_fortran</span><span class="p">(</span><span class="n">famr</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;i4&#39;</span><span class="p">),</span> <span class="n">ng</span><span class="p">)</span>
+<span class="c1"># Read Hydro data</span>
+<span class="c1"># Skip Hydro header always.</span>
+                    <span class="n">skip_fortran</span><span class="p">(</span><span class="n">fhydro</span><span class="p">)</span>
+                    <span class="n">skip_fortran</span><span class="p">(</span><span class="n">fhydro</span><span class="p">)</span>
+
+                    <span class="k">if</span> <span class="n">ng</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="k">for</span> <span class="n">ioct</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">twotondim</span><span class="p">):</span>
+                            <span class="k">for</span> <span class="n">ivar</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nvarh</span><span class="p">):</span>
+                                <span class="k">if</span> <span class="n">jcpu</span> <span class="o">==</span> <span class="n">icpu</span><span class="p">:</span>
+                                    <span class="n">var</span><span class="p">[</span><span class="n">ivar</span><span class="p">][</span><span class="n">ioct</span><span class="p">][:]</span> <span class="o">=</span> <span class="n">read_fortran</span><span class="p">(</span><span class="n">fhydro</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;f8&#39;</span><span class="p">),</span> <span class="n">ng</span><span class="p">)</span>
+                                <span class="k">else</span><span class="p">:</span>
+                                    <span class="n">read_fortran</span><span class="p">(</span><span class="n">fhydro</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;f8&#39;</span><span class="p">),</span> <span class="n">ng</span><span class="p">)</span>
+<span class="c1"># Compute map</span>
+                <span class="k">if</span> <span class="n">ngrida</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">ioct</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">twotondim</span><span class="p">):</span>
+                        <span class="k">for</span> <span class="n">idim</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+                            <span class="n">x</span><span class="p">[</span><span class="n">idim</span><span class="p">][:]</span> <span class="o">=</span> <span class="n">xg</span><span class="p">[</span><span class="n">idim</span><span class="p">][:]</span> <span class="o">+</span> <span class="n">xc</span><span class="p">[</span><span class="n">idim</span><span class="p">][</span><span class="n">ioct</span><span class="p">]</span> <span class="o">-</span> <span class="n">xbound</span><span class="p">[</span><span class="n">idim</span><span class="p">]</span>
+
+                        <span class="n">ref</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">ngrida</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int16</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">ilevel</span> <span class="o">&lt;</span> <span class="n">lmax</span><span class="p">:</span>
+                            <span class="n">val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">son</span><span class="p">[</span><span class="n">ioct</span><span class="p">][:]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                                <span class="n">ref</span><span class="p">[</span><span class="n">val</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+                        <span class="n">ok_cell</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">ref</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span>
+                                           <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span> <span class="o">+</span> <span class="n">dx2</span> <span class="o">&gt;=</span> <span class="n">xmi</span><span class="p">)</span> <span class="o">&amp;</span>
+                                           <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">:]</span> <span class="o">+</span> <span class="n">dx2</span> <span class="o">&gt;=</span> <span class="n">ymi</span><span class="p">)</span> <span class="o">&amp;</span>
+                                           <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="p">:]</span> <span class="o">+</span> <span class="n">dx2</span> <span class="o">&gt;=</span> <span class="n">zmi</span><span class="p">)</span> <span class="o">&amp;</span>
+                                           <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span> <span class="o">-</span> <span class="n">dx2</span> <span class="o">&lt;=</span> <span class="n">xma</span><span class="p">)</span> <span class="o">&amp;</span>
+                                           <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">:]</span> <span class="o">-</span> <span class="n">dx2</span> <span class="o">&lt;=</span> <span class="n">yma</span><span class="p">)</span> <span class="o">&amp;</span>
+                                           <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="p">:]</span> <span class="o">-</span> <span class="n">dx2</span> <span class="o">&lt;=</span> <span class="n">zma</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+
+<span class="c1">#################  It is extremely slow!!!   Use np.where instead.</span>
+<span class="c1">#                            ok_cell = np.all([ref == 0,</span>
+<span class="c1">#                                              x[0, :] + dx2 &gt;= xmi, x[0, :] - dx2 &lt;= xma,</span>
+<span class="c1">#                                              x[1, :] + dx2 &gt;= ymi, x[1, :] - dx2 &lt;= yma,</span>
+<span class="c1">#                                              x[2, :] + dx2 &gt;= zmi, x[2, :] - dx2 &lt;= zma],</span>
+<span class="c1">#                                              axis=0)</span>
+
+                        <span class="n">Nok_cell</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ok_cell</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">Nok_cell</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                            <span class="n">nbegin</span> <span class="o">=</span> <span class="n">nline</span>
+                            <span class="n">nend</span> <span class="o">=</span> <span class="n">nline</span> <span class="o">+</span> <span class="n">Nok_cell</span>
+
+                            <span class="c1"># If the existing arrays are not large enough.</span>
+                            <span class="k">if</span> <span class="n">nend</span> <span class="o">&gt;</span> <span class="n">nlinemax</span><span class="p">:</span>
+                                <span class="nb">print</span><span class="p">(</span><span class="n">nend</span><span class="p">,</span> <span class="s2">&quot; &gt; &quot;</span><span class="p">,</span> <span class="n">nlinemax</span><span class="p">)</span>
+                                <span class="n">xt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">xt</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">nlinemax</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">))</span>
+                                <span class="n">yt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">yt</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">nlinemax</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">))</span>
+                                <span class="n">zt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">zt</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">nlinemax</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">))</span>
+                                <span class="n">dxt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dxt</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">nlinemax</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">))</span>
+                                <span class="n">vart</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vart</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nvarh</span><span class="p">,</span><span class="n">nlinemax</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                                <span class="n">nlinemax</span> <span class="o">+=</span> <span class="n">nlinemax</span>
+<span class="c1"># save variables</span>
+                            <span class="n">xt</span><span class="p">[</span><span class="n">nbegin</span><span class="p">:</span><span class="n">nend</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">ok_cell</span><span class="p">]</span>
+                            <span class="n">yt</span><span class="p">[</span><span class="n">nbegin</span><span class="p">:</span><span class="n">nend</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="n">ok_cell</span><span class="p">]</span>
+                            <span class="n">zt</span><span class="p">[</span><span class="n">nbegin</span><span class="p">:</span><span class="n">nend</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="n">ok_cell</span><span class="p">]</span>
+                            <span class="n">dxt</span><span class="p">[</span><span class="n">nbegin</span><span class="p">:</span><span class="n">nend</span><span class="p">]</span> <span class="o">=</span> <span class="n">dx</span>
+                            <span class="n">vart</span><span class="p">[:,</span> <span class="n">nbegin</span><span class="p">:</span><span class="n">nend</span><span class="p">]</span> <span class="o">=</span> <span class="n">var</span><span class="p">[:,</span> <span class="n">ioct</span><span class="p">,</span> <span class="n">ok_cell</span><span class="p">]</span>
+                            <span class="n">nline</span> <span class="o">=</span> <span class="n">nend</span>
+
+            <span class="c1"># loop over ilevel</span>
+            <span class="n">famr</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="n">fhydro</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="n">dtype_cell</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f8&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f8&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;z&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f8&#39;</span><span class="p">),(</span><span class="s1">&#39;dx&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f8&#39;</span><span class="p">),</span>
+                      <span class="p">(</span><span class="s1">&#39;var0&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f8&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;var1&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f8&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;var2&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f8&#39;</span><span class="p">),</span>
+                        <span class="p">(</span><span class="s1">&#39;var3&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f8&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;var4&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f8&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;var5&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f8&#39;</span><span class="p">)]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">rec</span><span class="o">.</span><span class="n">fromarrays</span><span class="p">([</span><span class="n">xt</span><span class="p">[:</span><span class="n">nend</span><span class="p">],</span> <span class="n">yt</span><span class="p">[:</span><span class="n">nend</span><span class="p">],</span> <span class="n">zt</span><span class="p">[:</span><span class="n">nend</span><span class="p">],</span> <span class="n">dxt</span><span class="p">[:</span><span class="n">nend</span><span class="p">],</span>
+                                       <span class="n">vart</span><span class="p">[</span><span class="mi">0</span><span class="p">][:</span><span class="n">nend</span><span class="p">],</span> <span class="n">vart</span><span class="p">[</span><span class="mi">1</span><span class="p">][:</span><span class="n">nend</span><span class="p">],</span> <span class="n">vart</span><span class="p">[</span><span class="mi">2</span><span class="p">][:</span><span class="n">nend</span><span class="p">],</span>
+                                       <span class="n">vart</span><span class="p">[</span><span class="mi">3</span><span class="p">][:</span><span class="n">nend</span><span class="p">],</span> <span class="n">vart</span><span class="p">[</span><span class="mi">4</span><span class="p">][:</span><span class="n">nend</span><span class="p">],</span> <span class="n">vart</span><span class="p">[</span><span class="mi">5</span><span class="p">][:</span><span class="n">nend</span><span class="p">]],</span>
+                                       <span class="n">dtype</span> <span class="o">=</span> <span class="n">dtype_cell</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">pyclusterevol -0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2016, Hoseung.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.8.
+    </div>
+  </body>
+</html>

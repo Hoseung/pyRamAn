@@ -1,0 +1,485 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>analysis.Major_Minor_accretion &#8212; pyclusterevol -0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '-0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="top" title="pyclusterevol -0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">pyclusterevol -0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for analysis.Major_Minor_accretion</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Wed May 18 23:52:00 2016</span>
+
+<span class="sd">@author: hoseung</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pickle</span>
+<span class="kn">import</span> <span class="nn">analysis.evol_lambda</span> <span class="k">as</span> <span class="nn">evl</span>
+<span class="kn">import</span> <span class="nn">tree.ctutils</span> <span class="k">as</span> <span class="nn">ctu</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<div class="viewcode-block" id="Merger"><a class="viewcode-back" href="../../analysis.html#analysis.Major_Minor_accretion.Merger">[docs]</a><span class="k">class</span> <span class="nc">Merger</span><span class="p">():</span>
+    <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="load_cat"><a class="viewcode-back" href="../../analysis.html#analysis.Major_Minor_accretion.load_cat">[docs]</a><span class="k">def</span> <span class="nf">load_cat</span><span class="p">(</span><span class="n">fname</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)))</span><span class="o">.</span><span class="n">to_records</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="get_tick_locations"><a class="viewcode-back" href="../../analysis.html#analysis.Major_Minor_accretion.get_tick_locations">[docs]</a><span class="k">def</span> <span class="nf">get_tick_locations</span><span class="p">(</span><span class="n">org_range</span><span class="p">,</span> <span class="n">x_range</span><span class="p">):</span>
+    <span class="n">nticks</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">xx</span> <span class="o">=</span> <span class="n">x_range</span><span class="o">.</span><span class="n">ptp</span><span class="p">()</span>
+    <span class="n">dt</span> <span class="o">=</span> <span class="n">xx</span> <span class="o">//</span> <span class="p">(</span><span class="n">nticks</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">x_ticks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">x_range</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">dt</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">nticks</span><span class="p">))</span>
+    <span class="n">x_ticks</span> <span class="o">=</span> <span class="n">x_ticks</span><span class="p">[</span><span class="n">x_ticks</span> <span class="o">&lt;</span> <span class="nb">max</span><span class="p">(</span><span class="n">x_range</span><span class="p">)]</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="n">x_ticks</span><span class="p">[</span><span class="n">x_ticks</span> <span class="o">&lt;</span> <span class="nb">max</span><span class="p">(</span><span class="n">x_range</span><span class="p">)]</span>
+    
+    <span class="n">tick_pos</span> <span class="o">=</span> <span class="p">(</span><span class="n">labels</span> <span class="o">-</span> <span class="n">x_range</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="n">org_range</span><span class="o">.</span><span class="n">ptp</span><span class="p">()</span><span class="o">/</span><span class="n">xx</span> <span class="o">+</span> <span class="n">org_range</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">return</span>  <span class="n">tick_pos</span><span class="p">,</span> <span class="n">labels</span></div>
+
+
+
+<div class="viewcode-block" id="find_merger_epochs"><a class="viewcode-back" href="../../analysis.html#analysis.Major_Minor_accretion.find_merger_epochs">[docs]</a><span class="k">def</span> <span class="nf">find_merger_epochs</span><span class="p">(</span><span class="n">alltrees</span><span class="p">,</span> 
+                        <span class="n">idx_all</span><span class="p">,</span> 
+                        <span class="n">mpgs</span><span class="p">,</span> 
+                        <span class="n">nout_ini</span><span class="o">=</span><span class="mi">37</span><span class="p">,</span> 
+                        <span class="n">dist_gal_scale</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                        <span class="n">mass_ratio</span><span class="o">=</span><span class="s2">&quot;early&quot;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    parameter</span>
+<span class="sd">    ---------</span>
+<span class="sd">    dist_gal_scale </span>
+<span class="sd">        if two galaxies are closer than dist_gal_scale * (sum of raidus of the two),</span>
+<span class="sd">        that epoch is the nout_init_merger.</span>
+<span class="sd">    nout_ini</span>
+<span class="sd">        blabla</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span>
+    <span class="n">gal_list</span><span class="o">=</span><span class="p">[]</span>
+    <span class="n">mr_list</span><span class="o">=</span><span class="p">[]</span>
+    <span class="n">nout_list</span><span class="o">=</span><span class="p">[]</span>
+    <span class="n">nout_ini_list</span><span class="o">=</span><span class="p">[]</span> <span class="c1"># initial time when two halos(Galaxy stellar components in this case) overlap. </span>
+
+    <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">idx_all</span><span class="p">:</span>
+        <span class="c1"># full tree of a galaxy</span>
+        <span class="n">atree</span> <span class="o">=</span> <span class="n">ctu</span><span class="o">.</span><span class="n">extract_a_tree</span><span class="p">(</span><span class="n">alltrees</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">idx</span><span class="p">)</span>
+
+        <span class="c1"># main progenitor tree</span>
+        <span class="n">main</span> <span class="o">=</span> <span class="n">ctu</span><span class="o">.</span><span class="n">extract_main_tree</span><span class="p">(</span><span class="n">atree</span><span class="p">,</span> <span class="n">idx</span><span class="p">)</span>
+
+        <span class="n">x_nout</span> <span class="o">=</span> <span class="n">main</span><span class="p">[</span><span class="s1">&#39;nout&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+        <span class="n">i_nout_ok</span> <span class="o">=</span> <span class="n">x_nout</span> <span class="o">&gt;</span> <span class="n">nout_ini</span>
+        <span class="n">main</span> <span class="o">=</span> <span class="n">main</span><span class="p">[</span><span class="n">i_nout_ok</span><span class="p">]</span>
+        <span class="c1">#x_nout = x_nout[i_nout_ok]</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">main</span><span class="p">)))</span>
+        <span class="n">pos</span><span class="p">[</span><span class="mi">0</span><span class="p">,:]</span> <span class="o">=</span> <span class="n">main</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span>
+        <span class="n">pos</span><span class="p">[</span><span class="mi">1</span><span class="p">,:]</span> <span class="o">=</span> <span class="n">main</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span>
+        <span class="n">pos</span><span class="p">[</span><span class="mi">2</span><span class="p">,:]</span> <span class="o">=</span> <span class="n">main</span><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">]</span>
+
+        <span class="n">mass_ratios_single</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">main</span><span class="p">))</span>
+        <span class="n">nout_inits</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">main</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">nout</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">main</span><span class="p">[</span><span class="s1">&#39;nout&#39;</span><span class="p">]):</span>
+            <span class="c1"># merger ratio</span>
+            <span class="n">i_prgs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">atree</span><span class="p">[</span><span class="s1">&#39;desc_id&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">main</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="c1"># multiple prgs = merger</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">i_prgs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s2">&quot; </span><span class="si">{}</span><span class="s2"> mergers at nout = </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">i_prgs</span><span class="p">),</span> <span class="n">nout</span><span class="p">))</span>
+                <span class="n">id_prgs</span> <span class="o">=</span> <span class="n">atree</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">][</span><span class="n">i_prgs</span><span class="p">]</span>
+                <span class="n">mass_prgs</span> <span class="o">=</span> <span class="n">atree</span><span class="p">[</span><span class="s1">&#39;m&#39;</span><span class="p">][</span><span class="n">i_prgs</span><span class="p">]</span>
+                <span class="n">m_r</span> <span class="o">=</span> <span class="n">mass_prgs</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="n">mass_prgs</span><span class="p">)</span>
+
+                <span class="n">i_sat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">mass_prgs</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span> <span class="o">+</span> <span class="mi">1</span>
+                <span class="c1">#mass_ratios_single[i] = max([mass_prgs[1:] / max(mass_prgs)][0])</span>
+                <span class="k">if</span> <span class="n">mass_ratio</span> <span class="o">==</span> <span class="s2">&quot;max&quot;</span><span class="p">:</span>
+                    <span class="n">mass_ratios_single</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">mass_prgs</span><span class="p">[</span><span class="n">i_sat</span><span class="p">]</span> <span class="o">/</span> <span class="n">mass_prgs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+                <span class="n">satellite</span> <span class="o">=</span> <span class="n">ctu</span><span class="o">.</span><span class="n">extract_main_tree</span><span class="p">(</span><span class="n">atree</span><span class="p">,</span> <span class="n">id_prgs</span><span class="p">[</span><span class="n">i_sat</span><span class="p">],</span> <span class="n">no_subset</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+                <span class="n">nout_min</span> <span class="o">=</span> <span class="nb">max</span><span class="p">([</span><span class="nb">min</span><span class="p">(</span><span class="n">main</span><span class="p">[</span><span class="s1">&#39;nout&#39;</span><span class="p">]),</span> <span class="nb">min</span><span class="p">(</span><span class="n">satellite</span><span class="p">[</span><span class="s1">&#39;nout&#39;</span><span class="p">])])</span>
+                <span class="n">i_main_ok</span> <span class="o">=</span> <span class="p">(</span><span class="n">main</span><span class="p">[</span><span class="s1">&#39;nout&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">nout_min</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">main</span><span class="p">[</span><span class="s1">&#39;nout&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">nout</span><span class="p">)</span>
+                <span class="n">i_sat_ok</span> <span class="o">=</span> <span class="p">(</span><span class="n">satellite</span><span class="p">[</span><span class="s1">&#39;nout&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">nout_min</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">satellite</span><span class="p">[</span><span class="s1">&#39;nout&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">nout</span><span class="p">)</span>
+                <span class="n">satellite</span> <span class="o">=</span> <span class="n">satellite</span><span class="p">[</span><span class="n">i_sat_ok</span><span class="p">]</span>
+
+                <span class="n">dd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">pos</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">i_main_ok</span><span class="p">]</span> <span class="o">-</span> <span class="n">satellite</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">])</span> \
+                             <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">pos</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="n">i_main_ok</span><span class="p">]</span> <span class="o">-</span> <span class="n">satellite</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">])</span>
+                             <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">pos</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="n">i_main_ok</span><span class="p">]</span> <span class="o">-</span> <span class="n">satellite</span><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">]))</span> <span class="o">*</span> <span class="mi">1</span><span class="n">e3</span> <span class="c1"># in kpc</span>
+                <span class="n">rgal_tot</span> <span class="o">=</span> <span class="n">main</span><span class="p">[</span><span class="s1">&#39;rvir&#39;</span><span class="p">][</span><span class="n">i_main_ok</span><span class="p">]</span> <span class="o">+</span> <span class="n">satellite</span><span class="p">[</span><span class="s1">&#39;rvir&#39;</span><span class="p">]</span>
+                <span class="c1">#print(&quot; Galaxy sizes : main {}, and the second {}, and the sum {}&quot;.format(</span>
+                <span class="c1">#        main[&#39;r&#39;][i_main_ok], satellite[&#39;r&#39;], rgal_tot))</span>
+                <span class="c1">#print(&quot; dd :&quot;, dd)</span>
+                <span class="k">if</span> <span class="nb">sum</span><span class="p">(</span><span class="n">dist_gal_scale</span> <span class="o">*</span> <span class="n">rgal_tot</span> <span class="o">&lt;</span> <span class="n">dd</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="c1">#print(50 * rgal_tot - dd)</span>
+                    <span class="c1">#print(satellite[&#39;nout&#39;][50 * rgal_tot &lt; dd])</span>
+                    <span class="n">nout_inits</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">satellite</span><span class="p">[</span><span class="s1">&#39;nout&#39;</span><span class="p">][</span><span class="n">dist_gal_scale</span> <span class="o">*</span> <span class="n">rgal_tot</span> <span class="o">&lt;</span> <span class="n">dd</span><span class="p">])</span>
+                    <span class="k">if</span> <span class="n">mass_ratio</span> <span class="o">==</span> <span class="s2">&quot;early&quot;</span><span class="p">:</span>
+                        
+                        <span class="n">mass_ratios_single</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">satellite</span><span class="p">[</span><span class="s1">&#39;m&#39;</span><span class="p">][</span><span class="n">satellite</span><span class="p">[</span><span class="s1">&#39;nout&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">nout_inits</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="o">/</span> <span class="n">mass_prgs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                        
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">nout_inits</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">nout</span>
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot; Mass ratios : &quot;</span><span class="p">,</span> <span class="n">m_r</span><span class="p">,</span> <span class="n">nout</span><span class="p">,</span> <span class="n">nout_inits</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">mass_ratios_single</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="n">ind_ok</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">mass_ratios_single</span> <span class="o">&gt;</span> <span class="mf">0.01</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ind_ok</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># if a satellite oscillates around the host, </span>
+            <span class="c1"># it could be identified as multiple mergers with short time interval. </span>
+            <span class="c1"># leave only the first passage / merger.</span>
+            <span class="c1"># No, it doesn&#39;t happen in ConsistentTrees.</span>
+
+            <span class="c1">#good =[]</span>
+            <span class="c1">#for i in range(len(ind_ok)-1):</span>
+            <span class="c1">#    if ind_ok[i+1] &gt; ind_ok[i] + 2:</span>
+            <span class="c1">#        good.append(ind_ok[i])</span>
+            <span class="c1">#good.append(ind_ok[-1])</span>
+            <span class="c1">#ind_ok = good</span>
+            <span class="n">mr</span> <span class="o">=</span> <span class="mf">1.</span><span class="o">/</span><span class="n">mass_ratios_single</span><span class="p">[</span><span class="n">ind_ok</span><span class="p">]</span>
+
+            <span class="n">gal_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+            <span class="n">mr_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mr</span><span class="p">)</span>
+            <span class="n">nout_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x_nout</span><span class="p">[</span><span class="n">ind_ok</span><span class="p">])</span>    
+            <span class="n">nout_ini_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">nout_inits</span><span class="p">[</span><span class="n">ind_ok</span><span class="p">])</span>
+
+
+    <span class="n">inds</span><span class="o">=</span><span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">gal</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">mpgs</span><span class="p">):</span>
+        <span class="n">galid</span> <span class="o">=</span> <span class="n">gal</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;idx&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">galid</span> <span class="o">==</span> <span class="n">gal_list</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ind</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">inds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="n">merger</span> <span class="o">=</span> <span class="n">Merger</span><span class="p">()</span>
+            <span class="n">merger</span><span class="o">.</span><span class="n">mr</span> <span class="o">=</span> <span class="n">mr_list</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span>
+            <span class="n">merger</span><span class="o">.</span><span class="n">nout</span> <span class="o">=</span> <span class="n">nout_list</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span>
+            <span class="n">merger</span><span class="o">.</span><span class="n">nout_ini</span> <span class="o">=</span> <span class="n">nout_ini_list</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span>
+            <span class="n">gal</span><span class="o">.</span><span class="n">merger</span> <span class="o">=</span> <span class="n">merger</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">gal</span><span class="o">.</span><span class="n">merger</span> <span class="o">=</span> <span class="kc">None</span></div>
+    <span class="c1">#return gal_list, mr_list, nout_list, nout_ini_list</span>
+
+    
+
+<div class="viewcode-block" id="close_gals"><a class="viewcode-back" href="../../analysis.html#analysis.Major_Minor_accretion.close_gals">[docs]</a><span class="k">def</span> <span class="nf">close_gals</span><span class="p">(</span><span class="n">halo</span><span class="p">,</span> <span class="n">gals</span><span class="p">,</span> <span class="n">return_ind</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">rscale</span><span class="o">=</span><span class="mf">3.0</span><span class="p">):</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+    <span class="n">i_cluster</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">halo</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;np&#39;</span><span class="p">])</span>
+    <span class="n">cluster</span> <span class="o">=</span> <span class="n">halo</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">i_cluster</span><span class="p">]</span>
+    <span class="n">xc</span> <span class="o">=</span> <span class="n">cluster</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span>
+    <span class="n">yc</span> <span class="o">=</span> <span class="n">cluster</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span>
+    <span class="n">zc</span> <span class="o">=</span> <span class="n">cluster</span><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">]</span>
+
+    <span class="n">dd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">gals</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">xc</span><span class="p">)</span> <span class="o">+</span> \
+         <span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">gals</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">yc</span><span class="p">)</span> <span class="o">+</span> \
+         <span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">gals</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">zc</span><span class="p">)</span>
+    
+    <span class="n">r_clu</span> <span class="o">=</span> <span class="n">rscale</span> <span class="o">*</span> <span class="n">cluster</span><span class="p">[</span><span class="s1">&#39;rvir&#39;</span><span class="p">]</span>
+    <span class="c1">#print(cluster[&#39;rvir&#39;])</span>
+    <span class="k">if</span> <span class="n">return_ind</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">dd</span> <span class="o">&lt;</span> <span class="n">r_clu</span><span class="o">**</span><span class="mi">2</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">gals</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">][</span><span class="n">dd</span> <span class="o">&lt;</span> <span class="n">r_clu</span><span class="o">**</span><span class="mi">2</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span></div>
+    
+    
+
+<div class="viewcode-block" id="compile_mpgs"><a class="viewcode-back" href="../../analysis.html#analysis.Major_Minor_accretion.compile_mpgs">[docs]</a><span class="k">def</span> <span class="nf">compile_mpgs</span><span class="p">(</span><span class="n">alltrees</span><span class="p">,</span> <span class="n">idx_all</span><span class="p">,</span> <span class="n">wdir</span><span class="o">=</span><span class="s1">&#39;./&#39;</span><span class="p">,</span> <span class="n">cdir</span><span class="o">=</span><span class="s1">&#39;easy/&#39;</span><span class="p">,</span> <span class="n">nout_ini</span><span class="o">=</span><span class="mi">37</span><span class="p">,</span> <span class="n">nout_fi</span><span class="o">=</span><span class="mi">187</span><span class="p">):</span>
+    <span class="n">ad</span> <span class="o">=</span> <span class="n">alltrees</span><span class="o">.</span><span class="n">data</span>
+    <span class="n">mpg_tmp</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">idx_all</span><span class="p">):</span>
+        <span class="n">mpg_tmp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">evl</span><span class="o">.</span><span class="n">MainPrg</span><span class="p">(</span><span class="n">ad</span><span class="p">,</span> <span class="n">idx</span><span class="p">))</span>
+        <span class="c1">#print(i, idx)</span>
+
+    <span class="k">for</span> <span class="n">nout</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nout_ini</span><span class="p">,</span> <span class="n">nout_fi</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">cat</span> <span class="o">=</span> <span class="n">load_cat</span><span class="p">(</span><span class="n">wdir</span> <span class="o">+</span> <span class="n">cdir</span> <span class="o">+</span> <span class="s1">&#39;catalog&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">nout</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;.pickle&#39;</span><span class="p">)</span>
+<span class="c1">#        cat = pickle.load(open(wdir + cdir + &#39;catalog&#39; + str(nout) + &#39;.pickle&#39;, &#39;rb&#39;))</span>
+        <span class="k">for</span> <span class="n">gal</span> <span class="ow">in</span> <span class="n">mpg_tmp</span><span class="p">:</span>
+            <span class="n">gal</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="n">cat</span><span class="p">,</span> <span class="n">nout</span><span class="p">)</span>
+        <span class="c1">#print(nout)</span>
+
+    <span class="n">mpgs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">mpg_tmp</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">mpgs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mpg_tmp</span><span class="o">.</span><span class="n">pop</span><span class="p">())</span>
+        
+    <span class="k">return</span> <span class="n">mpgs</span></div>
+
+
+
+<div class="viewcode-block" id="Maj_min_acc_ratio"><a class="viewcode-back" href="../../analysis.html#analysis.Major_Minor_accretion.Maj_min_acc_ratio">[docs]</a><span class="k">def</span> <span class="nf">Maj_min_acc_ratio</span><span class="p">(</span><span class="n">mpgs</span><span class="p">,</span> <span class="n">dt</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">major_ratio</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">igal</span><span class="p">,</span> <span class="n">gal</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">mpgs</span><span class="p">):</span>
+        <span class="n">delta_lambda_tot</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">gal</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;lambda_r&#39;</span><span class="p">][:</span><span class="n">dt</span><span class="p">])</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">gal</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;lambda_r&#39;</span><span class="p">][</span><span class="o">-</span><span class="n">dt</span><span class="p">:])</span>
+
+        <span class="n">delta_lambda_major</span><span class="o">=</span><span class="mi">0</span>
+        <span class="n">delta_lambda_minor</span><span class="o">=</span><span class="mi">0</span>
+        <span class="k">if</span> <span class="n">gal</span><span class="o">.</span><span class="n">merger</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+
+    <span class="c1">#        for mr, xx, delta in zip(gal.merger.mr, gal.merger.nout, gal.merger.delta):</span>
+    <span class="c1">#            ax[0].scatter(mr, delta)</span>
+            <span class="c1">#print(gal.merger.mr, gal.merger.delta_l)</span>
+            <span class="n">i_major</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">gal</span><span class="o">.</span><span class="n">merger</span><span class="o">.</span><span class="n">mr</span> <span class="o">&lt;=</span> <span class="n">major_ratio</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">i_major</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="c1">#print(gal.merger.mr, gal.merger.delta_l, i_major, &quot;M&quot;)</span>
+                <span class="n">delta_lambda_major</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">for</span> <span class="n">iii</span> <span class="ow">in</span> <span class="n">i_major</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">gal</span><span class="o">.</span><span class="n">merger</span><span class="o">.</span><span class="n">delta_l</span><span class="p">[</span><span class="n">iii</span><span class="p">]</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                        <span class="n">delta_lambda_major</span> <span class="o">+=</span> <span class="n">gal</span><span class="o">.</span><span class="n">merger</span><span class="o">.</span><span class="n">delta_l</span><span class="p">[</span><span class="n">iii</span><span class="p">]</span>
+                    <span class="c1">#delta_lambda_major = np.sum(gal.merger.delta_l[i_major])</span>
+
+            <span class="n">i_minor</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">gal</span><span class="o">.</span><span class="n">merger</span><span class="o">.</span><span class="n">mr</span> <span class="o">&gt;</span> <span class="n">major_ratio</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">delta_lambda_minor</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">i_minor</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="c1">#print(gal.merger.delta_l, i_minor, &quot;m&quot;)</span>
+                <span class="k">for</span> <span class="n">iii</span> <span class="ow">in</span> <span class="n">i_minor</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">gal</span><span class="o">.</span><span class="n">merger</span><span class="o">.</span><span class="n">delta_l</span><span class="p">[</span><span class="n">iii</span><span class="p">]</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                        <span class="n">delta_lambda_minor</span> <span class="o">+=</span> <span class="n">gal</span><span class="o">.</span><span class="n">merger</span><span class="o">.</span><span class="n">delta_l</span><span class="p">[</span><span class="n">iii</span><span class="p">]</span>
+<span class="c1">#                    delta_lambda_minor = sum(gal.merger.delta_l[i_minor])</span>
+
+
+        <span class="n">delta_lambda_other</span> <span class="o">=</span> <span class="n">delta_lambda_tot</span> <span class="o">-</span> <span class="n">delta_lambda_major</span> <span class="o">-</span> <span class="n">delta_lambda_minor</span>
+        <span class="n">gal</span><span class="o">.</span><span class="n">dlt</span> <span class="o">=</span> <span class="n">delta_lambda_tot</span>
+        <span class="n">gal</span><span class="o">.</span><span class="n">dlo</span> <span class="o">=</span> <span class="n">delta_lambda_other</span>
+        <span class="n">gal</span><span class="o">.</span><span class="n">dlM</span> <span class="o">=</span> <span class="n">delta_lambda_major</span>
+        <span class="n">gal</span><span class="o">.</span><span class="n">dlm</span> <span class="o">=</span> <span class="n">delta_lambda_minor</span></div>
+
+
+
+<div class="viewcode-block" id="multipage_plot"><a class="viewcode-back" href="../../analysis.html#analysis.Major_Minor_accretion.multipage_plot">[docs]</a><span class="k">def</span> <span class="nf">multipage_plot</span><span class="p">(</span><span class="n">mpgs</span><span class="p">,</span> <span class="n">nout_ini</span><span class="o">=</span><span class="mi">37</span><span class="p">,</span> <span class="n">nout_fi</span> <span class="o">=</span> <span class="mi">187</span><span class="p">,</span>
+                    <span class="n">wdir</span><span class="o">=</span><span class="s1">&#39;./&#39;</span><span class="p">,</span>
+                    <span class="n">suffix</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+                    <span class="n">dt_after</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+                    <span class="n">dt_before</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+                    <span class="n">do_plot</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+
+    
+    <span class="kn">from</span> <span class="nn">matplotlib.backends.backend_pdf</span> <span class="k">import</span> <span class="n">PdfPages</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span> <span class="n">sharex</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">hspace</span><span class="o">=</span><span class="mf">0.001</span><span class="p">)</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">set_size_inches</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span><span class="mi">4</span><span class="p">)</span>
+
+    <span class="k">with</span> <span class="n">PdfPages</span><span class="p">(</span><span class="n">wdir</span> <span class="o">+</span> <span class="s1">&#39;MMA_plots&#39;</span> <span class="o">+</span> <span class="n">suffix</span> <span class="o">+</span><span class="s1">&#39;.pdf&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">pdf</span><span class="p">:</span>
+        <span class="n">measure_delta</span><span class="p">(</span><span class="n">mpgs</span><span class="p">,</span> <span class="n">nout_ini</span><span class="o">=</span><span class="mi">37</span><span class="p">,</span> <span class="n">nout_fi</span> <span class="o">=</span> <span class="mi">187</span><span class="p">,</span>
+                    <span class="n">wdir</span><span class="o">=</span><span class="s1">&#39;./&#39;</span><span class="p">,</span>
+                    <span class="n">dt_after</span> <span class="o">=</span> <span class="n">dt_after</span><span class="p">,</span>
+                    <span class="n">dt_before</span> <span class="o">=</span> <span class="n">dt_before</span><span class="p">,</span>
+                    <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
+        
+        
+        <span class="n">pdf</span><span class="o">.</span><span class="n">savefig</span><span class="p">()</span>
+        <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+
+    <span class="c1">#plt.show()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+    
+
+
+
+<div class="viewcode-block" id="measure_delta"><a class="viewcode-back" href="../../analysis.html#analysis.Major_Minor_accretion.measure_delta">[docs]</a><span class="k">def</span> <span class="nf">measure_delta</span><span class="p">(</span><span class="n">mpgs</span><span class="p">,</span> <span class="n">nout_ini</span><span class="o">=</span><span class="mi">37</span><span class="p">,</span> <span class="n">nout_fi</span> <span class="o">=</span> <span class="mi">187</span><span class="p">,</span>
+                    <span class="n">wdir</span><span class="o">=</span><span class="s1">&#39;./&#39;</span><span class="p">,</span>
+                    <span class="n">dt_after</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+                    <span class="n">dt_before</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+                    <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Measure lambda change at every merger and draw lambda evolution with merger events.</span>
+<span class="sd">    time span over which average lambda value is measured is given in Gyr unit.</span>
+
+
+<span class="sd">    smoothing is done elsewhere.         </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="kn">from</span> <span class="nn">scipy.signal</span> <span class="k">import</span> <span class="n">medfilt</span>
+    <span class="kn">from</span> <span class="nn">utils.util</span> <span class="k">import</span> <span class="n">dgyr2dnout</span>    
+    <span class="k">for</span> <span class="n">gal</span> <span class="ow">in</span> <span class="n">mpgs</span><span class="p">:</span>
+        <span class="n">ind_nout</span> <span class="o">=</span> <span class="n">gal</span><span class="o">.</span><span class="n">nouts</span> <span class="o">&gt;</span> <span class="n">nout_ini</span>
+        <span class="n">gal</span><span class="o">.</span><span class="n">nouts</span> <span class="o">=</span> <span class="n">gal</span><span class="o">.</span><span class="n">nouts</span><span class="p">[</span><span class="n">ind_nout</span><span class="p">]</span>
+        <span class="n">gal</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">gal</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">ind_nout</span><span class="p">]</span>
+<span class="c1">#        gal.smoothed_lambda = medfilt(gal.data[&#39;lambda_r&#39;], kernel_size=5)</span>
+        <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">gal</span><span class="o">.</span><span class="n">nouts</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">gal</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;mstar&#39;</span><span class="p">]),</span> <span class="s1">&#39;b:&#39;</span><span class="p">)</span>
+            <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">([</span><span class="mi">50</span><span class="p">,</span><span class="mi">190</span><span class="p">])</span>
+            <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">gal</span><span class="o">.</span><span class="n">ids</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="s2">&quot;, &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">gal</span><span class="o">.</span><span class="n">idxs</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+            <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">gal</span><span class="o">.</span><span class="n">nouts</span><span class="p">,</span> <span class="n">gal</span><span class="o">.</span><span class="n">smoothed_lambda</span><span class="p">,</span> <span class="s1">&#39;black&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">gal</span><span class="o">.</span><span class="n">merger</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">delta_lambda</span> <span class="o">=</span><span class="p">[]</span>
+            <span class="n">delta_mass</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="k">for</span> <span class="n">mr</span><span class="p">,</span> <span class="n">xx</span><span class="p">,</span> <span class="n">x2</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">gal</span><span class="o">.</span><span class="n">merger</span><span class="o">.</span><span class="n">mr</span><span class="p">,</span> <span class="n">gal</span><span class="o">.</span><span class="n">merger</span><span class="o">.</span><span class="n">nout</span><span class="p">,</span> <span class="n">gal</span><span class="o">.</span><span class="n">merger</span><span class="o">.</span><span class="n">nout_ini</span><span class="p">):</span>
+                <span class="c1"># index of merger (final coalescence)</span>
+                <span class="n">i_nout</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">gal</span><span class="o">.</span><span class="n">nouts</span> <span class="o">==</span> <span class="n">xx</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="c1"># index of the begining of merger (as the time two galaxies overlap</span>
+                <span class="c1"># =&gt; rga1 + rgal2 &lt; distance)</span>
+                <span class="n">iini_nout</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">gal</span><span class="o">.</span><span class="n">nouts</span> <span class="o">==</span> <span class="n">x2</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="c1"># snapshot number away by dt from nout</span>
+                <span class="n">nout_after</span> <span class="o">=</span> <span class="n">dgyr2dnout</span><span class="p">(</span><span class="n">dt_after</span><span class="p">,</span> <span class="n">xx</span><span class="p">)</span>
+                <span class="n">nout_before</span> <span class="o">=</span> <span class="n">dgyr2dnout</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">dt_before</span><span class="p">,</span> <span class="n">x2</span><span class="p">)</span>
+                <span class="c1"># indices of the snapshots.</span>
+                <span class="n">inout_after</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">gal</span><span class="o">.</span><span class="n">nouts</span> <span class="o">==</span> <span class="n">nout_after</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">inout_before</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">gal</span><span class="o">.</span><span class="n">nouts</span> <span class="o">==</span> <span class="n">nout_before</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+                <span class="c1"># if time_{merger} + dt &gt; t_{z=0}</span>
+                <span class="k">if</span> <span class="n">i_nout</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">l_inds_after</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">l_inds_after</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="nb">max</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="n">inout_after</span><span class="p">]),</span> <span class="n">i_nout</span><span class="p">)</span>
+
+                <span class="n">nouts_after</span> <span class="o">=</span> <span class="n">gal</span><span class="o">.</span><span class="n">nouts</span><span class="p">[</span><span class="n">l_inds_after</span><span class="p">]</span>
+                <span class="n">l_after</span> <span class="o">=</span> <span class="n">gal</span><span class="o">.</span><span class="n">smoothed_lambda</span><span class="p">[</span><span class="n">l_inds_after</span><span class="p">]</span>
+                <span class="n">m_after</span> <span class="o">=</span> <span class="n">gal</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;mstar&#39;</span><span class="p">][</span><span class="n">l_inds_after</span><span class="p">]</span>
+                <span class="n">lambda_after</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">l_after</span><span class="p">)</span>
+                <span class="n">mass_after</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">m_after</span><span class="p">)</span>
+
+
+                <span class="n">l_inds_before</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">iini_nout</span><span class="p">,</span><span class="nb">min</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">gal</span><span class="o">.</span><span class="n">data</span><span class="p">),</span> <span class="n">inout_before</span><span class="p">]))</span>
+                <span class="n">nouts_before</span> <span class="o">=</span> <span class="n">gal</span><span class="o">.</span><span class="n">nouts</span><span class="p">[</span><span class="n">l_inds_before</span><span class="p">]</span>
+                <span class="n">l_before</span> <span class="o">=</span> <span class="n">gal</span><span class="o">.</span><span class="n">smoothed_lambda</span><span class="p">[</span><span class="n">l_inds_before</span><span class="p">]</span>
+                <span class="n">m_before</span> <span class="o">=</span> <span class="n">gal</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;mstar&#39;</span><span class="p">][</span><span class="n">l_inds_before</span><span class="p">]</span>
+                <span class="n">lambda_before</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">l_before</span><span class="p">)</span>
+                <span class="n">mass_before</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">m_before</span><span class="p">)</span>
+
+                <span class="n">delta_lambda</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lambda_after</span> <span class="o">-</span> <span class="n">lambda_before</span><span class="p">)</span>
+                <span class="n">delta_mass</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mass_after</span> <span class="o">-</span> <span class="n">mass_before</span><span class="p">)</span>
+
+
+                <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">nouts_after</span><span class="p">,</span><span class="n">l_after</span><span class="p">,</span> <span class="s1">&#39;g-&#39;</span><span class="p">)</span>                                           
+                    <span class="c1"># Check again.</span>
+                    <span class="n">nn</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">nouts_after</span><span class="p">)</span> <span class="o">-</span> <span class="mi">5</span><span class="p">,</span> <span class="nb">min</span><span class="p">([</span><span class="n">nout_fi</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">nouts_after</span><span class="p">)</span> <span class="o">+</span> <span class="mi">5</span><span class="p">]))</span>
+                    <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">nn</span><span class="p">,</span> <span class="p">[</span><span class="n">lambda_after</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">nn</span><span class="p">),</span> <span class="s2">&quot;g:&quot;</span><span class="p">)</span>                    
+
+                    <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">nouts_before</span><span class="p">,</span><span class="n">l_before</span><span class="p">,</span> <span class="s1">&#39;r-&#39;</span><span class="p">)</span>
+                    <span class="n">nn</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="nb">max</span><span class="p">([</span><span class="n">nout_ini</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="n">nouts_before</span><span class="p">)</span> <span class="o">-</span> <span class="mi">5</span><span class="p">]),</span> <span class="nb">max</span><span class="p">(</span><span class="n">nouts_before</span><span class="p">)</span> <span class="o">+</span> <span class="mi">5</span><span class="p">)</span>
+                    <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">nn</span><span class="p">,</span> <span class="p">[</span><span class="n">lambda_before</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">nn</span><span class="p">),</span> <span class="s2">&quot;r:&quot;</span><span class="p">)</span>                    
+
+                    <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">xx</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
+                    <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{:.1f}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mr</span><span class="p">),</span> <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="n">xx</span><span class="p">,</span><span class="mf">0.8</span><span class="p">))</span>
+                    <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">xx</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
+                    <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{:.1f}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mr</span><span class="p">),</span> <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="n">xx</span><span class="p">,</span><span class="mf">0.8</span><span class="p">))</span>
+                    <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">xx</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
+                    <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">x2</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;g&#39;</span><span class="p">)</span>
+
+            <span class="n">gal</span><span class="o">.</span><span class="n">merger</span><span class="o">.</span><span class="n">delta_l</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">delta_lambda</span><span class="p">)</span>
+            <span class="n">gal</span><span class="o">.</span><span class="n">merger</span><span class="o">.</span><span class="n">delta_m</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">delta_mass</span><span class="p">)</span>        </div>
+
+
+
+<div class="viewcode-block" id="smooth"><a class="viewcode-back" href="../../analysis.html#analysis.Major_Minor_accretion.smooth">[docs]</a><span class="k">def</span> <span class="nf">smooth</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">window_len</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">monotonic</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">clip_tail_zeros</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">    kaiser window smoothing.</span>
+<span class="sd">    </span>
+<span class="sd">    If len(x) &lt; window_len, window_len is overwritten to be len(x).</span>
+<span class="sd">    This ensures to return valid length fo array, but with modified window size.</span>
+<span class="sd">       </span>
+<span class="sd">    </span>
+<span class="sd">    beta = 5 : Similar to a Hamming</span>
+<span class="sd">    </span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">clip_tail_zeros</span><span class="p">:</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="p">[:</span><span class="nb">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">x</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span>
+    
+    <span class="k">if</span> <span class="n">monotonic</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        if there is an overall slope, smoothing may result in offset.</span>
+<span class="sd">        compensate for that. </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">slope</span><span class="p">,</span> <span class="n">intercept</span><span class="p">,</span> <span class="n">r_value</span><span class="p">,</span> <span class="n">p_value</span><span class="p">,</span> <span class="n">std_err</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">linregress</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)))</span>
+        <span class="n">xx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="o">*</span> <span class="n">slope</span> <span class="o">+</span> <span class="n">intercept</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">x</span> <span class="o">-</span> <span class="n">xx</span>
+    
+    <span class="c1"># extending the data at beginning and at the end</span>
+    <span class="c1"># to apply the window at the borders</span>
+    <span class="n">window_len</span> <span class="o">=</span> <span class="nb">min</span><span class="p">([</span><span class="n">window_len</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)])</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="n">window_len</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="n">window_len</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="c1"># concatenate along 0-th axis.</span>
+    <span class="c1"># periodic boundary.</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">kaiser</span><span class="p">(</span><span class="n">window_len</span><span class="p">,</span><span class="n">beta</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">convolve</span><span class="p">(</span><span class="n">w</span><span class="o">/</span><span class="n">w</span><span class="o">.</span><span class="n">sum</span><span class="p">(),</span> <span class="n">s</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;valid&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">monotonic</span><span class="p">:</span> 
+        <span class="k">return</span> <span class="n">y</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">window_len</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">:</span><span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">)</span><span class="o">-</span><span class="nb">int</span><span class="p">(</span><span class="n">window_len</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">xx</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">y</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">window_len</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">:</span><span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">)</span><span class="o">-</span><span class="nb">int</span><span class="p">(</span><span class="n">window_len</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">pyclusterevol -0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2016, Hoseung.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.8.
+    </div>
+  </body>
+</html>

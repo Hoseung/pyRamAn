@@ -1,0 +1,349 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>analysis.single_gal_module &#8212; pyclusterevol -0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '-0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="top" title="pyclusterevol -0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">pyclusterevol -0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for analysis.single_gal_module</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">utils.cosmology</span>
+<span class="kn">import</span> <span class="nn">tree.ctutils</span> <span class="k">as</span> <span class="nn">ctu</span>
+<span class="kn">import</span> <span class="nn">load</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">pickle</span>
+
+<div class="viewcode-block" id="gal_file_list"><a class="viewcode-back" href="../../analysis.html#analysis.single_gal_module.gal_file_list">[docs]</a><span class="k">def</span> <span class="nf">gal_file_list</span><span class="p">(</span><span class="n">prg_this</span><span class="p">,</span> <span class="n">galidx</span><span class="p">,</span> <span class="n">GM_dir</span> <span class="o">=</span> <span class="s1">&#39;./GalaxyMaker/&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        prgt : </span>
+<span class="sd">            Progenitor only tree</span>
+<span class="sd">        galidx :</span>
+<span class="sd">            idx of the interested galaxy at nout_fi.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">sgalidx</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">galidx</span><span class="p">)</span>
+    <span class="n">gal_dir</span> <span class="o">=</span> <span class="n">GM_dir</span> <span class="o">+</span> <span class="s2">&quot;gal_&quot;</span> <span class="o">+</span> <span class="n">sgalidx</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> 
+
+    <span class="n">file_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">nout</span> <span class="ow">in</span> <span class="n">prg_this</span><span class="p">[</span><span class="s1">&#39;nout&#39;</span><span class="p">]:</span>
+        <span class="n">nout_dir</span> <span class="o">=</span> <span class="s2">&quot;GAL_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">nout</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span> <span class="o">+</span><span class="s2">&quot;/&quot;</span>
+        <span class="n">this_gal</span> <span class="o">=</span> <span class="n">prg_this</span><span class="p">[</span><span class="n">prg_this</span><span class="p">[</span><span class="s1">&#39;nout&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">nout</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">this_gal</span><span class="p">[</span><span class="s1">&#39;phantom&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">galid</span> <span class="o">=</span> <span class="n">this_gal</span><span class="p">[</span><span class="s1">&#39;Orig_halo_id&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">file_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">gal_dir</span> <span class="o">+</span> <span class="s2">&quot;gal_stars_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">nout</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> \
+                         <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">galid</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">7</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">file_list</span></div>
+
+
+<div class="viewcode-block" id="convert_gm_to_halo"><a class="viewcode-back" href="../../analysis.html#analysis.single_gal_module.convert_gm_to_halo">[docs]</a><span class="k">def</span> <span class="nf">convert_gm_to_halo</span><span class="p">(</span><span class="n">cat</span><span class="p">,</span> <span class="n">info</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        tree: </span>
+<span class="sd">        pos in Mpc/h [0-200]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cat</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span> <span class="o">/=</span> <span class="n">info</span><span class="o">.</span><span class="n">cboxsize</span>
+    <span class="n">cat</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span> <span class="o">/=</span> <span class="n">info</span><span class="o">.</span><span class="n">cboxsize</span>
+    <span class="n">cat</span><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">]</span> <span class="o">/=</span> <span class="n">info</span><span class="o">.</span><span class="n">cboxsize</span>
+    
+    <span class="n">cat</span><span class="p">[</span><span class="s1">&#39;rvir&#39;</span><span class="p">]</span> <span class="o">/=</span> <span class="n">info</span><span class="o">.</span><span class="n">boxtokpc</span></div>
+    
+
+<div class="viewcode-block" id="nout2lbt"><a class="viewcode-back" href="../../analysis.html#analysis.single_gal_module.nout2lbt">[docs]</a><span class="k">def</span> <span class="nf">nout2lbt</span><span class="p">(</span><span class="n">nout</span><span class="p">,</span> <span class="n">nout_fi</span><span class="o">=</span><span class="mi">187</span><span class="p">):</span>
+    <span class="kn">import</span> <span class="nn">astropy.cosmology</span> <span class="k">as</span> <span class="nn">ac</span>
+    <span class="n">aexp</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="n">nout_fi</span> <span class="o">-</span> <span class="n">nout</span><span class="p">)</span><span class="o">*</span><span class="mf">0.005</span>
+    
+    <span class="k">return</span> <span class="n">ac</span><span class="o">.</span><span class="n">WMAP7</span><span class="o">.</span><span class="n">lookback_time</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">aexp</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">value</span></div>
+        
+    
+<span class="c1">#for ac.WMAP7.lookback_time(1).value</span>
+
+<div class="viewcode-block" id="angular_momentum"><a class="viewcode-back" href="../../analysis.html#analysis.single_gal_module.angular_momentum">[docs]</a><span class="k">def</span> <span class="nf">angular_momentum</span><span class="p">(</span><span class="n">star</span><span class="p">):</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">star</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">star</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span>
+    <span class="n">z</span> <span class="o">=</span> <span class="n">star</span><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">]</span>
+    
+    <span class="n">vx</span> <span class="o">=</span> <span class="n">star</span><span class="p">[</span><span class="s1">&#39;vx&#39;</span><span class="p">]</span>
+    <span class="n">vy</span> <span class="o">=</span> <span class="n">star</span><span class="p">[</span><span class="s1">&#39;vy&#39;</span><span class="p">]</span>
+    <span class="n">vz</span> <span class="o">=</span> <span class="n">star</span><span class="p">[</span><span class="s1">&#39;vz&#39;</span><span class="p">]</span>
+    
+    <span class="n">m</span> <span class="o">=</span> <span class="n">star</span><span class="p">[</span><span class="s1">&#39;m&#39;</span><span class="p">]</span>
+    
+    <span class="n">lx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">y</span><span class="o">*</span><span class="n">vz</span> <span class="o">-</span> <span class="n">z</span><span class="o">*</span><span class="n">vy</span><span class="p">)</span><span class="o">*</span><span class="n">m</span><span class="p">)</span>
+    <span class="n">ly</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">z</span><span class="o">*</span><span class="n">vx</span> <span class="o">-</span> <span class="n">x</span><span class="o">*</span><span class="n">vz</span><span class="p">)</span><span class="o">*</span><span class="n">m</span><span class="p">)</span>
+    <span class="n">lz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">x</span><span class="o">*</span><span class="n">vy</span> <span class="o">-</span> <span class="n">y</span><span class="o">*</span><span class="n">vx</span><span class="p">)</span><span class="o">*</span><span class="n">m</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">lx</span><span class="p">,</span><span class="n">ly</span><span class="p">,</span><span class="n">lz</span></div>
+
+
+<div class="viewcode-block" id="draw_plot"><a class="viewcode-back" href="../../analysis.html#analysis.single_gal_module.draw_plot">[docs]</a><span class="k">def</span> <span class="nf">draw_plot</span><span class="p">(</span><span class="n">gal</span><span class="p">,</span> <span class="n">cat</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="n">ax_hist</span><span class="p">,</span> <span class="n">smoothed_lambda</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="c1">#ax = ax.ravel()</span>
+    <span class="n">t_min</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">gal</span><span class="o">.</span><span class="n">star</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">])</span>
+    <span class="n">t_max</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">gal</span><span class="o">.</span><span class="n">star</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">])</span>
+    <span class="n">bins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">t_min</span><span class="p">,</span> <span class="n">t_max</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">i_bins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">digitize</span><span class="p">(</span><span class="n">gal</span><span class="o">.</span><span class="n">star</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">],</span><span class="n">bins</span><span class="p">)</span>
+    <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">nout2lbt</span><span class="p">(</span><span class="n">cat</span><span class="o">.</span><span class="n">nouts</span><span class="p">),</span> <span class="n">cat</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;mstar&#39;</span><span class="p">])</span>
+    <span class="n">ax_hist</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">gal</span><span class="o">.</span><span class="n">star</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">],</span> <span class="n">histtype</span><span class="o">=</span><span class="s1">&#39;step&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">smoothed_lambda</span><span class="p">:</span>
+        <span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">nout2lbt</span><span class="p">(</span><span class="n">cat</span><span class="o">.</span><span class="n">nouts</span><span class="p">),</span> <span class="n">cat</span><span class="o">.</span><span class="n">smoothed_lambda</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">nout2lbt</span><span class="p">(</span><span class="n">cat</span><span class="o">.</span><span class="n">nouts</span><span class="p">),</span> <span class="n">cat</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;lambda_r&#39;</span><span class="p">])</span>
+
+    <span class="n">ax</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">nout2lbt</span><span class="p">(</span><span class="n">cat</span><span class="o">.</span><span class="n">nouts</span><span class="p">),</span> <span class="n">cat</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;reff&#39;</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">cat</span><span class="o">.</span><span class="n">merger</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">mr</span><span class="p">,</span> <span class="n">xx</span><span class="p">,</span> <span class="n">x2</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">cat</span><span class="o">.</span><span class="n">merger</span><span class="o">.</span><span class="n">mr</span><span class="p">,</span>
+                              <span class="n">nout2lbt</span><span class="p">(</span><span class="n">cat</span><span class="o">.</span><span class="n">merger</span><span class="o">.</span><span class="n">nout</span><span class="p">),</span>
+                              <span class="n">nout2lbt</span><span class="p">(</span><span class="n">cat</span><span class="o">.</span><span class="n">merger</span><span class="o">.</span><span class="n">nout_ini</span><span class="p">)):</span>
+            <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">xx</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
+            <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{:.1f}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mr</span><span class="p">),</span> <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="n">xx</span><span class="p">,</span><span class="mf">0.4</span><span class="p">))</span>
+            <span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">xx</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
+            <span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{:.1f}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mr</span><span class="p">),</span> <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="n">xx</span><span class="p">,</span><span class="mf">0.4</span><span class="p">))</span>
+            <span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">xx</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
+            <span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">x2</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;g&#39;</span><span class="p">)</span>
+
+
+    <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">r&quot;$M_{*} [M_{\odot}]$&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">26</span><span class="p">)</span>
+    <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">r&quot;$ j_{x,y,z} [kpc km s^{-1}]$&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">26</span><span class="p">)</span>
+    <span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">r&quot;$\lambda$&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">26</span><span class="p">)</span>
+    <span class="n">ax</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">r&quot;$R_</span><span class="si">{eff}</span><span class="s2"> [kpc]$&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">26</span><span class="p">)</span>
+    <span class="n">ax</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Mstar&quot;</span><span class="p">)</span></div>
+
+<span class="c1">#    ax[0].locator_params(nbins=3, axis=&#39;y&#39;)</span>
+<span class="c1">#    ax[1].locator_params(nbins=3, axis=&#39;y&#39;)</span>
+<span class="c1">#    ax[2].locator_params(nbins=3, axis=&#39;y&#39;)</span>
+<span class="c1">#    ax[3].locator_params(nbins=3, axis=&#39;y&#39;)</span>
+<span class="c1">#    ax[4].locator_params(nbins=3, axis=&#39;y&#39;)</span>
+
+
+
+<div class="viewcode-block" id="new_old_gals"><a class="viewcode-back" href="../../analysis.html#analysis.single_gal_module.new_old_gals">[docs]</a><span class="k">def</span> <span class="nf">new_old_gals</span><span class="p">(</span><span class="n">galid_at_187</span><span class="p">,</span> <span class="n">prgt</span><span class="p">):</span>
+    <span class="n">galidx</span> <span class="o">=</span> <span class="n">prgt</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">][(</span><span class="n">prgt</span><span class="p">[</span><span class="s2">&quot;nout&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">187</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">prgt</span><span class="p">[</span><span class="s2">&quot;Orig_halo_id&quot;</span><span class="p">]</span> \
+             <span class="o">==</span> <span class="n">galid_at_187</span><span class="p">)][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">prg_this</span> <span class="o">=</span> <span class="n">ctu</span><span class="o">.</span><span class="n">extract_main_tree</span><span class="p">(</span><span class="n">prgt</span><span class="p">,</span> <span class="n">galidx</span><span class="p">)</span>
+    <span class="c1">#prg_this[&#39;Orig_halo_id&#39;][[0,100]]</span>
+    <span class="c1">#prg_this[&#39;nout&#39;][[0,100]]</span>
+
+    <span class="n">info1</span> <span class="o">=</span> <span class="n">load</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">Info</span><span class="p">(</span><span class="mi">187</span><span class="p">)</span>
+    <span class="n">info2</span> <span class="o">=</span> <span class="n">load</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">Info</span><span class="p">(</span><span class="mi">87</span><span class="p">)</span>
+
+    <span class="c1">#gg = prg_now[prg_now[&quot;Orig_halo_id&quot;] == 707]</span>
+    <span class="n">gg</span> <span class="o">=</span> <span class="n">prg_this</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">convert_gm_to_halo</span><span class="p">(</span><span class="n">gg</span><span class="p">,</span> <span class="n">info1</span><span class="p">)</span>
+
+    <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;debug&quot;</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;verbose&quot;</span><span class="p">:</span><span class="kc">False</span><span class="p">}</span>
+    <span class="n">gal1</span> <span class="o">=</span> <span class="n">gal_from_GM</span><span class="p">(</span><span class="mi">187</span><span class="p">,</span> <span class="n">gg</span><span class="p">[</span><span class="s1">&#39;Orig_halo_id&#39;</span><span class="p">],</span> <span class="n">gg</span><span class="p">,</span> <span class="n">info1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="n">gg</span> <span class="o">=</span> <span class="n">prg_this</span><span class="p">[</span><span class="mi">100</span><span class="p">]</span>
+    <span class="n">convert_gm_to_halo</span><span class="p">(</span><span class="n">gg</span><span class="p">,</span> <span class="n">info2</span><span class="p">)</span>
+    <span class="n">gal2</span> <span class="o">=</span> <span class="n">gal_from_GM</span><span class="p">(</span><span class="mi">87</span><span class="p">,</span> <span class="n">gg</span><span class="p">[</span><span class="s1">&#39;Orig_halo_id&#39;</span><span class="p">],</span> <span class="n">gg</span><span class="p">,</span> <span class="n">info2</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">gal1</span><span class="p">,</span> <span class="n">gal2</span></div>
+
+
+<div class="viewcode-block" id="draw_lxyz"><a class="viewcode-back" href="../../analysis.html#analysis.single_gal_module.draw_lxyz">[docs]</a><span class="k">def</span> <span class="nf">draw_lxyz</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">t_mean</span><span class="p">,</span> <span class="n">lvec</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">t_mean</span><span class="p">,</span><span class="n">lvec</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;&gt;&#39;</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">t_mean</span><span class="p">,</span><span class="n">lvec</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;^&#39;</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s1">&#39;green&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">t_mean</span><span class="p">,</span><span class="n">lvec</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;v&#39;</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="add_lxyz_point"><a class="viewcode-back" href="../../analysis.html#analysis.single_gal_module.add_lxyz_point">[docs]</a><span class="k">def</span> <span class="nf">add_lxyz_point</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">gal</span><span class="p">,</span> <span class="n">info</span><span class="p">):</span>
+    <span class="n">lvec</span> <span class="o">=</span> <span class="n">angular_momentum</span><span class="p">(</span><span class="n">gal</span><span class="o">.</span><span class="n">star</span><span class="p">)</span>
+    <span class="n">draw_lxyz</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">nout2lbt</span><span class="p">(</span><span class="n">info</span><span class="o">.</span><span class="n">nout</span><span class="p">),</span> <span class="n">lvec</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">facecolor</span><span class="o">=</span><span class="s1">&#39;none&#39;</span><span class="p">)</span></div>
+    
+<div class="viewcode-block" id="load_prg_gal_data222"><a class="viewcode-back" href="../../analysis.html#analysis.single_gal_module.load_prg_gal_data222">[docs]</a><span class="k">def</span> <span class="nf">load_prg_gal_data222</span><span class="p">(</span><span class="n">gg</span><span class="p">,</span> <span class="n">info</span><span class="p">):</span>
+    <span class="n">convert_gm_to_halo</span><span class="p">(</span><span class="n">gg</span><span class="p">,</span> <span class="n">info</span><span class="p">)</span>
+    <span class="n">inout</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">prg_this</span><span class="p">[</span><span class="s1">&#39;nout&#39;</span><span class="p">])</span> <span class="o">-</span> <span class="n">gg</span><span class="p">[</span><span class="s1">&#39;nout&#39;</span><span class="p">]</span>
+    <span class="n">idgal</span> <span class="o">=</span> <span class="n">prg_this</span><span class="p">[</span><span class="s1">&#39;Orig_halo_id&#39;</span><span class="p">][</span><span class="n">inout</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">prg_this</span><span class="p">[</span><span class="s1">&#39;phantom&#39;</span><span class="p">][</span><span class="n">inout</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="n">nout</span> <span class="o">=</span> <span class="n">prg_this</span><span class="p">[</span><span class="s1">&#39;nout&#39;</span><span class="p">][</span><span class="n">inout</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">gal_from_GM</span><span class="p">(</span><span class="n">gg</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">nout</span><span class="o">=</span><span class="n">nout</span><span class="p">,</span> <span class="n">idgal</span><span class="o">=</span><span class="n">idgal</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="load_prg_gal_data"><a class="viewcode-back" href="../../analysis.html#analysis.single_gal_module.load_prg_gal_data">[docs]</a><span class="k">def</span> <span class="nf">load_prg_gal_data</span><span class="p">(</span><span class="n">gg</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">fname</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="n">convert_gm_to_halo</span><span class="p">(</span><span class="n">gg</span><span class="p">,</span> <span class="n">info</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">prg_this</span><span class="p">[</span><span class="s1">&#39;phantom&#39;</span><span class="p">][</span><span class="n">inout</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+<span class="c1">#    nout = prg_this[&#39;nout&#39;][inout]</span>
+    <span class="k">return</span> <span class="n">gal_from_GM</span><span class="p">(</span><span class="n">gg</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">nout</span><span class="o">=</span><span class="n">nout</span><span class="p">,</span> <span class="n">idgal</span><span class="o">=</span><span class="n">idgal</span><span class="p">,</span> <span class="n">fname</span><span class="o">=</span><span class="n">fname</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="gal_from_GM"><a class="viewcode-back" href="../../analysis.html#analysis.single_gal_module.gal_from_GM">[docs]</a><span class="k">def</span> <span class="nf">gal_from_GM</span><span class="p">(</span><span class="n">gcat</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">nout</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">idgal</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fname</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">dm</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">cell</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">galaxy</span> <span class="k">import</span> <span class="n">galaxy</span>
+    <span class="k">if</span> <span class="n">fname</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">gm</span> <span class="o">=</span> <span class="n">load</span><span class="o">.</span><span class="n">rd_GM</span><span class="o">.</span><span class="n">rd_gal</span><span class="p">(</span><span class="n">nout</span><span class="p">,</span> <span class="n">idgal</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">gm</span> <span class="o">=</span> <span class="n">load</span><span class="o">.</span><span class="n">rd_GM</span><span class="o">.</span><span class="n">rd_gal</span><span class="p">(</span><span class="n">info</span><span class="o">.</span><span class="n">nout</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">fname</span><span class="o">=</span><span class="n">fname</span><span class="p">)</span>
+        <span class="n">galid</span> <span class="o">=</span> <span class="n">gm</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;my_number&#39;</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">gm</span><span class="o">.</span><span class="n">star</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;no stellar particles, skipping&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="n">gm</span><span class="o">.</span><span class="n">star</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">cosmology</span><span class="o">.</span><span class="n">time2gyr</span><span class="p">(</span><span class="n">gm</span><span class="o">.</span><span class="n">star</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">],</span>
+                                 <span class="n">z_now</span> <span class="o">=</span> <span class="n">info</span><span class="o">.</span><span class="n">zred</span><span class="p">,</span>
+                                 <span class="n">info</span><span class="o">=</span><span class="n">info</span><span class="p">)</span>
+    <span class="n">gcat</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span> <span class="o">/=</span> <span class="n">info</span><span class="o">.</span><span class="n">cboxsize</span>
+    <span class="n">gcat</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span> <span class="o">/=</span> <span class="n">info</span><span class="o">.</span><span class="n">cboxsize</span>
+    <span class="n">gcat</span><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">]</span> <span class="o">/=</span> <span class="n">info</span><span class="o">.</span><span class="n">cboxsize</span>
+    <span class="c1">#print(&quot;Cat x&quot;, gcat[&#39;x&#39;])</span>
+    <span class="n">gal</span> <span class="o">=</span> <span class="n">galaxy</span><span class="o">.</span><span class="n">Galaxy</span><span class="p">(</span><span class="n">halo</span> <span class="o">=</span> <span class="n">gcat</span><span class="p">,</span> <span class="n">info</span><span class="o">=</span><span class="n">info</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">dm</span><span class="p">:</span>
+        <span class="n">fname_dm</span> <span class="o">=</span> <span class="n">fname</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;stars&quot;</span><span class="p">,</span> <span class="s2">&quot;dms&quot;</span><span class="p">)</span>
+        <span class="n">gm</span><span class="o">.</span><span class="n">dm</span> <span class="o">=</span> <span class="n">load</span><span class="o">.</span><span class="n">rd_GM</span><span class="o">.</span><span class="n">rd_dm</span><span class="p">(</span><span class="n">info</span><span class="o">.</span><span class="n">nout</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">fname</span> <span class="o">=</span> <span class="n">fname_dm</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">gm</span><span class="o">.</span><span class="n">dm</span> <span class="o">=</span> <span class="kc">None</span>
+    
+    <span class="k">if</span> <span class="n">cell</span> <span class="o">==</span> <span class="s2">&quot;GM&quot;</span><span class="p">:</span>
+        <span class="n">fname_cell</span> <span class="o">=</span> <span class="n">fname</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;stars&quot;</span><span class="p">,</span> <span class="s2">&quot;cells&quot;</span><span class="p">)</span>
+        <span class="n">gm</span><span class="o">.</span><span class="n">cell</span> <span class="o">=</span> <span class="n">load</span><span class="o">.</span><span class="n">rd_GM</span><span class="o">.</span><span class="n">rd_cell</span><span class="p">(</span><span class="n">info</span><span class="o">.</span><span class="n">nout</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">fname</span> <span class="o">=</span> <span class="n">fname_cell</span><span class="p">)</span>
+        <span class="c1"># unit of &quot;rho&quot; is not touched.</span>
+    <span class="k">elif</span> <span class="n">cell</span> <span class="o">==</span> <span class="s2">&quot;raw&quot;</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">load.hydro</span> <span class="k">import</span> <span class="n">Hydro</span>
+        <span class="kn">import</span> <span class="nn">utils.sampling</span> <span class="k">as</span> <span class="nn">smp</span>
+        <span class="n">centers</span> <span class="o">=</span> <span class="n">gm</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;xg&#39;</span><span class="p">]</span> <span class="o">/</span><span class="n">info</span><span class="o">.</span><span class="n">pboxsize</span> <span class="o">+</span> <span class="mf">0.5</span>
+         
+        <span class="n">radius</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="nb">max</span><span class="p">([</span><span class="n">gm</span><span class="o">.</span><span class="n">star</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">ptp</span><span class="p">(),</span> <span class="n">gm</span><span class="o">.</span><span class="n">star</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">ptp</span><span class="p">(),</span> \
+                           <span class="n">gm</span><span class="o">.</span><span class="n">star</span><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">ptp</span><span class="p">()])</span><span class="o">/</span><span class="n">info</span><span class="o">.</span><span class="n">pboxsize</span>
+
+        <span class="n">region</span> <span class="o">=</span> <span class="n">smp</span><span class="o">.</span><span class="n">set_region</span><span class="p">(</span><span class="n">centers</span><span class="o">=</span><span class="n">centers</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="mf">1.5</span><span class="o">*</span><span class="n">radius</span><span class="p">)</span>
+        <span class="n">hh</span> <span class="o">=</span> <span class="n">Hydro</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="n">region</span><span class="o">=</span><span class="n">region</span><span class="p">,</span> <span class="n">load</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">gm</span><span class="o">.</span><span class="n">cell</span> <span class="o">=</span> <span class="n">hh</span><span class="o">.</span><span class="n">cell</span>
+        <span class="n">gm</span><span class="o">.</span><span class="n">cell</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">gm</span><span class="o">.</span><span class="n">cell</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">*</span> <span class="n">info</span><span class="o">.</span><span class="n">pboxsize</span>
+        <span class="n">gm</span><span class="o">.</span><span class="n">cell</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">gm</span><span class="o">.</span><span class="n">cell</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">*</span> <span class="n">info</span><span class="o">.</span><span class="n">pboxsize</span>
+        <span class="n">gm</span><span class="o">.</span><span class="n">cell</span><span class="p">[</span><span class="s2">&quot;z&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">gm</span><span class="o">.</span><span class="n">cell</span><span class="p">[</span><span class="s2">&quot;z&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">*</span> <span class="n">info</span><span class="o">.</span><span class="n">pboxsize</span>
+        <span class="n">gm</span><span class="o">.</span><span class="n">cell</span><span class="p">[</span><span class="s1">&#39;dx&#39;</span><span class="p">]</span> <span class="o">*=</span> <span class="n">info</span><span class="o">.</span><span class="n">pboxsize</span>
+
+        
+    <span class="n">good_gal</span> <span class="o">=</span> <span class="n">gal</span><span class="o">.</span><span class="n">mk_gal</span><span class="p">(</span><span class="n">gm</span><span class="o">.</span><span class="n">star</span><span class="p">,</span> <span class="n">gm</span><span class="o">.</span><span class="n">dm</span><span class="p">,</span> <span class="n">gm</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span>
+                          <span class="n">unit_conversion</span><span class="o">=</span><span class="s2">&quot;GM&quot;</span><span class="p">,</span>
+                          <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                          <span class="n">mstar_min</span> <span class="o">=</span> <span class="mi">1</span><span class="n">e8</span><span class="p">,</span>
+                          <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">gal</span></div>
+
+
+<div class="viewcode-block" id="gas_cell_mass"><a class="viewcode-back" href="../../analysis.html#analysis.single_gal_module.gas_cell_mass">[docs]</a><span class="k">def</span> <span class="nf">gas_cell_mass</span><span class="p">(</span><span class="n">cell</span><span class="p">,</span> <span class="n">info</span><span class="p">):</span>
+    <span class="s2">&quot;Returns mass of each cell in Msun unit&quot;</span>
+    <span class="n">msun</span> <span class="o">=</span> <span class="mf">1.98892e33</span>
+    <span class="n">rho</span> <span class="o">=</span> <span class="n">cell</span><span class="p">[</span><span class="s1">&#39;rho&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">info</span><span class="o">.</span><span class="n">unit_d</span>
+    <span class="n">dx</span> <span class="o">=</span> <span class="n">cell</span><span class="p">[</span><span class="s1">&#39;dx&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="p">(</span><span class="n">info</span><span class="o">.</span><span class="n">pboxsize</span> <span class="o">*</span> <span class="mi">1</span><span class="n">e3</span><span class="p">)</span> <span class="o">*</span> <span class="n">info</span><span class="o">.</span><span class="n">unit_l</span>
+    <span class="k">return</span> <span class="n">rho</span> <span class="o">*</span> <span class="n">dx</span><span class="o">**</span><span class="mi">3</span> <span class="o">/</span> <span class="n">msun</span></div>
+    
+
+<span class="c1"># Measure gas Mass </span>
+<div class="viewcode-block" id="gas_mass"><a class="viewcode-back" href="../../analysis.html#analysis.single_gal_module.gas_mass">[docs]</a><span class="k">def</span> <span class="nf">gas_mass</span><span class="p">(</span><span class="n">gal</span><span class="p">,</span> <span class="n">info</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="k">import</span> <span class="n">binned_statistic</span>
+
+    <span class="n">cell</span> <span class="o">=</span> <span class="n">gal</span><span class="o">.</span><span class="n">cell</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cell</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">100</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span>
+    <span class="n">gasmass</span> <span class="o">=</span> <span class="n">gal</span><span class="o">.</span><span class="n">gasmass</span>
+    <span class="n">gmass</span> <span class="o">=</span> <span class="n">gas_cell_mass</span><span class="p">(</span><span class="n">cell</span><span class="p">,</span> <span class="n">info</span><span class="p">)</span>
+    
+    <span class="n">d_cut</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">cell</span><span class="p">[</span><span class="s1">&#39;rho&#39;</span><span class="p">],</span> <span class="mi">90</span><span class="p">)</span>
+    <span class="n">ind</span> <span class="o">=</span> <span class="n">cell</span><span class="p">[</span><span class="s1">&#39;rho&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">d_cut</span>
+    <span class="n">gasmass</span><span class="p">[</span><span class="s2">&quot;dense&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">gmass</span><span class="p">[</span><span class="n">ind</span><span class="p">])</span>
+
+    <span class="n">dx_unique</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">cell</span><span class="p">[</span><span class="s1">&#39;dx&#39;</span><span class="p">])</span>
+    <span class="n">dx_cut</span> <span class="o">=</span> <span class="n">dx_unique</span><span class="p">[</span><span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dx_unique</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">ind</span> <span class="o">=</span> <span class="n">cell</span><span class="p">[</span><span class="s1">&#39;dx&#39;</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">dx_cut</span>
+    <span class="n">gasmass</span><span class="p">[</span><span class="s2">&quot;highlevel&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">gmass</span><span class="p">[</span><span class="n">ind</span><span class="p">])</span>
+
+    <span class="n">rr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">cell</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">])</span> <span class="o">+</span>
+                 <span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">cell</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">])</span> <span class="o">+</span>
+                 <span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">cell</span><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">]))</span>
+    
+    <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">rr</span> <span class="o">&lt;</span> <span class="n">gal</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">rgal</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">gasmass</span><span class="p">[</span><span class="s2">&quot;rgal&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">gmass</span><span class="p">[</span><span class="n">ind</span><span class="p">])</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">binned_statistic</span><span class="p">(</span><span class="n">rr</span><span class="p">,</span> <span class="n">gmass</span><span class="p">,</span> <span class="s1">&#39;sum&#39;</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+    <span class="n">gasmass</span><span class="p">[</span><span class="s2">&quot;radial&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">statistic</span>
+    <span class="n">gasmass</span><span class="p">[</span><span class="s1">&#39;loc&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">bin_edges</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">result</span><span class="o">.</span><span class="n">bin_edges</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span></div>
+    
+    <span class="c1">#return gasmass</span>
+
+
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">pyclusterevol -0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2016, Hoseung.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.8.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,853 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>draw.pp &#8212; pyclusterevol -0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '-0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="top" title="pyclusterevol -0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">pyclusterevol -0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for draw.pp</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Mon Mar 16 14:01:14 2015</span>
+
+<span class="sd">@author: hoseung</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="circle_scatter"><a class="viewcode-back" href="../../draw.html#draw.pp.circle_scatter">[docs]</a><span class="k">def</span> <span class="nf">circle_scatter</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">x_array</span><span class="p">,</span> <span class="n">y_array</span><span class="p">,</span> <span class="n">radii_array</span><span class="p">,</span>
+                   <span class="n">colors</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                   <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;RdYlBu_r&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    draws circles of gievn x,y, and radii</span>
+<span class="sd">    </span>
+<span class="sd">    To Do:</span>
+<span class="sd">        zip only works with iterables (not with a single value, int or float.)</span>
+<span class="sd">        Can I make it more general? </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">matplotlib.pylab</span> <span class="k">as</span> <span class="nn">plt</span>
+    <span class="kn">from</span> <span class="nn">matplotlib.collections</span> <span class="k">import</span> <span class="n">PatchCollection</span>
+
+    <span class="n">mypatches</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">x_array</span><span class="p">,</span> <span class="n">y_array</span><span class="p">,</span> <span class="n">radii_array</span><span class="p">):</span>
+            <span class="n">circle</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">Circle</span><span class="p">((</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">),</span> <span class="n">radius</span><span class="o">=</span><span class="n">r</span><span class="p">)</span><span class="c1">#, **kwargs)</span>
+            <span class="n">mypatches</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">circle</span><span class="p">)</span>
+            
+    <span class="k">except</span><span class="p">:</span>
+        <span class="n">circle</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">Circle</span><span class="p">((</span><span class="n">x_array</span><span class="p">,</span><span class="n">y_array</span><span class="p">),</span> <span class="n">radius</span><span class="o">=</span><span class="n">radii_array</span><span class="p">)</span><span class="c1">#, **kwargs)</span>
+        <span class="n">mypatches</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">circle</span><span class="p">)</span>
+        
+    <span class="n">color_map</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="n">cmap</span><span class="p">)</span>
+ 
+    <span class="n">p</span> <span class="o">=</span> <span class="n">PatchCollection</span><span class="p">(</span><span class="n">mypatches</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                        <span class="c1">#facecolors = color_map(colors))</span>
+    <span class="k">if</span> <span class="n">colors</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">set_edgecolor</span><span class="p">(</span><span class="n">color_map</span><span class="p">(</span><span class="n">colors</span><span class="p">))</span>
+        <span class="c1">#p.set_facecolor(&#39;none&#39;)</span>
+        <span class="c1">#p.set_clim([np.min(colors),np.max(colors)])</span>
+    <span class="c1">#plt.colorbar(p,shrink=0.5)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+    <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="square_scatter"><a class="viewcode-back" href="../../draw.html#draw.pp.square_scatter">[docs]</a><span class="k">def</span> <span class="nf">square_scatter</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">x_array</span><span class="p">,</span> <span class="n">y_array</span><span class="p">,</span> <span class="n">size_array</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    draws square of given x,y, and lengths of side.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">matplotlib.pylab</span> <span class="k">as</span> <span class="nn">plt</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">size</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">x_array</span><span class="p">,</span> <span class="n">y_array</span><span class="p">,</span> <span class="n">size_array</span><span class="p">):</span>
+        <span class="n">square</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">Rectangle</span><span class="p">((</span><span class="n">x</span><span class="o">-</span><span class="n">size</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span><span class="n">y</span><span class="o">-</span><span class="n">size</span><span class="o">/</span><span class="mi">2</span><span class="p">),</span> <span class="n">size</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">add_patch</span><span class="p">(</span><span class="n">square</span><span class="p">)</span>
+    <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="polygon_scatter"><a class="viewcode-back" href="../../draw.html#draw.pp.polygon_scatter">[docs]</a><span class="k">def</span> <span class="nf">polygon_scatter</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">x_array</span><span class="p">,</span> <span class="n">y_array</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39; resolution is number of sides of polygon &#39;&#39;&#39;</span>
+    <span class="kn">from</span> <span class="nn">matplotlib.patches</span> <span class="k">import</span> <span class="n">CirclePolygon</span>
+    <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">x_array</span><span class="p">,</span> <span class="n">y_array</span><span class="p">):</span>
+        <span class="n">polygon</span> <span class="o">=</span> <span class="n">CirclePolygon</span><span class="p">((</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">),</span> <span class="n">radius</span><span class="o">=</span><span class="n">radius</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="n">resolution</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">add_patch</span><span class="p">(</span><span class="n">polygon</span><span class="p">)</span>
+    <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="part2den"><a class="viewcode-back" href="../../draw.html#draw.pp.part2den">[docs]</a><span class="k">def</span> <span class="nf">part2den</span><span class="p">(</span><span class="n">part</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">region</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">proj</span><span class="o">=</span><span class="s1">&#39;z&#39;</span><span class="p">,</span> <span class="n">npix</span><span class="o">=</span><span class="mi">800</span><span class="p">,</span> <span class="n">ptype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+               <span class="n">offset</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span> <span class="n">hist</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    creates img object, calculate 2d-projection map and return the img object.</span>
+<span class="sd">    given part, info, region, it passes x,y,z,m,npix,info arrays to pp.den2d.</span>
+<span class="sd">    mass [Msun]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+    <span class="kn">from</span> <span class="nn">draw</span> <span class="k">import</span> <span class="n">img_obj</span>
+    
+    <span class="k">if</span> <span class="n">region</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">utils.sampling</span> <span class="k">as</span> <span class="nn">smp</span>
+    
+        <span class="n">region</span> <span class="o">=</span> <span class="n">smp</span><span class="o">.</span><span class="n">set_region</span><span class="p">(</span><span class="n">xr</span><span class="o">=</span><span class="p">[</span><span class="n">part</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">+</span> <span class="n">offset</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">part</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">+</span> <span class="n">offset</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span>
+                                <span class="n">yr</span><span class="o">=</span><span class="p">[</span><span class="n">part</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">+</span> <span class="n">offset</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">part</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">+</span> <span class="n">offset</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span>
+                                <span class="n">zr</span><span class="o">=</span><span class="p">[</span><span class="n">part</span><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">+</span> <span class="n">offset</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">part</span><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">+</span> <span class="n">offset</span><span class="p">[</span><span class="mi">2</span><span class="p">]])</span>       
+        <span class="n">ind_ok</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">part</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ind_ok</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">part</span><span class="o">.</span><span class="n">x</span> <span class="o">&gt;</span> <span class="n">region</span><span class="p">[</span><span class="s2">&quot;xr&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">offset</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                        <span class="o">&amp;</span> <span class="p">(</span><span class="n">part</span><span class="o">.</span><span class="n">x</span> <span class="o">&lt;</span> <span class="n">region</span><span class="p">[</span><span class="s2">&quot;xr&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">offset</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                        <span class="o">&amp;</span> <span class="p">(</span><span class="n">part</span><span class="o">.</span><span class="n">y</span> <span class="o">&gt;</span> <span class="n">region</span><span class="p">[</span><span class="s2">&quot;yr&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">offset</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                        <span class="o">&amp;</span> <span class="p">(</span><span class="n">part</span><span class="o">.</span><span class="n">y</span> <span class="o">&lt;</span> <span class="n">region</span><span class="p">[</span><span class="s2">&quot;yr&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">offset</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                        <span class="o">&amp;</span> <span class="p">(</span><span class="n">part</span><span class="o">.</span><span class="n">z</span> <span class="o">&gt;</span> <span class="n">region</span><span class="p">[</span><span class="s2">&quot;zr&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">offset</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+                        <span class="o">&amp;</span> <span class="p">(</span><span class="n">part</span><span class="o">.</span><span class="n">z</span> <span class="o">&lt;</span> <span class="n">region</span><span class="p">[</span><span class="s2">&quot;zr&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">offset</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
+    
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ind_ok</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">img</span> <span class="o">=</span> <span class="n">img_obj</span><span class="o">.</span><span class="n">MapImg</span><span class="p">(</span><span class="n">info</span><span class="o">=</span><span class="n">info</span><span class="p">,</span> <span class="n">proj</span><span class="o">=</span><span class="n">proj</span><span class="p">,</span> <span class="n">npix</span><span class="o">=</span><span class="n">npix</span><span class="p">,</span> <span class="n">ptype</span><span class="o">=</span><span class="n">ptype</span><span class="p">)</span>
+        <span class="n">img</span><span class="o">.</span><span class="n">set_region</span><span class="p">(</span><span class="n">region</span><span class="p">)</span>
+        <span class="n">img</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="n">den2d</span><span class="p">(</span><span class="n">part</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">][</span><span class="n">ind_ok</span><span class="p">]</span> <span class="o">+</span> <span class="n">offset</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                           <span class="n">part</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">][</span><span class="n">ind_ok</span><span class="p">]</span> <span class="o">+</span> <span class="n">offset</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                           <span class="n">part</span><span class="p">[</span><span class="s2">&quot;z&quot;</span><span class="p">][</span><span class="n">ind_ok</span><span class="p">]</span> <span class="o">+</span> <span class="n">offset</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+                           <span class="n">part</span><span class="p">[</span><span class="s2">&quot;m&quot;</span><span class="p">][</span><span class="n">ind_ok</span><span class="p">],</span> <span class="n">npix</span><span class="p">,</span> <span class="n">region</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">proj</span><span class="o">=</span><span class="n">proj</span><span class="p">,</span>
+                           <span class="n">cic</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">norm_integer</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">hist</span><span class="o">=</span><span class="n">hist</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">img</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="den2d"><a class="viewcode-back" href="../../draw.html#draw.pp.den2d">[docs]</a><span class="k">def</span> <span class="nf">den2d</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">npix</span><span class="p">,</span> <span class="n">region</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">proj</span><span class="o">=</span><span class="s1">&#39;z&#39;</span><span class="p">,</span>
+                    <span class="n">ngp</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">cic</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">tsc</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">vmin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">norm_integer</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">mass_test</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">hist</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return 2D density map of given particle distribution in (npix,npix) array.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x : float array</span>
+<span class="sd">        x position of particles</span>
+<span class="sd">    y : float array</span>
+<span class="sd">        y position of particles            </span>
+<span class="sd">    z : float array</span>
+<span class="sd">        z position of particles        </span>
+<span class="sd">    m : float array</span>
+<span class="sd">        mass (or any types of charge) of particles</span>
+<span class="sd">    npix : int</span>
+<span class="sd">        number of pixel on a side.</span>
+<span class="sd">    region : Optional[dict; see utils.sampling.set_region]</span>
+<span class="sd">        If given, only particles inside the region is taken into account.</span>
+<span class="sd">    vmin : float</span>
+<span class="sd">        minimum value of map, below which are cut-off.</span>
+<span class="sd">    vmax : float</span>
+<span class="sd">        maximum value of map, above which are cut-off.</span>
+<span class="sd">    </span>
+<span class="sd">    NOTE</span>
+<span class="sd">    ----</span>
+<span class="sd">    Region must be in double precision.</span>
+<span class="sd">    If single is given max(x) - min(x) &gt; 2 * region[&#39;radius&#39;] is possible,</span>
+<span class="sd">    causing error in assignment calculation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">pyximport</span><span class="p">;</span> <span class="n">pyximport</span><span class="o">.</span><span class="n">install</span><span class="p">()</span>
+    <span class="kn">from</span> <span class="nn">utils</span> <span class="k">import</span> <span class="n">assign</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="c1">#   vmax = 1e12# in solar mass / kpc^2</span>
+
+<span class="c1">#   range = in data unit.   # prange = in physical unit</span>
+    <span class="k">if</span> <span class="n">region</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">lbox</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">region</span><span class="p">[</span><span class="s1">&#39;radius&#39;</span><span class="p">]</span>        
+        
+        <span class="n">buffer</span> <span class="o">=</span> <span class="mf">0.0001</span> <span class="o">*</span> <span class="n">lbox</span>        
+        
+        <span class="n">ind_ok</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">x</span> <span class="o">&gt;</span> <span class="n">region</span><span class="p">[</span><span class="s2">&quot;xr&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">buffer</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">x</span> <span class="o">&lt;</span> <span class="n">region</span><span class="p">[</span><span class="s2">&quot;xr&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">buffer</span><span class="p">)</span> <span class="o">&amp;</span>
+                          <span class="p">(</span><span class="n">y</span> <span class="o">&gt;</span> <span class="n">region</span><span class="p">[</span><span class="s2">&quot;yr&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">buffer</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">y</span> <span class="o">&lt;</span> <span class="n">region</span><span class="p">[</span><span class="s2">&quot;yr&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">buffer</span><span class="p">)</span> <span class="o">&amp;</span>
+                          <span class="p">(</span><span class="n">z</span> <span class="o">&gt;</span> <span class="n">region</span><span class="p">[</span><span class="s2">&quot;zr&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">buffer</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">z</span> <span class="o">&lt;</span> <span class="n">region</span><span class="p">[</span><span class="s2">&quot;zr&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">buffer</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+    
+        <span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ind_ok</span><span class="p">))</span>        
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ind_ok</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Too few particles to construct a density map&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+    
+        <span class="n">m</span> <span class="o">=</span> <span class="n">m</span><span class="p">[</span><span class="n">ind_ok</span><span class="p">]</span>        
+        <span class="c1">#   image center = region center</span>
+        <span class="c1">#   position, region in the same unit. </span>
+        <span class="k">if</span> <span class="n">proj</span> <span class="o">==</span> <span class="s1">&#39;z&#39;</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="p">((</span><span class="n">x</span><span class="p">[</span><span class="n">ind_ok</span><span class="p">]</span> <span class="o">-</span> <span class="n">region</span><span class="p">[</span><span class="s1">&#39;xc&#39;</span><span class="p">])</span> <span class="o">/</span> <span class="n">lbox</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">*</span> <span class="n">npix</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="p">((</span><span class="n">y</span><span class="p">[</span><span class="n">ind_ok</span><span class="p">]</span> <span class="o">-</span> <span class="n">region</span><span class="p">[</span><span class="s1">&#39;yc&#39;</span><span class="p">])</span> <span class="o">/</span> <span class="n">lbox</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">*</span> <span class="n">npix</span>
+        <span class="k">elif</span> <span class="n">proj</span> <span class="o">==</span> <span class="s1">&#39;x&#39;</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="p">((</span><span class="n">x</span><span class="p">[</span><span class="n">ind_ok</span><span class="p">]</span> <span class="o">-</span> <span class="n">region</span><span class="p">[</span><span class="s1">&#39;xc&#39;</span><span class="p">])</span> <span class="o">/</span> <span class="n">lbox</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">*</span> <span class="n">npix</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="p">((</span><span class="n">z</span><span class="p">[</span><span class="n">ind_ok</span><span class="p">]</span> <span class="o">-</span> <span class="n">region</span><span class="p">[</span><span class="s1">&#39;zc&#39;</span><span class="p">])</span> <span class="o">/</span> <span class="n">lbox</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">*</span> <span class="n">npix</span>
+        <span class="k">elif</span> <span class="n">proj</span> <span class="o">==</span> <span class="s1">&#39;y&#39;</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="p">((</span><span class="n">z</span><span class="p">[</span><span class="n">ind_ok</span><span class="p">]</span> <span class="o">-</span> <span class="n">region</span><span class="p">[</span><span class="s1">&#39;zc&#39;</span><span class="p">])</span> <span class="o">/</span> <span class="n">lbox</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">*</span> <span class="n">npix</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="p">((</span><span class="n">y</span><span class="p">[</span><span class="n">ind_ok</span><span class="p">]</span> <span class="o">-</span> <span class="n">region</span><span class="p">[</span><span class="s1">&#39;yc&#39;</span><span class="p">])</span> <span class="o">/</span> <span class="n">lbox</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">*</span> <span class="n">npix</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Too few particles to construct a density map&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>        
+        
+        <span class="n">lbox</span> <span class="o">=</span> <span class="nb">max</span><span class="p">([</span><span class="n">x</span><span class="o">.</span><span class="n">ptp</span><span class="p">(),</span> <span class="n">y</span><span class="o">.</span><span class="n">ptp</span><span class="p">(),</span> <span class="n">z</span><span class="o">.</span><span class="n">ptp</span><span class="p">()])</span>
+        <span class="c1"># image center = 0.5 * ptp</span>
+        <span class="k">if</span> <span class="n">proj</span> <span class="o">==</span> <span class="s1">&#39;z&#39;</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="nb">min</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="o">/</span> <span class="n">lbox</span> <span class="o">*</span> <span class="n">npix</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="nb">min</span><span class="p">(</span><span class="n">y</span><span class="p">))</span> <span class="o">/</span> <span class="n">lbox</span> <span class="o">*</span> <span class="n">npix</span>
+        <span class="k">elif</span> <span class="n">proj</span> <span class="o">==</span> <span class="s1">&#39;x&#39;</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="nb">min</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="o">/</span> <span class="n">lbox</span> <span class="o">*</span> <span class="n">npix</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="p">(</span><span class="n">z</span> <span class="o">-</span> <span class="nb">min</span><span class="p">(</span><span class="n">z</span><span class="p">))</span> <span class="o">/</span> <span class="n">lbox</span> <span class="o">*</span> <span class="n">npix</span>
+        <span class="k">elif</span> <span class="n">proj</span> <span class="o">==</span> <span class="s1">&#39;y&#39;</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="p">(</span><span class="n">z</span> <span class="o">-</span> <span class="nb">min</span><span class="p">(</span><span class="n">z</span><span class="p">))</span> <span class="o">/</span> <span class="n">lbox</span> <span class="o">*</span> <span class="n">npix</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="nb">min</span><span class="p">(</span><span class="n">y</span><span class="p">))</span> <span class="o">/</span> <span class="n">lbox</span> <span class="o">*</span> <span class="n">npix</span>
+
+
+        <span class="c1"># mass in solar mass unit.</span>
+    <span class="c1"># Test if that&#39;s true.</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">mass_test</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;mass seems not in solar mass unit.&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Minmum mass is </span><span class="si">{}</span><span class="s2"> and maximum is </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">m</span><span class="o">.</span><span class="n">max</span><span class="p">()))</span>
+
+    <span class="c1"># mass assigning</span>
+    <span class="k">if</span> <span class="n">hist</span><span class="p">:</span>
+        <span class="n">field</span><span class="p">,</span> <span class="n">xedges</span><span class="p">,</span> <span class="n">yedges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram2d</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="p">[</span><span class="n">npix</span><span class="p">,</span><span class="n">npix</span><span class="p">])</span>
+        <span class="n">field</span> <span class="o">=</span> <span class="n">field</span><span class="o">.</span><span class="n">T</span> <span class="o">*</span> <span class="n">m</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="c1">#        img.set_data(H * part[&#39;m&#39;][0]) # Assuming all stellar particle have the same mass</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">ngp</span> <span class="ow">is</span> <span class="kc">False</span> <span class="ow">and</span> <span class="n">cic</span> <span class="ow">is</span> <span class="kc">False</span> <span class="ow">and</span> <span class="n">tsc</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span> <span class="n">cic</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="n">ngp</span><span class="p">:</span>
+            <span class="n">field</span> <span class="o">=</span> <span class="n">assign</span><span class="o">.</span><span class="n">ngp</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">npix</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">npix</span><span class="p">,</span> <span class="n">wraparound</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;x.ptp()&quot;</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">ptp</span><span class="p">(),</span> <span class="s2">&quot;npix&quot;</span><span class="p">,</span> <span class="n">npix</span><span class="p">)</span>
+ 
+        <span class="k">if</span> <span class="n">cic</span><span class="p">:</span>
+            <span class="n">field</span> <span class="o">=</span> <span class="n">assign</span><span class="o">.</span><span class="n">cic</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">npix</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">npix</span><span class="p">,</span> <span class="n">wraparound</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                               <span class="n">average</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">norm_integer</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+ 
+        <span class="k">if</span> <span class="n">tsc</span><span class="p">:</span>
+            <span class="n">field</span> <span class="o">=</span> <span class="n">assign</span><span class="o">.</span><span class="n">tsc</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">npix</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">npix</span><span class="p">,</span> <span class="n">wraparound</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;minmax field&quot;</span><span class="p">,</span> <span class="n">field</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">field</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
+
+    
+    <span class="n">ppdx</span> <span class="o">=</span> <span class="n">npix</span> <span class="o">/</span> <span class="n">lbox</span>  <span class="c1"># pixel per dx. physical density is density * npix^2 / dx^2</span>
+    <span class="n">ppddxx</span> <span class="o">=</span> <span class="n">ppdx</span> <span class="o">*</span> <span class="n">ppdx</span>
+    
+    <span class="k">if</span> <span class="n">vmin</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">vmin</span> <span class="o">=</span> <span class="n">field</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">*</span> <span class="n">ppddxx</span>
+    <span class="k">if</span> <span class="n">vmax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">vmax</span> <span class="o">=</span> <span class="n">field</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">*</span> <span class="n">ppddxx</span>
+    
+    <span class="n">val_ok</span> <span class="o">=</span> <span class="p">(</span><span class="n">field</span> <span class="o">&gt;</span> <span class="n">vmin</span><span class="o">/</span> <span class="n">ppddxx</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">field</span> <span class="o">&lt;</span> <span class="n">vmax</span> <span class="o">/</span> <span class="n">ppddxx</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">[</span><span class="n">val_ok</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">[</span><span class="n">val_ok</span><span class="p">]</span> <span class="o">*</span> <span class="n">ppddxx</span>
+    <span class="c1"># normalize into solar mass / kpc^2</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;minmax field after crop and converting into physical unit&quot;</span><span class="p">,</span> <span class="n">field</span><span class="p">[</span><span class="n">val_ok</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">field</span><span class="p">[</span><span class="n">val_ok</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
+
+    <span class="k">return</span><span class="p">(</span><span class="n">field</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="pp_halo"><a class="viewcode-back" href="../../draw.html#draw.pp.pp_halo">[docs]</a><span class="k">def</span> <span class="nf">pp_halo</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">npix</span><span class="p">,</span> <span class="n">rscale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">region</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ind</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="s2">&quot;rvir&quot;</span><span class="p">,</span>
+            <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">new_ax</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+            <span class="n">color_field</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">color_log</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">vmin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">keep_clim</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;RdYlBu_r&quot;</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    plot halos as circles on the current/given/new ax.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    h : tree.halomodule.Halo instance OR Halo.data is also acceptable. </span>
+<span class="sd">    npix : int</span>
+<span class="sd">        number of pixels. (assuming square image)</span>
+<span class="sd">    rscale : float, default = 1.0</span>
+<span class="sd">        Radii of halos are magnified by rscale. </span>
+<span class="sd">    region : Optional[dict; see utils.sampling.set_region]</span>
+<span class="sd">        If region is given, only halos inside the region are plotted.</span>
+<span class="sd">        If region and ind are both given,</span>
+<span class="sd">    radius : str, (rvir by default)</span>
+<span class="sd">        Name of &#39;radius&#39; field.   </span>
+<span class="sd">    ind : int array</span>
+<span class="sd">        If ind is given, </span>
+<span class="sd">        only selected halos are plotted out of the bigger halo sample.</span>
+<span class="sd">    ax : pyplot ax instance</span>
+<span class="sd">        If ax is given, halos are plotted on the ax.</span>
+<span class="sd">    new_ax : Boolean, default = False</span>
+<span class="sd">        If True, make a new ax and plot halos onto it. </span>
+<span class="sd">        If ax is None and new_ax is False, then ax = plt.gca()</span>
+<span class="sd">    color_field: str</span>
+<span class="sd">        Name of field by whch value halos are colored. </span>
+<span class="sd">    color_log : Boolean</span>
+<span class="sd">        If True, coloring by color_field is in log scale. </span>
+<span class="sd">    keep_clim: Boolean</span>
+<span class="sd">        If True, keep the color range of given axis </span>
+<span class="sd">        so that halos overplotted on top of a prexisting axis</span>
+<span class="sd">        has a consistent color scheme.)   </span>
+<span class="sd">    </span>
+<span class="sd">    Both raw halo catalog (x=[0,1]) and tree-like catalog (x=[0,pboxsize]) are OK</span>
+<span class="sd">    as long as position and radius are in the same unit. </span>
+<span class="sd">    -&gt;  xrange, yrange are determined relatively.</span>
+
+<span class="sd">    Example</span>
+<span class="sd">    -------</span>
+<span class="sd">    &gt;&gt;&gt; import tree.halomodule as hmo</span>
+<span class="sd">    &gt;&gt;&gt; import matplotlib.pyplot as plt</span>
+<span class="sd">    &gt;&gt;&gt; import draw</span>
+<span class="sd">    &gt;&gt;&gt; hh = hmo.Halo(nout=187, is_gal=True)</span>
+<span class="sd">    &gt;&gt;&gt; ax = draw.pp.pp_halo(hh, 400, edgecolor=&#39;blue&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; plt.show()</span>
+<span class="sd">    &gt;&gt;&gt; import tree.treemodule as tmo</span>
+<span class="sd">    &gt;&gt;&gt; gt = tmo.load_tree(&#39;./&#39;, is_gal=True)</span>
+<span class="sd">    &gt;&gt;&gt; ax = draw.pp.pp_halo(gt.data[gt.data[&quot;nout&quot;]==187], 400, edgecolor=&#39;green&#39;, rscale=1e-3)# rvir in kpc unit.</span>
+<span class="sd">    &gt;&gt;&gt; plt.show()</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    1. Region does NOT modify x,y labels. </span>
+<span class="sd">       better to modify labels outside.</span>
+<span class="sd">    2. Unless only halos are being plotted, it is better to pass a region.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+    <span class="kn">from</span> <span class="nn">draw</span> <span class="k">import</span> <span class="n">pp</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+    <span class="k">class</span> <span class="nc">ax_meta</span><span class="p">():</span>
+        <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">region</span><span class="o">=</span><span class="kc">None</span>
+            <span class="k">pass</span>
+
+	<span class="c1"># h can be either a halo.data or just a halo.</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">h</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">h</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;xc&#39;</span><span class="p">]</span>
+        <span class="n">hd</span> <span class="o">=</span> <span class="n">h</span><span class="o">.</span><span class="n">data</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="n">hd</span> <span class="o">=</span> <span class="n">h</span>
+
+    <span class="c1"># both x and xc is fine.</span>
+    <span class="n">posname</span><span class="o">=</span><span class="mi">0</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">hd</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]</span>
+        <span class="n">xn</span><span class="p">,</span> <span class="n">yn</span><span class="p">,</span> <span class="n">zn</span> <span class="o">=</span> <span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="s2">&quot;z&quot;</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="n">hd</span><span class="p">[</span><span class="s2">&quot;xc&quot;</span><span class="p">]</span>
+        <span class="n">xn</span><span class="p">,</span> <span class="n">yn</span><span class="p">,</span> <span class="n">zn</span> <span class="o">=</span> <span class="s2">&quot;xc&quot;</span><span class="p">,</span> <span class="s2">&quot;yc&quot;</span><span class="p">,</span> <span class="s2">&quot;zc&quot;</span>
+
+    <span class="c1"># use pp_halo rather then the script below.</span>
+    <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="s2">&quot;pp_hal_meta&quot;</span><span class="p">):</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">pp_hal_meta</span> <span class="o">=</span> <span class="n">ax_meta</span><span class="p">()</span>
+    <span class="k">elif</span> <span class="n">ax</span><span class="o">.</span><span class="n">pp_hal_meta</span><span class="o">.</span><span class="n">region</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">region</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># If the given ax already has a region defined, and</span>
+            <span class="c1"># no new region is explicitly given, use the region </span>
+            <span class="c1"># from the ax.</span>
+            <span class="n">region</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">pp_hal_meta</span><span class="o">.</span><span class="n">region</span> 
+
+    <span class="k">if</span> <span class="n">ind</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">region</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># If no region, plot all </span>
+            <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">hd</span><span class="p">))</span>
+            <span class="n">xmin</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">hd</span><span class="p">[</span><span class="n">xn</span><span class="p">][</span><span class="n">ind</span><span class="p">]</span> <span class="o">-</span> <span class="n">hd</span><span class="p">[</span><span class="n">radius</span><span class="p">][</span><span class="n">ind</span><span class="p">])</span>
+            <span class="n">ymin</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">hd</span><span class="p">[</span><span class="n">yn</span><span class="p">][</span><span class="n">ind</span><span class="p">]</span> <span class="o">-</span> <span class="n">hd</span><span class="p">[</span><span class="n">radius</span><span class="p">][</span><span class="n">ind</span><span class="p">])</span>
+            <span class="n">xmax</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">hd</span><span class="p">[</span><span class="n">xn</span><span class="p">][</span><span class="n">ind</span><span class="p">]</span> <span class="o">+</span> <span class="n">hd</span><span class="p">[</span><span class="n">radius</span><span class="p">][</span><span class="n">ind</span><span class="p">])</span>
+            <span class="n">ymax</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">hd</span><span class="p">[</span><span class="n">yn</span><span class="p">][</span><span class="n">ind</span><span class="p">]</span> <span class="o">+</span> <span class="n">hd</span><span class="p">[</span><span class="n">radius</span><span class="p">][</span><span class="n">ind</span><span class="p">])</span>
+            <span class="n">xspan</span><span class="o">=</span> <span class="n">xmax</span> <span class="o">-</span> <span class="n">xmin</span>
+            <span class="n">yspan</span><span class="o">=</span> <span class="n">ymax</span> <span class="o">-</span> <span class="n">ymin</span>
+            
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># If reion is given, only plot halos inside the region.</span>
+            <span class="c1"># The size of region is retained. </span>
+            <span class="c1"># image area does not shrink to fit only valid halos.</span>
+            <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span> <span class="p">(</span><span class="n">hd</span><span class="p">[</span><span class="n">xn</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">region</span><span class="p">[</span><span class="s2">&quot;xr&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span> <span class="o">&amp;</span>
+                            <span class="p">(</span><span class="n">hd</span><span class="p">[</span><span class="n">xn</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">region</span><span class="p">[</span><span class="s2">&quot;xr&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span> <span class="o">&amp;</span>
+                            <span class="p">(</span><span class="n">hd</span><span class="p">[</span><span class="n">yn</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">region</span><span class="p">[</span><span class="s2">&quot;yr&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span> <span class="o">&amp;</span> 
+                            <span class="p">(</span><span class="n">hd</span><span class="p">[</span><span class="n">yn</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">region</span><span class="p">[</span><span class="s2">&quot;yr&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span> <span class="o">&amp;</span>
+                            <span class="p">(</span><span class="n">hd</span><span class="p">[</span><span class="n">zn</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">region</span><span class="p">[</span><span class="s2">&quot;zr&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span> <span class="o">&amp;</span>
+                            <span class="p">(</span><span class="n">hd</span><span class="p">[</span><span class="n">zn</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">region</span><span class="p">[</span><span class="s2">&quot;zr&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">]))[</span><span class="mi">0</span><span class="p">]</span>
+            
+            <span class="n">xmin</span> <span class="o">=</span> <span class="n">region</span><span class="p">[</span><span class="s2">&quot;xr&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">ymin</span> <span class="o">=</span> <span class="n">region</span><span class="p">[</span><span class="s2">&quot;yr&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">xspan</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ptp</span><span class="p">(</span><span class="n">region</span><span class="p">[</span><span class="s2">&quot;xr&quot;</span><span class="p">])</span>
+            <span class="n">yspan</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ptp</span><span class="p">(</span><span class="n">region</span><span class="p">[</span><span class="s2">&quot;yr&quot;</span><span class="p">])</span>
+            
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># if ind is a boolean array, convert it to an index array.</span>
+        <span class="k">if</span> <span class="n">ind</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="s1">&#39;bool&#39;</span><span class="p">:</span>
+            <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ind</span><span class="p">))[</span><span class="n">ind</span><span class="p">]</span>
+        
+        <span class="k">if</span> <span class="n">region</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">xmin</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">hd</span><span class="p">[</span><span class="n">xn</span><span class="p">][</span><span class="n">ind</span><span class="p">]</span> <span class="o">-</span> <span class="n">hd</span><span class="p">[</span><span class="n">radius</span><span class="p">][</span><span class="n">ind</span><span class="p">])</span>
+            <span class="n">ymin</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">hd</span><span class="p">[</span><span class="n">yn</span><span class="p">][</span><span class="n">ind</span><span class="p">]</span> <span class="o">-</span> <span class="n">hd</span><span class="p">[</span><span class="n">radius</span><span class="p">][</span><span class="n">ind</span><span class="p">])</span>
+            <span class="n">xmax</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">hd</span><span class="p">[</span><span class="n">xn</span><span class="p">][</span><span class="n">ind</span><span class="p">]</span> <span class="o">+</span> <span class="n">hd</span><span class="p">[</span><span class="n">radius</span><span class="p">][</span><span class="n">ind</span><span class="p">])</span>
+            <span class="n">ymax</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">hd</span><span class="p">[</span><span class="n">yn</span><span class="p">][</span><span class="n">ind</span><span class="p">]</span> <span class="o">+</span> <span class="n">hd</span><span class="p">[</span><span class="n">radius</span><span class="p">][</span><span class="n">ind</span><span class="p">])</span>
+            <span class="n">xspan</span><span class="o">=</span> <span class="n">xmax</span> <span class="o">-</span> <span class="n">xmin</span>
+            <span class="n">yspan</span><span class="o">=</span> <span class="n">ymax</span> <span class="o">-</span> <span class="n">ymin</span>
+            
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">xmin</span> <span class="o">=</span> <span class="n">region</span><span class="p">[</span><span class="s2">&quot;xr&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">ymin</span> <span class="o">=</span> <span class="n">region</span><span class="p">[</span><span class="s2">&quot;yr&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">xspan</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ptp</span><span class="p">(</span><span class="n">region</span><span class="p">[</span><span class="s2">&quot;xr&quot;</span><span class="p">])</span>
+            <span class="n">yspan</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ptp</span><span class="p">(</span><span class="n">region</span><span class="p">[</span><span class="s2">&quot;yr&quot;</span><span class="p">])</span>
+            
+
+    <span class="n">x</span> <span class="o">=</span> <span class="p">(</span><span class="n">hd</span><span class="p">[</span><span class="n">xn</span><span class="p">][</span><span class="n">ind</span><span class="p">]</span> <span class="o">-</span> <span class="n">xmin</span><span class="p">)</span> <span class="o">/</span> <span class="n">xspan</span> <span class="o">*</span> <span class="n">npix</span> 
+    <span class="n">y</span> <span class="o">=</span> <span class="p">(</span><span class="n">hd</span><span class="p">[</span><span class="n">yn</span><span class="p">][</span><span class="n">ind</span><span class="p">]</span> <span class="o">-</span> <span class="n">ymin</span><span class="p">)</span> <span class="o">/</span> <span class="n">yspan</span> <span class="o">*</span> <span class="n">npix</span> 
+    <span class="n">r</span> <span class="o">=</span>  <span class="n">hd</span><span class="p">[</span><span class="n">radius</span><span class="p">][</span><span class="n">ind</span><span class="p">]</span><span class="o">/</span><span class="n">xspan</span> <span class="o">*</span> <span class="n">npix</span> <span class="o">*</span> <span class="n">rscale</span> <span class="c1"># Assuing xspan == yspan</span>
+    
+    <span class="kn">import</span> <span class="nn">utils.sampling</span> <span class="k">as</span> <span class="nn">smp</span>
+    
+    <span class="k">if</span> <span class="n">ax</span><span class="o">.</span><span class="n">pp_hal_meta</span><span class="o">.</span><span class="n">region</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Keep a physical region so that I can plot multiple set of halos </span>
+        <span class="c1"># in a ax consistently. </span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">pp_hal_meta</span><span class="o">.</span><span class="n">region</span> <span class="o">=</span> <span class="n">smp</span><span class="o">.</span><span class="n">set_region</span><span class="p">(</span><span class="n">xr</span> <span class="o">=</span> <span class="p">(</span><span class="n">xmin</span><span class="p">,</span> <span class="n">xmin</span><span class="o">+</span><span class="n">xspan</span><span class="p">),</span>
+                                                <span class="n">yr</span> <span class="o">=</span> <span class="p">(</span><span class="n">ymin</span><span class="p">,</span> <span class="n">ymin</span><span class="o">+</span><span class="n">yspan</span><span class="p">),</span>
+                                                <span class="n">zr</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="n">e9</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;# of halos to plot:&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">ind</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">xmin</span><span class="p">,</span> <span class="n">ymin</span><span class="p">,</span> <span class="n">xspan</span><span class="p">,</span> <span class="n">yspan</span><span class="p">,</span> <span class="n">npix</span><span class="p">,</span> <span class="n">rscale</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">color_field</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1">#colors = hd[color_field][ind]</span>
+        <span class="c1"># normalize!</span>
+        <span class="c1"># If ax is given, decide whether to keep colormap range or update.</span>
+        <span class="c1"># Of course, this does not modify patches already added to the ax.</span>
+        <span class="k">if</span> <span class="n">color_log</span><span class="p">:</span>
+            <span class="n">ccc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">hd</span><span class="p">[</span><span class="n">color_field</span><span class="p">][</span><span class="n">ind</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ccc</span> <span class="o">=</span> <span class="n">hd</span><span class="p">[</span><span class="n">color_field</span><span class="p">][</span><span class="n">ind</span><span class="p">]</span>
+        <span class="c1"># normalize colors</span>
+        <span class="n">ccc</span> <span class="o">=</span> <span class="mi">256</span> <span class="o">*</span> <span class="p">(</span><span class="n">ccc</span><span class="o">-</span><span class="n">ccc</span><span class="o">.</span><span class="n">min</span><span class="p">())</span> <span class="o">/</span><span class="n">ccc</span><span class="o">.</span><span class="n">ptp</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="s2">&quot;clim&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">keep_clim</span><span class="p">):</span>
+            <span class="c1">#ax.clim=None</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">clim</span> <span class="o">=</span> <span class="n">ccc</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">ccc</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+                    
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;MinMax ccc&quot;</span><span class="p">,</span> <span class="n">ccc</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">ccc</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
+        <span class="n">kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;colors&quot;</span><span class="p">:</span> <span class="n">ccc</span><span class="p">})</span>
+    <span class="c1">#else:</span>
+        <span class="c1">#kwargs.update({&quot;colors&quot;: None})</span>
+    <span class="n">pp</span><span class="o">.</span><span class="n">circle_scatter</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">facecolors</span><span class="o">=</span><span class="s1">&#39;none&#39;</span><span class="p">,</span>
+                      <span class="n">linewidth</span><span class="o">=</span><span class="n">linewidth</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">([</span><span class="nb">min</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">x</span><span class="p">)])</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">([</span><span class="nb">min</span><span class="p">(</span><span class="n">y</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">y</span><span class="p">)])</span>
+    <span class="k">if</span> <span class="n">name</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ind</span><span class="p">):</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">hd</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">][</span><span class="n">ii</span><span class="p">]),</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span>
+                              <span class="n">fontsize</span><span class="o">=</span><span class="n">fontsize</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ax</span></div>
+
+
+<div class="viewcode-block" id="resize"><a class="viewcode-back" href="../../draw.html#draw.pp.resize">[docs]</a><span class="k">def</span> <span class="nf">resize</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">shape</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    resizes N-D array X into shape.</span>
+<span class="sd">    For example,</span>
+<span class="sd">    2D 100 * 100 array -&gt; 200 * 200</span>
+<span class="sd">    new = resize(img, [200,200])</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+    <span class="k">if</span> <span class="n">shape</span><span class="o">==</span><span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">X</span>
+    <span class="n">m</span><span class="p">,</span><span class="n">n</span> <span class="o">=</span> <span class="n">shape</span>
+<span class="c1">#    print(shape)</span>
+<span class="c1">#    print(m,n)</span>
+    <span class="n">Y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">m</span><span class="p">,</span><span class="n">n</span><span class="p">),</span><span class="n">dtype</span><span class="o">=</span><span class="nb">type</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]))</span>
+    <span class="n">k</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+    <span class="n">p</span><span class="p">,</span><span class="n">q</span> <span class="o">=</span> <span class="n">k</span><span class="o">/</span><span class="n">m</span><span class="p">,</span><span class="n">k</span><span class="o">/</span><span class="n">n</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">m</span><span class="p">):</span>
+        <span class="n">Y</span><span class="p">[</span><span class="n">i</span><span class="p">,:]</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="n">i</span><span class="o">*</span><span class="n">p</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">int_</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="o">*</span><span class="n">q</span><span class="p">)]</span>
+    <span class="k">return</span> <span class="n">Y</span></div>
+
+
+<div class="viewcode-block" id="pp_colden"><a class="viewcode-back" href="../../draw.html#draw.pp.pp_colden">[docs]</a><span class="k">def</span> <span class="nf">pp_colden</span><span class="p">(</span><span class="n">cell</span><span class="p">,</span> <span class="n">npix</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">proj</span><span class="o">=</span><span class="s2">&quot;z&quot;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">autosize</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Warning</span>
+<span class="sd">    -------</span>
+<span class="sd">    incomplete. </span>
+<span class="sd">    column density is simpler (no need to divide by projected mass.)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="c1">#    xh = np.asarray([0.5, 0.5, 0.5])</span>
+    <span class="n">hvar</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">sig</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="n">sigrange</span> <span class="o">=</span> <span class="n">sig</span> <span class="o">*</span> <span class="mi">2</span><span class="c1"># what is sigrange?</span>
+
+    <span class="n">x</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">x</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">y</span>
+<span class="c1">#    z = cell.z</span>
+<span class="c1">#    di = [0, 1]  # What is this?</span>
+<span class="c1">#    zh = xh[2]  # what is this?</span>
+
+    <span class="c1"># range</span>
+    <span class="n">xmi0</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">xma0</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">ymi0</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+    <span class="n">yma0</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+    <span class="n">xl</span> <span class="o">=</span> <span class="n">x</span> <span class="o">-</span> <span class="n">cell</span><span class="o">.</span><span class="n">dx</span><span class="o">/</span><span class="mi">2</span><span class="o">*</span><span class="n">sigrange</span> <span class="c1"># array as long as x</span>
+    <span class="n">xr</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="n">cell</span><span class="o">.</span><span class="n">dx</span><span class="o">/</span><span class="mi">2</span><span class="o">*</span><span class="n">sigrange</span>
+    <span class="n">yl</span> <span class="o">=</span> <span class="n">y</span> <span class="o">-</span> <span class="n">cell</span><span class="o">.</span><span class="n">dx</span><span class="o">/</span><span class="mi">2</span><span class="o">*</span><span class="n">sigrange</span>
+    <span class="n">yr</span> <span class="o">=</span> <span class="n">y</span> <span class="o">+</span> <span class="n">cell</span><span class="o">.</span><span class="n">dx</span><span class="o">/</span><span class="mi">2</span><span class="o">*</span><span class="n">sigrange</span>
+
+    <span class="n">maxdx</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">cell</span><span class="o">.</span><span class="n">dx</span><span class="p">)</span>
+
+<span class="c1"># Assuming no slice.</span>
+    <span class="n">tol</span> <span class="o">=</span> <span class="n">maxdx</span> <span class="c1">#</span>
+    <span class="n">val</span><span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">xr</span> <span class="o">&gt;=</span> <span class="n">xmi0</span><span class="o">-</span><span class="n">tol</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">xl</span> <span class="o">&lt;=</span> <span class="n">xma0</span><span class="o">+</span><span class="n">tol</span><span class="p">)</span> <span class="o">&amp;</span>
+                  <span class="p">(</span><span class="n">yr</span> <span class="o">&gt;=</span> <span class="n">ymi0</span><span class="o">-</span><span class="n">tol</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">yl</span> <span class="o">&lt;=</span> <span class="n">yma0</span><span class="o">+</span><span class="n">tol</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+
+<span class="c1"># Check for valid cell existing.</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No cell is selected&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="n">scale_d</span> <span class="o">=</span> <span class="n">info</span><span class="o">.</span><span class="n">unit_d</span>
+    <span class="n">scale_l</span> <span class="o">=</span> <span class="n">info</span><span class="o">.</span><span class="n">unit_l</span>
+<span class="c1">#    scale_nH = info.unit_nH</span>
+    <span class="n">scale_T2</span> <span class="o">=</span> <span class="n">info</span><span class="o">.</span><span class="n">unit_T2</span>
+
+    <span class="n">dx</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">dx</span><span class="p">[</span><span class="n">val</span><span class="p">]</span>
+
+<span class="c1"># No max, no column</span>
+    <span class="c1"># mass/L**2 = rho*L</span>
+    <span class="c1"># sden differs with hydro variable type.</span>
+    <span class="k">if</span> <span class="n">hvar</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">sden</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">var0</span><span class="p">[</span><span class="n">val</span><span class="p">]</span><span class="o">*</span><span class="n">dx</span><span class="o">*</span><span class="p">(</span><span class="n">scale_d</span><span class="o">*</span><span class="n">scale_l</span><span class="p">)</span><span class="o">*</span><span class="mf">0.76</span><span class="o">/</span><span class="mf">1.66e-24</span>
+        <span class="c1">#sden = cell.var0[val]**2*dx*scale_nH</span>
+    <span class="k">if</span> <span class="n">hvar</span> <span class="o">==</span> <span class="mi">5</span><span class="p">:</span>
+        <span class="n">sden</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">var4</span><span class="p">[</span><span class="n">val</span><span class="p">]</span><span class="o">*</span><span class="n">scale_T2</span>
+    <span class="k">if</span> <span class="n">hvar</span> <span class="o">==</span> <span class="mi">6</span><span class="p">:</span>
+        <span class="n">sden</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">var0</span><span class="p">[</span><span class="n">val</span><span class="p">]</span><span class="o">*</span><span class="n">dx</span><span class="o">*</span><span class="n">cell</span><span class="o">.</span><span class="n">var5</span><span class="p">[</span><span class="n">val</span><span class="p">]</span><span class="o">/</span><span class="mf">0.02</span>
+<span class="c1">#    mass = cell.var0[val]*dx</span>
+
+    <span class="n">mindx</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">dx</span><span class="p">)</span>
+
+    <span class="n">xmi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">xmi0</span><span class="o">/</span><span class="n">mindx</span><span class="p">)</span><span class="o">*</span><span class="n">mindx</span>
+    <span class="n">xma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">xma0</span><span class="o">/</span><span class="n">mindx</span><span class="p">)</span><span class="o">*</span><span class="n">mindx</span>
+    <span class="n">nx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">((</span><span class="n">xma</span><span class="o">-</span><span class="n">xmi</span><span class="o">-</span><span class="n">mindx</span><span class="p">)</span><span class="o">/</span><span class="n">mindx</span><span class="p">)</span>
+
+    <span class="n">ymi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">ymi0</span><span class="o">/</span><span class="n">mindx</span><span class="p">)</span><span class="o">*</span><span class="n">mindx</span>
+    <span class="n">yma</span> <span class="o">=</span> <span class="n">ymi</span> <span class="o">+</span> <span class="n">mindx</span><span class="o">*</span><span class="n">nx</span> <span class="o">+</span> <span class="n">mindx</span>
+    <span class="n">ny</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">((</span><span class="n">yma</span><span class="o">-</span><span class="n">ymi</span><span class="o">-</span><span class="n">mindx</span><span class="p">)</span><span class="o">/</span><span class="n">mindx</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot; ... working resolution % npix &quot;</span><span class="p">,</span> <span class="n">nx</span><span class="p">,</span> <span class="n">ny</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot; ... given npix:&quot;</span><span class="p">,</span> <span class="n">npix</span><span class="p">)</span>
+
+    <span class="c1"># adjust npix (IDL Line 173)</span>
+
+    <span class="n">dx_dot</span> <span class="o">=</span> <span class="p">(</span><span class="n">xma0</span><span class="o">-</span><span class="n">xmi0</span><span class="p">)</span><span class="o">/</span><span class="n">npix</span>
+<span class="c1">#    lv_skip = np.floor(-1. * np.log10(dx_dot)/np.log10(2)) - 1</span>
+    <span class="c1"># Assum no smoothing.</span>
+
+    <span class="n">ixmi</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">xmi</span><span class="o">/</span><span class="n">mindx</span><span class="p">)</span>
+    <span class="n">iymi</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">ymi</span><span class="o">/</span><span class="n">mindx</span><span class="p">)</span>
+
+    <span class="n">xl</span>   <span class="o">=</span> <span class="n">xl</span><span class="p">[</span><span class="n">val</span><span class="p">]</span>
+    <span class="n">xr</span>   <span class="o">=</span> <span class="n">xr</span><span class="p">[</span><span class="n">val</span><span class="p">]</span>
+    <span class="n">yl</span>   <span class="o">=</span> <span class="n">yl</span><span class="p">[</span><span class="n">val</span><span class="p">]</span>
+    <span class="n">yr</span>   <span class="o">=</span> <span class="n">yr</span><span class="p">[</span><span class="n">val</span><span class="p">]</span>
+
+    <span class="n">ixl</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">xl</span> <span class="o">/</span> <span class="n">mindx</span><span class="p">)</span> <span class="o">-</span> <span class="n">ixmi</span>
+    <span class="n">ixr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">xr</span> <span class="o">/</span> <span class="n">mindx</span><span class="p">)</span> <span class="o">-</span> <span class="n">ixmi</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="n">iyl</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">yl</span> <span class="o">/</span> <span class="n">mindx</span><span class="p">)</span> <span class="o">-</span> <span class="n">iymi</span>
+    <span class="n">iyr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">yr</span> <span class="o">/</span> <span class="n">mindx</span><span class="p">)</span> <span class="o">-</span> <span class="n">iymi</span> <span class="o">-</span><span class="mi">1</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    fd = np.where(ixl &lt; 0)[0]</span>
+<span class="sd">    if len(fd) &gt; 0:</span>
+<span class="sd">        ixl[fd] = 0</span>
+<span class="sd">    fd = np.where(ixr &gt; nx - 1)[0]</span>
+<span class="sd">    if len(fd) &gt; 0:</span>
+<span class="sd">        ixr[fd] = nx -1</span>
+<span class="sd">        fd = np.where(ixl &lt; 0)[0]</span>
+<span class="sd">    if len(fd) &gt; 0:</span>
+<span class="sd">        ixl[fd] = 0</span>
+<span class="sd">    fd = np.where(ixl &lt; 0)[0]</span>
+<span class="sd">    if len(fd) &gt; 0:</span>
+<span class="sd">        ixl[fd] = 0</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ixl</span><span class="p">[</span><span class="n">ixl</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">ixr</span><span class="p">[</span><span class="n">ixr</span> <span class="o">&gt;</span> <span class="n">nx</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">nx</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="n">iyl</span><span class="p">[</span><span class="n">iyl</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">iyr</span><span class="p">[</span><span class="n">iyr</span> <span class="o">&gt;</span> <span class="n">ny</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">ny</span> <span class="o">-</span><span class="mi">1</span>
+
+    <span class="n">fd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">ixl</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">ixr</span> <span class="o">&gt;=</span><span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">ixl</span> <span class="o">&gt;</span> <span class="n">ixr</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">fd</span><span class="p">):</span>
+        <span class="n">ixr</span><span class="p">[</span><span class="n">fd</span><span class="p">]</span> <span class="o">=</span> <span class="n">ixl</span><span class="p">[</span><span class="n">fd</span><span class="p">]</span>
+    <span class="n">fd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">iyl</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">iyr</span> <span class="o">&gt;=</span><span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">iyl</span> <span class="o">&gt;</span> <span class="n">iyr</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">fd</span><span class="p">):</span>
+        <span class="n">iyr</span><span class="p">[</span><span class="n">fd</span><span class="p">]</span> <span class="o">=</span> <span class="n">iyl</span><span class="p">[</span><span class="n">fd</span><span class="p">]</span>
+
+<span class="c1">#    mass.transpose()</span>
+    <span class="n">sden</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span>
+<span class="c1">#    print(&quot;shape of sden&quot;, sden.shape)</span>
+<span class="c1">#    finalmap = ppc.col_over_denom(iin, ixl, ixr, iyl, iyr, mass, sden, nx, ny)</span>
+    
+    <span class="c1"># original size != npix * npix. </span>
+    <span class="c1"># rescale it to npix * npix image. </span>
+    <span class="k">return</span><span class="p">(</span><span class="n">resize</span><span class="p">(</span><span class="n">sden</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">npix</span><span class="p">,</span><span class="n">npix</span><span class="p">),</span> <span class="p">[</span><span class="n">npix</span><span class="p">,</span><span class="n">npix</span><span class="p">]))</span></div>
+
+
+<div class="viewcode-block" id="pp_cell"><a class="viewcode-back" href="../../draw.html#draw.pp.pp_cell">[docs]</a><span class="k">def</span> <span class="nf">pp_cell</span><span class="p">(</span><span class="n">cell</span><span class="p">,</span> <span class="n">npix</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">proj</span><span class="o">=</span><span class="s2">&quot;z&quot;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">autosize</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">column</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">region</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">xmin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">xmax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ymin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ymax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">hvar</span><span class="o">=</span><span class="s2">&quot;rho&quot;</span><span class="p">,</span> <span class="n">field_var</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Accepts cell data and returns 2D projected gas map.</span>
+<span class="sd">     *position and dx must be in the same unit.</span>
+
+<span class="sd">    example</span>
+<span class="sd">    -------</span>
+<span class="sd">    &gt;&gt;&gt; gas_map = pp_cell(gal.cell, 200, info)</span>
+<span class="sd">    &gt;&gt;&gt; plt.imshow(gas_map, origin=&quot;lower&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; plt.show()</span>
+<span class="sd">    -&gt; Without range or region, all cells are taken. </span>
+
+<span class="sd">    &gt;&gt;&gt; region = smp.set_region(centers=[0.,0.,0.], radius=gal.region[&#39;radius&#39;])</span>
+<span class="sd">    &gt;&gt;&gt; gas_map = pp_cell(gal.cell, 200, info, region=region)</span>
+<span class="sd">    -&gt; cells only inside the region are taken into account.</span>
+<span class="sd">       *It&#39;s a cubic region, not a sphere.</span>
+
+
+<span class="sd">    Note</span>
+<span class="sd">    ----</span>
+<span class="sd">    To do: Currently only column sum is supported. maximum value along the column, or column average option are needed.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+    <span class="kn">from</span> <span class="nn">draw</span> <span class="k">import</span> <span class="n">ppc</span>
+    
+
+    <span class="n">sig</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="n">sigrange</span> <span class="o">=</span> <span class="n">sig</span> <span class="o">*</span> <span class="mi">2</span><span class="c1"># what is sigrange?</span>
+
+    <span class="n">x</span> <span class="o">=</span> <span class="n">cell</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">cell</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">]</span>
+<span class="c1">#    z = cell.z</span>
+<span class="c1">#    di = [0, 1]  # What is this?</span>
+<span class="c1">#    zh = xh[2]  # what is this?</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">xmin</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">xmax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">ymin</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">ymax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span> 
+        <span class="k">if</span> <span class="n">region</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">xmi0</span><span class="p">,</span> <span class="n">xma0</span> <span class="o">=</span> <span class="n">region</span><span class="p">[</span><span class="s1">&#39;xr&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">region</span><span class="p">[</span><span class="s1">&#39;xr&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">ymi0</span><span class="p">,</span> <span class="n">yma0</span> <span class="o">=</span> <span class="n">region</span><span class="p">[</span><span class="s1">&#39;yr&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">region</span><span class="p">[</span><span class="s1">&#39;yr&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">xmi0</span><span class="p">,</span> <span class="n">xma0</span><span class="p">,</span> <span class="n">ymi0</span><span class="p">,</span> <span class="n">yma0</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="nb">min</span><span class="p">(</span><span class="n">y</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">xmi0</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">xmi0</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">xma0</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">xma0</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>        
+    <span class="k">if</span> <span class="n">ymi0</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">ymi0</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">yma0</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">yma0</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+       
+    <span class="n">xl</span> <span class="o">=</span> <span class="n">x</span> <span class="o">-</span> <span class="n">cell</span><span class="p">[</span><span class="s1">&#39;dx&#39;</span><span class="p">]</span><span class="o">/</span><span class="mi">2</span><span class="o">*</span><span class="n">sigrange</span> <span class="c1"># array as long as x</span>
+    <span class="n">xr</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="n">cell</span><span class="p">[</span><span class="s1">&#39;dx&#39;</span><span class="p">]</span><span class="o">/</span><span class="mi">2</span><span class="o">*</span><span class="n">sigrange</span>
+    <span class="n">yl</span> <span class="o">=</span> <span class="n">y</span> <span class="o">-</span> <span class="n">cell</span><span class="p">[</span><span class="s1">&#39;dx&#39;</span><span class="p">]</span><span class="o">/</span><span class="mi">2</span><span class="o">*</span><span class="n">sigrange</span>
+    <span class="n">yr</span> <span class="o">=</span> <span class="n">y</span> <span class="o">+</span> <span class="n">cell</span><span class="p">[</span><span class="s1">&#39;dx&#39;</span><span class="p">]</span><span class="o">/</span><span class="mi">2</span><span class="o">*</span><span class="n">sigrange</span>
+
+    <span class="n">maxdx</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">cell</span><span class="p">[</span><span class="s1">&#39;dx&#39;</span><span class="p">])</span>
+
+<span class="c1"># Assuming no slice.</span>
+    <span class="n">tol</span> <span class="o">=</span> <span class="n">maxdx</span> <span class="c1">#</span>
+    <span class="n">val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">xr</span> <span class="o">&gt;=</span> <span class="n">xmi0</span><span class="o">-</span><span class="n">tol</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">xl</span> <span class="o">&lt;=</span> <span class="n">xma0</span><span class="o">+</span><span class="n">tol</span><span class="p">)</span> <span class="o">&amp;</span>
+                  <span class="p">(</span><span class="n">yr</span> <span class="o">&gt;=</span> <span class="n">ymi0</span><span class="o">-</span><span class="n">tol</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">yl</span> <span class="o">&lt;=</span> <span class="n">yma0</span><span class="o">+</span><span class="n">tol</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+
+<span class="c1"># Check for valid cell existing.</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No cell is selected&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="n">scale_d</span> <span class="o">=</span> <span class="n">info</span><span class="o">.</span><span class="n">unit_d</span>
+    <span class="n">scale_l</span> <span class="o">=</span> <span class="n">info</span><span class="o">.</span><span class="n">unit_l</span>
+    <span class="n">scale_nH</span> <span class="o">=</span> <span class="n">info</span><span class="o">.</span><span class="n">unit_nH</span>
+    <span class="n">scale_T2</span> <span class="o">=</span> <span class="n">info</span><span class="o">.</span><span class="n">unit_T2</span>
+
+    <span class="n">dx</span> <span class="o">=</span> <span class="n">cell</span><span class="p">[</span><span class="s2">&quot;dx&quot;</span><span class="p">][</span><span class="n">val</span><span class="p">]</span>
+
+<span class="c1"># No max, no column</span>
+    <span class="c1"># mass/L**2 = rho*L</span>
+    <span class="c1"># sden differs with hydro variable type.</span>
+
+    <span class="k">if</span> <span class="n">column</span><span class="p">:</span>
+        <span class="n">sden</span> <span class="o">=</span> <span class="n">cell</span><span class="p">[</span><span class="n">hvar</span><span class="p">][</span><span class="n">val</span><span class="p">]</span><span class="o">*</span><span class="n">dx</span><span class="o">*</span><span class="p">(</span><span class="n">scale_d</span><span class="o">*</span><span class="n">scale_l</span><span class="p">)</span><span class="o">*</span><span class="mf">0.76</span><span class="o">/</span><span class="mf">1.66e-24</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">field_var</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">hvar</span> <span class="o">==</span> <span class="s2">&quot;rho&quot;</span><span class="p">:</span>
+                <span class="n">hvar</span> <span class="o">=</span> <span class="s2">&quot;var0&quot;</span>
+                <span class="n">sden</span> <span class="o">=</span> <span class="n">cell</span><span class="p">[</span><span class="n">hvar</span><span class="p">][</span><span class="n">val</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">dx</span><span class="o">*</span><span class="n">scale_nH</span>
+            <span class="k">if</span> <span class="n">hvar</span> <span class="o">==</span> <span class="s2">&quot;temp&quot;</span><span class="p">:</span>
+                <span class="n">sden</span> <span class="o">=</span> <span class="n">cell</span><span class="p">[</span><span class="s2">&quot;var4&quot;</span><span class="p">][</span><span class="n">val</span><span class="p">]</span><span class="o">*</span><span class="n">scale_T2</span>
+            <span class="k">if</span> <span class="n">hvar</span> <span class="o">==</span> <span class="s2">&quot;metal&quot;</span><span class="p">:</span>
+                <span class="n">sden</span> <span class="o">=</span> <span class="n">cell</span><span class="p">[</span><span class="s2">&quot;var5&quot;</span><span class="p">][</span><span class="n">val</span><span class="p">]</span><span class="o">*</span><span class="n">dx</span><span class="o">*</span><span class="n">cell</span><span class="o">.</span><span class="n">var5</span><span class="p">[</span><span class="n">val</span><span class="p">]</span><span class="o">/</span><span class="mf">0.02</span>            
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sden</span> <span class="o">=</span> <span class="n">cell</span><span class="p">[</span><span class="n">field_var</span><span class="p">][</span><span class="n">val</span><span class="p">]</span>
+
+    <span class="n">mass</span> <span class="o">=</span> <span class="n">cell</span><span class="p">[</span><span class="s2">&quot;var0&quot;</span><span class="p">][</span><span class="n">val</span><span class="p">]</span><span class="o">*</span><span class="n">dx</span>
+    <span class="n">mass</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span>
+
+    <span class="n">mindx</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">dx</span><span class="p">)</span>
+
+    <span class="n">xmi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">xmi0</span><span class="o">/</span><span class="n">mindx</span><span class="p">)</span><span class="o">*</span><span class="n">mindx</span>
+    <span class="n">xma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">xma0</span><span class="o">/</span><span class="n">mindx</span><span class="p">)</span><span class="o">*</span><span class="n">mindx</span>
+    <span class="n">nx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">((</span><span class="n">xma</span><span class="o">-</span><span class="n">xmi</span><span class="o">-</span><span class="n">mindx</span><span class="p">)</span><span class="o">/</span><span class="n">mindx</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+
+    <span class="n">ymi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">ymi0</span><span class="o">/</span><span class="n">mindx</span><span class="p">)</span><span class="o">*</span><span class="n">mindx</span>
+    <span class="n">yma</span> <span class="o">=</span> <span class="n">ymi</span> <span class="o">+</span> <span class="n">mindx</span><span class="o">*</span><span class="n">nx</span> <span class="o">+</span> <span class="n">mindx</span>
+    <span class="n">ny</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">((</span><span class="n">yma</span><span class="o">-</span><span class="n">ymi</span><span class="o">-</span><span class="n">mindx</span><span class="p">)</span><span class="o">/</span><span class="n">mindx</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot; ... working resolution % npix &quot;</span><span class="p">,</span> <span class="n">nx</span><span class="p">,</span> <span class="n">ny</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot; ... given npix:&quot;</span><span class="p">,</span> <span class="n">npix</span><span class="p">)</span>
+    <span class="c1"># adjust npix (IDL Line 173)</span>
+
+    <span class="c1">#dx_dot = (xma0-xmi0)/npix</span>
+<span class="c1">#    lv_skip = np.floor(-1. * np.log10(dx_dot)/np.log10(2)) - 1</span>
+    <span class="c1"># Assum no smoothing.</span>
+    <span class="n">ixmi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">xmi</span><span class="o">/</span><span class="n">mindx</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span> <span class="c1"># int</span>
+    <span class="n">iymi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">ymi</span><span class="o">/</span><span class="n">mindx</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+
+    <span class="n">xl</span>   <span class="o">=</span> <span class="n">xl</span><span class="p">[</span><span class="n">val</span><span class="p">]</span>
+    <span class="n">xr</span>   <span class="o">=</span> <span class="n">xr</span><span class="p">[</span><span class="n">val</span><span class="p">]</span>
+    <span class="n">yl</span>   <span class="o">=</span> <span class="n">yl</span><span class="p">[</span><span class="n">val</span><span class="p">]</span>
+    <span class="n">yr</span>   <span class="o">=</span> <span class="n">yr</span><span class="p">[</span><span class="n">val</span><span class="p">]</span>
+
+    <span class="n">ixl</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">xl</span> <span class="o">/</span> <span class="n">mindx</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span> <span class="o">-</span> <span class="n">ixmi</span>
+    <span class="n">ixr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">xr</span> <span class="o">/</span> <span class="n">mindx</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span> <span class="o">-</span> <span class="n">ixmi</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="n">iyl</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">yl</span> <span class="o">/</span> <span class="n">mindx</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span> <span class="o">-</span> <span class="n">iymi</span>
+    <span class="n">iyr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">yr</span> <span class="o">/</span> <span class="n">mindx</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span> <span class="o">-</span> <span class="n">iymi</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="n">iin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">ixr</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">ixl</span> <span class="o">&lt;=</span> <span class="n">nx</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">iyr</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">iyl</span> <span class="o">&lt;=</span> <span class="n">ny</span><span class="o">-</span><span class="mi">1</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+    <span class="c1"># What does it mean?</span>
+    
+    <span class="n">fd</span> <span class="o">=</span> <span class="n">ixl</span> <span class="o">&lt;</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">ixl</span><span class="p">[</span><span class="n">fd</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">fd</span> <span class="o">=</span> <span class="n">ixr</span> <span class="o">&gt;</span> <span class="n">nx</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">ixr</span><span class="p">[</span><span class="n">fd</span><span class="p">]</span> <span class="o">=</span> <span class="n">nx</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="n">fd</span> <span class="o">=</span> <span class="n">ixl</span> <span class="o">&lt;</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">ixl</span><span class="p">[</span><span class="n">fd</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">fd</span> <span class="o">=</span> <span class="n">ixl</span> <span class="o">&lt;</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">ixl</span><span class="p">[</span><span class="n">fd</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    
+    <span class="n">ixl</span><span class="p">[</span><span class="n">ixl</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">ixr</span><span class="p">[</span><span class="n">ixr</span> <span class="o">&gt;</span> <span class="n">nx</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">nx</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="n">iyl</span><span class="p">[</span><span class="n">iyl</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">iyr</span><span class="p">[</span><span class="n">iyr</span> <span class="o">&gt;</span> <span class="n">ny</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">ny</span> <span class="o">-</span><span class="mi">1</span>
+
+    <span class="n">fd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">ixl</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">ixr</span> <span class="o">&gt;=</span><span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">ixl</span> <span class="o">&gt;</span> <span class="n">ixr</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">fd</span><span class="p">):</span>
+        <span class="n">ixr</span><span class="p">[</span><span class="n">fd</span><span class="p">]</span> <span class="o">=</span> <span class="n">ixl</span><span class="p">[</span><span class="n">fd</span><span class="p">]</span>
+    <span class="n">fd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">iyl</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">iyr</span> <span class="o">&gt;=</span><span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">iyl</span> <span class="o">&gt;</span> <span class="n">iyr</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">fd</span><span class="p">):</span>
+        <span class="n">iyr</span><span class="p">[</span><span class="n">fd</span><span class="p">]</span> <span class="o">=</span> <span class="n">iyl</span><span class="p">[</span><span class="n">fd</span><span class="p">]</span>
+    
+<span class="c1">#    sden.transpose()</span>
+<span class="c1">#    colden = np.zeros((nx,ny), dtype=np.float32)</span>
+<span class="c1">#    denom =  np.zeros((nx,ny), dtype=np.float32)</span>
+
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;dimensions of </span><span class="se">\n</span><span class="s2"> mass = </span><span class="si">{}</span><span class="s2">, </span><span class="se">\n</span><span class="s2"> sden = </span><span class="si">{}</span><span class="s2">, and nx, ny are </span><span class="si">{}</span><span class="s2">, </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>\
+        <span class="n">mass</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">sden</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">nx</span><span class="p">,</span> <span class="n">ny</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="nb">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">mass</span><span class="p">)),</span> <span class="nb">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">sden</span><span class="p">)))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">mass</span><span class="p">[</span><span class="mi">100</span><span class="p">:</span><span class="mi">110</span><span class="p">])</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">sden</span><span class="p">[</span><span class="mi">100</span><span class="p">:</span><span class="mi">110</span><span class="p">])</span>
+        
+    <span class="c1">#print(nx, ny, npix)</span>
+    <span class="c1"># if ppc.col_over_denom throw an type missmatch error,</span>
+    <span class="c1"># compile the ppc module locally once more.</span>
+    <span class="k">return</span> <span class="n">resize</span><span class="p">(</span><span class="n">ppc</span><span class="o">.</span><span class="n">col_over_denom</span><span class="p">(</span><span class="n">iin</span><span class="p">,</span>
+            <span class="n">ixl</span><span class="p">,</span> <span class="n">ixr</span><span class="p">,</span> <span class="n">iyl</span><span class="p">,</span> <span class="n">iyr</span><span class="p">,</span>
+            <span class="n">mass</span><span class="p">,</span> <span class="n">sden</span><span class="p">,</span>
+            <span class="n">nx</span><span class="p">,</span> <span class="n">ny</span><span class="p">,</span> <span class="n">column</span><span class="p">),</span> <span class="p">[</span><span class="n">npix</span><span class="p">,</span><span class="n">npix</span><span class="p">])</span></div>
+
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">pyclusterevol -0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2016, Hoseung.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.8.
+    </div>
+  </body>
+</html>

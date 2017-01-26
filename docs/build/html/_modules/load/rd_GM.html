@@ -1,0 +1,577 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>load.rd_GM &#8212; pyclusterevol -0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '-0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="top" title="pyclusterevol -0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">pyclusterevol -0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for load.rd_GM</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Thu Mar 10 04:50:37 2016</span>
+
+<span class="sd">Inherits galaxy.Galaxy class</span>
+
+<span class="sd">@author: hoseung</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">load.utils</span> <span class="k">import</span> <span class="n">read_header</span><span class="p">,</span> <span class="n">read_fortran</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">galaxy.galaxy</span> <span class="k">import</span> <span class="n">Galaxy</span>
+
+
+<div class="viewcode-block" id="Header"><a class="viewcode-back" href="../../load.html#load.rd_GM.Header">[docs]</a><span class="k">class</span> <span class="nc">Header</span><span class="p">():</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nout</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gid</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hid</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span></div>
+        
+
+<div class="viewcode-block" id="Units"><a class="viewcode-back" href="../../load.html#load.rd_GM.Units">[docs]</a><span class="k">class</span> <span class="nc">Units</span><span class="p">():</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">=</span><span class="s2">&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">position</span> <span class="o">=</span><span class="s2">&quot;&quot;</span> <span class="c1"># code, center, galaxy</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">velocity</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">density</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+<span class="c1">#        self.unit_system = &quot;cgs&quot;</span>
+  
+<div class="viewcode-block" id="Units.set_system"><a class="viewcode-back" href="../../load.html#load.rd_GM.Units.set_system">[docs]</a>    <span class="k">def</span> <span class="nf">set_system</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">=</span><span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">position</span> <span class="o">=</span><span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">velocity</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">density</span> <span class="o">=</span> <span class="n">name</span></div></div>
+        
+
+<div class="viewcode-block" id="Dummy"><a class="viewcode-back" href="../../load.html#load.rd_GM.Dummy">[docs]</a><span class="k">class</span> <span class="nc">Dummy</span><span class="p">():</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="Gal"><a class="viewcode-back" href="../../load.html#load.rd_GM.Gal">[docs]</a><span class="k">class</span> <span class="nc">Gal</span><span class="p">(</span><span class="n">Galaxy</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nout</span><span class="p">,</span> <span class="n">idgal</span><span class="p">,</span> <span class="n">wdir</span><span class="o">=</span><span class="s1">&#39;./&#39;</span><span class="p">,</span> <span class="n">idhal</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">load</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">info</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rscale</span><span class="o">=</span><span class="mf">1.5</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        load : logical (Default = True)</span>
+<span class="sd">            load avaialable (star, dm, cell) data on creating an instance.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Gal</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">star</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1"># data -&gt; star</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">header</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dm</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nout</span> <span class="o">=</span> <span class="n">nout</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gid</span> <span class="o">=</span> <span class="n">idgal</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hid</span> <span class="o">=</span> <span class="n">idhal</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">units</span> <span class="o">=</span> <span class="n">Dummy</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="o">.</span><span class="n">star</span> <span class="o">=</span> <span class="n">Units</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="o">.</span><span class="n">dm</span> <span class="o">=</span> <span class="n">Units</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="o">.</span><span class="n">cell</span> <span class="o">=</span> <span class="n">Units</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="o">.</span><span class="n">header</span> <span class="o">=</span> <span class="n">Units</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wdir</span> <span class="o">=</span> <span class="n">wdir</span>
+        <span class="c1">#self.info = Dummy()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_info</span><span class="p">(</span><span class="n">info</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rscale</span><span class="o">=</span><span class="n">rscale</span>
+        <span class="k">if</span> <span class="n">load</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">load</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_check_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">,</span> <span class="s2">&quot;unit_l&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_minimal_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">info</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        exclude method.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">keep_list</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;msun&quot;</span><span class="p">,</span> <span class="s2">&quot;unit_Z&quot;</span><span class="p">,</span> <span class="s2">&quot;unit_l&quot;</span><span class="p">,</span> <span class="s2">&quot;unit_d&quot;</span><span class="p">,</span> <span class="s2">&quot;unit_t&quot;</span><span class="p">,</span> <span class="s2">&quot;unit_v&quot;</span><span class="p">,</span>\
+                   <span class="s2">&quot;unit_T2&quot;</span><span class="p">,</span> <span class="s2">&quot;pboxsize&quot;</span><span class="p">,</span><span class="s2">&quot;kms&quot;</span><span class="p">,</span><span class="s2">&quot;unit_nH&quot;</span><span class="p">,</span>\
+                   <span class="s2">&quot;base&quot;</span><span class="p">,</span> <span class="s2">&quot;nout&quot;</span><span class="p">,</span> <span class="s2">&quot;aexp&quot;</span><span class="p">,</span><span class="s2">&quot;zred&quot;</span><span class="p">,</span><span class="s2">&quot;h&quot;</span><span class="p">,</span><span class="s2">&quot;H0&quot;</span><span class="p">,</span><span class="s2">&quot;time&quot;</span><span class="p">,</span>\
+                   <span class="s2">&quot;ob&quot;</span><span class="p">,</span><span class="s2">&quot;ol&quot;</span><span class="p">,</span><span class="s2">&quot;om&quot;</span><span class="p">,</span><span class="s2">&quot;tGyr&quot;</span><span class="p">,</span><span class="s2">&quot;unit_flux&quot;</span><span class="p">,</span><span class="s2">&quot;boxtokpc&quot;</span><span class="p">]</span>
+<span class="c1">#        if self.info is None:</span>
+<span class="c1">#            self.info = Dummy()</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">info</span><span class="o">.</span><span class="n">__dict__</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">keep_list</span><span class="p">:</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
+<span class="c1">#                print(self.info.unit_d)</span>
+
+<div class="viewcode-block" id="Gal.set_info"><a class="viewcode-back" href="../../load.html#load.rd_GM.Gal.set_info">[docs]</a>    <span class="k">def</span> <span class="nf">set_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">info</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">info</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">load.info</span> <span class="k">import</span> <span class="n">Info</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">info</span> <span class="o">=</span> <span class="n">Info</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nout</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">wdir</span><span class="p">)</span></div>
+        <span class="c1">#self._get_minimal_info(info) </span>
+        <span class="c1"># Most of the information are needed. </span>
+        <span class="c1"># No point filtering few attributes.</span>
+
+
+<div class="viewcode-block" id="Gal.get_rgal"><a class="viewcode-back" href="../../load.html#load.rd_GM.Gal.get_rgal">[docs]</a>    <span class="k">def</span> <span class="nf">get_rgal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        get rgal as ptp() of star position. </span>
+<span class="sd">        If necessary, only the resulting value is converted. </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_info</span><span class="p">():</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Aborting...&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="o">.</span><span class="n">star</span><span class="o">.</span><span class="n">length</span> <span class="o">==</span> <span class="s2">&quot;code&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rgal</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="nb">max</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">star</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">ptp</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">star</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">ptp</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">star</span><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">ptp</span><span class="p">()])</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="o">.</span><span class="n">star</span><span class="o">.</span><span class="n">length</span> <span class="o">==</span> <span class="s2">&quot;gm&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rgal</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="nb">max</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">star</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">ptp</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">star</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">ptp</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">star</span><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">ptp</span><span class="p">()])</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">pboxsize</span></div>
+            
+
+<div class="viewcode-block" id="Gal.load"><a class="viewcode-back" href="../../load.html#load.rd_GM.Gal.load">[docs]</a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">type_star</span><span class="o">=</span><span class="s2">&quot;gm&quot;</span><span class="p">,</span> <span class="n">type_dm</span><span class="o">=</span><span class="s2">&quot;gm&quot;</span><span class="p">,</span> <span class="n">type_cell</span><span class="o">=</span><span class="s2">&quot;gm&quot;</span><span class="p">,</span>
+             <span class="n">info</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rscale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        type_star : string {&quot;gm&quot;, &quot;raw&quot;}</span>
+<span class="sd">			unit of stellar particle data, &quot;gm&quot; by default.</span>
+<span class="sd">        type_dm : string {&quot;gm&quot;, &quot;raw&quot;}</span>
+<span class="sd">			unit of DM particle data, &quot;gm&quot; by default.</span>
+<span class="sd">        type_cell : string {&quot;gm&quot;, &quot;raw&quot;}</span>
+<span class="sd">			unit of gas data, &quot;gm&quot; by default.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        when loading raw data the choice of data 1.5 * rgal,</span>
+<span class="sd">        where rgal is the maximum ptp() of stellar particles, is arbitrary. </span>
+<span class="sd">        I don&#39;t know how to GUESS where the galaxy gas component will truncate.</span>
+
+<span class="sd">        Info must be available by this time.</span>
+<span class="sd">        If not, load one.</span>
+
+
+<span class="sd">        &gt;&gt;&gt; GM_gal.header.dtype</span>
+<span class="sd">        &gt;&gt;&gt; dtype([(&#39;my_number&#39;, &#39;&lt;i4&#39;), (&#39;level&#39;, &#39;&lt;i4&#39;), (&#39;mgal&#39;, &#39;&lt;f8&#39;), (&#39;xg&#39;, &#39;&lt;f8&#39;, (3,)), (&#39;vg&#39;, &#39;&lt;f8&#39;, (3,)), (&#39;lg&#39;, &#39;&lt;f8&#39;, (3,)), (&#39;npart&#39;, &#39;&lt;i4&#39;)])</span>
+
+<span class="sd">        &gt;&gt;&gt; hmo.Halo().data.dtype</span>
+<span class="sd">        &gt;&gt;&gt; dtype((numpy.record, [(&#39;np&#39;, &#39;&lt;i4&#39;), (&#39;id&#39;, &#39;&lt;i4&#39;), (&#39;level&#39;, &#39;&lt;i4&#39;), (&#39;host&#39;, &#39;&lt;i4&#39;), (&#39;sub&#39;, &#39;&lt;i4&#39;), (&#39;nsub&#39;, &#39;&lt;i4&#39;), (&#39;nextsub&#39;, &#39;&lt;i4&#39;), (&#39;m&#39;, &#39;&lt;f4&#39;), (&#39;mvir&#39;, &#39;&lt;f4&#39;), (&#39;r&#39;, &#39;&lt;f4&#39;), (&#39;rvir&#39;, &#39;&lt;f4&#39;), (&#39;tvir&#39;, &#39;&lt;f4&#39;), (&#39;cvel&#39;, &#39;&lt;f4&#39;), (&#39;x&#39;, &#39;&lt;f4&#39;), (&#39;y&#39;, &#39;&lt;f4&#39;), (&#39;z&#39;, &#39;&lt;f4&#39;), (&#39;vx&#39;, &#39;&lt;f4&#39;), (&#39;vy&#39;, &#39;&lt;f4&#39;), (&#39;vz&#39;, &#39;&lt;f4&#39;), (&#39;ax&#39;, &#39;&lt;f4&#39;), (&#39;ay&#39;, &#39;&lt;f4&#39;), (&#39;az&#39;, &#39;&lt;f4&#39;), (&#39;sp&#39;, &#39;&lt;f4&#39;), (&#39;idx&#39;, &#39;&lt;i4&#39;), (&#39;p_rho&#39;, &#39;&lt;f4&#39;), (&#39;p_c&#39;, &#39;&lt;f4&#39;), (&#39;energy&#39;, &#39;&lt;f8&#39;, (3,)), (&#39;radius&#39;, &#39;&lt;f8&#39;, (4,))]))</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">utils</span> <span class="k">import</span> <span class="n">sampling</span>
+        <span class="c1">#if info is None and self.info is None:</span>
+        <span class="c1">#    self.</span>
+        <span class="k">if</span> <span class="n">info</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">,</span> <span class="s2">&quot;unit_l&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_get_minimal_info</span><span class="p">(</span><span class="n">info</span><span class="p">)</span> 
+
+        <span class="k">if</span> <span class="n">rscale</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rscale</span> <span class="o">=</span> <span class="n">rscale</span>
+        <span class="k">if</span> <span class="n">type_star</span> <span class="o">==</span> <span class="s2">&quot;gm&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">star</span> <span class="o">=</span> <span class="n">_rd_gal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nout</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gid</span><span class="p">,</span> <span class="n">wdir</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">wdir</span><span class="p">,</span> <span class="n">metal</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="o">.</span><span class="n">star</span><span class="o">.</span><span class="n">set_system</span><span class="p">(</span><span class="s2">&quot;gm&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">info</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">center_code</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;xg&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">pboxsize</span> <span class="o">+</span> <span class="mf">0.5</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">get_rgal</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">region</span> <span class="o">=</span> <span class="n">sampling</span><span class="o">.</span><span class="n">set_region</span><span class="p">(</span><span class="n">centers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">center_code</span><span class="p">,</span>
+                                                  <span class="n">radius</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rscale</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">rgal</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">type_star</span> <span class="o">==</span> <span class="s2">&quot;raw&quot;</span><span class="p">:</span>
+            <span class="c1"># load catalog</span>
+            <span class="kn">import</span> <span class="nn">tree.halomodule</span> <span class="k">as</span> <span class="nn">hmo</span>
+            <span class="n">gcat</span> <span class="o">=</span> <span class="n">hmo</span><span class="o">.</span><span class="n">Halo</span><span class="p">(</span><span class="n">nout</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nout</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">wdir</span><span class="p">,</span> <span class="n">is_gal</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">thisgal</span> <span class="o">=</span> <span class="n">gcat</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">gcat</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">gid</span><span class="p">]</span>
+            <span class="c1"># In which format should the header be?</span>
+            <span class="c1"># Raw</span>
+
+            <span class="c1"># Header is originally a numpy array, but a dict should be enough.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">header</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">my_number</span> <span class="o">=</span> <span class="n">thisgal</span><span class="p">[</span><span class="s2">&quot;np&quot;</span><span class="p">],</span>
+                               <span class="n">mgal</span> <span class="o">=</span> <span class="n">thisgal</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">],</span>
+                               <span class="n">xg</span> <span class="o">=</span> <span class="p">(</span><span class="n">thisgal</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">],</span> <span class="n">thisgal</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">],</span> <span class="n">thisgal</span><span class="p">[</span><span class="s2">&quot;z&quot;</span><span class="p">]),</span>
+                               <span class="n">vg</span> <span class="o">=</span> <span class="p">(</span><span class="n">thisgal</span><span class="p">[</span><span class="s2">&quot;vx&quot;</span><span class="p">],</span> <span class="n">thisgal</span><span class="p">[</span><span class="s2">&quot;vy&quot;</span><span class="p">],</span> <span class="n">thisgal</span><span class="p">[</span><span class="s2">&quot;vz&quot;</span><span class="p">]),</span>
+                               <span class="n">npart</span> <span class="o">=</span> <span class="n">thisgal</span><span class="p">[</span><span class="s2">&quot;np&quot;</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rgal</span> <span class="o">=</span> <span class="n">thisgal</span><span class="p">[</span><span class="s2">&quot;r&quot;</span><span class="p">]</span> <span class="c1"># in code unit.</span>
+            <span class="k">if</span> <span class="n">radius</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">radius</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rgal</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">region</span> <span class="o">=</span> <span class="n">sampling</span><span class="o">.</span><span class="n">set_region</span><span class="p">(</span><span class="n">centers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s2">&quot;xg&quot;</span><span class="p">],</span>
+                                              <span class="n">radius</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rscale</span> <span class="o">*</span> <span class="n">radius</span><span class="p">)</span>
+            <span class="kn">from</span> <span class="nn">load.part</span> <span class="k">import</span> <span class="n">Part</span>
+            <span class="n">pp</span> <span class="o">=</span> <span class="n">Part</span><span class="p">(</span><span class="n">info</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">,</span> <span class="n">ptypes</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;star id pos vel time metal&#39;</span><span class="p">],</span>
+                      <span class="n">region</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">region</span><span class="p">,</span> <span class="n">load</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">star</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">star</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="o">.</span><span class="n">star</span><span class="o">.</span><span class="n">set_system</span><span class="p">(</span><span class="s2">&quot;code&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">type_dm</span> <span class="o">==</span> <span class="s2">&quot;gm&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dm</span> <span class="o">=</span> <span class="n">rd_dm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nout</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gid</span><span class="p">,</span> <span class="n">wdir</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">wdir</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="o">.</span><span class="n">dm</span><span class="o">.</span><span class="n">set_system</span><span class="p">(</span><span class="s2">&quot;gm&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">type_dm</span> <span class="o">==</span> <span class="s1">&#39;raw&#39;</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">load.part</span> <span class="k">import</span> <span class="n">Part</span>
+            <span class="n">pp</span> <span class="o">=</span> <span class="n">Part</span><span class="p">(</span><span class="n">info</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">,</span> <span class="n">ptypes</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;dm id pos vel&#39;</span><span class="p">],</span>
+                  <span class="n">region</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">region</span><span class="p">,</span> <span class="n">load</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dm</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">dm</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="o">.</span><span class="n">dm</span><span class="o">.</span><span class="n">set_system</span><span class="p">(</span><span class="s2">&quot;code&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">type_cell</span> <span class="o">==</span> <span class="s2">&quot;gm&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cell</span> <span class="o">=</span> <span class="n">rd_cell</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nout</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gid</span><span class="p">,</span> <span class="n">wdir</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">wdir</span><span class="p">,</span> <span class="n">metal</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="o">.</span><span class="n">cell</span><span class="o">.</span><span class="n">set_system</span><span class="p">(</span><span class="s2">&quot;gm&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">type_cell</span> <span class="o">==</span> <span class="s2">&quot;raw&quot;</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">load.hydro</span> <span class="k">import</span> <span class="n">Hydro</span>
+            <span class="n">hh</span> <span class="o">=</span> <span class="n">Hydro</span><span class="p">(</span><span class="n">info</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">,</span> <span class="n">region</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">region</span><span class="p">)</span>
+            <span class="n">hh</span><span class="o">.</span><span class="n">amr2cell</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cell</span> <span class="o">=</span> <span class="n">hh</span><span class="o">.</span><span class="n">cell</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="o">.</span><span class="n">cell</span><span class="o">.</span><span class="n">set_system</span><span class="p">(</span><span class="s2">&quot;code&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Gal.time2gyr"><a class="viewcode-back" href="../../load.html#load.rd_GM.Gal.time2gyr">[docs]</a>    <span class="k">def</span> <span class="nf">time2gyr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">info</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Only stars have time.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="o">.</span><span class="n">star</span><span class="o">.</span><span class="n">time</span> <span class="o">==</span> <span class="s2">&quot;Gyr&quot;</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;stellar age already in Gyr unit&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">info</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="kn">import</span> <span class="nn">load</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">info</span> <span class="o">=</span> <span class="n">load</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">Info</span><span class="p">(</span><span class="n">nout</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nout</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">wdir</span><span class="p">)</span>
+                    <span class="n">info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">info</span>
+                <span class="k">except</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Failed to load info&quot;</span><span class="p">)</span>
+                    <span class="k">return</span>
+ 
+            <span class="kn">import</span> <span class="nn">utils.cosmology</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">star</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">cosmology</span><span class="o">.</span><span class="n">time2gyr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">star</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">],</span>
+                                 <span class="n">z_now</span> <span class="o">=</span> <span class="n">info</span><span class="o">.</span><span class="n">zred</span><span class="p">,</span>
+                                 <span class="n">info</span><span class="o">=</span><span class="n">info</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">time</span> <span class="o">=</span> <span class="s2">&quot;Gyr&quot;</span></div>
+    
+
+<div class="viewcode-block" id="Gal.gm2code"><a class="viewcode-back" href="../../load.html#load.rd_GM.Gal.gm2code">[docs]</a>    <span class="k">def</span> <span class="nf">gm2code</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">star</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">dm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">cell</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">header</span> <span class="o">==</span> <span class="kc">True</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">header</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">position</span> <span class="o">==</span> <span class="s2">&quot;gm&quot;</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;xg&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;xg&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">pboxsize</span> <span class="o">+</span> <span class="mf">0.5</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">position</span> <span class="o">=</span> <span class="s2">&quot;code&quot;</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">length</span> <span class="o">=</span> <span class="s2">&quot;code&quot;</span>
+                <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No .header attribute&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Header position not in GM unit&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">star</span> <span class="o">==</span> <span class="kc">True</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">star</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">star</span><span class="o">.</span><span class="n">position</span> <span class="o">==</span> <span class="s2">&quot;gm&quot;</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="s2">&quot;z&quot;</span><span class="p">]:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">star</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">star</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">pboxsize</span> <span class="o">+</span> <span class="mf">0.5</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">star</span><span class="o">.</span><span class="n">position</span> <span class="o">=</span> <span class="s2">&quot;code&quot;</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">star</span><span class="o">.</span><span class="n">length</span> <span class="o">=</span> <span class="s2">&quot;code&quot;</span>
+                <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No .star attribute&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;star position not in GM unit&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">dm</span> <span class="o">==</span> <span class="kc">True</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">dm</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">dm</span><span class="o">.</span><span class="n">position</span> <span class="o">==</span> <span class="s2">&quot;gm&quot;</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="s2">&quot;z&quot;</span><span class="p">]:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">dm</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dm</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">pboxsize</span> <span class="o">+</span> <span class="mf">0.5</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">dm</span><span class="o">.</span><span class="n">position</span> <span class="o">=</span> <span class="s2">&quot;code&quot;</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">dm</span><span class="o">.</span><span class="n">length</span> <span class="o">=</span> <span class="s2">&quot;code&quot;</span>
+                <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No .dm attribute&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;dm position not in GM unit&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">cell</span> <span class="o">==</span> <span class="kc">True</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">cell</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">cell</span><span class="o">.</span><span class="n">position</span> <span class="o">==</span> <span class="s2">&quot;gm&quot;</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="s2">&quot;z&quot;</span><span class="p">]:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cel</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">pboxsize</span> <span class="o">+</span> <span class="mf">0.5</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">cell</span><span class="o">.</span><span class="n">position</span> <span class="o">=</span> <span class="s2">&quot;code&quot;</span>
+                <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No .cell attribute&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;cell position not in GM unit&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">cell</span><span class="o">.</span><span class="n">length</span> <span class="o">==</span> <span class="s2">&quot;gm&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">[</span><span class="s1">&#39;dx&#39;</span><span class="p">]</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">pboxsize</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">cell</span><span class="o">.</span><span class="n">length</span> <span class="o">=</span> <span class="s2">&quot;code&quot;</span></div></div>
+
+
+<span class="k">def</span> <span class="nf">_rd_gal</span><span class="p">(</span><span class="n">nout</span><span class="p">,</span> <span class="n">idgal</span><span class="p">,</span> <span class="n">wdir</span><span class="o">=</span><span class="s2">&quot;./&quot;</span><span class="p">,</span> <span class="n">metal</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+          <span class="n">nchem</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">long</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">fname</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    nout : int</span>
+<span class="sd">        Snashot number</span>
+<span class="sd">    idgal : int</span>
+<span class="sd">        GalaxyMaker id. (not idx)</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">        &gt;&gt;&gt; gal = rd_gal(187, 123)</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    header xg in Mpc (physical, centered at 0.5, 0.5, 0.5 of the simualtion volume)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">fname</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">idgal</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">idgal</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">7</span><span class="p">)</span>
+        <span class="n">dir_nout</span> <span class="o">=</span> <span class="s2">&quot;GAL_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">nout</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+        <span class="n">fname</span> <span class="o">=</span> <span class="n">wdir</span> <span class="o">+</span> <span class="s1">&#39;GalaxyMaker/&#39;</span> <span class="o">+</span>  <span class="n">dir_nout</span> <span class="o">+</span> <span class="s1">&#39;/gal_stars_&#39;</span> <span class="o">+</span> <span class="n">idgal</span>
+   
+    <span class="c1">#header, data =</span>
+    <span class="k">return</span> <span class="n">rd_gm_star_file</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
+ 
+
+<div class="viewcode-block" id="rd_gal"><a class="viewcode-back" href="../../load.html#load.rd_GM.rd_gal">[docs]</a><span class="k">def</span> <span class="nf">rd_gal</span><span class="p">(</span><span class="n">nout</span><span class="p">,</span> <span class="n">idgal</span><span class="p">,</span> <span class="n">wdir</span><span class="o">=</span><span class="s2">&quot;./&quot;</span><span class="p">,</span> <span class="n">metal</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+          <span class="n">nchem</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">long</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">fname</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    nout : int</span>
+<span class="sd">        Snashot number</span>
+<span class="sd">    idgal : int</span>
+<span class="sd">        GalaxyMaker id. (not idx)</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">        &gt;&gt;&gt; gal = rd_gal(187, 123)</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    header xg in Mpc (physical, centered at 0.5, 0.5, 0.5 of the simualtion volume)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">fname</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">idgal</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">idgal</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">7</span><span class="p">)</span>
+        <span class="n">dir_nout</span> <span class="o">=</span> <span class="s2">&quot;GAL_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">nout</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+        <span class="n">fname</span> <span class="o">=</span> <span class="n">wdir</span> <span class="o">+</span> <span class="s1">&#39;GalaxyMaker/&#39;</span> <span class="o">+</span>  <span class="n">dir_nout</span> <span class="o">+</span> <span class="s1">&#39;/gal_stars_&#39;</span> <span class="o">+</span> <span class="n">idgal</span>
+   
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[rd_GM.rd_gal] fname=&quot;</span><span class="p">,</span> <span class="n">fname</span><span class="p">)</span>
+    <span class="n">header</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="n">rd_gm_star_file</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
+        
+    <span class="n">gal</span> <span class="o">=</span> <span class="n">Gal</span><span class="p">(</span><span class="n">nout</span><span class="p">,</span> <span class="n">idgal</span><span class="p">,</span> <span class="n">wdir</span><span class="o">=</span><span class="n">wdir</span><span class="p">,</span> <span class="n">load</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">gal</span><span class="o">.</span><span class="n">star</span> <span class="o">=</span> <span class="n">data</span>
+    <span class="n">gal</span><span class="o">.</span><span class="n">header</span> <span class="o">=</span> <span class="n">header</span>
+    <span class="n">gal</span><span class="o">.</span><span class="n">gid</span> <span class="o">=</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;my_number&#39;</span><span class="p">]</span>
+    <span class="n">gal</span><span class="o">.</span><span class="n">units</span><span class="o">.</span><span class="n">star</span><span class="o">.</span><span class="n">set_system</span><span class="p">(</span><span class="s2">&quot;gm&quot;</span><span class="p">)</span>
+    <span class="n">gal</span><span class="o">.</span><span class="n">wdir</span> <span class="o">=</span> <span class="n">wdir</span>
+    <span class="k">return</span> <span class="n">gal</span></div>
+
+
+<div class="viewcode-block" id="rd_dm"><a class="viewcode-back" href="../../load.html#load.rd_GM.rd_dm">[docs]</a><span class="k">def</span> <span class="nf">rd_dm</span><span class="p">(</span><span class="n">nout</span><span class="p">,</span> <span class="n">idgal</span><span class="p">,</span> <span class="n">wdir</span><span class="o">=</span><span class="s2">&quot;./&quot;</span><span class="p">,</span> <span class="n">long</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">fname</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    header xg in Mpc (physical, centered at 0.5, 0.5, 0.5 of the simualtion volume)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">fname</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">idgal</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">idgal</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">7</span><span class="p">)</span>
+        <span class="n">dir_nout</span> <span class="o">=</span> <span class="s2">&quot;HAL_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">nout</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>      
+        <span class="n">fname</span> <span class="o">=</span> <span class="n">wdir</span> <span class="o">+</span> <span class="s1">&#39;halo/&#39;</span> <span class="o">+</span>  <span class="n">dir_nout</span> <span class="o">+</span> <span class="s1">&#39;/hal_dms_&#39;</span> <span class="o">+</span> <span class="n">idgal</span>
+    <span class="k">return</span> <span class="n">rd_gm_dm_file</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>   </div>
+
+
+<div class="viewcode-block" id="rd_gm_dm_file"><a class="viewcode-back" href="../../load.html#load.rd_GM.rd_gm_dm_file">[docs]</a><span class="k">def</span> <span class="nf">rd_gm_dm_file</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">long</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="c1"># Header structure</span>
+    <span class="n">dtype_header</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">([(</span><span class="s1">&#39;my_number&#39;</span><span class="p">,</span> <span class="s1">&#39;i4&#39;</span><span class="p">),</span>
+                             <span class="p">(</span><span class="s1">&#39;level&#39;</span><span class="p">,</span> <span class="s1">&#39;i4&#39;</span><span class="p">),</span>
+                             <span class="p">(</span><span class="s1">&#39;mgal&#39;</span><span class="p">,</span> <span class="s1">&#39;f8&#39;</span><span class="p">),</span>
+                             <span class="p">(</span><span class="s1">&#39;xg&#39;</span><span class="p">,</span> <span class="s1">&#39;f8&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,)),</span>
+                             <span class="p">(</span><span class="s1">&#39;vg&#39;</span><span class="p">,</span> <span class="s1">&#39;f8&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,)),</span>
+                             <span class="p">(</span><span class="s1">&#39;lg&#39;</span><span class="p">,</span> <span class="s1">&#39;f8&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,)),</span>
+                             <span class="p">(</span><span class="s1">&#39;npart&#39;</span><span class="p">,</span> <span class="s1">&#39;i4&#39;</span><span class="p">)])</span>
+    
+    <span class="c1"># variable type</span>
+    <span class="n">dtype_data</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f8&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f8&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;z&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f8&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;vx&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f8&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;vy&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f8&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;vz&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f8&#39;</span><span class="p">),</span>
+               <span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;i4&#39;</span><span class="p">),</span>
+               <span class="p">(</span><span class="s1">&#39;m&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f8&#39;</span><span class="p">)]</span>
+    
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">header</span> <span class="o">=</span> <span class="n">read_header</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype_header</span><span class="p">)</span>
+        <span class="n">header</span><span class="p">[</span><span class="s1">&#39;mgal&#39;</span><span class="p">]</span> <span class="o">*=</span> <span class="mi">1</span><span class="n">e11</span> <span class="c1"># mass fof galaxy</span>
+        
+        <span class="c1"># data array</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">recarray</span><span class="p">(</span><span class="n">header</span><span class="p">[</span><span class="s2">&quot;npart&quot;</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype_data</span><span class="p">)</span>
+        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;f8&#39;</span><span class="p">),</span> <span class="n">header</span><span class="p">[</span><span class="s2">&quot;npart&quot;</span><span class="p">])</span> <span class="c1"># row-major</span>
+        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;f8&#39;</span><span class="p">),</span> <span class="n">header</span><span class="p">[</span><span class="s2">&quot;npart&quot;</span><span class="p">])</span>
+        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;f8&#39;</span><span class="p">),</span> <span class="n">header</span><span class="p">[</span><span class="s2">&quot;npart&quot;</span><span class="p">])</span>
+    
+        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;vx&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;f8&#39;</span><span class="p">),</span> <span class="n">header</span><span class="p">[</span><span class="s2">&quot;npart&quot;</span><span class="p">])</span> <span class="c1"># row-major</span>
+        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;vy&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;f8&#39;</span><span class="p">),</span> <span class="n">header</span><span class="p">[</span><span class="s2">&quot;npart&quot;</span><span class="p">])</span>
+        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;vz&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;f8&#39;</span><span class="p">),</span> <span class="n">header</span><span class="p">[</span><span class="s2">&quot;npart&quot;</span><span class="p">])</span>
+        
+        
+        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;m&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;f8&#39;</span><span class="p">),</span> <span class="n">header</span><span class="p">[</span><span class="s2">&quot;npart&quot;</span><span class="p">])</span> <span class="c1"># row-major</span>
+        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;i4&#39;</span><span class="p">),</span> <span class="n">header</span><span class="p">[</span><span class="s2">&quot;npart&quot;</span><span class="p">])</span>
+        
+    <span class="k">return</span> <span class="n">data</span></div>
+
+
+<div class="viewcode-block" id="rd_gm_star_file"><a class="viewcode-back" href="../../load.html#load.rd_GM.rd_gm_star_file">[docs]</a><span class="k">def</span> <span class="nf">rd_gm_star_file</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">metal</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">nchem</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">long</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="c1"># Header structure</span>
+    <span class="n">dtype_header</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">([(</span><span class="s1">&#39;my_number&#39;</span><span class="p">,</span> <span class="s1">&#39;i4&#39;</span><span class="p">),</span>
+                             <span class="p">(</span><span class="s1">&#39;level&#39;</span><span class="p">,</span> <span class="s1">&#39;i4&#39;</span><span class="p">),</span>
+                             <span class="p">(</span><span class="s1">&#39;mgal&#39;</span><span class="p">,</span> <span class="s1">&#39;f8&#39;</span><span class="p">),</span>
+                             <span class="p">(</span><span class="s1">&#39;xg&#39;</span><span class="p">,</span> <span class="s1">&#39;f8&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,)),</span>
+                             <span class="p">(</span><span class="s1">&#39;vg&#39;</span><span class="p">,</span> <span class="s1">&#39;f8&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,)),</span>
+                             <span class="p">(</span><span class="s1">&#39;lg&#39;</span><span class="p">,</span> <span class="s1">&#39;f8&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,)),</span>
+                             <span class="p">(</span><span class="s1">&#39;npart&#39;</span><span class="p">,</span> <span class="s1">&#39;i4&#39;</span><span class="p">)])</span>
+    
+    <span class="c1"># variable type</span>
+    <span class="n">dtype_data</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f8&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f8&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;z&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f8&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;vx&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f8&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;vy&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f8&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;vz&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f8&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;i4&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;m&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f8&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;time&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f8&#39;</span><span class="p">)]</span>
+    <span class="k">if</span> <span class="n">metal</span><span class="p">:</span>
+        <span class="n">dtype_data</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s1">&#39;metal&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f8&#39;</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">nchem</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">dtype_data</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s1">&#39;cp&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f8&#39;</span><span class="p">,</span> <span class="p">(</span><span class="n">nchem</span><span class="p">,)))</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">header</span> <span class="o">=</span> <span class="n">read_header</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype_header</span><span class="p">)</span>
+        <span class="n">header</span><span class="p">[</span><span class="s1">&#39;mgal&#39;</span><span class="p">]</span> <span class="o">*=</span> <span class="mi">1</span><span class="n">e11</span> <span class="c1"># mass fof galaxy</span>
+        
+        <span class="c1"># data array</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">recarray</span><span class="p">(</span><span class="n">header</span><span class="p">[</span><span class="s2">&quot;npart&quot;</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype_data</span><span class="p">)</span>
+        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;f8&#39;</span><span class="p">),</span> <span class="n">header</span><span class="p">[</span><span class="s2">&quot;npart&quot;</span><span class="p">])</span> <span class="c1"># row-major</span>
+        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;f8&#39;</span><span class="p">),</span> <span class="n">header</span><span class="p">[</span><span class="s2">&quot;npart&quot;</span><span class="p">])</span>
+        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;f8&#39;</span><span class="p">),</span> <span class="n">header</span><span class="p">[</span><span class="s2">&quot;npart&quot;</span><span class="p">])</span>
+    
+        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;vx&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;f8&#39;</span><span class="p">),</span> <span class="n">header</span><span class="p">[</span><span class="s2">&quot;npart&quot;</span><span class="p">])</span> <span class="c1"># row-major</span>
+        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;vy&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;f8&#39;</span><span class="p">),</span> <span class="n">header</span><span class="p">[</span><span class="s2">&quot;npart&quot;</span><span class="p">])</span>
+        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;vz&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;f8&#39;</span><span class="p">),</span> <span class="n">header</span><span class="p">[</span><span class="s2">&quot;npart&quot;</span><span class="p">])</span>
+        
+        
+        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;m&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;f8&#39;</span><span class="p">),</span> <span class="n">header</span><span class="p">[</span><span class="s2">&quot;npart&quot;</span><span class="p">])</span> <span class="c1"># row-major</span>
+        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;i4&#39;</span><span class="p">),</span> <span class="n">header</span><span class="p">[</span><span class="s2">&quot;npart&quot;</span><span class="p">])</span>
+        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;f8&#39;</span><span class="p">),</span> <span class="n">header</span><span class="p">[</span><span class="s2">&quot;npart&quot;</span><span class="p">])</span> <span class="c1"># row-major</span>
+        <span class="k">if</span> <span class="s1">&#39;metal&#39;</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">names</span><span class="p">:</span>
+            <span class="n">data</span><span class="p">[</span><span class="s1">&#39;metal&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;f8&#39;</span><span class="p">),</span> <span class="n">header</span><span class="p">[</span><span class="s2">&quot;npart&quot;</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">nchem</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nchem</span><span class="p">):</span>
+                    <span class="n">data</span><span class="p">[</span><span class="s1">&#39;cp&#39;</span><span class="p">][:,</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;f8&#39;</span><span class="p">),</span> <span class="n">header</span><span class="p">[</span><span class="s2">&quot;npart&quot;</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">header</span><span class="p">,</span> <span class="n">data</span></div>
+
+
+
+<div class="viewcode-block" id="rd_cell"><a class="viewcode-back" href="../../load.html#load.rd_GM.rd_cell">[docs]</a><span class="k">def</span> <span class="nf">rd_cell</span><span class="p">(</span><span class="n">nout</span><span class="p">,</span> <span class="n">idgal</span><span class="p">,</span> <span class="n">wdir</span><span class="o">=</span><span class="s2">&quot;./&quot;</span><span class="p">,</span> <span class="n">metal</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">nchem</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">fname</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A warpper of rd_gm_cell_file that (only) provides the file name. </span>
+<span class="sd">    header xg in Mpc (physical, centered at 0.5, 0.5, 0.5 of the simualtion volume)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">fname</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">idgal</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">idgal</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">7</span><span class="p">)</span>
+        <span class="n">dir_nout</span> <span class="o">=</span> <span class="s2">&quot;CELL_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">nout</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span> 
+        <span class="n">fname</span> <span class="o">=</span> <span class="n">wdir</span> <span class="o">+</span> <span class="s1">&#39;GalaxyMaker/&#39;</span> <span class="o">+</span>  <span class="n">dir_nout</span> <span class="o">+</span> <span class="s1">&#39;/gal_cells_&#39;</span><span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">idgal</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">7</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">rd_gm_cell_file</span><span class="p">(</span><span class="n">nout</span><span class="p">,</span> <span class="n">idgal</span><span class="p">,</span> <span class="n">fname</span><span class="p">,</span> <span class="n">metal</span><span class="o">=</span><span class="n">metal</span><span class="p">,</span> <span class="n">nchem</span><span class="o">=</span><span class="n">nchem</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="rd_gm_cell_file"><a class="viewcode-back" href="../../load.html#load.rd_GM.rd_gm_cell_file">[docs]</a><span class="k">def</span> <span class="nf">rd_gm_cell_file</span><span class="p">(</span><span class="n">nout</span><span class="p">,</span> <span class="n">idgal</span><span class="p">,</span> <span class="n">fname</span><span class="p">,</span> <span class="n">metal</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">nchem</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Read GalaxyMaker format cell dump data into Recarray.</span>
+<span class="sd">    No unit conversion performed.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Cell may have &#39;cpu&#39; field. take care of this. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span>  <span class="nn">utils.io_module</span> <span class="k">as</span> <span class="nn">io</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">nout0</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="c1">#        assert nout == nout0, &quot;given nout ({}) and loaded nout ({}) do not match&quot;.format(nout, nout0)</span>
+        <span class="n">gid</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> 
+<span class="c1">#        assert idgal == gid, &quot;given idgal ({}) and loaded idgal ({}) do not match&quot;.format(idgal, gid)</span>
+        
+        <span class="n">ncell</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">cell</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">ncell</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f8&#39;</span><span class="p">),(</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f8&#39;</span><span class="p">),(</span><span class="s1">&#39;z&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f8&#39;</span><span class="p">),</span>
+                                     <span class="p">(</span><span class="s1">&#39;dx&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f8&#39;</span><span class="p">),(</span><span class="s1">&#39;var0&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f8&#39;</span><span class="p">),(</span><span class="s1">&#39;var1&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f8&#39;</span><span class="p">),</span>
+                                     <span class="p">(</span><span class="s1">&#39;var2&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f8&#39;</span><span class="p">),(</span><span class="s1">&#39;var3&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f8&#39;</span><span class="p">),(</span><span class="s1">&#39;var4&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f8&#39;</span><span class="p">),</span>
+                                     <span class="p">(</span><span class="s1">&#39;var5&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f8&#39;</span><span class="p">)])</span>
+        <span class="n">cell</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span>  <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">ncell</span><span class="p">)</span>
+        <span class="n">cell</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span>  <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">ncell</span><span class="p">)</span>
+        <span class="n">cell</span><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">]</span>  <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">ncell</span><span class="p">)</span>
+        <span class="n">cell</span><span class="p">[</span><span class="s1">&#39;dx&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">ncell</span><span class="p">)</span>
+        <span class="n">cell</span><span class="p">[</span><span class="s1">&#39;var0&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">ncell</span><span class="p">)</span>
+        <span class="n">cell</span><span class="p">[</span><span class="s1">&#39;var1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">ncell</span><span class="p">)</span>
+        <span class="n">cell</span><span class="p">[</span><span class="s1">&#39;var2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">ncell</span><span class="p">)</span>
+        <span class="n">cell</span><span class="p">[</span><span class="s1">&#39;var3&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">ncell</span><span class="p">)</span>
+        <span class="n">cell</span><span class="p">[</span><span class="s1">&#39;var4&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">ncell</span><span class="p">)</span>
+        <span class="n">cell</span><span class="p">[</span><span class="s1">&#39;var5&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">ncell</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">cell</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">pyclusterevol -0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2016, Hoseung.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.8.
+    </div>
+  </body>
+</html>

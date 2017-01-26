@@ -1,0 +1,212 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>analysis.merger &#8212; pyclusterevol -0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '-0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="top" title="pyclusterevol -0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">pyclusterevol -0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for analysis.merger</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Wed May 11 02:22:44 2016</span>
+
+<span class="sd">@author: hoseung</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">tree.ctutils</span> <span class="k">as</span> <span class="nn">ctu</span>
+<span class="c1">#from tree import treeutils</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pickle</span>
+
+<span class="c1"># Calculate merger event parameters</span>
+<div class="viewcode-block" id="find_merger"><a class="viewcode-back" href="../../analysis.html#analysis.merger.find_merger">[docs]</a><span class="k">def</span> <span class="nf">find_merger</span><span class="p">(</span><span class="n">atree</span><span class="p">,</span> <span class="n">idx</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">aexp_min</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        find indices of merger event from a tree.</span>
+<span class="sd">        (Full tree or main progenitor trunk)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">idx</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">atree</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        
+    <span class="n">nprg</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">merger_list</span><span class="o">=</span><span class="p">[]</span>
+
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">while</span> <span class="n">nprg</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">ctu</span><span class="o">.</span><span class="n">get_progenitors</span><span class="p">(</span><span class="n">atree</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">main</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">atree</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">idx</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">atree</span><span class="p">[</span><span class="s1">&#39;aexp&#39;</span><span class="p">][</span><span class="n">ind</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">aexp_min</span><span class="p">:</span>
+            <span class="k">break</span>
+        <span class="n">nprg</span> <span class="o">=</span> <span class="n">ctu</span><span class="o">.</span><span class="n">get_npr</span><span class="p">(</span><span class="n">atree</span><span class="p">,</span> <span class="n">idx</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">nprg</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">merger_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="n">i</span> <span class="o">+=</span><span class="mi">1</span>
+    <span class="k">return</span> <span class="n">merger_list</span></div>
+
+
+<div class="viewcode-block" id="merger_mass_ratio"><a class="viewcode-back" href="../../analysis.html#analysis.merger.merger_mass_ratio">[docs]</a><span class="k">def</span> <span class="nf">merger_mass_ratio</span><span class="p">(</span><span class="n">atree</span><span class="p">,</span> <span class="n">idx</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    return mass ratio of the given merger event</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">idx</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">atree</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        
+    <span class="n">prgs</span> <span class="o">=</span> <span class="n">ctu</span><span class="o">.</span><span class="n">get_progenitors</span><span class="p">(</span><span class="n">atree</span><span class="p">,</span> <span class="n">idx</span><span class="p">)</span>
+    
+    <span class="c1"># only for mergers</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">prgs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">i_prgs</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">atree</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">i</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">prgs</span><span class="p">]</span>
+        <span class="n">mass</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">iprg</span> <span class="ow">in</span> <span class="n">i_prgs</span><span class="p">:</span>
+            <span class="n">mass</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">atree</span><span class="p">[</span><span class="s1">&#39;m&#39;</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;This is not a merger&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="mi">0</span></div>
+    
+
+<div class="viewcode-block" id="merger_properties_main_prg"><a class="viewcode-back" href="../../analysis.html#analysis.merger.merger_properties_main_prg">[docs]</a><span class="k">def</span> <span class="nf">merger_properties_main_prg</span><span class="p">(</span><span class="n">atree</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate merger mass ratio for &quot;one&quot; merger event.</span>
+
+<span class="sd">    if idx == None:</span>
+<span class="sd">        if nout == None:</span>
+<span class="sd">            print(&quot;Both idx and nout are missing&quot;)</span>
+<span class="sd">            return</span>
+<span class="sd">    else:</span>
+<span class="sd">        if nout == None:</span>
+<span class="sd">            nout = np.where(atree[&#39;id&#39;] == idx)[0]</span>
+
+<span class="sd">    idx = atree[&#39;id&#39;][ind]</span>
+<span class="sd">    &quot;&quot;&quot;</span>    
+
+    <span class="c1">#prgs = get_progenitors(atree, idx)</span>
+    <span class="c1">#if len(prgs) &gt; 1:</span>
+    <span class="c1">#    i_prgs = [np.where(atree[&#39;id&#39;] == i)[0] for i in prgs]</span>
+    
+    <span class="n">i_prgs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">atree</span><span class="p">[</span><span class="s1">&#39;desc_id&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">idx</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        
+    <span class="nb">print</span><span class="p">(</span><span class="n">i_prgs</span><span class="p">)</span>
+    <span class="c1">#id_prgs = atree[&#39;id&#39;][i_prgs]</span>
+    <span class="n">mass_prgs</span> <span class="o">=</span> <span class="n">atree</span><span class="p">[</span><span class="s1">&#39;m&#39;</span><span class="p">][</span><span class="n">i_prgs</span><span class="p">]</span>
+    
+    <span class="c1">#mass_prgs_norm = mass_prgs / sum(mass_prgs)</span>
+
+    <span class="k">return</span> <span class="n">mass_prgs</span></div>
+
+
+<div class="viewcode-block" id="load_tree"><a class="viewcode-back" href="../../analysis.html#analysis.merger.load_tree">[docs]</a><span class="k">def</span> <span class="nf">load_tree</span><span class="p">(</span><span class="n">wdir</span><span class="p">,</span> <span class="n">is_gal</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">no_dump</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="c1">#import pickle</span>
+    <span class="kn">from</span> <span class="nn">tree</span> <span class="k">import</span> <span class="n">treemodule</span>
+    <span class="kn">import</span> <span class="nn">tree.ctutils</span> <span class="k">as</span> <span class="nn">ctu</span>
+
+    <span class="n">alltrees</span> <span class="o">=</span> <span class="n">treemodule</span><span class="o">.</span><span class="n">CTree</span><span class="p">()</span>
+    
+
+    <span class="k">if</span> <span class="n">is_gal</span><span class="p">:</span>
+        <span class="c1"># Galaxy tree</span>
+        <span class="n">tree_path</span> <span class="o">=</span> <span class="s1">&#39;GalaxyMaker/Trees/&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># halo tree</span>
+        <span class="n">tree_path</span> <span class="o">=</span> <span class="s1">&#39;halo/Trees/&#39;</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">alltrees</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">wdir</span> <span class="o">+</span> <span class="n">tree_path</span> <span class="o">+</span> <span class="s2">&quot;extended_tree.pickle&quot;</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span> <span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Loaded an extended tree&quot;</span><span class="p">)</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="n">alltrees</span> <span class="o">=</span> <span class="n">treemodule</span><span class="o">.</span><span class="n">CTree</span><span class="p">()</span>
+        <span class="n">alltrees</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span> <span class="n">wdir</span> <span class="o">+</span> <span class="n">tree_path</span> <span class="o">+</span> <span class="s1">&#39;tree_0_0_0.dat&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">no_dump</span><span class="p">:</span>
+            <span class="c1"># Fix nout -----------------------------------------------------</span>
+            <span class="n">nout_max</span> <span class="o">=</span> <span class="n">alltrees</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;nout&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+            <span class="n">alltrees</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;nout&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">187</span> <span class="o">-</span> <span class="n">nout_max</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;------ NOUT fixed&quot;</span><span class="p">)</span>
+            <span class="n">alltrees</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">ctu</span><span class="o">.</span><span class="n">augment_tree</span><span class="p">(</span><span class="n">alltrees</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">wdir</span><span class="p">,</span> <span class="n">is_gal</span><span class="o">=</span><span class="n">is_gal</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;------ tree data extended&quot;</span><span class="p">)</span>
+        
+    <span class="k">return</span> <span class="n">alltrees</span></div>
+
+
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">pyclusterevol -0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2016, Hoseung.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.8.
+    </div>
+  </body>
+</html>

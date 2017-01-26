@@ -1,0 +1,471 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>load.amr &#8212; pyclusterevol -0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '-0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="top" title="pyclusterevol -0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">pyclusterevol -0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for load.amr</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Thu Mar 26 17:44:27 2015</span>
+
+<span class="sd">@author: hoseung</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">load.utils</span> <span class="k">import</span> <span class="n">read_header</span><span class="p">,</span> <span class="n">read_fortran</span><span class="p">,</span> <span class="n">skip_fortran</span> 
+
+<div class="viewcode-block" id="AmrHeader"><a class="viewcode-back" href="../../load.html#load.amr.AmrHeader">[docs]</a><span class="k">class</span> <span class="nc">AmrHeader</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Find the coefficients of a polynomial with the given sequence of roots.</span>
+
+<span class="sd">    Returns the coefficients of the polynomial whose leading coefficient</span>
+<span class="sd">    is one for the given sequence of zeros (multiple roots must be included</span>
+<span class="sd">    in the sequence as many times as their multiplicity; see Examples).</span>
+<span class="sd">    A square matrix (or array, which will be treated as a matrix) can also</span>
+<span class="sd">    be given, in which case the coefficients of the characteristic polynomial</span>
+<span class="sd">    of the matrix are returned.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    seq_of_zeros : array_like, shape (N,) or (N, N)</span>
+<span class="sd">        A sequence of polynomial roots, or a square array or matrix object.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    c : ndarray</span>
+<span class="sd">        1D array of polynomial coefficients from highest to lowest degree:</span>
+
+<span class="sd">        ``c[0] * x**(N) + c[1] * x**(N-1) + ... + c[N-1] * x + c[N]``</span>
+<span class="sd">        where c[0] always equals 1.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If input is the wrong shape (the input must be a 1-D or square</span>
+<span class="sd">        2-D array).</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">_read_amr_header</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">skip_header</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Make this visible from outside, and more general</span>
+<span class="sd">        this can be used everytime you need to skip header</span>
+<span class="sd">        where value assigning is unnecessary</span>
+<span class="sd">        recieve file object f rather than opening one internally.</span>
+<span class="sd">        Are all header entries global quantaties?</span>
+<span class="sd">        or varies with cpus?</span>
+<span class="sd">        Local values must be separated from global values.</span>
+
+<span class="sd">        parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        skip_header :</span>
+<span class="sd">            makes the core more tolerant. </span>
+<span class="sd">            AMR header structure may change depending on the </span>
+<span class="sd">            type of the simulation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">h1</span> <span class="o">=</span> <span class="n">read_header</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span>
+                             <span class="p">[(</span><span class="s1">&#39;ncpu&#39;</span><span class="p">,</span> <span class="s1">&#39;i4&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;ndim&#39;</span><span class="p">,</span> <span class="s1">&#39;i4&#39;</span><span class="p">),</span>
+                              <span class="p">(</span><span class="s1">&#39;ng&#39;</span><span class="p">,</span> <span class="s1">&#39;i4&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,)),</span> <span class="p">(</span><span class="s1">&#39;nlevelmax&#39;</span><span class="p">,</span> <span class="s1">&#39;i4&#39;</span><span class="p">),</span>
+                              <span class="p">(</span><span class="s1">&#39;ngridmax&#39;</span><span class="p">,</span> <span class="s1">&#39;i4&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;nboundary&#39;</span><span class="p">,</span> <span class="s1">&#39;i4&#39;</span><span class="p">),</span>
+                              <span class="p">(</span><span class="s1">&#39;ngrid&#39;</span><span class="p">,</span> <span class="s1">&#39;i4&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;boxlen&#39;</span><span class="p">,</span> <span class="s1">&#39;f8&#39;</span><span class="p">),</span>
+                              <span class="p">(</span><span class="s1">&#39;outputs&#39;</span><span class="p">,</span> <span class="s1">&#39;i4&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,))]))</span>  <span class="c1"># Global</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">ncpu</span> <span class="o">=</span> <span class="n">h1</span><span class="p">[</span><span class="s1">&#39;ncpu&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span> <span class="o">=</span> <span class="n">h1</span><span class="p">[</span><span class="s1">&#39;ndim&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ng</span> <span class="o">=</span> <span class="n">h1</span><span class="p">[</span><span class="s1">&#39;ng&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nlevelmax</span> <span class="o">=</span> <span class="n">h1</span><span class="p">[</span><span class="s1">&#39;nlevelmax&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ngridmax</span> <span class="o">=</span> <span class="n">h1</span><span class="p">[</span><span class="s1">&#39;ngridmax&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nboundary</span> <span class="o">=</span> <span class="n">h1</span><span class="p">[</span><span class="s1">&#39;nboundary&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ngrid</span> <span class="o">=</span> <span class="n">h1</span><span class="p">[</span><span class="s1">&#39;ngrid&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">boxlen</span> <span class="o">=</span> <span class="n">h1</span><span class="p">[</span><span class="s1">&#39;boxlen&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nnouts</span> <span class="o">=</span> <span class="n">h1</span><span class="p">[</span><span class="s1">&#39;outputs&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iout</span> <span class="o">=</span> <span class="n">h1</span><span class="p">[</span><span class="s1">&#39;outputs&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ifout</span> <span class="o">=</span> <span class="n">h1</span><span class="p">[</span><span class="s1">&#39;outputs&#39;</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>
+        <span class="c1"># Basic information that are required to read the header further.</span>
+        <span class="n">ncpu</span> <span class="o">=</span> <span class="n">h1</span><span class="p">[</span><span class="s1">&#39;ncpu&#39;</span><span class="p">]</span>
+        <span class="n">nnouts</span> <span class="o">=</span> <span class="n">h1</span><span class="p">[</span><span class="s1">&#39;outputs&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">nlevelmax</span> <span class="o">=</span> <span class="n">h1</span><span class="p">[</span><span class="s1">&#39;nlevelmax&#39;</span><span class="p">]</span>
+        <span class="n">ncoarse</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="n">h1</span><span class="p">[</span><span class="s1">&#39;ng&#39;</span><span class="p">][:])</span>  <span class="c1"># multiply all elements in an array</span>
+
+        <span class="c1"># Global</span>
+        <span class="n">dtype_h2</span> <span class="o">=</span>  <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span>
+                     <span class="p">[(</span><span class="s1">&#39;tout&#39;</span><span class="p">,</span> <span class="s1">&#39;f8&#39;</span><span class="p">,</span> <span class="p">(</span><span class="n">nnouts</span><span class="p">,)),</span>
+                      <span class="p">(</span><span class="s1">&#39;aout&#39;</span><span class="p">,</span> <span class="s1">&#39;f8&#39;</span><span class="p">,</span> <span class="p">(</span><span class="n">nnouts</span><span class="p">,)),</span>
+                      <span class="p">(</span><span class="s1">&#39;t&#39;</span><span class="p">,</span> <span class="s1">&#39;f8&#39;</span><span class="p">),</span>
+                      <span class="p">(</span><span class="s1">&#39;dtold&#39;</span><span class="p">,</span> <span class="s1">&#39;f8&#39;</span><span class="p">,</span> <span class="p">(</span><span class="n">nlevelmax</span><span class="p">,)),</span>
+                      <span class="p">(</span><span class="s1">&#39;dtnew&#39;</span><span class="p">,</span> <span class="s1">&#39;f8&#39;</span><span class="p">,</span> <span class="p">(</span><span class="n">nlevelmax</span><span class="p">,)),</span>
+                      <span class="p">(</span><span class="s1">&#39;nsteps&#39;</span><span class="p">,</span> <span class="s1">&#39;i4&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">2</span><span class="p">,))])</span>
+
+        <span class="n">dtype_h20</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">([(</span><span class="s1">&#39;cmr&#39;</span><span class="p">,</span> <span class="s1">&#39;f8&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,)),</span>
+                              <span class="p">(</span><span class="s1">&#39;omlkbhal&#39;</span><span class="p">,</span> <span class="s1">&#39;f8&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">7</span><span class="p">,)),</span>
+                              <span class="p">(</span><span class="s1">&#39;expepot&#39;</span><span class="p">,</span> <span class="s1">&#39;f8&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">5</span><span class="p">,)),</span>
+                              <span class="p">(</span><span class="s1">&#39;mass_sph&#39;</span><span class="p">,</span> <span class="s1">&#39;f8&#39;</span><span class="p">),</span>
+                              <span class="p">(</span><span class="s1">&#39;headl&#39;</span><span class="p">,</span> <span class="s1">&#39;i4&#39;</span><span class="p">,</span> <span class="p">(</span><span class="n">nlevelmax</span><span class="p">,</span> <span class="n">ncpu</span><span class="p">,)),</span>
+                              <span class="p">(</span><span class="s1">&#39;taill&#39;</span><span class="p">,</span> <span class="s1">&#39;i4&#39;</span><span class="p">,</span> <span class="p">(</span><span class="n">nlevelmax</span><span class="p">,</span> <span class="n">ncpu</span><span class="p">,)),</span>
+                              <span class="p">(</span><span class="s1">&#39;numbl&#39;</span><span class="p">,</span> <span class="s1">&#39;i4&#39;</span><span class="p">,</span> <span class="p">(</span><span class="n">nlevelmax</span><span class="p">,</span> <span class="n">ncpu</span><span class="p">,))])</span>
+
+        <span class="k">if</span> <span class="n">skip_header</span><span class="p">:</span>
+            <span class="k">return</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dtype_h2</span><span class="p">)):</span>
+               <span class="n">skip_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="n">h2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">dtype_h2</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dtype_h20</span><span class="p">)):</span>
+               <span class="n">skip_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="n">h20</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">dtype_h20</span><span class="p">)</span>
+            <span class="n">skip_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">h2</span> <span class="o">=</span> <span class="n">read_header</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">dtype_h2</span><span class="p">)</span>
+            <span class="n">h20</span><span class="o">=</span> <span class="n">read_header</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">dtype_h20</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">numbl</span> <span class="o">=</span> <span class="n">h20</span><span class="p">[</span><span class="s2">&quot;numbl&quot;</span><span class="p">]</span>
+            <span class="n">skip_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">h1</span><span class="p">[</span><span class="s1">&#39;nboundary&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="n">h3</span> <span class="o">=</span> <span class="n">read_header</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">([(</span><span class="s1">&#39;headb&#39;</span><span class="p">,</span> <span class="s1">&#39;i4&#39;</span><span class="p">,</span> <span class="p">(</span><span class="n">nlevelmax</span><span class="p">,</span> <span class="n">ncpu</span><span class="p">,)),</span>
+                                          <span class="p">(</span><span class="s1">&#39;tailb&#39;</span><span class="p">,</span> <span class="s1">&#39;i4&#39;</span><span class="p">,</span> <span class="p">(</span><span class="n">nlevelmax</span><span class="p">,</span> <span class="n">ncpu</span><span class="p">,)),</span>
+                                          <span class="p">(</span><span class="s1">&#39;numbb&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int16</span><span class="p">,</span> <span class="p">(</span><span class="n">nlevelmax</span><span class="p">,</span> <span class="n">ncpu</span><span class="p">,))]))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">headb</span> <span class="o">=</span> <span class="n">h3</span><span class="p">[</span><span class="s1">&#39;headb&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tailb</span> <span class="o">=</span> <span class="n">h3</span><span class="p">[</span><span class="s1">&#39;tailb&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">numbb</span> <span class="o">=</span> <span class="n">h3</span><span class="p">[</span><span class="s1">&#39;numbb&#39;</span><span class="p">]</span>
+
+        <span class="n">h4</span> <span class="o">=</span> <span class="n">read_header</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">([(</span><span class="s1">&#39;htnm1m2&#39;</span><span class="p">,</span> <span class="s1">&#39;i4&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">5</span><span class="p">,)),</span>
+                                      <span class="p">(</span><span class="s1">&#39;ordering&#39;</span><span class="p">,</span> <span class="s1">&#39;a128&#39;</span><span class="p">,(</span><span class="mi">1</span><span class="p">,))]),</span><span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">headf</span> <span class="o">=</span> <span class="n">h4</span><span class="p">[</span><span class="s1">&#39;htnm1m2&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tailf</span> <span class="o">=</span> <span class="n">h4</span><span class="p">[</span><span class="s1">&#39;htnm1m2&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">numbf</span> <span class="o">=</span> <span class="n">h4</span><span class="p">[</span><span class="s1">&#39;htnm1m2&#39;</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">used_mem</span> <span class="o">=</span> <span class="n">h4</span><span class="p">[</span><span class="s1">&#39;htnm1m2&#39;</span><span class="p">][</span><span class="mi">3</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">used_mem_tot</span> <span class="o">=</span> <span class="n">h4</span><span class="p">[</span><span class="s1">&#39;htnm1m2&#39;</span><span class="p">][</span><span class="mi">4</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ordering</span> <span class="o">=</span> <span class="n">h4</span><span class="p">[</span><span class="s1">&#39;ordering&#39;</span><span class="p">]</span>
+
+
+    <span class="c1"># When reading 2D array, beware that fortran file is written in</span>
+    <span class="c1"># ???-major order but python will save it in ???-major order</span>
+
+    <span class="c1"># For example,</span>
+    <span class="c1"># numbl is (ncpu x nlevelmax) array in fortran</span>
+    <span class="c1"># and is accessed by numbl[icpu,ilevel]</span>
+
+    <span class="c1"># where is the 170 coming from?</span>
+        
+        
+        <span class="c1">#h4 = read_header(f, np.dtype([(&#39;bound_key&#39;, &#39;f8&#39;, (ncpu+1,))]),check=False)</span>
+        <span class="c1"># Get the data type by calculating precision from the fortran block header</span>
+        <span class="n">alen</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;i4&#39;</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">alen</span><span class="o">/</span><span class="p">(</span><span class="n">ncpu</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="mi">8</span><span class="p">:</span>
+            <span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span>
+        <span class="k">elif</span> <span class="n">alen</span><span class="o">/</span><span class="p">(</span><span class="n">ncpu</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="mi">16</span><span class="p">:</span>
+            <span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float128</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Failed to detect bound_key precision.&#39;</span><span class="p">)</span>        
+        <span class="bp">self</span><span class="o">.</span><span class="n">bound_key</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">ncpu</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;i4&#39;</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span> <span class="c1"># skip tail.</span>
+
+                                      
+        <span class="n">h4</span> <span class="o">=</span> <span class="n">read_header</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">([(</span><span class="s1">&#39;son&#39;</span><span class="p">,</span> <span class="s1">&#39;i4&#39;</span><span class="p">,</span> <span class="p">(</span><span class="n">ncoarse</span><span class="p">,)),</span>
+                                      <span class="p">(</span><span class="s1">&#39;flag1&#39;</span><span class="p">,</span> <span class="s1">&#39;i4&#39;</span><span class="p">,</span> <span class="p">(</span><span class="n">ncoarse</span><span class="p">,)),</span>
+                                      <span class="p">(</span><span class="s1">&#39;cpu_map&#39;</span><span class="p">,</span> <span class="s1">&#39;i4&#39;</span><span class="p">,</span> <span class="p">(</span><span class="n">ncoarse</span><span class="p">,))]),</span><span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                                      
+<span class="c1"># Aquarius data has 16Byte &quot;bound_key&quot;.</span>
+<span class="c1"># Because of QUADHILBERT??</span>
+                                      
+<span class="c1"># check=False =&gt; Even if user gives a wrong size,</span>
+<span class="c1"># it still reads based on what fortran binary says.</span>
+
+        <span class="c1"># if assign</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">tout</span> <span class="o">=</span> <span class="n">h2</span><span class="p">[</span><span class="s1">&#39;tout&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">aout</span> <span class="o">=</span> <span class="n">h2</span><span class="p">[</span><span class="s1">&#39;aout&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">t</span> <span class="o">=</span> <span class="n">h2</span><span class="p">[</span><span class="s1">&#39;t&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dtold</span> <span class="o">=</span> <span class="n">h2</span><span class="p">[</span><span class="s1">&#39;dtold&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dtnew</span> <span class="o">=</span> <span class="n">h2</span><span class="p">[</span><span class="s1">&#39;dtnew&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nstep</span> <span class="o">=</span> <span class="n">h2</span><span class="p">[</span><span class="s1">&#39;nsteps&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nstep_coarse</span> <span class="o">=</span> <span class="n">h2</span><span class="p">[</span><span class="s1">&#39;nsteps&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">const</span> <span class="o">=</span> <span class="n">h20</span><span class="p">[</span><span class="s1">&#39;cmr&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mass_tot0</span> <span class="o">=</span> <span class="n">h20</span><span class="p">[</span><span class="s1">&#39;cmr&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rho_tot</span> <span class="o">=</span> <span class="n">h20</span><span class="p">[</span><span class="s1">&#39;cmr&#39;</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Om</span> <span class="o">=</span> <span class="n">h20</span><span class="p">[</span><span class="s1">&#39;omlkbhal&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Ol</span> <span class="o">=</span> <span class="n">h20</span><span class="p">[</span><span class="s1">&#39;omlkbhal&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Ok</span> <span class="o">=</span> <span class="n">h20</span><span class="p">[</span><span class="s1">&#39;omlkbhal&#39;</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Ob</span> <span class="o">=</span> <span class="n">h20</span><span class="p">[</span><span class="s1">&#39;omlkbhal&#39;</span><span class="p">][</span><span class="mi">3</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">h0</span> <span class="o">=</span> <span class="n">h20</span><span class="p">[</span><span class="s1">&#39;omlkbhal&#39;</span><span class="p">][</span><span class="mi">4</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">aexp_ini</span> <span class="o">=</span> <span class="n">h20</span><span class="p">[</span><span class="s1">&#39;omlkbhal&#39;</span><span class="p">][</span><span class="mi">5</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">boxlen</span> <span class="o">=</span> <span class="n">h20</span><span class="p">[</span><span class="s1">&#39;omlkbhal&#39;</span><span class="p">][</span><span class="mi">6</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">aexp</span> <span class="o">=</span> <span class="n">h20</span><span class="p">[</span><span class="s1">&#39;expepot&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hexp</span> <span class="o">=</span> <span class="n">h20</span><span class="p">[</span><span class="s1">&#39;expepot&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">aexp_old</span> <span class="o">=</span> <span class="n">h20</span><span class="p">[</span><span class="s1">&#39;expepot&#39;</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">epot_tot_ini</span> <span class="o">=</span> <span class="n">h20</span><span class="p">[</span><span class="s1">&#39;expepot&#39;</span><span class="p">][</span><span class="mi">3</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">epot_tot_old</span> <span class="o">=</span> <span class="n">h20</span><span class="p">[</span><span class="s1">&#39;expepot&#39;</span><span class="p">][</span><span class="mi">4</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">mass_sph</span> <span class="o">=</span> <span class="n">h20</span><span class="p">[</span><span class="s1">&#39;mass_sph&#39;</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">headl</span> <span class="o">=</span> <span class="n">h20</span><span class="p">[</span><span class="s1">&#39;headl&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">taill</span> <span class="o">=</span> <span class="n">h20</span><span class="p">[</span><span class="s1">&#39;taill&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">numbl</span> <span class="o">=</span> <span class="n">h20</span><span class="p">[</span><span class="s1">&#39;numbl&#39;</span><span class="p">]</span>
+<span class="c1">#        self.numbot = h2[&#39;numbot&#39;] # This value has been skipped</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">son</span> <span class="o">=</span> <span class="n">h4</span><span class="p">[</span><span class="s1">&#39;son&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">flag1</span> <span class="o">=</span> <span class="n">h4</span><span class="p">[</span><span class="s1">&#39;flag1&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cpu_map</span> <span class="o">=</span> <span class="n">h4</span><span class="p">[</span><span class="s1">&#39;cpu_map&#39;</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="Amr"><a class="viewcode-back" href="../../load.html#load.amr.Amr">[docs]</a><span class="k">class</span> <span class="nc">Amr</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    AMR class, which is required by Hydro class.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">info</span><span class="p">):</span>
+        <span class="kn">import</span> <span class="nn">os</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        info : load.info.Info class</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">snout</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">info</span><span class="o">.</span><span class="n">nout</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">info</span> <span class="o">=</span> <span class="n">info</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fnbase</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">info</span><span class="o">.</span><span class="n">base</span><span class="p">,</span> <span class="n">info</span><span class="o">.</span><span class="n">data_dir</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;output_&#39;</span> <span class="o">+</span> <span class="n">snout</span> <span class="o">+</span> <span class="s1">&#39;/amr_&#39;</span> <span class="o">+</span> <span class="n">snout</span> <span class="o">+</span> <span class="s1">&#39;.out&#39;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fnbase</span> <span class="o">+</span> <span class="s1">&#39;00001&#39;</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="kn">import</span> <span class="nn">glob</span>
+            <span class="n">amrs</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fnbase</span> <span class="o">+</span> <span class="s2">&quot;*&quot;</span><span class="p">)</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">amrs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">header</span> <span class="o">=</span> <span class="n">AmrHeader</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">_read_amr_header</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_load_mesh</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">ndim</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">ndim</span><span class="p">):</span>
+            <span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;f8&#39;</span><span class="p">))</span>
+            
+<div class="viewcode-block" id="Amr.get_zoomin"><a class="viewcode-back" href="../../load.html#load.amr.Amr.get_zoomin">[docs]</a>    <span class="k">def</span> <span class="nf">get_zoomin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a spherical region encompassing maximally refined cells.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        scale : float</span>
+<span class="sd">            The radius of the returned sphere is scaled by &#39;scale&#39;.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">utils</span> <span class="k">import</span> <span class="n">sampling</span>
+        <span class="n">imin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dm</span><span class="p">[</span><span class="s1">&#39;m&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">dm</span><span class="p">[</span><span class="s1">&#39;m&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">())</span>
+        <span class="n">xr</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">dm</span><span class="p">[</span><span class="s1">&#39;px&#39;</span><span class="p">][</span><span class="n">imin</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">dm</span><span class="p">[</span><span class="s1">&#39;px&#39;</span><span class="p">][</span><span class="n">imin</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()]</span>
+        <span class="n">yr</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">dm</span><span class="p">[</span><span class="s1">&#39;py&#39;</span><span class="p">][</span><span class="n">imin</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">dm</span><span class="p">[</span><span class="s1">&#39;py&#39;</span><span class="p">][</span><span class="n">imin</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()]</span>
+        <span class="n">zr</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">dm</span><span class="p">[</span><span class="s1">&#39;pz&#39;</span><span class="p">][</span><span class="n">imin</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">dm</span><span class="p">[</span><span class="s1">&#39;pz&#39;</span><span class="p">][</span><span class="n">imin</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()]</span>
+
+        <span class="n">xc</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="nb">sum</span><span class="p">(</span><span class="n">xr</span><span class="p">)</span>
+        <span class="n">yc</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="nb">sum</span><span class="p">(</span><span class="n">yr</span><span class="p">)</span>
+        <span class="n">zc</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="nb">sum</span><span class="p">(</span><span class="n">zr</span><span class="p">)</span>
+
+        <span class="n">radius</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="nb">max</span><span class="p">([</span><span class="n">xr</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">xr</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">yr</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">yr</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">zr</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">zr</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span> <span class="o">*</span> <span class="n">scale</span>
+        <span class="c1">#print(radius)</span>
+        <span class="k">return</span> <span class="n">sampling</span><span class="o">.</span><span class="n">set_region</span><span class="p">(</span><span class="n">centers</span><span class="o">=</span><span class="p">[</span><span class="n">xc</span><span class="p">,</span> <span class="n">yc</span><span class="p">,</span> <span class="n">zc</span><span class="p">],</span> <span class="n">radius</span><span class="o">=</span><span class="n">radius</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Amr.load"><a class="viewcode-back" href="../../load.html#load.amr.Amr.load">[docs]</a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load AMR data.</span>
+
+<span class="sd">        Need info file.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        The building block of FTT AMR is an oct, which is a group of 8 cells and data</span>
+<span class="sd">        either associate with cells or the oct(called &#39;mesh&#39; in IDL analysis routine).</span>
+<span class="sd">        An Oct consists of (level, xyz coordinates, poiner to the parent,</span>
+<span class="sd">        pointer to 6 neighbouring parents, pointer to child oct)</span>
+
+<span class="sd">        cpu map and refinement map is additionaly needed to restart a simulation.</span>
+<span class="sd">        octs of the same level are written at once. (So you need to loop over ilevel)</span>
+
+<span class="sd">        &lt;Todo&gt;</span>
+<span class="sd">        Think about when you will need to load the amr file.</span>
+<span class="sd">        It&#39;s rather unclear!</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+        <span class="c1"># global header variables are available.</span>
+        <span class="n">icpu</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># icpu</span>
+        <span class="n">cpus</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">cpus</span>
+        <span class="n">ndim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">ndim</span>
+        <span class="n">ngridtot</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="n">ncpu</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">ncpu</span>
+        <span class="n">nboundary</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">nboundary</span>
+        <span class="n">nlevelmax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">nlevelmax</span>
+
+        <span class="c1"># Size of arrays</span>
+
+        <span class="k">if</span> <span class="n">icpu</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">listmax</span> <span class="o">=</span> <span class="n">ncpu</span>
+        <span class="k">elif</span> <span class="n">icpu</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">listmax</span> <span class="o">=</span> <span class="n">ncpu</span> <span class="o">+</span> <span class="n">nboundary</span>
+
+        <span class="n">ngridarr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nlevelmax</span><span class="p">,</span> <span class="n">listmax</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+
+        <span class="n">llist</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">jcpu</span> <span class="ow">in</span> <span class="n">cpus</span><span class="p">:</span>
+            <span class="k">if</span><span class="p">(</span><span class="n">verbose</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">print_cpu</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">icpu</span><span class="p">)</span>
+
+            <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fnbase</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">jcpu</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">5</span><span class="p">))</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fnbase</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">jcpu</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">5</span><span class="p">),</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span>  <span class="c1"># +1</span>
+
+            <span class="c1"># read header</span>
+            <span class="n">header_icpu</span> <span class="o">=</span> <span class="n">AmrHeader</span><span class="p">()</span>
+            <span class="n">header_icpu</span><span class="o">.</span><span class="n">_read_amr_header</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+            <span class="n">numbl</span> <span class="o">=</span> <span class="n">header_icpu</span><span class="o">.</span><span class="n">numbl</span>
+            <span class="k">if</span> <span class="n">nboundary</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">numbb</span> <span class="o">=</span> <span class="n">header_icpu</span><span class="o">.</span><span class="n">numbb</span>  <span class="c1"># None if nboundary = 0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">numbb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">numbl</span><span class="p">))</span>
+
+            <span class="n">ngridtot</span> <span class="o">=</span> <span class="mi">0</span>
+
+            <span class="n">kcpumin</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">kcpumax</span> <span class="o">=</span> <span class="n">nboundary</span> <span class="o">+</span> <span class="n">ncpu</span>
+            <span class="n">nlevel</span> <span class="o">=</span> <span class="mi">0</span>
+
+            <span class="k">for</span> <span class="n">ilevel</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">nlevelmax</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">kcpu</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">kcpumin</span><span class="p">,</span> <span class="n">kcpumax</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+
+                    <span class="k">if</span> <span class="p">(</span><span class="n">kcpu</span> <span class="o">&lt;=</span> <span class="n">ncpu</span><span class="p">):</span>
+                        <span class="n">ng</span> <span class="o">=</span> <span class="n">numbl</span><span class="p">[</span><span class="n">ilevel</span><span class="p">][</span><span class="n">kcpu</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">ng</span> <span class="o">=</span> <span class="n">numbb</span><span class="p">[</span><span class="n">ilevel</span><span class="p">][</span><span class="n">kcpu</span> <span class="o">-</span> <span class="n">ncpu</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">icpu</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">kcpu</span> <span class="o">==</span> <span class="n">jcpu</span><span class="p">:</span>
+                            <span class="n">ngridarr</span><span class="p">[</span><span class="n">ilevel</span><span class="p">][</span><span class="n">kcpu</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">ng</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">ngridarr</span><span class="p">[</span><span class="n">ilevel</span><span class="p">][</span><span class="n">kcpu</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">ng</span>
+
+                    <span class="k">if</span> <span class="p">(</span><span class="n">ng</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
+                        <span class="n">ngridtot</span> <span class="o">=</span> <span class="n">ngridtot</span> <span class="o">+</span> <span class="n">ng</span>
+                        <span class="k">if</span> <span class="p">(</span><span class="n">verbose</span><span class="p">):</span>
+                            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Level </span><span class="si">%2d</span><span class="s2"> has </span><span class="si">%6d</span><span class="s2"> grids in proc </span><span class="si">%4d</span><span class="s2">&quot;</span>
+                                  <span class="o">%</span> <span class="p">(</span><span class="n">ilevel</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">ng</span><span class="p">,</span> <span class="n">kcpu</span><span class="p">))</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">tell</span><span class="p">())</span>
+                        <span class="n">nlevel</span> <span class="o">=</span> <span class="n">nlevel</span> <span class="o">+</span> <span class="mi">1</span>  <span class="c1"># number of valid (ng &gt; 0) levels</span>
+
+                        <span class="c1"># Read actual data</span>
+                        <span class="n">i_skip</span> <span class="o">=</span> <span class="mi">0</span>
+                        <span class="n">ind_current</span> <span class="o">=</span> <span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;i4&#39;</span><span class="p">),</span> <span class="n">ng</span><span class="p">)</span>
+                        <span class="c1"># row-major</span>
+                        <span class="n">ind_next</span> <span class="o">=</span> <span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;i4&#39;</span><span class="p">),</span> <span class="n">ng</span><span class="p">)</span>
+                        <span class="n">ind_prev</span> <span class="o">=</span> <span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;i4&#39;</span><span class="p">),</span> <span class="n">ng</span><span class="p">)</span>
+                        <span class="k">for</span> <span class="n">idim</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ndim</span><span class="p">):</span> <span class="c1"># gird center</span>
+                            <span class="n">xx</span> <span class="o">=</span> <span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;f8&#39;</span><span class="p">),</span> <span class="n">ng</span><span class="p">)</span>
+                        <span class="c1"># father index</span>
+                        <span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;i4&#39;</span><span class="p">),</span> <span class="n">ng</span><span class="p">)</span>
+
+                        <span class="k">for</span> <span class="n">idim</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">ndim</span><span class="p">):</span>  <span class="c1"># neighbour index</span>
+                            <span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;i4&#39;</span><span class="p">),</span> <span class="n">ng</span><span class="p">)</span>
+
+                        <span class="k">for</span> <span class="n">idim</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">ndim</span><span class="p">):</span>  <span class="c1"># son index</span>
+                            <span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;i4&#39;</span><span class="p">),</span> <span class="n">ng</span><span class="p">)</span>
+
+                        <span class="k">for</span> <span class="n">idim</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">ndim</span><span class="p">):</span>  <span class="c1"># cpu map</span>
+                            <span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;i4&#39;</span><span class="p">),</span> <span class="n">ng</span><span class="p">)</span>
+
+                        <span class="k">for</span> <span class="n">idim</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">ndim</span><span class="p">):</span>  <span class="c1"># ref map</span>
+                            <span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;i4&#39;</span><span class="p">),</span> <span class="n">ng</span><span class="p">)</span>
+
+                        <span class="k">if</span> <span class="n">icpu</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="p">(</span><span class="n">kcpu</span> <span class="o">==</span> <span class="n">jcpu</span><span class="p">):</span>
+                                <span class="n">pc</span> <span class="o">=</span> <span class="mi">1</span>
+
+                        <span class="n">llist</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">close</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">pyclusterevol -0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2016, Hoseung.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.8.
+    </div>
+  </body>
+</html>

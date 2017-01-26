@@ -1,0 +1,194 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>utils.util &#8212; pyclusterevol -0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '-0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="top" title="pyclusterevol -0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">pyclusterevol -0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for utils.util</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Thu Jan 29 00:26:50 2015</span>
+
+<span class="sd">@author: hoseung</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="point2range"><a class="viewcode-back" href="../../utils.html#utils.util.point2range">[docs]</a><span class="k">def</span> <span class="nf">point2range</span><span class="p">(</span><span class="n">cx</span><span class="p">,</span><span class="n">r</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">[[</span><span class="n">cx</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">r</span><span class="p">,</span><span class="n">cx</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">r</span><span class="p">],[</span><span class="n">cx</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">r</span><span class="p">,</span><span class="n">cx</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">r</span><span class="p">],[</span><span class="n">cx</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">-</span><span class="n">r</span><span class="p">,</span><span class="n">cx</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">+</span><span class="n">r</span><span class="p">]]</span></div>
+
+<div class="viewcode-block" id="reimport"><a class="viewcode-back" href="../../utils.html#utils.util.reimport">[docs]</a><span class="k">def</span> <span class="nf">reimport</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">importlib</span> <span class="k">import</span> <span class="n">reload</span>
+    <span class="n">reload</span><span class="p">(</span><span class="n">name</span><span class="p">)</span></div>
+    
+<div class="viewcode-block" id="normalize"><a class="viewcode-back" href="../../utils.html#utils.util.normalize">[docs]</a><span class="k">def</span> <span class="nf">normalize</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="kn">import</span> <span class="nn">string</span>
+    <span class="c1"># 1. lowercase</span>
+    <span class="c1"># 2. trim whitespaces</span>
+    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">string</span><span class="o">.</span><span class="n">punctuation</span><span class="p">:</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">s</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="fuzzymatch"><a class="viewcode-back" href="../../utils.html#utils.util.fuzzymatch">[docs]</a><span class="k">def</span> <span class="nf">fuzzymatch</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">answer_list</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+    <span class="kn">import</span> <span class="nn">string</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns an answer among a list of answers that best matches given string.</span>
+<span class="sd">    Maximum levenshtein distance is 2 by default. </span>
+<span class="sd">    </span>
+<span class="sd">    Refer to http://streamhacker.com/2011/10/31/fuzzy-string-matching-python/</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">answer</span> <span class="ow">in</span> <span class="n">answer_list</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">normalize</span><span class="p">(</span><span class="n">answer</span><span class="p">)</span> <span class="o">==</span> <span class="n">normalize</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">answer</span>
+    <span class="c1"># no answer so far?</span>
+   
+    <span class="n">edit_distance</span><span class="o">=</span><span class="p">[]</span>
+    <span class="k">for</span> <span class="n">answer</span> <span class="ow">in</span> <span class="n">answer_list</span><span class="p">:</span>
+        <span class="n">edit_distance</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">levenshtein</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">answer</span><span class="p">))</span>
+
+    <span class="n">min_ed</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">edit_distance</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">min_ed</span> <span class="o">&lt;=</span> <span class="n">threshold</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">answer_list</span><span class="p">[</span><span class="n">edit_distance</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">min_ed</span><span class="p">)]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No good matching. </span><span class="se">\</span>
+<span class="s2">               The best one is </span><span class="si">{0}</span><span class="s2"> with the distance </span><span class="si">{1}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+               <span class="n">answer_list</span><span class="p">[</span><span class="n">edit_distance</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">min_ed</span><span class="p">)],</span> <span class="n">mined</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="levenshtein"><a class="viewcode-back" href="../../utils.html#utils.util.levenshtein">[docs]</a><span class="k">def</span> <span class="nf">levenshtein</span><span class="p">(</span><span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns Levenshtein distance of two strings.</span>
+
+<span class="sd">    levenshtein(s1, s2)</span>
+<span class="sd">    </span>
+<span class="sd">    Source: http://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/Levenshtein_distance</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">s1</span><span class="p">)</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">s2</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">levenshtein</span><span class="p">(</span><span class="n">s2</span><span class="p">,</span> <span class="n">s1</span><span class="p">)</span>
+ 
+    <span class="c1"># len(s1) &gt;= len(s2)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">s2</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">s1</span><span class="p">)</span>
+ 
+    <span class="n">previous_row</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">s2</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">c1</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">s1</span><span class="p">):</span>
+        <span class="n">current_row</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">c2</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">s2</span><span class="p">):</span>
+            <span class="n">insertions</span> <span class="o">=</span> <span class="n">previous_row</span><span class="p">[</span><span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span> <span class="c1"># j+1 instead of j since previous_row and current_row are one character longer</span>
+            <span class="n">deletions</span> <span class="o">=</span> <span class="n">current_row</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span>       <span class="c1"># than s2</span>
+            <span class="n">substitutions</span> <span class="o">=</span> <span class="n">previous_row</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">c1</span> <span class="o">!=</span> <span class="n">c2</span><span class="p">)</span>
+            <span class="n">current_row</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">insertions</span><span class="p">,</span> <span class="n">deletions</span><span class="p">,</span> <span class="n">substitutions</span><span class="p">))</span>
+        <span class="n">previous_row</span> <span class="o">=</span> <span class="n">current_row</span>
+ 
+    <span class="k">return</span> <span class="n">previous_row</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="dgyr2dnout"><a class="viewcode-back" href="../../utils.html#utils.util.dgyr2dnout">[docs]</a><span class="k">def</span> <span class="nf">dgyr2dnout</span><span class="p">(</span><span class="n">dt</span><span class="p">,</span> <span class="n">nout_now</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">       returns nout closest to look back time at (nout) + dt.</span>
+<span class="sd">       dt can be either positive or negative. </span>
+
+<span class="sd">       example</span>
+<span class="sd">       -------</span>
+
+<span class="sd">       &gt;&gt;&gt; nout_now = 180</span>
+<span class="sd">       &gt;&gt;&gt; nout_1gyr_earlier = dgyr2dnout(-1.0, nout_now)</span>
+<span class="sd">       &gt;&gt;&gt; nout_1gyr_earlier</span>
+<span class="sd">           166</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">general.defaults</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">general</span><span class="o">.</span><span class="n">defaults</span><span class="o">.</span><span class="n">Default</span><span class="p">()</span>
+    <span class="n">df</span><span class="o">.</span><span class="n">load_time</span><span class="p">()</span>
+    
+    <span class="n">lbt</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">times</span><span class="p">[</span><span class="s2">&quot;lbt&quot;</span><span class="p">]</span>
+    <span class="n">lbt_now</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">times</span><span class="p">[</span><span class="s2">&quot;lbt&quot;</span><span class="p">][</span><span class="n">df</span><span class="o">.</span><span class="n">times</span><span class="p">[</span><span class="s2">&quot;nout&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">nout_now</span><span class="p">]</span>
+    <span class="c1">#print(np.abs(lbt - lbt_now - dt))</span>
+    <span class="n">i_dt</span><span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">lbt</span> <span class="o">-</span> <span class="n">lbt_now</span> <span class="o">+</span> <span class="n">dt</span><span class="p">))</span>
+    
+    <span class="k">return</span> <span class="n">df</span><span class="o">.</span><span class="n">times</span><span class="p">[</span><span class="s2">&quot;nout&quot;</span><span class="p">][</span><span class="n">i_dt</span><span class="p">]</span></div>
+
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">pyclusterevol -0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2016, Hoseung.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.8.
+    </div>
+  </body>
+</html>

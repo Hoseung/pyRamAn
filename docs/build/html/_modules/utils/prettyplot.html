@@ -1,0 +1,163 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>utils.prettyplot &#8212; pyclusterevol -0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '-0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="top" title="pyclusterevol -0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">pyclusterevol -0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for utils.prettyplot</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Sat Apr  4 21:36:41 2015</span>
+
+<span class="sd">Tools to make plots look better</span>
+
+
+<span class="sd">@author: hoseung</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="tickInPboxFloat"><a class="viewcode-back" href="../../utils.html#utils.prettyplot.tickInPboxFloat">[docs]</a><span class="k">def</span> <span class="nf">tickInPboxFloat</span><span class="p">(</span><span class="n">xr</span><span class="p">,</span> <span class="n">pboxsize</span><span class="p">,</span> <span class="n">nticks</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">numpy</span> <span class="k">import</span> <span class="n">arange</span>
+    <span class="n">dx</span> <span class="o">=</span> <span class="p">(</span><span class="n">xr</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">xr</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="n">nticks</span>
+    <span class="k">return</span> <span class="p">[</span><span class="s2">&quot;</span><span class="si">{:1.2f}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">arange</span><span class="p">(</span><span class="n">xr</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">xr</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">dx</span><span class="p">)</span> <span class="o">*</span> <span class="n">pboxsize</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="tickInPboxInt"><a class="viewcode-back" href="../../utils.html#utils.prettyplot.tickInPboxInt">[docs]</a><span class="k">def</span> <span class="nf">tickInPboxInt</span><span class="p">(</span><span class="n">xr</span><span class="p">,</span> <span class="n">npix</span><span class="p">,</span> <span class="n">nticks</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    returns x_org_pos, and x_new,</span>
+<span class="sd">    where x_org_pos is normalized position of new ticks on data point,</span>
+<span class="sd">    and x_new is new ticks in physical unit.</span>
+
+<span class="sd">    xx, xnew = tickInPboxInt(xr, s.info.pboxsize, 800, nticks=3)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">numpy</span> <span class="k">import</span> <span class="n">arange</span>
+    <span class="kn">from</span> <span class="nn">numpy</span> <span class="k">import</span> <span class="n">asarray</span>
+    <span class="kn">from</span> <span class="nn">math</span> <span class="k">import</span> <span class="n">floor</span><span class="p">,</span> <span class="n">ceil</span>
+    <span class="n">dx_phy</span> <span class="o">=</span> <span class="p">(</span><span class="n">xr</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">xr</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="c1">#print(dx_phy)</span>
+    <span class="c1"># For example, xr = [0.234, 0.345], pboxsize = 262.813870..</span>
+    <span class="c1"># ntick=5</span>
+    <span class="c1"># dx_phy = 29.1723396 Mpc</span>
+    <span class="n">multiplier</span><span class="p">,</span> <span class="n">dxpn</span> <span class="o">=</span> <span class="n">toIntegerPart</span><span class="p">(</span><span class="n">dx_phy</span> <span class="o">/</span> <span class="n">nticks</span><span class="p">)</span>
+    <span class="c1">#print(dxpn)</span>
+    <span class="c1"># dxpn = 5.83446792...</span>
+    <span class="n">dxpn_good</span> <span class="o">=</span> <span class="n">floor</span><span class="p">(</span><span class="n">dxpn</span><span class="p">)</span> <span class="o">*</span> <span class="mi">10</span><span class="o">**</span><span class="p">(</span><span class="n">multiplier</span><span class="p">)</span>
+    <span class="c1">#print(dxpn_good)</span>
+    <span class="c1"># dxpn_good = 5</span>
+
+    <span class="n">x_new_first</span> <span class="o">=</span> <span class="n">ceil</span><span class="p">(</span><span class="n">xr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">dxpn_good</span><span class="p">)</span> <span class="o">*</span> <span class="n">dxpn_good</span>
+    <span class="c1"># 65</span>
+    <span class="n">x_new_last</span> <span class="o">=</span> <span class="n">floor</span><span class="p">(</span><span class="n">xr</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">dxpn_good</span><span class="p">)</span> <span class="o">*</span> <span class="n">dxpn_good</span>
+    <span class="c1">#print(floor(xr[1] / dxpn_good))</span>
+    <span class="c1"># 85</span>
+    <span class="n">x_new_num</span> <span class="o">=</span> <span class="n">arange</span><span class="p">(</span><span class="n">x_new_first</span><span class="p">,</span> <span class="n">x_new_last</span> <span class="o">*</span> <span class="mf">1.00001</span><span class="p">,</span> <span class="n">dxpn_good</span><span class="p">)</span>
+    <span class="c1"># to include the end point</span>
+    <span class="n">x_new</span> <span class="o">=</span> <span class="n">asarray</span><span class="p">([</span><span class="s2">&quot;</span><span class="si">{:1.1f}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">x_new_num</span><span class="p">])</span>
+    <span class="n">x_org_pos</span> <span class="o">=</span> <span class="p">(</span><span class="n">x_new_num</span> <span class="o">-</span> <span class="n">xr</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="n">dx_phy</span>
+    <span class="k">return</span> <span class="n">x_org_pos</span><span class="p">,</span> <span class="n">x_new</span></div>
+
+
+<div class="viewcode-block" id="toIntegerPart"><a class="viewcode-back" href="../../utils.html#utils.prettyplot.toIntegerPart">[docs]</a><span class="k">def</span> <span class="nf">toIntegerPart</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">ndecimal</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Converts number to have 1 digit integer part.</span>
+<span class="sd">    For example, 123.456 -&gt; 1.23456</span>
+
+<span class="sd">    Also returned is the original number of digit.</span>
+<span class="sd">    , ndigit</span>
+
+<span class="sd">    return ndigit, new_val</span>
+
+<span class="sd">    To have 2 integer part digits,</span>
+<span class="sd">    use the option ndecimal = 2</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1">#from math import ceil</span>
+    <span class="n">nID</span> <span class="o">=</span> <span class="n">nIntDigit</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">nID</span><span class="p">,</span> <span class="n">val</span><span class="o">*</span> <span class="mi">10</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">nID</span> <span class="o">+</span> <span class="n">ndecimal</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="nIntDigit"><a class="viewcode-back" href="../../utils.html#utils.prettyplot.nIntDigit">[docs]</a><span class="k">def</span> <span class="nf">nIntDigit</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">math</span> <span class="k">import</span> <span class="n">floor</span><span class="p">,</span> <span class="n">log10</span>
+    <span class="k">return</span> <span class="n">floor</span><span class="p">(</span><span class="n">log10</span><span class="p">(</span><span class="n">val</span><span class="p">))</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">pyclusterevol -0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2016, Hoseung.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.8.
+    </div>
+  </body>
+</html>

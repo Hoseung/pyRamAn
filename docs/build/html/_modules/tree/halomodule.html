@@ -1,0 +1,632 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>tree.halomodule &#8212; pyclusterevol -0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '-0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="top" title="pyclusterevol -0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">pyclusterevol -0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for tree.halomodule</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Mon Apr  6 11:00:31 2015</span>
+
+<span class="sd">halo / galaxy calss including basic data load functionality. </span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">nout : int</span>
+<span class="sd">    snapshot number</span>
+<span class="sd">base : str</span>
+<span class="sd">    work directory</span>
+<span class="sd">is_gal : logical</span>
+<span class="sd">    load galaxy if true</span>
+<span class="sd">return_id : logical</span>
+<span class="sd">    If True, load and return constituent particle id of each halo. </span>
+<span class="sd">return_id_list : int list</span>
+<span class="sd">    specify halos of which particle id is returned.</span>
+<span class="sd">    If return_id is True but return_id_list is None, </span>
+<span class="sd">    particle id of all halos are returned.</span>
+
+
+<span class="sd">MODIFICATIONS:</span>
+<span class="sd">2015. 08. 08</span>
+<span class="sd">    Floats are all stored as doubles even though the original data is float32.</span>
+<span class="sd">    If center position is stored in float32, then is used to select particles</span>
+<span class="sd">    inside the region, then max(x) - min(x) &gt; 2 * region[&#39;radius&#39;] is possible!</span>
+
+<span class="sd">2016.03.26</span>
+<span class="sd">    if return_id = True, but no return_id_list is set, then return id lists</span>
+<span class="sd">     of all halos by dafault.</span>
+
+<span class="sd">@author: hoseung</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="HaloMeta"><a class="viewcode-back" href="../../tree.html#tree.halomodule.HaloMeta">[docs]</a><span class="k">class</span> <span class="nc">HaloMeta</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    HaloMeta class.</span>
+
+
+<span class="sd">    all except halofinder output.</span>
+
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd"> </span>
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+<span class="sd">    set_info(self, info)</span>
+<span class="sd">    set_nout(self, nout)</span>
+
+<span class="sd">    set_halofinder(self, halofinder)</span>
+
+
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nout</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="s1">&#39;./&#39;</span><span class="p">,</span> <span class="n">info</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">halofinder</span><span class="o">=</span><span class="s1">&#39;HM&#39;</span><span class="p">,</span>
+                 <span class="n">load</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">is_gal</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">return_id</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">outdir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        nout : int</span>
+<span class="sd">            snapshot number</span>
+<span class="sd">        base : str</span>
+<span class="sd">            working directory</span>
+<span class="sd">        info : info object</span>
+
+<span class="sd">        halofinder : {&quot;RS&quot;, &quot;HM&quot;}</span>
+<span class="sd">            Full names also work. case insensitive.</span>
+<span class="sd">  </span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        It is better to specify nout, base, halofinder from the beginning. </span>
+<span class="sd">        All three are necessary to load a halo output</span>
+<span class="sd">        </span>
+<span class="sd">        &gt;&gt;&gt; h = tree.halomodule.Halo(nout=132, halofinder=&quot;RS&quot;, base=&#39;~/data/AGN2/&#39;)    </span>
+<span class="sd">        </span>
+<span class="sd">        given nout and base, info is auto-loaded if not explicitely given.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">nout</span> <span class="o">=</span> <span class="n">nout</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">base</span> <span class="o">=</span> <span class="n">base</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">info</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_info</span><span class="p">(</span><span class="n">info</span><span class="o">=</span><span class="n">info</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">run_params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;none&quot;</span><span class="p">:</span><span class="kc">None</span><span class="p">}</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">halofinder</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_halofinder</span><span class="p">(</span><span class="n">halofinder</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">aexp</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">age</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sim</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;none&quot;</span><span class="p">:</span><span class="kc">None</span><span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nhalo</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nsub</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">npart_all</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">massp</span> <span class="o">=</span> <span class="mi">0</span> <span class="c1"># in case of single level DMO run.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">unit</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;mass&quot;</span><span class="p">:</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;lengh&quot;</span><span class="p">:</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;velocity&quot;</span><span class="p">:</span><span class="kc">None</span><span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_gal</span> <span class="o">=</span> <span class="n">is_gal</span>
+        <span class="k">if</span> <span class="n">return_id</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">return_id</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">return_id</span><span class="p">,</span> <span class="s2">&quot;__len__&quot;</span><span class="p">):</span>
+                <span class="c1"># String also has __len__, but let&#39;s just ignore such cases.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">return_id_list</span> <span class="o">=</span> <span class="n">return_id</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">return_id_list</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1"># None = load all halo&#39;s ids.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">return_id</span> <span class="o">=</span> <span class="kc">True</span>
+        
+        <span class="k">if</span> <span class="n">outdir</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">is_gal</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">gal_find_dir</span> <span class="o">=</span> <span class="s1">&#39;GalaxyMaker/&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dm_find_dir</span><span class="o">=</span> <span class="s1">&#39;halo/&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">is_gal</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">gal_find_dir</span> <span class="o">=</span> <span class="n">outdir</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dm_find_dir</span> <span class="o">=</span> <span class="n">outdir</span>
+        
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_nout</span><span class="p">(</span><span class="n">nout</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">pass</span>
+        
+        <span class="k">if</span> <span class="n">load</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">load</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="HaloMeta.set_info"><a class="viewcode-back" href="../../tree.html#tree.halomodule.HaloMeta.set_info">[docs]</a>    <span class="k">def</span> <span class="nf">set_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">info</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">info</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_load_info</span><span class="p">()</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[Halo.set_info] Couldn&#39;t load info file.&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="c1"># automatically raise the most recent error</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">info</span> <span class="o">=</span> <span class="n">info</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_load_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">import</span> <span class="nn">load.info</span>
+        <span class="c1">#if self.verbose: </span>
+        <span class="k">if</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[Halo.load_info] loading info&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[Halo.load_info] nout = </span><span class="si">{}</span><span class="s2">, base =</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nout</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">info</span> <span class="o">=</span> <span class="n">load</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">Info</span><span class="p">(</span><span class="n">nout</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nout</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="p">,</span> <span class="n">load</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>    
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[Halo.load_info] info is loaded&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="HaloMeta.set_halofinder"><a class="viewcode-back" href="../../tree.html#tree.halomodule.HaloMeta.set_halofinder">[docs]</a>    <span class="k">def</span> <span class="nf">set_halofinder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">halofinder</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">utils</span> <span class="k">import</span> <span class="n">util</span>
+        <span class="n">options</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;HM&#39;</span><span class="p">,</span> <span class="s1">&#39;halomaker&#39;</span><span class="p">,</span> <span class="s1">&#39;rockstar&#39;</span><span class="p">,</span> <span class="s1">&#39;rs&#39;</span><span class="p">]</span>
+        <span class="n">guess</span> <span class="o">=</span>  <span class="n">util</span><span class="o">.</span><span class="n">fuzzymatch</span><span class="p">(</span><span class="n">halofinder</span><span class="p">,</span> <span class="n">answer_list</span><span class="o">=</span><span class="n">options</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">guess</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;HM&quot;</span><span class="p">,</span> <span class="s1">&#39;halomaker&#39;</span><span class="p">]:</span>
+            <span class="n">answer</span> <span class="o">=</span> <span class="s2">&quot;HaloMaker&quot;</span>
+        <span class="k">elif</span> <span class="n">guess</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;rockstar&#39;</span><span class="p">,</span> <span class="s1">&#39;rs&#39;</span><span class="p">]:</span>
+            <span class="n">answer</span> <span class="o">=</span> <span class="s1">&#39;Rockstar&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Don&#39;t understand what you mean:&quot;</span> <span class="o">+</span> <span class="n">halofinder</span><span class="p">)</span>
+            <span class="n">answer</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">halofinder</span> <span class="o">=</span> <span class="n">answer</span></div>
+
+
+<div class="viewcode-block" id="HaloMeta.set_nout"><a class="viewcode-back" href="../../tree.html#tree.halomodule.HaloMeta.set_nout">[docs]</a>    <span class="k">def</span> <span class="nf">set_nout</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nout</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nout</span> <span class="o">=</span> <span class="n">nout</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_aexp</span><span class="p">(</span><span class="n">nout</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="Halo"><a class="viewcode-back" href="../../tree.html#tree.halomodule.Halo">[docs]</a><span class="k">class</span> <span class="nc">Halo</span><span class="p">(</span><span class="n">HaloMeta</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class to hold Halo finder catalog.</span>
+
+<span class="sd">    HM :</span>
+<span class="sd">        r = distance of the furthest particle from the center of the halo.</span>
+<span class="sd">        rvir = radius where the density is 200 times the _______?</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Rockstar halo id starts from 0. CT id too.</span>
+<span class="sd">    For the details of Halofinders refer Aubert 2004, Behroozi 2013.</span>
+
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Halo</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        
+    <span class="k">def</span> <span class="nf">_check_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">),</span> <span class="s2">&quot;No working directory given : </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nout</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">),</span> <span class="s2">&quot;No nout given : </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nout</span><span class="p">)</span>
+        <span class="c1">#assert (self.base is not None), &quot;No  : {}&quot;.format(self.base)</span>
+    
+<div class="viewcode-block" id="Halo.set_data"><a class="viewcode-back" href="../../tree.html#tree.halomodule.Halo.set_data">[docs]</a>    <span class="k">def</span> <span class="nf">set_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">load</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span></div>
+
+<div class="viewcode-block" id="Halo.load"><a class="viewcode-back" href="../../tree.html#tree.halomodule.Halo.load">[docs]</a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_params</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">halofinder</span> <span class="ow">is</span> <span class="s1">&#39;Rockstar&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">load_rs</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">halofinder</span> <span class="ow">is</span> <span class="s1">&#39;HaloMaker&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_id</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">load_hm_old</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">load_hm</span><span class="p">()</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">info</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="kn">import</span> <span class="nn">load</span>
+                <span class="n">info</span> <span class="o">=</span> <span class="n">load</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">Info</span><span class="p">(</span><span class="n">base</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="p">,</span> <span class="n">nout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nout</span><span class="p">,</span> <span class="n">load</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">set_info</span><span class="p">(</span><span class="n">info</span><span class="p">)</span>
+        
+            <span class="bp">self</span><span class="o">.</span><span class="n">normalize</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Halo.load_hm"><a class="viewcode-back" href="../../tree.html#tree.halomodule.Halo.load_hm">[docs]</a>    <span class="k">def</span> <span class="nf">load_hm</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nout</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">info</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">nout</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">nout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nout</span>
+        <span class="k">if</span> <span class="n">base</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">base</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base</span>
+        <span class="n">snout</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nout</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_gal</span><span class="p">:</span>
+            <span class="n">fn</span> <span class="o">=</span> <span class="n">base</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">gal_find_dir</span> <span class="o">+</span> <span class="s1">&#39;gal/tree_bricks&#39;</span> <span class="o">+</span> <span class="n">snout</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">fn</span> <span class="o">=</span> <span class="n">base</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">dm_find_dir</span> <span class="o">+</span> <span class="s1">&#39;DM/tree_bricks&#39;</span> <span class="o">+</span> <span class="n">snout</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span> 
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Loading file:&quot;</span><span class="p">,</span> <span class="n">fn</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">dtype_halo</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;np&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;i4&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;i4&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;level&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;i4&#39;</span><span class="p">),</span>
+                          <span class="p">(</span><span class="s1">&#39;host&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;i4&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;sub&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;i4&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;nsub&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;i4&#39;</span><span class="p">),</span>
+                          <span class="p">(</span><span class="s1">&#39;nextsub&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;i4&#39;</span><span class="p">),</span>
+                          <span class="p">(</span><span class="s1">&#39;m&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;mvir&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span>
+                          <span class="p">(</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;rvir&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span> 
+                          <span class="p">(</span><span class="s1">&#39;tvir&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;cvel&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span> 
+                          <span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;z&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span>
+                          <span class="p">(</span><span class="s1">&#39;vx&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;vy&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;vz&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span>
+                          <span class="p">(</span><span class="s1">&#39;ax&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;ay&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;az&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span>
+                          <span class="p">(</span><span class="s1">&#39;sp&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;idx&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;i4&#39;</span><span class="p">),</span>
+                          <span class="p">(</span><span class="s1">&#39;p_rho&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),(</span><span class="s1">&#39;p_c&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span> 
+                          <span class="p">(</span><span class="s1">&#39;energy&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f8&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,)),</span> <span class="p">(</span><span class="s1">&#39;radius&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f8&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">4</span><span class="p">,))]</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_gal</span><span class="p">:</span>
+                <span class="n">dtype_halo</span> <span class="o">+=</span> <span class="p">[(</span><span class="s1">&#39;sig&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;sigbulge&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span>
+                               <span class="p">(</span><span class="s1">&#39;mbulge&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;hosthalo&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;i4&#39;</span><span class="p">),</span>
+                               <span class="p">(</span><span class="s1">&#39;g_nbin&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;i4&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;g_rr&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">100</span><span class="p">,)),</span>
+                               <span class="p">(</span><span class="s1">&#39;g_rho&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">100</span><span class="p">,))]</span>
+
+            <span class="kn">import</span> <span class="nn">tree.load_c.rd_hal</span> <span class="k">as</span> <span class="nn">rd_halo</span>
+            <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+            <span class="n">temp</span> <span class="o">=</span> <span class="n">rd_halo</span><span class="o">.</span><span class="n">read_file</span><span class="p">(</span><span class="n">fn</span><span class="o">.</span><span class="n">encode</span><span class="p">(),</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">is_gal</span><span class="p">))</span><span class="c1"># as a byte str.</span>
+            
+            <span class="bp">self</span><span class="o">.</span><span class="n">nbodies</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">halnum</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">subnum</span><span class="p">,</span>\
+                <span class="bp">self</span><span class="o">.</span><span class="n">massp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">aexp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">omegat</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">age</span> <span class="o">=</span> <span class="n">temp</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">7</span><span class="p">]</span>
+            <span class="n">ntot</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">halnum</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">subnum</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">recarray</span><span class="p">(</span><span class="n">ntot</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype_halo</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;np&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">],</span>\
+            <span class="n">levels</span><span class="p">,</span> <span class="n">ang</span><span class="p">,</span> <span class="n">energy</span><span class="p">,</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;m&#39;</span><span class="p">],</span>\
+            <span class="n">radius</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span>\
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;sp&#39;</span><span class="p">],</span> <span class="n">vel</span> <span class="o">=</span> <span class="n">temp</span><span class="p">[</span><span class="mi">7</span><span class="p">:</span><span class="mi">17</span><span class="p">]</span>
+            <span class="n">vir</span><span class="p">,</span> <span class="n">profile</span> <span class="o">=</span> <span class="n">temp</span><span class="p">[</span><span class="mi">17</span><span class="p">:</span><span class="mi">19</span><span class="p">]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_gal</span><span class="p">:</span>
+                <span class="n">temp_gal</span> <span class="o">=</span> <span class="n">temp</span><span class="p">[</span><span class="mi">19</span><span class="p">]</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;energy&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">energy</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">ntot</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
+            <span class="n">levels</span> <span class="o">=</span> <span class="n">levels</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">ntot</span><span class="p">,</span><span class="mi">5</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;level&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;host&#39;</span><span class="p">],</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;sub&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;nsub&#39;</span><span class="p">],</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;nextsub&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">levels</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> \
+                <span class="n">levels</span><span class="p">[:,</span><span class="mi">1</span><span class="p">],</span> <span class="n">levels</span><span class="p">[:,</span><span class="mi">2</span><span class="p">],</span><span class="n">levels</span><span class="p">[:,</span><span class="mi">3</span><span class="p">],</span> <span class="n">levels</span><span class="p">[:,</span><span class="mi">4</span><span class="p">]</span>
+            <span class="n">pos</span> <span class="o">=</span> <span class="n">pos</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">ntot</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">]</span> \
+                    <span class="o">=</span> <span class="n">pos</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span><span class="n">pos</span><span class="p">[:,</span><span class="mi">1</span><span class="p">],</span><span class="n">pos</span><span class="p">[:,</span><span class="mi">2</span><span class="p">]</span>
+            <span class="n">vel</span> <span class="o">=</span> <span class="n">vel</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">ntot</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;vx&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;vy&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;vz&#39;</span><span class="p">]</span> \
+                    <span class="o">=</span> <span class="n">vel</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span><span class="n">vel</span><span class="p">[:,</span><span class="mi">1</span><span class="p">],</span><span class="n">vel</span><span class="p">[:,</span><span class="mi">2</span><span class="p">]</span>
+            <span class="n">ang</span> <span class="o">=</span> <span class="n">ang</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">ntot</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;ax&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;ay&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;az&#39;</span><span class="p">]</span> \
+                    <span class="o">=</span> <span class="n">ang</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span><span class="n">ang</span><span class="p">[:,</span><span class="mi">1</span><span class="p">],</span><span class="n">ang</span><span class="p">[:,</span><span class="mi">2</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;r&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">radius</span><span class="p">[::</span><span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+<span class="c1">#           copy so that memory is continuous. (Not tested!)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;rvir&#39;</span><span class="p">],</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;mvir&#39;</span><span class="p">],</span> \
+                    <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;tvir&#39;</span><span class="p">],</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;cvel&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">vir</span><span class="p">[::</span><span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>\
+                <span class="n">vir</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span><span class="n">vir</span><span class="p">[</span><span class="mi">2</span><span class="p">::</span><span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span><span class="n">vir</span><span class="p">[</span><span class="mi">3</span><span class="p">::</span><span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;p_rho&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;p_c&#39;</span><span class="p">]</span> <span class="o">=</span>\
+                    <span class="n">profile</span><span class="p">[::</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span><span class="n">profile</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="c1"># profile rho and concentration</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_gal</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;sig&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;sigbulge&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;mbulge&#39;</span><span class="p">]</span> <span class="o">=</span>\
+                        <span class="n">temp_gal</span><span class="p">[::</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">temp_gal</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">temp_gal</span><span class="p">[</span><span class="mi">2</span><span class="p">::</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;g_nbin&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">temp</span><span class="p">[</span><span class="mi">20</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;g_rr&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">temp</span><span class="p">[</span><span class="mi">21</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">ntot</span><span class="p">,</span><span class="mi">100</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;g_rho&#39;</span><span class="p">]</span><span class="o">=</span> <span class="n">temp</span><span class="p">[</span><span class="mi">22</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">ntot</span><span class="p">,</span><span class="mi">100</span><span class="p">)</span>
+
+        <span class="k">except</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Something wrong&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Halo.load_hm_old"><a class="viewcode-back" href="../../tree.html#tree.halomodule.Halo.load_hm_old">[docs]</a>    <span class="k">def</span> <span class="nf">load_hm_old</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nout</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">info</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">nout</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">nout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nout</span>
+        <span class="k">if</span> <span class="n">base</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">base</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base</span>
+        <span class="n">snout</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nout</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_gal</span><span class="p">:</span>
+            <span class="n">fn</span> <span class="o">=</span> <span class="n">base</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">gal_find_dir</span> <span class="o">+</span> <span class="s1">&#39;gal/tree_bricks&#39;</span> <span class="o">+</span> <span class="n">snout</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">fn</span> <span class="o">=</span> <span class="n">base</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">dm_find_dir</span> <span class="o">+</span> <span class="s1">&#39;DM/tree_bricks&#39;</span> <span class="o">+</span> <span class="n">snout</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span>
+            <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+            <span class="kn">from</span> <span class="nn">load.utils</span> <span class="k">import</span> <span class="n">read_fortran</span><span class="p">,</span> <span class="n">skip_fortran</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nbodies</span> <span class="o">=</span> <span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;i4&#39;</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">massp</span> <span class="o">=</span> <span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;f4&#39;</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">aexp</span> <span class="o">=</span> <span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;f4&#39;</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">omegat</span> <span class="o">=</span> <span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;f4&#39;</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">age</span> <span class="o">=</span> <span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;f4&#39;</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">halnum</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">subnum</span> <span class="o">=</span> <span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;i4&#39;</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span>
+
+            <span class="n">dtype_halo</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;np&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;i4&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;i4&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;level&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;i4&#39;</span><span class="p">),</span>
+                          <span class="p">(</span><span class="s1">&#39;host&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;i4&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;sub&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;i4&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;nsub&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;i4&#39;</span><span class="p">),</span>
+                          <span class="p">(</span><span class="s1">&#39;nextsub&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;i4&#39;</span><span class="p">),</span>
+                          <span class="p">(</span><span class="s1">&#39;m&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;mvir&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span>
+                          <span class="p">(</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;rvir&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span> 
+                          <span class="p">(</span><span class="s1">&#39;tvir&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;cvel&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span> 
+                          <span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;z&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span>
+                          <span class="p">(</span><span class="s1">&#39;vx&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;vy&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;vz&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span>
+                          <span class="p">(</span><span class="s1">&#39;ax&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;ay&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;az&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span>
+                          <span class="p">(</span><span class="s1">&#39;sp&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;idx&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;i4&#39;</span><span class="p">),</span>
+                          <span class="p">(</span><span class="s1">&#39;p_rho&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),(</span><span class="s1">&#39;p_c&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">)]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_gal</span><span class="p">:</span>
+                <span class="n">dtype_halo</span> <span class="o">+=</span> <span class="p">[(</span><span class="s1">&#39;sig&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;sigbulge&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span>
+                               <span class="p">(</span><span class="s1">&#39;mbulge&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;f4&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;hosthalo&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;i4&#39;</span><span class="p">)]</span>
+
+            <span class="n">tothal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">halnum</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">subnum</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">recarray</span><span class="p">(</span><span class="n">tothal</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype_halo</span><span class="p">)</span>
+<span class="c1">#            print(&quot;retunr id?&quot;, self.return_id)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_id</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">idlists</span><span class="o">=</span><span class="p">[]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">hal_idlists</span><span class="o">=</span><span class="p">[]</span>
+          
+<span class="c1">#            print(&quot;idlists&quot;, self.idlists)          </span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">tothal</span><span class="p">):</span>
+                <span class="n">nph</span> <span class="o">=</span> <span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;i4&#39;</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;np&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">nph</span>
+
+                <span class="n">tmp</span> <span class="o">=</span> <span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;i4&#39;</span><span class="p">),</span> <span class="n">nph</span><span class="p">)</span> <span class="c1"># id list. </span>
+                <span class="n">hnu</span> <span class="o">=</span> <span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;i4&#39;</span><span class="p">),</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">hnu</span>
+<span class="c1">#                print(self.return_id_list, &quot;return_id_list&quot;)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_id</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_id_list</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">hnu</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_id_list</span><span class="p">:</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">idlists</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">hal_idlists</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">hnu</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">idlists</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">hal_idlists</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">hnu</span><span class="p">)</span>
+                  <span class="c1"># By default save all id lists. </span>
+<span class="c1">#                        self.idlists.append(tmp)</span>
+            
+                <span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;i4&#39;</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span> <span class="c1">#timestep</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;level&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;host&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">],</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;sub&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;nsub&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">],</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;nextsub&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;i4&#39;</span><span class="p">),</span> <span class="mi">5</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;m&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;f4&#39;</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> \
+                    <span class="o">=</span> <span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;f4&#39;</span><span class="p">),</span> <span class="mi">3</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;vx&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;vy&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;vz&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> \
+                    <span class="o">=</span> <span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;f4&#39;</span><span class="p">),</span> <span class="mi">3</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;ax&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;ay&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;az&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> \
+                    <span class="o">=</span> <span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;f4&#39;</span><span class="p">),</span> <span class="mi">3</span><span class="p">)</span>                
+                <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;r&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;f4&#39;</span><span class="p">),</span> <span class="mi">4</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;f4&#39;</span><span class="p">),</span> <span class="mi">3</span><span class="p">)</span><span class="c1">#energies</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;sp&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;f4&#39;</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_gal</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;sig&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;sigbulge&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;mbulge&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> \
+                        <span class="o">=</span> <span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;f4&#39;</span><span class="p">),</span> <span class="mi">3</span><span class="p">)</span>
+                    <span class="c1">#skip_fortran(f)</span>
+                    
+                <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;rvir&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;mvir&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">],</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;tvir&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">],</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;cvel&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> \
+                        <span class="o">=</span> <span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;f4&#39;</span><span class="p">),</span> <span class="mi">4</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;p_rho&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;p_c&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">read_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;f4&#39;</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span><span class="c1"># profile rho and concentration</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_gal</span><span class="p">:</span>
+                    <span class="c1"># stellar surface profile</span>
+                    <span class="n">skip_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="c1"># nbin</span>
+                    <span class="n">skip_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="c1"># rr</span>
+                    <span class="n">skip_fortran</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="c1"># rho</span>
+    
+            <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_id_list</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">hal_idlists</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span>
+<span class="c1">#            self.refactor_hm()</span>
+        <span class="k">except</span> <span class="ne">IOError</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Couldn&#39;t find </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fn</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_id_list</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="kn">import</span> <span class="nn">utils.match</span> <span class="k">as</span> <span class="nn">mtc</span>
+            <span class="n">ind_ok</span> <span class="o">=</span> <span class="n">mtc</span><span class="o">.</span><span class="n">match_list_ind</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_id_list</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">ind_ok</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="Halo.refactor_hm"><a class="viewcode-back" href="../../tree.html#tree.halomodule.Halo.refactor_hm">[docs]</a>    <span class="k">def</span> <span class="nf">refactor_hm</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        refactor HaloMaker halo into Rockstar format. (mostly name modifications.)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        self.aexp = data.aexp</span>
+<span class="sd">        self.age = data.age</span>
+<span class="sd">        self.npart_all = data.nbodies</span>
+<span class="sd">        self.massp = data.massp</span>
+<span class="sd">        self.nhalo = data.halnum[0]</span>
+<span class="sd">        self.nsub = data.subnum[0]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># refactor the recarray.</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="s2">&quot;np&quot;</span><span class="p">,</span> <span class="s2">&quot;m&quot;</span><span class="p">,</span> <span class="s2">&quot;mvir&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="s2">&quot;rvir&quot;</span><span class="p">,</span>
+                 <span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="s2">&quot;z&quot;</span><span class="p">,</span> <span class="s2">&quot;vx&quot;</span><span class="p">,</span> <span class="s2">&quot;vy&quot;</span><span class="p">,</span> <span class="s2">&quot;vz&quot;</span><span class="p">,</span>
+                 <span class="s2">&quot;level&quot;</span><span class="p">,</span> <span class="s2">&quot;host&quot;</span><span class="p">,</span> <span class="s2">&quot;sub&quot;</span><span class="p">,</span> <span class="s2">&quot;nsub&quot;</span><span class="p">,</span> <span class="s2">&quot;nextsub&quot;</span><span class="p">,</span>
+                 <span class="s2">&quot;spinx&quot;</span><span class="p">,</span> <span class="s2">&quot;spiny&quot;</span><span class="p">,</span> <span class="s2">&quot;spinz&quot;</span><span class="p">,</span> <span class="s2">&quot;angx&quot;</span><span class="p">,</span> <span class="s2">&quot;angy&quot;</span><span class="p">,</span> <span class="s2">&quot;angz&quot;</span><span class="p">]</span>
+
+        <span class="n">dtypes</span> <span class="o">=</span> <span class="s2">&quot;int64, int64, float64, float64, float64, float64, </span><span class="se">\</span>
+<span class="s2">                  float64, float64, float64, float64, float64, float64,</span><span class="se">\</span>
+<span class="s2">                  int8, int64, int64, int32, int64, </span><span class="se">\</span>
+<span class="s2">                  float64, float64, float64, float64, float64, float64&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">rec</span><span class="o">.</span><span class="n">fromarrays</span><span class="p">([</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;HNU&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;NP&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+                      <span class="n">data</span><span class="p">[</span><span class="s2">&quot;M&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;MVIR&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+                      <span class="n">data</span><span class="p">[</span><span class="s2">&quot;R&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;RVIR&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+                      <span class="n">data</span><span class="p">[</span><span class="s2">&quot;P&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;P&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;P&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">2</span><span class="p">],</span>
+                      <span class="n">data</span><span class="p">[</span><span class="s2">&quot;V&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;V&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;V&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">2</span><span class="p">],</span>
+                      <span class="n">data</span><span class="p">[</span><span class="s2">&quot;HHOST&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;HHOST&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span>
+                      <span class="n">data</span><span class="p">[</span><span class="s2">&quot;HHOST&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">2</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;HHOST&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">3</span><span class="p">],</span>
+                      <span class="n">data</span><span class="p">[</span><span class="s2">&quot;HHOST&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">4</span><span class="p">],</span>
+                      <span class="n">data</span><span class="p">[</span><span class="s2">&quot;SP&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;SP&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;SP&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">2</span><span class="p">],</span>
+                      <span class="n">data</span><span class="p">[</span><span class="s2">&quot;ANG&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;ANG&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;ANG&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">2</span><span class="p">]],</span>
+                      <span class="n">dtype</span> <span class="o">=</span> <span class="n">dtypes</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">names</span> <span class="o">=</span> <span class="n">names</span></div>
+
+<div class="viewcode-block" id="Halo.normalize"><a class="viewcode-back" href="../../tree.html#tree.halomodule.Halo.normalize">[docs]</a>    <span class="k">def</span> <span class="nf">normalize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        normalize qunatities in comoving scale.</span>
+<span class="sd">        Works only with internal info. So set Halo.info first.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">halofinder</span> <span class="ow">is</span> <span class="s1">&#39;Rockstar&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">normalize_rs</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">halofinder</span> <span class="ow">is</span> <span class="s1">&#39;HaloMaker&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">normalize_hm</span><span class="p">()</span></div>
+            <span class="c1"># modify units</span>
+            <span class="c1"># All in comoving scale. (But mass.. hmm..)</span>
+            <span class="c1"># Length, distance in kpc/h</span>
+            <span class="c1"># mass in Msun/h</span>
+
+<div class="viewcode-block" id="Halo.normalize_rs"><a class="viewcode-back" href="../../tree.html#tree.halomodule.Halo.normalize_rs">[docs]</a>    <span class="k">def</span> <span class="nf">normalize_rs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Normalizes positions and lenghts in code unit ([0,1]),</span>
+<span class="sd">        and mass in solar mass (physical).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_boxsize</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_boxsize</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_boxsize</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;rvir&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;rvir&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_boxsize</span> <span class="o">/</span> <span class="mi">1000</span> <span class="c1"># in code unit.</span>
+<span class="c1">#        self.data[&#39;m&#39;] = self.data[&#39;m&#39;] * 1e11 # / info.h</span>
+<span class="c1">#        self.data[&#39;mvir&#39;] = self.data[&#39;mvir&#39;] * 1e11 # / info.h</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;Mass&quot;</span><span class="p">:</span><span class="s2">&quot;Msun (physical)&quot;</span><span class="p">,</span>
+                          <span class="s2">&quot;Length&quot;</span><span class="p">:</span><span class="s2">&quot;code unit (0 - 1), (comoving)&quot;</span><span class="p">,</span>
+                            <span class="s2">&quot;velocity&quot;</span><span class="p">:</span><span class="s2">&quot;km/s physical&quot;</span><span class="p">})</span></div>
+
+<div class="viewcode-block" id="Halo.normalize_hm"><a class="viewcode-back" href="../../tree.html#tree.halomodule.Halo.normalize_hm">[docs]</a>    <span class="k">def</span> <span class="nf">normalize_hm</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Normalizes positions and lenghts in code unit ([0,1]),</span>
+<span class="sd">        and mass in solar mass (physical).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">info</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="n">info</span><span class="o">.</span><span class="n">pboxsize</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="c1">#* info.cboxsize * 1e3</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="n">info</span><span class="o">.</span><span class="n">pboxsize</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="c1">#* info.cboxsize * 1e3</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="n">info</span><span class="o">.</span><span class="n">pboxsize</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="c1">#* info.cboxsize * 1e3</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;r&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;r&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="n">info</span><span class="o">.</span><span class="n">pboxsize</span>  <span class="c1">#* info.cboxsize * 1e3</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;rvir&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;rvir&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="n">info</span><span class="o">.</span><span class="n">pboxsize</span> <span class="c1">#* info.cboxsize * 1e3</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;m&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;m&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">1</span><span class="n">e11</span> <span class="c1"># / info.h</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;mvir&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;mvir&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">1</span><span class="n">e11</span> <span class="c1"># / info.h</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;Mass&quot;</span><span class="p">:</span><span class="s2">&quot;Msun (physical)&quot;</span><span class="p">,</span>
+                          <span class="s2">&quot;Length&quot;</span><span class="p">:</span><span class="s2">&quot;code unit (0 - 1), (comoving)&quot;</span><span class="p">,</span>
+                            <span class="s2">&quot;velocity&quot;</span><span class="p">:</span><span class="s2">&quot;km/s physical&quot;</span><span class="p">})</span></div>
+
+<div class="viewcode-block" id="Halo.load_rs_ascii"><a class="viewcode-back" href="../../tree.html#tree.halomodule.Halo.load_rs_ascii">[docs]</a>    <span class="k">def</span> <span class="nf">load_rs_ascii</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nout</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">info</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pickle</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Loading Rockstar halos from ascii files&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">pickle</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Halos will be automatically pickled.&quot;</span><span class="p">)</span>
+        <span class="kn">from</span> <span class="nn">tree</span> <span class="k">import</span> <span class="n">rshalo</span>
+        <span class="k">if</span> <span class="n">nout</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">nout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nout</span>
+        <span class="k">if</span> <span class="n">base</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">base</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base</span>
+        <span class="n">fname</span> <span class="o">=</span> <span class="n">base</span> <span class="o">+</span> <span class="s2">&quot;rockstar_halos/&quot;</span> <span class="o">+</span> <span class="s2">&quot;halos_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">nout</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">rshalo</span><span class="o">.</span><span class="n">read_halo_all</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">sort</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">pickle</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pickle_halo</span><span class="p">(</span><span class="n">fname</span><span class="o">=</span><span class="n">fname</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Halo.load_rs"><a class="viewcode-back" href="../../tree.html#tree.halomodule.Halo.load_rs">[docs]</a>    <span class="k">def</span> <span class="nf">load_rs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nout</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">info</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="kn">import</span> <span class="nn">pickle</span>
+        <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+        <span class="k">if</span> <span class="n">nout</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">nout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nout</span>
+        <span class="k">if</span> <span class="n">base</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">base</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base</span>
+        <span class="n">fname</span> <span class="o">=</span> <span class="n">base</span> <span class="o">+</span> <span class="s1">&#39;rhalo/halos_py/halos_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">nout</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;.pickle&#39;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">rec</span><span class="o">.</span><span class="n">fromrecords</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="n">data</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_boxsize</span> <span class="o">=</span> <span class="mf">199.632011</span>
+            <span class="c1"># Temporarly, to wrap the data in recarray.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">normalize_rs</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Halo.pickle_halo"><a class="viewcode-back" href="../../tree.html#tree.halomodule.Halo.pickle_halo">[docs]</a>    <span class="k">def</span> <span class="nf">pickle_halo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fname</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="kn">import</span> <span class="nn">pickle</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;rw&#39;</span><span class="p">):</span>
+            <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fname</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Halo.derive_from"><a class="viewcode-back" href="../../tree.html#tree.halomodule.Halo.derive_from">[docs]</a>    <span class="k">def</span> <span class="nf">derive_from</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">old_halo</span><span class="p">,</span> <span class="n">ind</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        derive a subset from another halo instance.</span>
+<span class="sd">        1) all meta data will be overwritten.</span>
+<span class="sd">        2) ind specifies the part of .data to be inherited.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">ind</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ind</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">old_halo</span><span class="o">.</span><span class="n">data</span><span class="p">))</span>
+        <span class="c1"># How can I force a integer to be a single element list?</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">old_halo</span><span class="o">.</span><span class="n">__dict__</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;data&quot;</span> <span class="ow">or</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;nhalo&quot;</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">key</span><span class="p">:</span><span class="n">val</span><span class="p">})</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">old_halo</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span>
+        <span class="k">try</span><span class="p">:</span>        
+            <span class="bp">self</span><span class="o">.</span><span class="n">nhalo</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ind</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nhalo</span> <span class="o">=</span> <span class="nb">len</span><span class="p">([</span><span class="n">ind</span><span class="p">])</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">pyclusterevol -0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2016, Hoseung.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.8.
+    </div>
+  </body>
+</html>
