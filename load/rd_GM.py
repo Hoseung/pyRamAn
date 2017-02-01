@@ -311,14 +311,14 @@ class Gal(Galaxy):
             print("gal.info is not available. aborting...")
             return
 
-        if sum[unit_system == us.name for us in unit_systems] !=1:
+        if sum([unit_system == us.name for us in unit_systems]) !=1:
             print("Illegal unit system detected. \n Aborting...")
             return
 
         # Case 1)
         # from gm to relative_p
-        if header == True and self.header is not None:
-            if self.units.header.position == "gm":
+        if self.header is not None:
+            if self.units.header.position == "box center":
                 try:
                     self.header['xg'] = self.header['xg'] / self.info.pboxsize + 0.5
                     self.units.header.position = "code"
@@ -328,32 +328,31 @@ class Gal(Galaxy):
             else:
                 print("Header position not in GM unit")
 
-
         if self.star is not None:
-            if self.units.star.position == "gm":
-                try:
-                    # pos
-                    self.star["x"] -= gal.header["xg"][0]
-                    self.star["y"] -= gal.header["xg"][1]
-                    self.star["z"] -= gal.header["xg"][2]
-                    # vel
-                    self.star["vx"] -= gal.header["vg"][0]
-                    self.star["vy"] -= gal.header["vg"][1]
-                    self.star["vz"] -= gal.header["vg"][2]
-                    # mass
-                    self.star["m"] *=1e11
-                    # time
-                    self.star["time"] = self.time2Gyr(self.info)
+            if self.units.star.position == "box center":
+                # pos
+                self.star["x"] -= gal.header["xg"][0]
+                self.star["y"] -= gal.header["xg"][1]
+                self.star["z"] -= gal.header["xg"][2]
+            if self.units.star.vel_org == "box":
+                # vel
+                self.star["vx"] -= gal.header["vg"][0]
+                self.star["vy"] -= gal.header["vg"][1]
+                self.star["vz"] -= gal.header["vg"][2]
+            if self.units.star.mass == "1e11Msun":
+                # mass
+                self.star["m"] *=1e11
+            if self.units.star.time == "conformal":
+                # time
+                self.star["time"] = self.time2Gyr(self.info)
+                self.units.star.name("relative_p")
 
-                    self.units.star.name("relative_p")
-                except AttributeError:
-                    print("No .star attribute")
             else:
                 print("star position not in GM unit")
 
 
         if self.dm is not None:
-            if self.units.dm.position == "gm":
+            if self.units.dm.position == "box center":
                 try:
                     for field in ["x", "y", "z"]:
                         self.dm[field] = self.dm[field] / self.info.pboxsize + 0.5
@@ -364,7 +363,7 @@ class Gal(Galaxy):
             else:
                 print("dm position not in GM unit")
         if cell == True and self.cell is not None:
-            if self.units.cell.position == "gm":
+            if self.units.cell.position == "box center":
                 try:
                     for field in ["x", "y", "z"]:
                         self.cell[field] = self.cel[field] / self.info.pboxsize + 0.5
