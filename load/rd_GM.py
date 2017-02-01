@@ -87,7 +87,7 @@ unit_raw = Units(name="code",
                 metal="code",
                 vel_org="box")
 
-unit_systems=[unit_gm, unit_rel]
+unit_systems=[unit_gm, unit_rel, unit_raw]
 
 
 class Dummy():
@@ -292,8 +292,14 @@ class Gal(Galaxy):
                   time in Gyr since bigbang,
                   metal in [Z/H].
 
+            Parameters
+            ----------
+            unit_system : str {"gm", "relative_p", "raw"}
+                desired unit system.
             Notes
             -----
+            Current unit system is referred from the gal.units.
+
             It should convert to the desired units for all the possible units given.
             But I don't do any computational/statistical tests on the units
             to minimize the computing cost.
@@ -305,10 +311,12 @@ class Gal(Galaxy):
             print("gal.info is not available. aborting...")
             return
 
-        if not unit_system in unit_systems:
+        if sum[unit_system == us.name for us in unit_systems] !=1:
             print("Illegal unit system detected. \n Aborting...")
             return
 
+        # Case 1)
+        # from gm to relative_p
         if header == True and self.header is not None:
             if self.units.header.position == "gm":
                 try:
