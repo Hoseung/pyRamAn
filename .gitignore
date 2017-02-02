@@ -1,1 +1,8 @@
-draw/ppc.cpython-35m-x86_64-linux-gnu.so load/a2c.cpython-35m-x86_64-linux-gnu.so load/part_shared.cpython-35m-x86_64-linux-gnu.so tree/rd_hal.cpython-35m-x86_64-linux-gnu.so
+*.pyc
+*.swp
+*.png
+*.pdf
+*.eps
+*.o
+*.so
+*/build/*
