@@ -721,9 +721,9 @@ def plot_minor(twogals, ax, suptitle="",
     #im = pickle.load(open("lambda_evol_all.pickle", "rb"))
     #im.axes.set_ybound([-0.1, 0.85])
     
-    fontsize_ticks = 6 * img_scale
+    fontsize_ticks = 8 * img_scale
     fontsize_tick_label = 8 * img_scale
-    fontsize_legend = 5 * img_scale
+    fontsize_legend = 7 * img_scale
     img_size_single_column =2.25 * img_scale
     
     loc = [0, 0, 0, 0]
@@ -820,7 +820,7 @@ def plot_minor(twogals, ax, suptitle="",
                                  linestyle="--",
                                  color = ["red", "green", "yellow", "white"][igal],
                                  alpha = 0.5)
-                    ax.annotate("{:.1f}".format(mr),
+                    ax.annotate("{:.2f}".format(1./mr),
                                     xy=(nout - nout_ini, 0.32 + ((loc[igal]) - 0.32) * 1.1),
                                     fontsize=fontsize_legend)
                     # text slightly further than the end of dashed lines
@@ -847,9 +847,9 @@ def plot_rest(twogals, ax,
     #im = pickle.load(open("lambda_evol_all.pickle", "rb"))
     #im.axes.set_ybound([-0.1, 0.85])
     
-    fontsize_ticks = 6 * img_scale
+    fontsize_ticks = 8 * img_scale
     fontsize_tick_label = 8 * img_scale
-    fontsize_legend = 5 * img_scale
+    #fontsize_legend = 5 * img_scale
     img_size_single_column =2.25 * img_scale
     
     loc = [0, 0, 0, 0]
@@ -923,9 +923,9 @@ def plot_major(twogals, ax,
                   arrow_scale = 40):
     import matplotlib as mpl
     
-    fontsize_ticks = 6 * img_scale
+    fontsize_ticks = 8 * img_scale
     fontsize_tick_label = 8 * img_scale
-    fontsize_legend = 5 * img_scale
+    fontsize_legend = 7 * img_scale
     
     loc = [0, 0.65, 0, 0]
    
@@ -974,7 +974,7 @@ def plot_major(twogals, ax,
                                      linestyle="--",
                                      color = ["red", "green", "yellow", "white"][igal],
                                      alpha = 0.5)
-                        ax.annotate("{:.1f}".format(mr),
+                        ax.annotate("{:.2f}".format(1./mr),
                                     xy=(nout - nout_ini, 0.32 + ((loc[igal]) - 0.32) * 1.1),
                                     fontsize=fontsize_legend)
                         # text slightly further than the end of dashed lines
