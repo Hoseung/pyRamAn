@@ -54,8 +54,6 @@ class Meta():
         self.ssfr=0.0
         self.mrj=0.0
         self.d2t=0.0
-        self.nvec=None
-        self.lvec=None
         
     def show_summary(self):
         """
@@ -200,7 +198,7 @@ class Galaxy(object):
         """
             Input data in code unit.
 
-            Returns True if it is a "good" galaxy
+            Returns True if it is a good galaxy
             
             Parameters
             ----------
@@ -1366,8 +1364,7 @@ class Galaxy(object):
         lx = sum(y*vz - z*vy) # normalized; *m is omitted.
         ly = sum(z*vx - x*vz)
         lz = sum(x*vy - y*vx)
-        self.meta.lvec = np.array([lx, ly, lz])
-        self.meta.nvec = self.meta.lvec/np.sqrt(lx**2 + ly**2 + lz**2)
+        self.meta.nvec = np.array([lx, ly, lz])/np.sqrt(lx**2 + ly**2 + lz**2)
 #        self.cal_rotation_matrix(dest=dest)
         return self.meta.nvec
 

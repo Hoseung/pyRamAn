@@ -127,7 +127,6 @@ def worker(gals, hals, out_q, info, inds,
             print("GAS MASS in solar mass", gal.meta.mgas)
 
         galid = gal.meta.id
-        galidx = gg["idx"]
 
         #do other things
         if not good_gal:
@@ -135,49 +134,45 @@ def worker(gals, hals, out_q, info, inds,
             #out_q.put(gal.meta)
         else:
             print("galaxy {} is made \n".format(galid))
+            lambdas = gal.cal_lambda_r_eps(**cal_lambda_params)
+#                           npix_per_reff=npix_lambda,
+#                           rscale=rscale_lambda, method='ellip', verbose=False)
 
-            if True:
-#            try:
+            gal.meta.lambda_arr, gal.meta.lambda_arrh, gal.meta.lambda_12kpc= lambdas[0]
+            gal.meta.lambda_r,   gal.meta.lambda_rh,   gal.meta.lambda_r12kpc = lambdas[1]
+            if galaxy_plot:
+                gal.plot_gal(fn_save = galaxy_plot_dir + str(nout).zfill(3) \
+                                 + "_" + str(galid) + ".png", ioff=True)
+
+            gal.meta.__dict__['idx'] = hals.data['idx'][i]
+            gal.meta.__dict__['rhalo'] = hals.data['rvir'][i]
+
+            print("   lambda calculation done. ID, IDx", galid, gal.meta.idx)
+
+            if reorient:
+                reori_pops = ["star"]
+                if with_cell:
+                    reori_pops.append("cell")
+                if with_DM:
+                    reori_pops.append("dm")
+                    
+                gal.cal_norm_vec(["star"], dest=[0.,1.,0.])
+                gal.cal_rotation_matrix(dest = [0., 1., 0.])
+                gal.reorient(dest=[0., 1., 0.], pop_nvec = ['star'],
+                             pops=reori_pops, verbose=True)
                 lambdas = gal.cal_lambda_r_eps(**cal_lambda_params)
-
-                gal.meta.lambda_arr, gal.meta.lambda_arrh, gal.meta.lambda_12kpc= lambdas[0]
-                gal.meta.lambda_r,   gal.meta.lambda_rh,   gal.meta.lambda_r12kpc = lambdas[1]
+                                #npix_per_reff=npix_lambda,
+                                #rscale=rscale_lambda, method='ellip')
+# Because lambda is measured for ALL stars,
+# B/T must also be measured for ALL stars, not only for bound stars.
+                gal.meta.lambda_arr2, gal.meta.lambda_arr2h, gal.meta.lambda_arr2q = lambdas[0]
+                gal.meta.lambda_r2,   gal.meta.lambda_r2h  , gal.meta.lambda_r2q   = lambdas[1]
                 if galaxy_plot:
-                     gal.plot_gal(fn_save = galaxy_plot_dir + str(nout).zfill(3) \
-                                      + "_" + str(galid) + ".png", ioff=True)
+                    gal.plot_gal(fn_save = galaxy_plot_dir + str(nout).zfill(3) \
+                                     + "_" + str(galid) + "_reori.png", ioff=True)
+        out_q.put(gal.meta.__dict__)
+        #print("where are you gone, dict?", out_q.get())
 
-                 #gal.meta.__dict__['idx'] = galidx
-                gal.meta.idx = galidx
-                gal.meta.tree_root_id = gg["tree_root_id"]
-                #gal.meta.__dict__['rhalo'] = hals.data['rvir'][i]
-
-                print(" lambda calculation done. ID, IDx", galid, gal.meta.idx, gal.meta.tree_root_id)
-
-                if reorient:
-                    reori_pops = ["star"]
-                    if with_cell:
-                        reori_pops.append("cell")
-                    if with_DM:
-                        reori_pops.append("dm")
-
-                    gal.cal_norm_vec(["star"], dest=[0.,1.,0.])
-                    gal.cal_rotation_matrix(dest = [0., 1., 0.])
-                    gal.reorient(dest=[0., 1., 0.], pop_nvec = ['star'],
-                                 pops=reori_pops, verbose=True)
-                    lambdas = gal.cal_lambda_r_eps(**cal_lambda_params)
-                                    #npix_per_reff=npix_lambda,
-                                    #rscale=rscale_lambda, method='ellip')
-## Be Because lambda is measured for ALL stars,
-## B/ B/T must also be measured for ALL stars, not only for bound stars.
-                    gal.meta.lambda_arr2, gal.meta.lambda_arr2h, gal.meta.lambda_arr2q = lambdas[0]
-                    gal.meta.lambda_r2,   gal.meta.lambda_r2h  , gal.meta.lambda_r2q   = lambdas[1]
-                    if galaxy_plot:
-                        gal.plot_gal(fn_save = galaxy_plot_dir + str(nout).zfill(3) \
-                                         + "_" + str(galid) + "_reori.png", ioff=True)
-                out_q.put(gal.meta.__dict__)
-#            except:
-            else:
-                pass
 
 def main(wdir='./',
          ncore=1,
@@ -214,7 +209,7 @@ def main(wdir='./',
     worker_params = {"dump_gal":       w_dump_gal,
                      "reorient":       w_reorient,
                      "galaxy_plot":    w_galaxy_plot,
-                     "galaxy_plot_dir":wdir + out_dir + w_galaxy_plot_dir,
+                     "galaxy_plot_dir":out_dir + w_galaxy_plot_dir,
                      "region_plot":    w_region_plot,
                      "wdir":           w_wdir,
                      "with_DM":        w_with_DM,
@@ -248,6 +243,7 @@ def main(wdir='./',
     if out_dir[-1] != '/':
         out_dir = out_dir + '/'
         # need a tailing slash to be joined with sub-directories
+
     if not os.path.isdir(wdir + out_dir):
         os.mkdir(wdir + out_dir)
 
@@ -383,7 +379,7 @@ def main(wdir='./',
             mstar_min = 2 * get_mstar_min(info.aexp)
         print("Mstar now, min: {:.2e} {:.2e}".format(2 * \
                     (masscut_a * info.aexp + masscut_b), mstar_min))
-        
+
         allgal, allhal = get_sample_gal(wdir, nout, info, prg_only_tree, mstar_min)
 ##----------------------------------------------------------------------------------
 
@@ -391,6 +387,7 @@ def main(wdir='./',
         print("Total # galaxies to analyze",nh)
         print("# complete-tree galaxies",sum(allhal.data['idx'] > 0))
         print("# non-complete-tree galaxies",sum(allhal.data['idx'] < 0))
+
 
         mk_gal_params = dict(verbose=verbose,
                              mstar_min=mstar_min,

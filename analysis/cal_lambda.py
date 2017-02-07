@@ -283,6 +283,7 @@ def get_sample_gal(wdir, nout, info, prg_only_tree, mstar_min):
         inside the zoom region above the mass cut.
     """
     import utils.match as mtc
+    import numpy.lib.recfunctions as rf
     
     gals_in_tree_now = prg_only_tree[prg_only_tree['nout'] == nout]
     id_now = gals_in_tree_now['Orig_halo_id'] # this is Orig_halo_id
@@ -300,41 +301,42 @@ def get_sample_gal(wdir, nout, info, prg_only_tree, mstar_min):
                                np.square(cluster_now['z'] * 200 - gals_in_tree_now['z']))) # in Mpc/h
 
     # unless you have "perfect" trees, do not take the mass of the least massive progentor
-    # as the non-tree galaxy mass cut. Sometimes tree marks ridiculously small galaxy
+    # as the non-tree galaxy mass cut. Sometimes tree marks a ridiculously small galaxy
     # as a progenitor.
-    #mstar_min = min(gals_in_tree_now['m'][(gals_in_tree_now['mmp'] == 1) * (gals_in_tree_now['phantom'] == 0)])
+    # mstar_min = min(gals_in_tree_now['m'][(gals_in_tree_now['mmp'] == 1) * (gals_in_tree_now['phantom'] == 0)])
 
     # Galaxy with enough stellar mass
     # -> there is no stellar mass cut when building all_gals_in_trees list.
     allgal = hmo.Halo(base=wdir, nout=nout, is_gal=True, halofinder='HM',
                       return_id=False, load=True)
+    allgal.data = rf.append_fields(allgal.data, "tree_root_id", dtypes='i8', data = -1 * np.ones(len(allgal.data)))
 
     dd_cat = np.sqrt(np.square(cluster_now['x'] - allgal.data['x']) +
                      np.square(cluster_now['y'] - allgal.data['y']) +
                      np.square(cluster_now['z'] - allgal.data['z'])) * 200
 
     igal_ok_cat = (dd_cat < max_dist_prg) * (allgal.data['m'] > mstar_min)
-    print("(catalogue) # galaxies more massive than {:.2e} at nout ="
+    print("[get_sample_gal] (catalogue) # galaxies more massive than {:.2e} at nout ="
     " {}".format(mstar_min, nout, sum(igal_ok_cat)))
 
     final_sample_galaxies = \
         np.unique(np.concatenate((allgal.data[igal_ok_cat]['id'], id_now)))
-    print(" Originally the tree selected:", len(id_now))
-    print("Total set length:", len(final_sample_galaxies))
+    print("[get_sample_gal] Originally the tree selected:", len(id_now))
+    print("[get_sample_gal] Total set length:", len(final_sample_galaxies))
 
     i_gal_ok_final = mtc.match_list_ind(allgal.data['id'], final_sample_galaxies)
 
     # load GalaxyMaker output again, with return_id this time.
     allgal.data = allgal.data[i_gal_ok_final]
-    print("length of the original allgal: {}".format(len(allgal.data)))
+    print("[get_sample_gal] length of the original allgal: {}".format(len(allgal.data)))
 
 
     # Associate galaxies with halos. 
     # Mark non-matching galaxies.
-    print("Before associate_gal_hal,"
-          "length of the original allhal: {}".format(len(allhal.data)))
+    print("[get_sample_gal] Before associate_gal_hal,"
+          "[get_sample_gal] length of the original allhal: {}".format(len(allhal.data)))
     allhal = associate_gal_hal(allgal, allhal, plot_check=False, dir_out=wdir)
-    print("Now, {}".format(len(allhal.data)))
+    print("[get_sample_gal] Now, {}".format(len(allhal.data)))
 
 
     # load DM ids
@@ -349,8 +351,10 @@ def get_sample_gal(wdir, nout, info, prg_only_tree, mstar_min):
         ii = np.where(gals_in_tree_now['Orig_halo_id'] == gal['id'])[0]
         if len(ii) > 0:
             gal['idx'] = np.int32(gals_in_tree_now['id'][ii])
+            gal["tree_root_id"] = gals_in_tree_now["tree_root_id"][ii]
         else:
             gal['idx'] = np.int32(-1)
+            gal["tree_root_id"] = -1
 #    print(gal['idx'])
     allhal.data['idx'] = allgal.data['idx']
 

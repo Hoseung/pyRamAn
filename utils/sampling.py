@@ -84,7 +84,7 @@ def set_region_multi(xc=None, yc=None, zc=None, radius=None, **kwargs):
                             zc=0.5 * sum(ranges[4:6]), radius = rr)
 
 
-def sum_region_multi(xc=[], yc=[], zc=[], radius = []):
+def sum_region_multi(xc=[], yc=[], zc=[], radius=[]):
     """
     Returns minimum and maximum of given ranges. 
     

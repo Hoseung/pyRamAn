@@ -665,7 +665,7 @@ def find_merger_epochs(alltrees,
             ##--------------------------------------------------
                     
 
-        ind_ok = np.where(mass_ratios_single > 0.01)[0]
+        ind_ok = np.where(mass_ratios_single > min_mass_ratio)[0]
         if len(ind_ok) > 0:
             # if a satellite oscillates around the host, 
             # it could be identified as multiple mergers with short time interval. 
@@ -684,7 +684,7 @@ def find_merger_epochs(alltrees,
             mr_list.append(mr)
             nout_list.append(main_nout[ind_ok])    
             nout_ini_list.append(nout_inits[ind_ok])
-            print(idx)
+            #print(idx)
     if do_plot:
         pdf.close()
 
