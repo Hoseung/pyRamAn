@@ -56,11 +56,20 @@ class MainPrg():
         #
         # 
         # excluded=["lambda_arr2"]
+        #filled_fields = ["eps", "epsh", "epsq", "lambda_12kpc",
+        #                 "lambda_arr", "lambda_arrh",
+        #                 "lambda_r","lambda_r12kpc",
+        #                 "lambda_r2","lambda_rh","mgas","mrj","mstar",
+        #                 "reff","reff2","rgal","rgal2","rhalo","rscale_lambda",
+        #                 "sfr","sma","smah","smaq","smi","smih","smiq","ssfr",
+        #                 "vxc", "vyc", "vzc", "xc", "yc", "zc"]
+
+        # rhalo is not in gal.data, and is not used later.
         filled_fields = ["eps", "epsh", "epsq", "lambda_12kpc",
                          "lambda_arr", "lambda_arrh",
                          "lambda_r","lambda_r12kpc",
                          "lambda_r2","lambda_rh","mgas","mrj","mstar",
-                         "reff","reff2","rgal","rgal2","rhalo","rscale_lambda",
+                         "reff","reff2","rgal","rgal2","rscale_lambda",
                          "sfr","sma","smah","smaq","smi","smih","smiq","ssfr",
                          "vxc", "vyc", "vzc", "xc", "yc", "zc"]
 

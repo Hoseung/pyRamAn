@@ -26,11 +26,11 @@ from analysis.evol_lambda import MainPrg
 
 from analysis.all_plot_modules import *
 import analysis.Major_Minor_accretion as mma
-
+import MajorMinorAccretion_module
 
 # In[3]:
 
-wdir = '/home/hoseung/Work/data/'
+wdir = '../'
 raw_mpgs = False
 save=True
 if raw_mpgs:
@@ -54,7 +54,7 @@ if raw_mpgs:
             pickle.dump(mpgs, open(wdir + "main_prgs_final_augmented_5_10_0.5_0.5_0.5_37_0.01_filtered.pickle", "wb"))
 else:
     #mpgs = pickle.load(open("main_prgs_final_augmented_5_10_0.5_0.5_0.5_37.pickle", "rb"))
-    mpgs = pickle.load(open(wdir + "main_prgs_final_augmented_5_10_0.5_0.5_0.5_37_0.01_filtered_.pickle", "rb"))
+    mpgs = pickle.load(open(wdir + "all_prgs/main_prgs_final_augmented_5_10_0.5_0.5_0.5_37_0.01_filtered_.pickle", "rb"))
 
 
 # In[4]:
@@ -109,18 +109,7 @@ def plot_lambda_evol(xx,yy,z,axs,cmap ="jet", img_scale=1.5):
 
     for ax in axs:
         ax.scatter(xx, yy, c=z, s=50, edgecolor='', cmap=cmap, rasterized=True)
-#            yticks_ok=[0.0, 0.2, 0.4, 0.6, 0.8]
-#            ax.set_ylim([-0.05, 0.9])
-#            ax.set_yticks([0.0, 0.2, 0.4, 0.6, 0.8])
-#            ax.set_yticklabels([str(yy) for yy in yticks_ok])
-#            ax.set_ylabel(r"$\lambda_{R_{eff}}$", fontsize=fontsize_tick_label, family="Liberation Sans")
-#            ax.tick_params(axis='both', which='major', labelsize=fontsize_ticks)
 
-#    axs[2].tick_params(axis='x', which='major', labelsize=fontsize_ticks)
-#    return zreds, aexps
-
-
-# In[9]:
 
 Load_background = True
 
@@ -133,39 +122,15 @@ if not Load_background:
     xx,yy,z, zreds, aexps = den_lambda_evol(mpgs, nout_ini, 187,
                  wdir_info = wdir + '29172/',
                  density="kernel")
-    #pickle.dump((xx,yy,z,zreds,aexps), open("lambda_evol_xxyyz.pickle", "wb"))
 else:
     xx,yy,z,zreds, aexps = pickle.load(open(wdir+"lambda_evol_xxyyz.pickle", "rb"))
 
-plot_lambda_evol(xx,yy,z, axs, cmap = "Blues")  # 37 : z = 3.0
-#pickle.dump(fig, open("lambda_evol_background.pickle", "wb"))
-#fig = pickle.load(open("lambda_evol_background.pickle", "rb"))
 
-
-# In[10]:
-
-plt.show()
-
-
-# In[9]:
-
-plt.savefig("figs/fig4_bare.png", dpi=200)
-plt.savefig("figs/fig4_bare.pdf")
-
-
-# In[16]:
 
 gal_clu_list= [160500811,  160500745, 3566300002, 2917600065, 2917600001,
        1000200001, 3641500003, 3999000032, 3999000015, 3999000001,
        3641300444]
 
-
-# In[21]:
-
-gal.data.dtype
-
-
-# In[24]:
 
 i=0
 for gal in mpgs:
@@ -175,8 +140,6 @@ for gal in mpgs:
         print(np.log10(gal.data["mstar"][0]), gal.data["rgal"][0])
     i += 1
 
-
-# In[20]:
 
 gals = [mpgs[8], mpgs[16], mpgs[329]]
 plot_major(gals, axs[0],
@@ -203,8 +166,6 @@ plot_rest(gals, axs[2],
 
 plt.tight_layout()
 
-
-#Fix font
 
 from matplotlib import rc, font_manager
 sizeOfFont=9
@@ -240,14 +201,6 @@ plt.savefig(fname_base + "smooth_"+".pdf")
 #plt.savefig(fname_base + "smooth_"+".svg")
 plt.savefig(fname_base + "smooth_"+".png", dpi=200)
 #plt.savefig(fname_base + "smooth_Hires"+".png", dpi=400)
-
-
-# In[ ]:
-
-
-
-
-# In[ ]:
 
 
 

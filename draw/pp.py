@@ -673,9 +673,9 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
                 hvar = "var0"
                 sden = cell[hvar][val]**2*dx*scale_nH
             if hvar == "temp":
-                sden = cell["var4"][val]*scale_T2
+                sden = cell["var4"][val]*dx*scale_T2#/cell["var0"][val]
             if hvar == "metal":
-                sden = cell["var5"][val]*dx*cell.var5[val]/0.02            
+                sden = cell["var5"][val]*dx*cell["var0"][val]/0.02
         else:
             sden = cell[field_var][val]
 
