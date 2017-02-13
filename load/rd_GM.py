@@ -331,21 +331,26 @@ class Gal(Galaxy):
         if self.star is not None:
             if self.units.star.position == "box center":
                 # pos
-                self.star["x"] -= gal.header["xg"][0]
-                self.star["y"] -= gal.header["xg"][1]
-                self.star["z"] -= gal.header["xg"][2]
+                self.star["x"] -= self.header["xg"][0]
+                self.star["y"] -= self.header["xg"][1]
+                self.star["z"] -= self.header["xg"][2]
+
+                self.star["x"] *=1e3
+                self.star["y"] *=1e3
+                self.star["z"] *=1e3
+
             if self.units.star.vel_org == "box":
                 # vel
-                self.star["vx"] -= gal.header["vg"][0]
-                self.star["vy"] -= gal.header["vg"][1]
-                self.star["vz"] -= gal.header["vg"][2]
+                self.star["vx"] -= self.header["vg"][0]
+                self.star["vy"] -= self.header["vg"][1]
+                self.star["vz"] -= self.header["vg"][2]
             if self.units.star.mass == "1e11Msun":
                 # mass
                 self.star["m"] *=1e11
             if self.units.star.time == "conformal":
                 # time
-                self.star["time"] = self.time2Gyr(self.info)
-                self.units.star.name("relative_p")
+                self.star["time"] = self.time2gyr(self.info)
+                self.units.star.name = "relative_p"
 
             else:
                 print("star position not in GM unit")
@@ -362,7 +367,7 @@ class Gal(Galaxy):
                     print("No .dm attribute")
             else:
                 print("dm position not in GM unit")
-        if cell == True and self.cell is not None:
+        if self.cell is not None:
             if self.units.cell.position == "box center":
                 try:
                     for field in ["x", "y", "z"]:
@@ -427,29 +432,29 @@ class Gal(Galaxy):
 
 
 
-def time2gyr(self, info=None):
-    """
-    Only stars have time.
-    """
-    if self.units.star.time == "Gyr":
-        print("stellar age already in Gyr unit")
-    else:
-        if info is None:
-            if hasattr(self, "info"):
-                info = self.info
-            try:
-                import load
-                self.info = load.info.Info(nout=self.nout, base=self.wdir)
-                info = self.info
-            except:
-                print("Failed to load info")
-                return
+    def time2gyr(self, info=None):
+        """
+        Only stars have time.
+        """
+        if self.units.star.time == "Gyr":
+            print("stellar age already in Gyr unit")
+        else:
+            if info is None:
+                if hasattr(self, "info"):
+                    info = self.info
+                try:
+                    import load
+                    self.info = load.info.Info(nout=self.nout, base=self.wdir)
+                    info = self.info
+                except:
+                    print("Failed to load info")
+                    return
 
-        import utils.cosmology
-        self.star['time'] = utils.cosmology.time2gyr(self.star['time'],
-                             z_now = info.zred,
-                             info=info)
-        self.units.time = "Gyr"
+            import utils.cosmology
+            self.star['time'] = utils.cosmology.time2gyr(self.star['time'],
+                                 z_now = info.zred,
+                                 info=info)
+            self.units.time = "Gyr"
 
 
 
