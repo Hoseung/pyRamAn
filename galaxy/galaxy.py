@@ -171,6 +171,7 @@ class Galaxy(object):
         self.meta.reff2 = r_sorted[i_reff2]
         self.meta.reff  = r_sorted[i_reff1]
         #print(bin_centers, i_r_cut2, m_radial)
+
         self.meta.rgal2 = max([bin_centers[i_r_cut2],4*self.meta.reff2])
         self.meta.rgal  = max([bin_centers[i_r_cut1],4*self.meta.reff])#bin_centers[i_r_cut1]
 
@@ -195,6 +196,7 @@ class Galaxy(object):
     def mk_gal(self, star, dm, cell,
                save=False, verbose=False,
                mstar_min=1e9,
+               den_lim=1e6, den_lim2=5e6,
                rmin = -1, Rgal_to_reff=5.0, method_com=1, follow_bp=None,
                unit_conversion="code", debug=False):
         """
@@ -266,7 +268,7 @@ class Galaxy(object):
         if verbose: print("Rgal_tmp", rgal_tmp)
         dense_enough = self.radial_profile_cut(star['x'], star['y'], star['m'],
                                 star['vx'], star['vy'], star['vz'],
-                                den_lim=1e6, den_lim2=5e6,
+                                den_lim=den_lim, den_lim2=den_lim2,
                                 mag_lim=25,
                                 nbins=int(rgal_tmp/0.5),
                                 dr=0.5 * self.info.aexp,
