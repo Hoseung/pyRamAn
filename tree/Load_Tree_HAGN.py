@@ -14,7 +14,7 @@ import time
 
 def load_Tree(fname):
     with open(fname, 'rb') as f:
-        # Header 
+        # Header
         nsteps = read_fortran(f, dtype=np.int32, check=False)
         dummy = read_fortran(f, dtype=np.int32, check=False, n=nsteps)
         nhals_arr = dummy[:nsteps]
@@ -81,7 +81,7 @@ def load_Tree(fname):
                 # What does st stand for?
                 st = read_fortran(f, dtype=dint)
                 t[idx]["level"], t[idx]["hosthalo"], t[idx]["hostsub"],                t[idx]["nsub"], t[idx]["nextsub"]= read_fortran(f, dtype=dint, n=5)
-                # Mass in 1e11 solar mass. 
+                # Mass in 1e11 solar mass.
                 t[idx]['m'] = read_fortran(f, dtype=dfloat) * 1e11
                 t[idx]['macc'] = read_fortran(f, dtype=ddouble)
 
@@ -100,14 +100,14 @@ def load_Tree(fname):
 
                 #endid[idx] = startid[idx] + n_fathers - 1
                 #if idx != nall -1 :
-                #    startid[idx + 1] = endid[idx] + 1        
+                #    startid[idx + 1] = endid[idx] + 1
 
-                # every halo has at least one father, the background. 
+                # every halo has at least one father, the background.
                 #if n_fathers > 0:
                 fid = read_fortran(f, dtype=dint, n=n_fathers)
                 fatherMass.append(read_fortran(f, dtype=dfloat, n=n_fathers))
                 #if n_fathers > 1:
-                fatherID.append(fid.copy()) 
+                fatherID.append(fid.copy())
                 # fid[:] copies the value
                 # Otherwise, the fatherID entry will be modified afterwards.
                 t[idx]["flist_index"] = flist_index
@@ -144,8 +144,8 @@ def load_Tree(fname):
 
                 idx = idx + 1
 
-            # Keep tree at the previous snapshot 
-            # to make fatherIDx list. 
+            # Keep tree at the previous snapshot
+            # to make fatherIDx list.
             t_before = t[idx_old:idx_old + nhals_now]
 
     print("Took", time.time() - t0)
@@ -167,4 +167,3 @@ pickle.dump(fatherID, open(wdir + "fatherID.pickle", "wb"))
 pickle.dump(fatherMass, open(wdir + "fatherMass.pickle", "wb"))
 pickle.dump(fatherIDx, open(wdir + "fatherIDx.pickle", "wb"))
 pickle.dump(t, open(wdir + "Tree.pickle", "wb"))
-
