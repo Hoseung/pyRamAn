@@ -6,7 +6,8 @@ Created on Thu Mar 10 04:50:37 2016
 Minimal... test purpose?
 
 """
-from load.utils import read_header, read_fortran
+from utils.io_module import read_fortran
+from load.utils import read_header
 import numpy as np
 
 
