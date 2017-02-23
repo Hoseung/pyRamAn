@@ -10,7 +10,7 @@ Created on Wed Jan 21 11:45:42 2015
 """
 import numpy as np
 
-from load.utils import read_fortran, skip_fortran
+from utils.io_module import read_fortran, skip_fortran
 import numpy as np
 import time
 
