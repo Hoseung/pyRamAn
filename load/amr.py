@@ -5,7 +5,7 @@ Created on Thu Mar 26 17:44:27 2015
 @author: hoseung
 """
 import numpy as np
-from load.utils import read_header, read_fortran, skip_fortran 
+from load.utils import read_header, read_fortran, skip_fortran
 
 class AmrHeader():
     """
@@ -55,8 +55,8 @@ class AmrHeader():
         parameters
         ----------
         skip_header :
-            makes the core more tolerant. 
-            AMR header structure may change depending on the 
+            makes the core more tolerant.
+            AMR header structure may change depending on the
             type of the simulation.
         """
         h1 = read_header(f, np.dtype(
@@ -142,8 +142,8 @@ class AmrHeader():
     # and is accessed by numbl[icpu,ilevel]
 
     # where is the 170 coming from?
-        
-        
+
+
         #h4 = read_header(f, np.dtype([('bound_key', 'f8', (ncpu+1,))]),check=False)
         # Get the data type by calculating precision from the fortran block header
         alen = np.fromfile(f, np.dtype('i4'), 1)
@@ -152,18 +152,18 @@ class AmrHeader():
         elif alen/(ncpu + 1) == 16:
             dtype = np.float128
         else:
-            raise Exception('Failed to detect bound_key precision.')        
+            raise Exception('Failed to detect bound_key precision.')
         self.bound_key = np.fromfile(f, dtype, ncpu + 1)
         np.fromfile(f, np.dtype('i4'), 1) # skip tail.
 
-                                      
+
         h4 = read_header(f, np.dtype([('son', 'i4', (ncoarse,)),
                                       ('flag1', 'i4', (ncoarse,)),
                                       ('cpu_map', 'i4', (ncoarse,))]),check=True)
-                                      
+
 # Aquarius data has 16Byte "bound_key".
 # Because of QUADHILBERT??
-                                      
+
 # check=False => Even if user gives a wrong size,
 # it still reads based on what fortran binary says.
 
@@ -221,7 +221,7 @@ class Amr():
         """
         snout = str(info.nout).zfill(5)
         self.info = info
-        
+
         self._fnbase = os.path.join(info.base, info.data_dir) + 'output_' + snout + '/amr_' + snout + '.out'
         try:
             f = open(self._fnbase + '00001', "rb")
@@ -237,8 +237,8 @@ class Amr():
     def _load_mesh(f, ndim=3):
         for i in np.arange(ndim):
             read_fortran(f, np.dtype('f8'))
-            
-    def get_zoomin(self, scale=1.0):
+
+    def search_zoomin(self, lmin=None, scale=1.0):
         """
         Returns a spherical region encompassing maximally refined cells.
 
@@ -246,13 +246,27 @@ class Amr():
         ----------
         scale : float
             The radius of the returned sphere is scaled by 'scale'.
-        
+
         """
         from utils import sampling
+        lmax = self.info.lmax
+        if lmin is None:
+            lmin = lmax - 7
+            # lmin = lmax - 7 - nzoomlevels
+            # It will be better if I know the number of zoom-in levels and
+
+        xs,ys=[],[]
+        for cpu_mesh in self.levellist[lmin -1 - (self.nlevelmax-lmax)]:
+            if cpu_mesh !=0:
+                xs.extend(cpu_mesh["xg"][0])
+                ys.extend(cpu_mesh["xg"][1])
+
+        dx = 0.5**(lmin-1)
+
         imin = np.where(self.dm['m'] == self.dm['m'].min())
-        xr = [self.dm['px'][imin].min(), self.dm['px'][imin].max()]
-        yr = [self.dm['py'][imin].min(), self.dm['py'][imin].max()]
-        zr = [self.dm['pz'][imin].min(), self.dm['pz'][imin].max()]
+        xr = [xs.min()-dx, xs.max()+dx]
+        yr = [ys.min()-dx, ys.max()+dx]
+        zr = [zr.min()-dx, zs.max()+dx]
 
         xc = 0.5 * sum(xr)
         yc = 0.5 * sum(yr)
