@@ -1,6 +1,6 @@
 def extract_main_tree(t, idx, fatherID, fatherMass):
     """
-    Extracts 
+    Extracts
     """
     import numpy as np
     t_now = t[idx]
@@ -13,6 +13,7 @@ def extract_main_tree(t, idx, fatherID, fatherMass):
         try:
             #id_father = fatherID[t["flist_index"][idx]]
             id_father = fatherID[idx]
+            print(id_father)
             if len(id_father) > 1:
                 #mass_father = fatherMass[t["flist_index"][idx]]
                 mass_father = fatherMass[idx]
@@ -29,12 +30,12 @@ def extract_main_tree(t, idx, fatherID, fatherMass):
                 break
         except:
             break
-    return atree
+    return np.copy(atree[:i])
 
 
 def extract_main_tree2(idx, t, fatherIDx, fatherMass):
     """
-    Two extract_main_tree, which one works? 
+    Two extract_main_tree, which one works?
     """
     import numpy as np
     t_now = t[idx]
@@ -62,4 +63,3 @@ def extract_main_tree2(idx, t, fatherIDx, fatherMass):
         except:
             break
     return atree
-
