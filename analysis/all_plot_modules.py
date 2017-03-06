@@ -352,7 +352,8 @@ def do_plot(x,y, atlas,
             levels=None,
             fname_vs_e = "./figs/lambda_vs_e_z0",
             d_alpha=1.0,
-            sizeOfFont=12
+            sizeOfFont=12,
+            label="This work"
             ):
     import scipy.stats as st
 
@@ -423,14 +424,14 @@ def do_plot(x,y, atlas,
         xx,yy,z = density_map(x, y)
         axmain.scatter(xx, yy, c=z, s=15, edgecolor='',
                        cmap=den_cmap, rasterized=False,
-                       alpha=1.0, label="This work")
+                       alpha=1.0, label=label)
 
     if do_scatter:
         scatter = axmain.scatter(x,y, s=7,
                              facecolor=twocolors[0],
                              edgecolor='none',
                              alpha= 0.7,
-                             label="This work")
+                             label=label)
         fname_vs_e = fname_vs_e + "_sct"
 
     if 1 == 3:
@@ -462,7 +463,7 @@ def do_plot(x,y, atlas,
         thisArtist = plt.Line2D((0,1),(0,0), color='k', marker='o', linestyle='')
         #Create legend from custom artist/label lists
         handles.append(thisArtist)
-        labels.append("This work")
+        labels.append(label)
         axmain.legend(handles, labels,
                       loc=2,
                       borderaxespad=0.,
