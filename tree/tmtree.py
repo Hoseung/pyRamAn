@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 """
-
 From tree.fits file, select halos by mass cut.
 
 Created on Wed Jan 21 11:45:42 2015
@@ -67,6 +66,7 @@ def load_Tree(fname):
         cnt_nofather=0
 
         for i in range(nsteps):
+            print("Processing {}-th step".format(i))
             nhals_now = nhals_arr[i] + nsubhals_arr[i]
             #t[idx:idx + nhals_now]['nhalo'] = nhals_arr[i] + nsubhals_arr[i]
             #t[idx:idx + nhals_now]["boxsize"] = aexp_arr[i] * boxlen_ini
