@@ -713,7 +713,6 @@ class Part(load.sim.Simbase):
 # ValueError: failed to initialize intent(inout) array -- input not fortran contiguous
         ndm_actual = max([ndm_actual, 1])
         nstar_actual = max([nstar_actual, 1])
-        read_metal = 1 # 
         star_float, star_int, dm_float, dm_int = part_shared.load_part(
                 nstar_actual, ndm_actual, nsink_actual,
                 work_dir, xmi, xma, ymi, yma, zmi, zma, read_metal, self.cpus)
