@@ -171,7 +171,6 @@ class Galaxy(object):
         self.meta.reff2 = r_sorted[i_reff2]
         self.meta.reff  = r_sorted[i_reff1]
         #print(bin_centers, i_r_cut2, m_radial)
-
         self.meta.rgal2 = max([bin_centers[i_r_cut2],4*self.meta.reff2])
         self.meta.rgal  = max([bin_centers[i_r_cut1],4*self.meta.reff])#bin_centers[i_r_cut1]
 

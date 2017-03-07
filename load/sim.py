@@ -8,8 +8,8 @@ Created on Tue Jan 13 23:27:16 2015
 import numpy as np
 
 class Simbase():
-    """ 
-    base    
+    """
+    base
     """
     def __init__(self, cosmo=True):
         self.cosmo=cosmo
@@ -18,10 +18,10 @@ class Simbase():
         self.nout=None
         self.cpu_fixed=False
         self.cpus=None
-    
-    def add_amr(self):
+
+    def add_amr(self, load=False):
         from load.amr import Amr
-        self.amr = Amr(self.info)
+        self.amr = Amr(self.info, cpus=self.cpus, load=load)
         print("An AMR instance is created\n", self.__class__.__name__)
 
     def get_cpus(self):
@@ -68,7 +68,7 @@ class Simbase():
         else:
             self.ranges = None
 
-    
+
     def _hilbert_cpulist(self, info, ranges):
         """
         After determining cpus, read the cpu files and cut off data
@@ -82,7 +82,8 @@ class Simbase():
         if not(hasattr(self, 'amr')):
             print("[sim._hilbert_cpulist] No AMR instance,")
             print("[sim._hilbert_cpulist] Loading one...")
-            self.amr = Amr(self.info)
+            #self.amr = Amr(self.info)
+            self.add_amr(load=False)# load only meta data
 
         nlevelmax = self.amr.header.nlevelmax
         nboundary = self.amr.header.nboundary
@@ -224,28 +225,28 @@ class Sim(Simbase):
         Setup basic parameters need for an AMR instance.
 
     add_info(self, load=False)
-        
+
     add_hydro(self, load=False, lmax=None)
-    
+
     add_part(self, ptypes=[], load=False, fortran=True, dmo=False, **kwargs)
-   
+
     Examples
     --------
     >>> import load
     >>> s = load.sim.Sim(187, ranges=[[0.3,0.4], [0.35,0.45], [0.1,0.2]])
-    
+
     Notes
     -----
-    Global information is stored in this class: 
+    Global information is stored in this class:
         ndim, ncpu, base, type of simulation (DMO, zoom, and so on)
     Later it will also include .nml information.
     (Romain's git version generates such output in text files)
- 
+
     Currently this class deals with single snapshot.
     But I hope to expand it for multiple snapshots.
     """
     def __init__(self, nout, base='./', data_dir='snapshots/',
-                 ranges=[[0.0,1.0],[0.0,1.0],[0.0,1.0]], dmo=False, 
+                 ranges=[[0.0,1.0],[0.0,1.0],[0.0,1.0]], dmo=False,
                  setup=True, region=None, cosmo=True):
         """
             Parameters
@@ -264,7 +265,7 @@ class Sim(Simbase):
         super(Sim,self).__init__()
         # should call parent class' init.
 
-        self.nout = nout          
+        self.nout = nout
         self.set_base(base)
         # info appreciates nout and base (not mandatary, though)
         self.dmo = dmo
@@ -289,7 +290,7 @@ class Sim(Simbase):
     def setup(self, nout=None, base='./', data_dir='snapshots/',
                  ranges=[[0.0,1.0],[0.0,1.0],[0.0,1.0]], dmo=False):
         self.nout = nout
-        self.set_base(base)        
+        self.set_base(base)
         if self.nout is None:
             raise ValueError("Note that 'nout' is not set. \n use sim.Sim.set_nout(nout)")
         self.add_info()
@@ -331,12 +332,12 @@ class Sim(Simbase):
     def add_hydro(self, load=True, lmax=None, region=None, ranges=None,
                   cpu=False, **kwargs):
         """
-        Add a hydro instance to the simulation instance. 
+        Add a hydro instance to the simulation instance.
 
         parameters
         ----------
         lmax : int
-            maximum AMR level of hydro variable retrieved. 
+            maximum AMR level of hydro variable retrieved.
         load : bool
             If false, an hydro instance is added without cell data.
         """
@@ -357,7 +358,7 @@ class Sim(Simbase):
             self.hydro.amr2cell(lmax=lmax, cpu=cpu)
         else:
             print("Use hydro.amr2cell() to load hydro variables")
-            
+
     def add_info(self, load=False):
         from load import info
         self.info = info.Info(self.nout,
@@ -369,24 +370,24 @@ class Sim(Simbase):
 
     def add_part(self, ptypes=[], load=True, fortran=True, dmo=False, **kwargs):
         """
-        Add a particle instance to the simulation instance. 
+        Add a particle instance to the simulation instance.
         Requires types of particles and particle data.
         load = True  to load actual data on creating the instance
 
         parameters
         ----------
-        ptypes : list of particle type and information. 
+        ptypes : list of particle type and information.
                 ["dm id pos"] or ["dm id pos", "star mass vel"]
-                
+
         """
         if dmo:
             self.dmo = True
         from load import part
         print("Types of particles you want to load are: ", ptypes)
 
-        # To do. instead of specifying every variables, 
+        # To do. instead of specifying every variables,
         # make the Part object inherit common variables from the father class instance, sim.
-        # use inspect module?? 
+        # use inspect module??
         self.part = part.Part(info=self.info,
                               ptypes=ptypes,
                               data_dir=self.data_dir,
@@ -411,7 +412,7 @@ class Sim(Simbase):
     def search_zoomin_region(self, *args, **kwargs):
         """
         Determine Zoomin region.
-        
+
         Returns a spherical region encompassing maximally refined cells.
 
         Notes
@@ -435,4 +436,3 @@ class Sim(Simbase):
         """
         self.zregion = zregion
         self.info.zregion = zregion
-
