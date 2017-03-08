@@ -6,7 +6,7 @@ subroutine count_tree(fn, n_halos_all, flist_index, slist_index, big_run)
     integer, dimension(:), allocatable::nb_of_halos, nb_of_subhalos
     integer, INTENT(OUT)::flist_index, slist_index, n_halos_all
 
-    integer(KIND=4):: i,j, nhals_now
+    integer(KIND=4)::i,j, nhals_now
     logical, INTENT(IN)::big_run
 
     open(unit=1,file=fn,status='old',form='unformatted')
