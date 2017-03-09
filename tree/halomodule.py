@@ -247,7 +247,6 @@ class Halo(HaloMeta):
                                ('g_nbin', '<i4'), ('g_rr', '<f4', (100,)),
                                ('g_rho', '<f4', (100,))]
 
-            #import tree.load_c.rd_hal as rd_halo
             import tree.rd_hal as rd_halo
             import numpy as np
             temp = rd_halo.read_file(fn.encode(), int(self.is_gal))# as a byte str.
