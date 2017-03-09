@@ -613,19 +613,42 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
     import numpy as np
     from draw import ppc
     
-
     sig = 1.0
     sigrange = sig * 2# what is sigrange?
+    
+    if proj=="z":
+        dim1 = "x"
+        dim1r = "xr"
+        dim2 = "y"
+        dim2r = "yr"
+        dim2_rev = 1
 
-    x = cell["x"]
-    y = cell["y"]
-#    z = cell.z
+    elif proj == "y":
+        dim1 = "x"
+        dim1r = "xr"
+        dim2 = "z"
+        dim2r = "zr"
+        dim1_rev = 1
+        dim2_rev = -1
+
+    elif proj == "x":
+        dim1 = "z"
+        dim1r = "zr"
+        dim2 = "y"
+        dim2r = "yr"
+        dim1_rev = -1
+        dim2_rev = 1
+        # apply reverse in imshow stage.
+
+    x = cell[dim1]
+    y = cell[dim2]
+
 #    di = [0, 1]  # What is this?
 #    zh = xh[2]  # what is this?
     if (xmin is None) & (xmax is None) & (ymin is None) & (ymax is None): 
         if region is not None:
-            xmi0, xma0 = region['xr'][0], region['xr'][1]
-            ymi0, yma0 = region['yr'][0], region['yr'][1]
+            xmi0, xma0 = region[dim1r][0], region[dim1r][1]
+            ymi0, yma0 = region[dim2r][0], region[dim2r][1]
         else:
             xmi0, xma0, ymi0, yma0 = min(x), max(x), min(y), max(y)
     if xmi0 is None:
