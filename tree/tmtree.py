@@ -252,8 +252,8 @@ class Tree():
             tt["nstep"] = i_arr[:,10]
         if not BIG_RUN:
             tt["np"] = i_arr[:,11]
-        tt["f_ind"] = i_arr[:,12]
-        tt["s_ind"] = i_arr[:,13]
+        tt["f_ind"] = i_arr[:,12] -1
+        tt["s_ind"] = i_arr[:,13] -1
 
         #return
 
