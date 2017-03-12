@@ -19,22 +19,22 @@ import tree.halomodule as hmo
 import galaxy
 
 wdir = './29172/'
-nout = 180
+nout = 187
 
 info = load.info.Info(nout=nout, base=wdir)
 
 gcat = hmo.Halo(base=wdir, is_gal=True, verbose=False, nout=nout)
 
-gg = gcat.data[10]
+gg = gcat.data[0]
 galid = gg['id']
 
 gm = load.rd_GM.rd_gal(nout, galid, wdir=wdir)
-gm.cell = load.rd_GM.rd_cell(nout, galid, wdir=wdir)
+#gm.cell = load.rd_GM.rd_cell(nout, galid, wdir=wdir)
 
 gal = galaxy.galaxy.Galaxy(halo = gg, info=info)
-good_gal = gal.mk_gal(gm.star, None, gm.cell, unit_conversion="GM", verbose=False)
+good_gal = gal.mk_gal(gm.star, None, None, unit_conversion="GM", verbose=False)
 
-celldata=gal.cell
+celldata=gal.star
 
 points = np.stack((celldata['x'], celldata['y'], celldata['z'])).T
 
