@@ -7,14 +7,18 @@ Routines used in sampling tasks
 
 @author: hoseung
 """
+
 def region_from_halo(halo, ind=None, rscale = 1.0):
-    if ind == None:
-        ind = range(halo.data)
-    
-    return set_region(xc = halo.data['x'],
-                      yc = halo.data['y'],
-                      zc = halo.data['z'],
-                      radius = halo.data['rvir'] * rscale)
+    if ind is None:
+        return set_region_multi(xc = halo.data['x'],
+                               yc = halo.data['y'],
+                               zc = halo.data['z'],
+                               radius = halo.data['rvir'] * rscale)
+    else:
+        return set_region(xc = halo.data['x'][ind],
+                          yc = halo.data['y'][ind],
+                          zc = halo.data['z'][ind],
+                          radius = halo.data['rvir'][ind] * rscale)
 
 def distance_to(xc, xx):
     import numpy as np

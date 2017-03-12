@@ -8,12 +8,10 @@ Created on Wed Jan 21 11:45:42 2015
 @author: hoseung
 """
 import numpy as np
-
 from utils.io_module import read_fortran, skip_fortran
-import numpy as np
 import time
 
-def load_Tree(fname):
+def load_Tree_deprecated(fname):
     with open(fname, 'rb') as f:
         # Header
         nsteps = read_fortran(f, dtype=np.int32, check=False)
@@ -153,6 +151,164 @@ def load_Tree(fname):
     print("Took", time.time() - t0)
     return t, fatherID, fatherIDx, fatherMass
 
+class Tree():
+    def __init__(self, fn=None, load=True, nout_now=None, BIG_RUN=True):
+        import numpy as np
+
+        self.fn = fn
+        self.tree = None
+        self.fatherID = None
+        self.fatherIDx = None
+        self.fatherMass = None
+        self.sonID = None
+        self.n_all_halos = 0
+        self.n_all_fathers = 0
+        self.n_all_sons = 0
+        if (self.fn is not None) and load:
+            self.load(nout_now=nout_now)
+
+    def load(self, BIG_RUN=True, nout_now = None):
+        """
+            Parameters
+            ----------
+
+            nout_now : int
+                correct nstep to match with simulation nout.
+
+                The first treebrick in the tree is usually between
+                a few to a few tens snapshot.
+
+            BIG_RUN : logical
+                for large simulation, particle mass is excluded.
+                .. But why 'np' of tree is excluded too?
+                it's only one more column to ~40 coluns.
+        """
+        if self.fn is None:
+            print("No tree file name is given")
+            return
+        from tree import cnt_tree
+
+        self.n_all_halos, self.n_all_fathers, self.n_all_sons = cnt_tree.count_tree(self.fn, int(BIG_RUN))
+        self.fatherID, self.fatherIDx, self.sonID, self.fatherMass, i_arr, f_arr = \
+                cnt_tree.load_tree(self.fn, self.n_all_halos, self.n_all_fathers, self.n_all_sons, int(BIG_RUN))
+
+        dtype_tree = [('zred', '<f8'),
+                      ('nstep', '<i4'), ('id', '<i4'), ('m', '<f8'),
+                      ('macc', '<f8'), ('nsub', '<i4'),
+                      ('xp', '<f8', (3,)),
+                      ('vp', '<f8', (3,)),
+                      ('lp', '<f8', (3,)),
+                      ('abc', '<f8', (4,)),
+                      ("ek", '<f8'),
+                      ("ep", '<f8'),
+                      ("et", '<f8'),
+                      ("spin", '<f8'),
+                      ('mvir', '<f8'),
+                      ('rvir', '<f8'),
+                      ('tvir', '<f8'),
+                      ('cvel', '<f8'),
+                      ('rho_0', '<f8'),
+                      ('rho_c', '<f8'),
+                      ('level', '<i4'),
+                      ('hosthalo', '<i4'), ('hostsub', '<i4'),
+                      ('nextsub', '<i4'), ('idx', '<i4'),
+                      ('nprgs', '<i4'),
+                      ('f_ind', '<i4'), ('s_ind', '<i4')]
+
+        tt = np.recarray(self.n_all_halos, dtype = dtype_tree)
+        self.tree = tt
+
+        tt["m"] = f_arr[:,0]
+        tt["macc"] = f_arr[:,1]
+        tt["xp"] = f_arr[:,2:5]
+        tt["vp"] = f_arr[:,5:8]
+        tt["lp"] = f_arr[:,8:11]
+        tt["abc"] = f_arr[:,11:15]
+        tt["ek"] = f_arr[:,15]
+        tt["ep"] = f_arr[:,16]
+        tt["et"] = f_arr[:,17]
+        tt["spin"] = f_arr[:,18]
+
+        tt["rvir"] = f_arr[:,19]
+        tt["mvir"] = f_arr[:,20]* 1e11
+        tt["tvir"] = f_arr[:,21]
+        tt["cvel"] = f_arr[:,22]
+        tt["rho_0"] = f_arr[:,23]
+        tt["rho_c"] = f_arr[:,24]
+
+        tt["idx"] = i_arr[:,0]
+        tt["id"] = i_arr[:,1]
+        #tt["bushID"] = i_arr[:,2]
+        #tt["st"] = i_arr[:,3]
+        tt["level"] = i_arr[:,4]
+        tt["hosthalo"] = i_arr[:,5]
+        tt["hostsub"] = i_arr[:,6]
+        tt["nsub"] = i_arr[:,7]
+        tt["nextsub"] = i_arr[:,8]
+        tt["nprgs"] = i_arr[:,9]
+        if nout_now is not None:
+            tt["nstep"] = i_arr[:,10] + (nout_now - max(tt["nstep"]))
+        else:
+            tt["nstep"] = i_arr[:,10]
+        if not BIG_RUN:
+            tt["np"] = i_arr[:,11]
+        tt["f_ind"] = i_arr[:,12] -1
+        tt["s_ind"] = i_arr[:,13] -1
+
+        #return
+
+        # idx, id, bushID, st, hosts(5), nprgs, np(if not big_run)
+        # m, macc, xp(3), vp(3), lp(3), abc(4), energy(3), spin, virial(4), rho(2)
+
+    def extract_main_tree(self, idx):
+        """
+        Extracts main progenitors from a TreeMaker tree.
+
+
+        example
+        -------
+        >>> tt = tmtree.Tree("tree.dat")
+        >>> atree = tt.extract_main_tree(12345)
+
+        TODO
+        ----
+        It works, but the try - except clause is error-prone.
+        Explicitly check the end of progenitor tree and make the function more predictable.
+
+        """
+
+        t = self.tree
+        fatherID = self.fatherID
+        fatherMass = self.fatherMass
+
+        t_now = t[idx]
+        nstep = t_now["nstep"]
+        nouts = [nstep]
+        atree = np.zeros(nstep + 1, dtype=t.dtype)
+        atree[0] = t_now
+
+
+        for i in range(1, nstep + 1):
+            try:
+                id_father = fatherID[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]]
+                if len(id_father) > 1:
+                    mass_father = fatherMass[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]]
+
+                    id_father = id_father[np.argmax(mass_father)]
+                    ind_father = id_father[id_father > 0] -1
+
+                    nstep -= 1
+                    t_father = t[np.where(t["nstep"] == nstep)[0]][ind_father]
+                    idx = t_father["idx"]
+                    atree[i]=t_father
+                    nouts.append(nstep)
+                else:
+                    break
+            except:
+                break
+
+        return np.copy(atree[:i])
+
 
 
 def load_fits(base=None, work_dir=None, filename="halo/TMtree.fits"):
@@ -188,47 +344,9 @@ def fix_nout(tt, nout_ini, nout_fi):
     tt["NOUT"] = nout_fi - tt["NOUT"]
 
 
-def get_main_prg(tree, halos, nout_ini=None, nout_fi=None):
-    """
-    TM version.
-    nout in tree =/= nout. correct it.
 
-    parameters
-    ----------
-    tree
-        tree object (recarray)
-    halos
-        ID(s) of target halo(s) at the final nout.
 
-    """
-    import numpy as np
-    from collections import Iterable
-    if not isinstance(halos, Iterable):
-        halos = [halos]
-    i_nout_final = np.where(tree[:]["NOUT"] == 0)[0]
-    if nout_ini is None:
-        nout_ini = max(tree['NOUT'])
-    if nout_fi is None:
-        nout_fi = min(tree['NOUT'])
 
-    prg_list = np.zeros([len(halos), abs(nout_ini - nout_fi) + 1], dtype=int)
-    hnu_list = np.zeros([len(halos), abs(nout_ini - nout_fi) + 1], dtype=int)
-
-    for ihalo, halo in enumerate(halos):
-        i_prg = np.where(tree[i_nout_final]["HALNUM"] == halo)[0]
-        prg_idx = tree[i_nout_final[i_prg]]['IDX'][0]
-        hnu_list[ihalo][0] = halo
-
-#        print(prg_idx)
-        prg_list[ihalo][0] = prg_idx
-        for i in range(nout_fi, nout_ini):
-            prg_idx = tree["TREE"][prg_idx][0]
-            prg_list[ihalo][i + 1] = prg_idx
-            hnu_list[ihalo][i + 1] = tree["HALNUM"][prg_idx]
-#            print(prg_idx, tree[prg_idx]["NOUT"])
-        # First element of "tree" is the main progenitor.
-
-    return prg_list, hnu_list
 
 def check_tree_complete(tree, nout_fi, nout_ini, halo_list):
     import numpy as np
