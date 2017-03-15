@@ -427,7 +427,7 @@ def not_all_galaxies_have_hosthalo(allhal, allgal):
     allhal.idlists = newlist
 
 
-def extract_dm(halo, info, wdir, region=None):
+def load_dm_direct(halo, info, wdir, region=None):
     """
     Load and return DM paticles at the location of the halo.
     But unlike HaloMaker dump files, subhalos may be included.
@@ -445,7 +445,11 @@ def extract_dm(halo, info, wdir, region=None):
     return part.dm
 
 
-def extract_cell(halo, info, wdir, region=None, rscale=1.0):
+def load_cell_direct(halo, info, wdir, region=None, rscale=1.0):
+    """
+    Actually, it load the data from the binary.
+    Does not extract from a larger chunk of memory.
+    """
     if region is None:
         import utils.sampling as smp
         region = smp.set_region(xc=halo['x'],
@@ -458,21 +462,4 @@ def extract_cell(halo, info, wdir, region=None, rscale=1.0):
                load=True)
 
     return hh.cell
-
-
-def extract_dm_old(halo, nout, wdir):
-    import utils.sampling as smp
-    region = smp.set_region(xc=halo['x'],
-                            yc=halo['y'],
-                            zc=halo['z'],
-                            radius=halo['r'])
-    s = load.sim.Sim(nout=nout, base=wdir, setup=True)
-    s.set_ranges(region['ranges'])
-
-    s.add_part(ptypes=["dm id mass pos vel"],
-           load=True)
-
-    return s.part.dm
-
-
 
