@@ -419,3 +419,7 @@ def main(wdir='./',
         print("------------------ \n")
         #print("main loop took ", time.time() - t0, "seconds")
     
+
+
+if __name__ == "main":
+    main()
