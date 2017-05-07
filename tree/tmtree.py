@@ -60,14 +60,14 @@ class Tree():
                 return
             dump_temp.append(attr)
 
-# No need to check individual data. 
-# They should go altogether always. 
-#            
+# No need to check individual data.
+# They should go altogether always.
+#
 #                fn = self.wdir + suffix + attr_name + ".npz"
                 #np.save(fn, self.tree)
 #            else:
 #                print("Nothing to save ", attr_name)
-        
+
         fn = self.wdir + suffix + "data.npy"
         np.save(fn, dump_temp)
         self.dump_files.update({"data":fn})
@@ -99,8 +99,8 @@ class Tree():
                     Overwrite_ok=True
         #            return
         self.tree, self.fatherID, self.fatherIDx, self.fatherMass, self.sonID = np.load(self.dump_files["data"])
-        
-        
+
+
         #fn = self.wdir + suffix + "tree_meta_" + ["hal","gal"][self.is_gal]
         #if not fn.endswith(".pickle"):
         #    fn += ".pickle"
@@ -121,8 +121,8 @@ class Tree():
         else:
             self.set_fn(None)
             print(fn, "is not found")
-        
-        
+
+
     def load(self, BIG_RUN=True, nout_now = None):
         """
             Parameters
@@ -247,7 +247,7 @@ class Tree():
         for i in range(1, nstep + 1):
             try:
                 id_father = fatherID[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]]
-                if len(id_father) > 1:
+                if len(id_father) > 0:
                     mass_father = fatherMass[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]]
 
                     id_father = id_father[np.argmax(mass_father)]

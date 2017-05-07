@@ -6,10 +6,9 @@ Inherits galaxy.Galaxy class
 
 @author: hoseung
 """
+from galaxymodule.galaxy import Galaxy
 from load.utils import read_header, read_fortran
 import numpy as np
-from galaxy.galaxy import Galaxy
-
 
 class Header():
     def __init__(self):
@@ -112,7 +111,7 @@ class Gal(Galaxy):
         """
         assert(not(idgal == None and catalog == None)), ("either idgal or a catalog"
         " is needed.")
-
+        print("info", info)
         if idgal == None:
             idgal = catalog["id"]
         super(Gal, self).__init__(catalog=catalog, info=info, halo=halo)
@@ -152,10 +151,10 @@ class Gal(Galaxy):
                 setattr(self.info, name, val)
 #                print(self.info.unit_d)
 
-    def set_info(self, info=None):
-        if info is None:
-            from load.info import Info
-            self.info = Info(self.nout, base=self.wdir)
+    #def set_info(self, info=None):
+    #    if info is None:
+    #        from load.info import Info
+    #        self.info = Info(self.nout, base=self.wdir)
         #self._get_minimal_info(info)
         # Most of the information are needed.
         # No point filtering few attributes.

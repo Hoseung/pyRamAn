@@ -9,8 +9,7 @@ cluster = dict(
     Rgal_to_reff=4.0,
     method_com=1,
     follow_bp=None,
-    unit_conversion='code',
-    debug=False)
+    unit_conversion='code')
 
 HAGN = dict(
     save=False,
@@ -22,8 +21,7 @@ HAGN = dict(
     Rgal_to_reff=4.0,
     method_com=1,
     follow_bp=None,
-    unit_conversion='code',
-    debug=False)
+    unit_conversion='code')
 
 NH = dict(
     save=False,
@@ -35,7 +33,6 @@ NH = dict(
     Rgal_to_reff=5.0,
     method_com=1,
     follow_bp=None,
-    unit_conversion='code',
-    debug=False)
+    unit_conversion='code')
 
 available = tuple(k for k in locals() if not k.startswith('_'))
