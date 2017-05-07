@@ -31,6 +31,19 @@ def print_large_number(q):
     else:
         return("{:.2f}".format(q))
 
+
+def convert_catalog(catalog, pboxsize, unit="code"):
+    """
+    Default unit = code unit.
+    (tree.halomodule converts units to code units on reading catalogs)
+    """
+    catalog['x'] = (catalog['x'] -0.5) * pboxsize
+    catalog['y'] = (catalog['y'] -0.5) * pboxsize
+    catalog['z'] = (catalog['z'] -0.5) * pboxsize
+    catalog['r'] = (catalog['r'] -0.5) * pboxsize  #* info.cboxsize * 1e3
+    catalog['rvir'] = catalog['rvir'] * pboxsize #* info.cboxsize * 1e3
+
+
 class Meta():
     def __init__(self):
         self.xc = 0.0
@@ -59,7 +72,7 @@ class Meta():
 
     def show_summary(self):
         """
-            prints a summary of the galaxy meta data.
+            prints a summary of the galaxy meta catalog.
         """
         for name in sorted(self.__dict__):
             q = self.__dict__[name]
@@ -80,18 +93,37 @@ class Meta():
 
 
 
-class Galaxy(object):
+class Galaxy():
+    """
 
-    def __init__(self, halo=None, info=None):
+    Maybe.. this class is getting too heavy...?
+    -> If I have to deal with millions of this.
+
+    """
+    def __init__(self, info=None, halo=None,
+                 catalog=None, convert_cat=True):
         self.meta = Meta()
-        self.set_halo(halo)
+        self.set_catalog(catalog, convert_cat)
         self.info = info
+        self._has_star=False
+        self._has_dm=False
+        self._has_cell=False
         #self.meta.id=-1 # why did I do this...??
 
-    def set_halo(self, halo):
-        if halo is not None:
-            self.halo = halo
-            self.meta.id = int(halo['id'])
+    def set_catalog(self, catalog, convert):
+        # Copy so not to be affected by the original catalog
+        # being modified later outside.
+        self.gcat = np.copy(catalog)
+        !!!!!!!!!!1
+        Galaxy diesn't have an info.
+        And shouldn't have a full info.
+        A stripped down version(as loaded in rd_GM) is desired.
+
+        if convert:
+            convert_catalog(self.gcat, self.info.pboxsize)
+        if catalog is not None:
+            self.meta.id = int(catalog['id'])
+
 
     def set_ptypes(self, pt=None):
         pass
@@ -196,7 +228,7 @@ class Galaxy(object):
 
     def _convert_unit_meta(self, unit_conversion):
         """
-            convert meta data into convenient unit.
+            convert meta catalog into convenient unit.
         """
         if unit_conversion == "code":
             self.meta.xc = xc * self.info.pboxsize*1000
@@ -215,30 +247,30 @@ class Galaxy(object):
             print("No target unit is specified")
             return
 
-        data = getattr(self, pop)
+        catalog = getattr(self, pop)
         # Unit conversion
         if unit_conversion == "code":
-            if "x" in data.dtype.names:
-                data['x'] = (data['x'] - xc) * self.info.pboxsize*1000
-                data['y'] = (data['y'] - yc) * self.info.pboxsize*1000
-                data['z'] = (data['z'] - zc) * self.info.pboxsize*1000
-            if 'm' in data.dtype.names:
-                data['m'] = data['m'] * self.info.msun
-            if "vx" in data.dtype.names:
-                data['vx'] = data['vx'] * self.info.kms - self.meta.vxc
-                data['vy'] = data['vy'] * self.info.kms - self.meta.vyc
-                data['vz'] = data['vz'] * self.info.kms - self.meta.vzc
+            if "x" in catalog.dtype.names:
+                catalog['x'] = (catalog['x'] - xc) * self.info.pboxsize*1000
+                catalog['y'] = (catalog['y'] - yc) * self.info.pboxsize*1000
+                catalog['z'] = (catalog['z'] - zc) * self.info.pboxsize*1000
+            if 'm' in catalog.dtype.names:
+                catalog['m'] = catalog['m'] * self.info.msun
+            if "vx" in catalog.dtype.names:
+                catalog['vx'] = catalog['vx'] * self.info.kms - self.meta.vxc
+                catalog['vy'] = catalog['vy'] * self.info.kms - self.meta.vyc
+                catalog['vz'] = catalog['vz'] * self.info.kms - self.meta.vzc
         elif unit_conversion == "GM":
-            if "x" in data.dtype.names:
-                data['x'] = (data['x'] - (xc - 0.5) * self.info.pboxsize)*1e3
-                data['y'] = (data['y'] - (yc - 0.5) * self.info.pboxsize)*1e3
-                data['z'] = (data['z'] - (zc - 0.5) * self.info.pboxsize)*1e3
-            if 'm' in data.dtype.names:
-                data['m'] = data['m'] * 1e11 # in Msun.
-            if "vx" in data.dtype.names:
-                data['vx'] -= self.meta.vxc
-                data['vy'] -= self.meta.vyc
-                data['vz'] -= self.meta.vzc
+            if "x" in catalog.dtype.names:
+                catalog['x'] = (catalog['x'] - (xc - 0.5) * self.info.pboxsize)*1e3
+                catalog['y'] = (catalog['y'] - (yc - 0.5) * self.info.pboxsize)*1e3
+                catalog['z'] = (catalog['z'] - (zc - 0.5) * self.info.pboxsize)*1e3
+            if 'm' in catalog.dtype.names:
+                catalog['m'] = catalog['m'] * 1e11 # in Msun.
+            if "vx" in catalog.dtype.names:
+                catalog['vx'] -= self.meta.vxc
+                catalog['vy'] -= self.meta.vyc
+                catalog['vz'] -= self.meta.vzc
 
     def _add_dm(self, dm, idm):
         ndm_tot = len(idm)
@@ -261,7 +293,7 @@ class Galaxy(object):
             self.dm['vy'] = dm['vy'][idm]
             self.dm['vz'] = dm['vz'][idm]
 
-        if verbose: print("DM data stored")
+        if verbose: print("DM catalog stored")
 
     def _add_cell(self, cell, icell):
         ncell_tot = len(icell)
@@ -281,16 +313,19 @@ class Galaxy(object):
         self.cell['temp'] = cell['var4'][icell]
         self.cell['metal'] = cell['var5'][icell]
 
-    def mk_gal(self, star, dm, cell,
-               save=False, verbose=False,
-               mstar_min=1e9,
-               den_lim=1e6, den_lim2=5e6,
-               rmin = -1, Rgal_to_reff=5.0, method_com=1, follow_bp=None,
-               unit_conversion="code", debug=False):
+    def mk_gal(self,
+                save=False, verbose=False,
+                mstar_min=1e9,
+                den_lim=1e6, den_lim2=5e6,
+                rmin = -1, Rgal_to_reff=5.0, method_com=1, follow_bp=None,
+                unit_conversion="code", debug=False):
         """
-            Input data in code unit.
+            Refine given catalog (star, DM, gas) to define a realistic galaxy.
+            Raw star/DM/gas catalog as give are only rough representation of a galaxy.
+            But not much have to be thrown away, either.
 
-            Returns True if it is a "good" galaxy
+            Returns True if a "good" galaxy is made.
+
 
             Parameters
             ----------
@@ -302,36 +337,47 @@ class Galaxy(object):
 
             Notes
             -----
-            Since now (as of 2016.03) galaxy calculation is based on the GalaxyMaker results,
-            let's just believe and minimize redundant processes to determine the center of mass,
-            system velocity, and to check the presence of additional components.
+            1. Since now (as of 2016.03) galaxy calculation is based on the GalaxyMaker results,
+            let's just believe and minimize redundant processes such as determining the center of mass,
+            system velocity, and checking the presence of (unwanted) substructure.
 
-            Assuming all data in the code units.
+            2. Assuming all catalog in the code units.
 
-            dr, bin size for radial profile cut measure, scales with exponential factor.
+            3. dr, bin size in determining the radial profile cut scales with exponential factor.
             Without scaling, 0.5kpc bin size is too large for ~1kpc galaxies at high-z.
 
         """
-        assert (self.halo is not None), "Need halo information,"
+        # Need halo information
+        assert (self.gcat is not None), ("Need a catalog,"
         "use Galaxy.set_halo() and provide x,y,z,vx,vy,vz,r,rvir, at least"
-        "Units are - "
+        "Units are.. ?? ")
 
-        member="Reff"
+        # And at least one component.
+        star = self.star
+        dm = self.dm
+        cell = self.cell
+
+        assert (self._has_star or self._has_dm or self._has_cell), ("At least"
+        "one of three(star, dm, gas) component is needed")
+
+        # all tests passed.
         if verbose:
             print("Making a galaxy:", self.meta.id)
             print("SAVE:", save)
-            print("Halo size:", self.halo['rvir'])
+            print("Halo size:", self.gcat['rvir'])
 
+        #
+        member="Reff"
 
         # galaxy center from GalaxyMaker. - good enough.
-        xc = self.halo['x']
-        yc = self.halo['y']
-        zc = self.halo['z']
+        xc = self.gcat['x']
+        yc = self.gcat['y']
+        zc = self.gcat['z']
 
-        if verbose: print("xc, yxc,zc =", xc, yc, zc)
+        if verbose: print("xc, yc, zc =", xc, yc, zc)
 
 
-        rgal_tmp = min([self.halo['r'] * self.info.pboxsize * 1000.0, 30])
+        rgal_tmp = min([self.gcat['r'] * self.info.pboxsize * 1000.0, 30])
         if verbose: print("Rgal_tmp", rgal_tmp)
         dense_enough = self.radial_profile_cut(star['x'], star['y'], star['m'],
                                 star['vx'], star['vy'], star['vz'],
@@ -534,7 +580,7 @@ class Galaxy(object):
         """
         import numpy as np
         if method == "simple":
-            return self.halo['rvir']
+            return self.gcat['rvir']
         elif method == "eff":
             # requires galaxy center to be determined.
             dd = xx**2 + yy**2 + zz**2
@@ -698,9 +744,9 @@ class Galaxy(object):
             vy = self.star['vy']
             vz = self.star['vz']
 
-        vhalx = self.halo['vx']
-        vhaly = self.halo['vy']
-        vhalz = self.halo['vz']
+        vhalx = self.gcat['vx']
+        vhaly = self.gcat['vy']
+        vhalz = self.gcat['vz']
 
         r_frac = 0.7
         vrange = max([np.std(vx),
@@ -959,7 +1005,7 @@ class Galaxy(object):
             ypos_regular = np.tile(np.arange(ny),nx)
             from Cappellari.voronoi.voronoi_2d_binning import voronoi_2d_binning
             """
-            This function accepts only data on uniform grid...?
+            This function accepts only catalog on uniform grid...?
             """
             binNum, xNode, yNode, xBar, yBar, sn, nPixels, scale = \
                 voronoi_2d_binning(xpos_regular, ypos_regular, count_map,
@@ -978,7 +1024,7 @@ class Galaxy(object):
                 ymin, ymax = np.min(y), np.max(y)
                 nx = round((xmax - xmin)/pixelSize) + 1
                 ny = round((ymax - ymin)/pixelSize) + 1
-                img = np.full((nx, ny), np.nan)  # use nan for missing data
+                img = np.full((nx, ny), np.nan)  # use nan for missing catalog
                 j = np.round((x - xmin)/pixelSize).astype(int)
                 k = np.round((y - ymin)/pixelSize).astype(int)
                 img[j, k] = counts
@@ -1731,7 +1777,7 @@ class Galaxy(object):
         """
         # if hist=True, use histogram instead of custom CIC.
         img = pp.part2den(self.star, self.info, npix=npix, hist=True)
-        im = ax.imshow(img.data, cmap=plt.get_cmap('brg'),
+        im = ax.imshow(img.catalog, cmap=plt.get_cmap('brg'),
                        norm=LogNorm(vmin=1e6))
 #        _,_,_,im = ax.hist2d( self.star['x'], self.star['y'], norm=LogNorm(), bins=npix)
         fig.colorbar(im, ax=ax)
@@ -1851,50 +1897,50 @@ class Galaxy(object):
 
     def save_gal(self, base='./'):
 
-        def get_metadata(clazz):
+        def get_metacatalog(clazz):
             """
-                Out of all attributes of a galaxy instance, leave only data.
+                Out of all attributes of a galaxy instance, leave only catalog.
             """
             return {name: attr for name, attr in clazz.__dict__.items()
                     if not name.startswith("__")
                     and not callable(attr)
                     and not type(attr) is staticmethod}
 
-        def get_metadata2(adict):
+        def get_metacatalog2(adict):
             return {name: attr for name, attr in adict.items()
                     if not isinstance(attr, (np.ndarray, np.recarray, dict, list))}
 
 
         import h5py as hdf
-        # Save data into a hdf5 file
+        # Save catalog into a hdf5 file
         outfile = hdf.File(base + str(self.meta.id).zfill(6) + '_gal.hdf5',
                            'w', libver='latest')
 
-        # Store metadata in HDF5 attributes
-        attrs = get_metadata(self)
-        attrs = get_metadata2(attrs)
+        # Store metacatalog in HDF5 attributes
+        attrs = get_metacatalog(self)
+        attrs = get_metacatalog2(attrs)
         for name, atr in attrs.items():
             if atr != None:
                 outfile.attrs.create(name, atr)
             #outfile.attrs[name] = atr
 
-        # Store data under /selfaxy with direct assignment
+        # Store catalog under /selfaxy with direct assignment
         if hasattr(self, 'star'):
             #print("Saving star")
             star = outfile.create_group("star")
             for field in self.star.dtype.names:
-                star.create_dataset(field, data=self.star[field])
+                star.create_catalogset(field, catalog=self.star[field])
 
         if hasattr(self, 'dm'):
             #print("Saving DM")
             dm = outfile.create_group("dm")
             for field in self.dm.dtype.names:
-                dm.create_dataset(field, data=self.dm[field])
+                dm.create_catalogset(field, catalog=self.dm[field])
 
         if hasattr(self, 'cell'):
             #print("Saving gas")
             gas = outfile.create_group("gas")
             for field in self.cell.dtype.names:
-                gas.create_dataset(field, data=self.cell[field])
+                gas.create_catalogset(field, catalog=self.cell[field])
 
         outfile.close()
