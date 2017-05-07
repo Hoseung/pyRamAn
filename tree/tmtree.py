@@ -171,45 +171,45 @@ class Tree():
                       ('nprgs', '<i4'),
                       ('f_ind', '<i4'), ('s_ind', '<i4')]
 
-        tt = np.recarray(self.n_all_halos, dtype = dtype_tree)
+        tt = np.recarray(self.n_all_halos +1, dtype = dtype_tree)
         self.tree = tt
 
-        tt["m"] = f_arr[:,0]
-        tt["macc"] = f_arr[:,1]
-        tt["xp"] = f_arr[:,2:5]
-        tt["vp"] = f_arr[:,5:8]
-        tt["lp"] = f_arr[:,8:11]
-        tt["abc"] = f_arr[:,11:15]
-        tt["ek"] = f_arr[:,15]
-        tt["ep"] = f_arr[:,16]
-        tt["et"] = f_arr[:,17]
-        tt["spin"] = f_arr[:,18]
+        tt["m"][1:] = f_arr[:,0]
+        tt["macc"][1:] = f_arr[:,1]
+        tt["xp"][1:] = f_arr[:,2:5]
+        tt["vp"][1:] = f_arr[:,5:8]
+        tt["lp"][1:] = f_arr[:,8:11]
+        tt["abc"][1:] = f_arr[:,11:15]
+        tt["ek"][1:] = f_arr[:,15]
+        tt["ep"][1:] = f_arr[:,16]
+        tt["et"][1:] = f_arr[:,17]
+        tt["spin"][1:] = f_arr[:,18]
 
-        tt["rvir"] = f_arr[:,19]
-        tt["mvir"] = f_arr[:,20]* 1e11
-        tt["tvir"] = f_arr[:,21]
-        tt["cvel"] = f_arr[:,22]
-        tt["rho_0"] = f_arr[:,23]
-        tt["rho_c"] = f_arr[:,24]
+        tt["rvir"][1:] = f_arr[:,19]
+        tt["mvir"][1:] = f_arr[:,20]* 1e11
+        tt["tvir"][1:] = f_arr[:,21]
+        tt["cvel"][1:] = f_arr[:,22]
+        tt["rho_0"][1:] = f_arr[:,23]
+        tt["rho_c"][1:] = f_arr[:,24]
 
-        tt["idx"] = i_arr[:,0]
-        tt["id"] = i_arr[:,1]
+        tt["idx"][1:] = i_arr[:,0]
+        tt["id"][1:] = i_arr[:,1]
         #tt["bushID"] = i_arr[:,2]
         #tt["st"] = i_arr[:,3]
-        tt["level"] = i_arr[:,4]
-        tt["hosthalo"] = i_arr[:,5]
-        tt["hostsub"] = i_arr[:,6]
-        tt["nsub"] = i_arr[:,7]
-        tt["nextsub"] = i_arr[:,8]
-        tt["nprgs"] = i_arr[:,9]
+        tt["level"][1:] = i_arr[:,4]
+        tt["hosthalo"][1:] = i_arr[:,5]
+        tt["hostsub"][1:] = i_arr[:,6]
+        tt["nsub"][1:] = i_arr[:,7]
+        tt["nextsub"][1:] = i_arr[:,8]
+        tt["nprgs"][1:] = i_arr[:,9]
         if nout_now is not None:
-            tt["nstep"] = i_arr[:,10] + (nout_now - max(tt["nstep"]))
+            tt["nstep"][1:] = i_arr[:,10] + (nout_now - max(tt["nstep"]))
         else:
-            tt["nstep"] = i_arr[:,10]
+            tt["nstep"][1:] = i_arr[:,10]
         if not BIG_RUN:
-            tt["np"] = i_arr[:,11]
-        tt["f_ind"] = i_arr[:,12] -1
-        tt["s_ind"] = i_arr[:,13] -1
+            tt["np"][1:] = i_arr[:,11]
+        tt["f_ind"][1:] = i_arr[:,12] -1
+        tt["s_ind"][1:] = i_arr[:,13] -1
 
         #return
 
