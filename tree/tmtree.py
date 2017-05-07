@@ -31,6 +31,10 @@ class Tree():
         self.n_all_sons = 0
         self.is_gal = is_gal
         self.wdir = wdir
+        self.aexps = None
+        self.omega_ts = None
+        self.age_univs = None
+        self.nsteps = None
 
         if fn is None:
             self.get_fn()
@@ -144,9 +148,12 @@ class Tree():
             return
         from tree import cnt_tree
 
-        self.n_all_halos, self.n_all_fathers, self.n_all_sons = cnt_tree.count_tree(self.fn, int(BIG_RUN))
-        self.fatherID, self.fatherIDx, self.sonID, self.fatherMass, i_arr, f_arr = \
-                cnt_tree.load_tree(self.fn, self.n_all_halos, self.n_all_fathers, self.n_all_sons, int(BIG_RUN))
+        self.n_all_halos, self.n_all_fathers, self.n_all_sons, self.nsteps = cnt_tree.count_tree(self.fn, int(BIG_RUN))
+        self.fatherID, self.fatherIDx, self.sonID, \
+        self.fatherMass, i_arr, f_arr, \
+        self.aexps, self.omega_ts, self.age_univs = \
+                cnt_tree.load_tree(self.fn, self.n_all_halos, \
+                self.n_all_fathers, self.n_all_sons, int(BIG_RUN), self.nsteps)
 
         dtype_tree = [('zred', '<f8'),
                       ('nstep', '<i4'), ('id', '<i4'), ('m', '<f8'),
@@ -249,13 +256,12 @@ class Tree():
                 id_father = fatherID[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]]
                 if len(id_father) > 0:
                     mass_father = fatherMass[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]]
-
                     id_father = id_father[np.argmax(mass_father)]
-                    ind_father = id_father[id_father > 0]# -1
 
                     nstep -= 1
-                    t_father = t[np.where(t["nstep"] == nstep)[0]][ind_father]
-                    idx = t_father["idx"]
+                    t_next = t[np.where(t["nstep"] == nstep)[0]]
+                    t_father = t_next[t_next["id"]==id_father]
+                    idx = t_father["idx"][0] # need to be a integer scalar.
                     atree[i]=t_father
                     nouts.append(nstep)
                 else:
@@ -264,7 +270,6 @@ class Tree():
                 break
 
         return np.copy(atree[:i])
-
 
 
 def load_fits(base=None, work_dir=None, filename="halo/TMtree.fits"):
