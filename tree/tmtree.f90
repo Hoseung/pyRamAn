@@ -78,7 +78,8 @@ subroutine load_tree(fn, fatherID, fatherIDx, sonID, fatherMass, &
 
     integer, dimension(:), allocatable::fid_tmp, nb_of_halos, nb_of_subhalos
 
-    integer, dimension(1:n_all_fathers), INTENT(OUT)::fatherID, fatherIDx
+    ! +1 so that in python the array content start from index 1.
+    integer, dimension(1:n_all_fathers+1), INTENT(OUT)::fatherID, fatherIDx
     integer, dimension(1:n_all_sons), INTENT(OUT)::sonID
     real(KIND=4), dimension(1:n_all_fathers), INTENT(OUT) ::fatherMass
     integer(KIND=4), dimension(1:n_halos_all,1:14), INTENT(OUT) ::i_arr
