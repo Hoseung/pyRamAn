@@ -107,7 +107,7 @@ class Galaxy():
         #if info is not None:
         #    print("AAAAAA")
         self.set_info(info)
-        self.set_catalog(catalog, convert_cat)
+        self.set_catalog(np.copy(catalog), convert_cat)
         self._has_star=False
         self._has_dm=False
         self._has_cell=False
@@ -119,7 +119,7 @@ class Galaxy():
     def set_catalog(self, catalog, convert):
         # Copy so not to be affected by the original data
         # being modified outside later.
-        self.gcat = np.copy(catalog)
+        self.gcat = catalog
 
         if convert:
             convert_catalog(self.gcat, self.info.pboxsize)

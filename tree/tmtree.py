@@ -223,6 +223,69 @@ class Tree():
         # idx, id, bushID, st, hosts(5), nprgs, np(if not big_run)
         # m, macc, xp(3), vp(3), lp(3), abc(4), energy(3), spin, virial(4), rho(2)
 
+    def extract_direct_full_tree(self, idx):
+        """
+        Extracts main progenitors from a TreeMaker tree.
+
+
+        example
+        -------
+        >>> tt = tmtree.Tree("tree.dat")
+        >>> atree = tt.extract_main_tree(12345)
+
+        TODO
+        ----
+        It works, but the try - except clause is error-prone.
+        Explicitly check the end of progenitor tree and make the function more predictable.
+
+        """
+
+        t = self.tree
+        #fatherID = self.fatherID
+        fatherIDx = self.fatherIDx
+        fatherMass = self.fatherMass
+
+        t_now = t[idx]
+        nstep = t_now["nstep"]
+        nouts = [nstep]
+        atree = np.zeros(nstep + 1, dtype=t.dtype)
+        atree[0] = t_now
+
+        idx_prgs_alltime = [[idx]]
+        #idx_prgs_alltime.append(idx)
+
+        for i in range(1, nstep + 1):
+            try:
+                idx_father = fatherIDx[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]] -1
+                if len(idx_father) > 0:
+                    idx_prgs_alltime.append(idx_father[idx_father>0])
+                    mass_father = fatherMass[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]]
+                    idx = idx_father[np.argmax(mass_father)]
+                    if idx < 1:
+                        break
+                    t_father=t[idx]
+                    atree[i]=t_father
+                    nouts.append(nstep)
+                else:
+                    break
+            except:
+                break
+
+        return atree, idx_prgs_alltime
+
+    def get_all_trees(self,idx_prgs_alltime):
+        all_main_prgs=[]
+        # Per nstep
+        for j, satellie_roots in enumerate(idx_prgs_alltime):
+            #print("{}-th step".format(j))
+            mainprgs=[]
+            # Per galaxy
+            for sat in satellie_roots:
+                mainprgs.append(self.extract_main_tree(sat))
+            all_main_prgs.append(mainprgs)
+
+        return all_main_prgs
+
     def extract_main_tree(self, idx):
         """
         Extracts main progenitors from a TreeMaker tree.
@@ -241,7 +304,7 @@ class Tree():
         """
 
         t = self.tree
-        fatherID = self.fatherID
+        fatherIDx = self.fatherIDx
         fatherMass = self.fatherMass
 
         t_now = t[idx]
@@ -250,18 +313,19 @@ class Tree():
         atree = np.zeros(nstep + 1, dtype=t.dtype)
         atree[0] = t_now
 
+        if nstep <= 1:
+            return
 
         for i in range(1, nstep + 1):
             try:
-                id_father = fatherID[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]]
-                if len(id_father) > 0:
+                idx_father = fatherIDx[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]]
+                if len(idx_father) > 0:
                     mass_father = fatherMass[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]]
-                    id_father = id_father[np.argmax(mass_father)]
-
-                    nstep -= 1
-                    t_next = t[np.where(t["nstep"] == nstep)[0]]
-                    t_father = t_next[t_next["id"]==id_father]
-                    idx = t_father["idx"][0] # need to be a integer scalar.
+                    idx = idx_father[np.argmax(mass_father)] -1
+                    if idx < 1:
+                        break
+                    t_father=t[idx]
+                    #idx = t_father["idx"]
                     atree[i]=t_father
                     nouts.append(nstep)
                 else:
