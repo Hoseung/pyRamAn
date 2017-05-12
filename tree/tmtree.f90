@@ -1,10 +1,10 @@
-subroutine count_tree(fn, n_halos_all, flist_index, slist_index, big_run)
+subroutine count_tree(fn, n_halos_all, flist_index, slist_index, nsteps, big_run)
     implicit none
     character(LEN=256), INTENT(IN)::fn
 
-    integer::nsteps, nfathers, nsons
+    integer::nfathers, nsons
     integer, dimension(:), allocatable::nb_of_halos, nb_of_subhalos
-    integer, INTENT(OUT)::flist_index, slist_index, n_halos_all
+    integer, INTENT(OUT)::flist_index, slist_index, n_halos_all, nsteps
 
     integer(KIND=4)::i,j, nhals_now
     logical, INTENT(IN)::big_run
@@ -63,24 +63,28 @@ end subroutine
 
 
 
-subroutine load_tree(fn, fatherID, fatherIDx, sonID, fatherMass, i_arr, f_arr, n_halos_all, n_all_fathers, n_all_sons, big_run)
+subroutine load_tree(fn, fatherID, fatherIDx, sonID, fatherMass, &
+                   & i_arr, f_arr, aexp_arr, omega_t_arr, age_univ_arr, &
+                   & n_halos_all, n_all_fathers, n_all_sons, big_run, nsteps)
 
     implicit none
     character(LEN=256), INTENT(IN)::fn
     logical, INTENT(IN)::big_run
-    integer, INTENT(IN)::n_all_sons, n_all_fathers, n_halos_all
+    integer, INTENT(IN)::n_all_sons, n_all_fathers, n_halos_all, nsteps
 
-    integer(KIND=4)::nsteps, nsons, flist_index, slist_index
+    integer(KIND=4):: nsons, flist_index, slist_index
     integer(KIND=4):: i,j, k,nhals_now, n_fathers, idx_old, nhals_old, idx
     real(KIND=8)::macc
 
     integer, dimension(:), allocatable::fid_tmp, nb_of_halos, nb_of_subhalos
 
-    integer, dimension(1:n_all_fathers), INTENT(OUT)::fatherID, fatherIDx
+    ! +1 so that in python the array content start from index 1.
+    integer, dimension(1:n_all_fathers+1), INTENT(OUT)::fatherID, fatherIDx
     integer, dimension(1:n_all_sons), INTENT(OUT)::sonID
     real(KIND=4), dimension(1:n_all_fathers), INTENT(OUT) ::fatherMass
     integer(KIND=4), dimension(1:n_halos_all,1:14), INTENT(OUT) ::i_arr
     real(KIND=4), dimension(1:n_halos_all,1:25), INTENT(OUT) ::f_arr
+    real(KIND=4), dimension(1:nsteps), INTENT(OUT) ::aexp_arr, omega_t_arr, age_univ_arr
 
     ! iarr = idx, id, level, hosthalo,
 
@@ -88,14 +92,14 @@ subroutine load_tree(fn, fatherID, fatherIDx, sonID, fatherMass, i_arr, f_arr, n
 
     open(unit=1,file=fn,status='old',form='unformatted')
 
-    read(1)nsteps
+    read(1)
     allocate(nb_of_halos(1:nsteps))
     allocate(nb_of_subhalos(1:nsteps))
     read(1)nb_of_halos(1:nsteps),nb_of_subhalos(1:nsteps)
 
-    read(1)
-    read(1)
-    read(1)
+    read(1)aexp_arr(1:nsteps)
+    read(1)omega_t_arr(1:nsteps)
+    read(1)age_univ_arr(1:nsteps)
 
     flist_index=1
     slist_index=1

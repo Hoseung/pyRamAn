@@ -393,11 +393,395 @@ body.cython { font-family: courier; font-size: 12; }
   <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_2); __pyx_t_2 = 0;
 </pre><pre class="cython line score-0">&#xA0;<span class="">05</span>: <span class="k">ctypedef</span> <span class="n">np</span><span class="o">.</span><span class="n">float_t</span> <span class="n">DTYPE_t</span></pre>
 <pre class="cython line score-0">&#xA0;<span class="">06</span>: </pre>
-<pre class="cython line score-208" onclick='toggleDiv(this)'>+<span class="">07</span>: <span class="k">def</span> <span class="nf">col_over_denom</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int32_t</span><span class="p">,</span> <span class="n">ndim</span><span class="o">=</span><span class="mf">1</span><span class="p">]</span> <span class="n">iin</span><span class="p">,</span> \</pre>
+<pre class="cython line score-172" onclick='toggleDiv(this)'>+<span class="">07</span>: <span class="k">def</span> <span class="nf">col</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int32_t</span><span class="p">,</span> <span class="n">ndim</span><span class="o">=</span><span class="mf">1</span><span class="p">]</span> <span class="n">iin</span><span class="p">,</span> \</pre>
+<pre class='cython code score-172 '>/* Python wrapper */
+static PyObject *__pyx_pw_4draw_3ppc_1col(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyMethodDef __pyx_mdef_4draw_3ppc_1col = {"col", (PyCFunction)__pyx_pw_4draw_3ppc_1col, METH_VARARGS|METH_KEYWORDS, 0};
+static PyObject *__pyx_pw_4draw_3ppc_1col(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+  PyArrayObject *__pyx_v_iin = 0;
+  PyArrayObject *__pyx_v_ixl = 0;
+  PyArrayObject *__pyx_v_ixr = 0;
+  PyArrayObject *__pyx_v_iyl = 0;
+  PyArrayObject *__pyx_v_iyr = 0;
+  PyArrayObject *__pyx_v_sden = 0;
+  int __pyx_v_nx;
+  int __pyx_v_ny;
+  PyObject *__pyx_r = 0;
+  <span class='refnanny'>__Pyx_RefNannyDeclarations</span>
+  <span class='refnanny'>__Pyx_RefNannySetupContext</span>("col (wrapper)", 0);
+  {
+    static PyObject **__pyx_pyargnames[] = {&amp;__pyx_n_s_iin,&amp;__pyx_n_s_ixl,&amp;__pyx_n_s_ixr,&amp;__pyx_n_s_iyl,&amp;__pyx_n_s_iyr,&amp;__pyx_n_s_sden,&amp;__pyx_n_s_nx,&amp;__pyx_n_s_ny,0};
+    PyObject* values[8] = {0,0,0,0,0,0,0,0};
+    if (unlikely(__pyx_kwds)) {
+      Py_ssize_t kw_args;
+      const Py_ssize_t pos_args = <span class='py_macro_api'>PyTuple_GET_SIZE</span>(__pyx_args);
+      switch (pos_args) {
+        case  8: values[7] = <span class='py_macro_api'>PyTuple_GET_ITEM</span>(__pyx_args, 7);
+        case  7: values[6] = <span class='py_macro_api'>PyTuple_GET_ITEM</span>(__pyx_args, 6);
+        case  6: values[5] = <span class='py_macro_api'>PyTuple_GET_ITEM</span>(__pyx_args, 5);
+        case  5: values[4] = <span class='py_macro_api'>PyTuple_GET_ITEM</span>(__pyx_args, 4);
+        case  4: values[3] = <span class='py_macro_api'>PyTuple_GET_ITEM</span>(__pyx_args, 3);
+        case  3: values[2] = <span class='py_macro_api'>PyTuple_GET_ITEM</span>(__pyx_args, 2);
+        case  2: values[1] = <span class='py_macro_api'>PyTuple_GET_ITEM</span>(__pyx_args, 1);
+        case  1: values[0] = <span class='py_macro_api'>PyTuple_GET_ITEM</span>(__pyx_args, 0);
+        case  0: break;
+        default: goto __pyx_L5_argtuple_error;
+      }
+      kw_args = <span class='py_c_api'>PyDict_Size</span>(__pyx_kwds);
+      switch (pos_args) {
+        case  0:
+        if (likely((values[0] = <span class='py_c_api'>PyDict_GetItem</span>(__pyx_kwds, __pyx_n_s_iin)) != 0)) kw_args--;
+        else goto __pyx_L5_argtuple_error;
+        case  1:
+        if (likely((values[1] = <span class='py_c_api'>PyDict_GetItem</span>(__pyx_kwds, __pyx_n_s_ixl)) != 0)) kw_args--;
+        else {
+          <span class='pyx_c_api'>__Pyx_RaiseArgtupleInvalid</span>("col", 1, 8, 8, 1); __PYX_ERR(0, 7, __pyx_L3_error)
+        }
+        case  2:
+        if (likely((values[2] = <span class='py_c_api'>PyDict_GetItem</span>(__pyx_kwds, __pyx_n_s_ixr)) != 0)) kw_args--;
+        else {
+          <span class='pyx_c_api'>__Pyx_RaiseArgtupleInvalid</span>("col", 1, 8, 8, 2); __PYX_ERR(0, 7, __pyx_L3_error)
+        }
+        case  3:
+        if (likely((values[3] = <span class='py_c_api'>PyDict_GetItem</span>(__pyx_kwds, __pyx_n_s_iyl)) != 0)) kw_args--;
+        else {
+          <span class='pyx_c_api'>__Pyx_RaiseArgtupleInvalid</span>("col", 1, 8, 8, 3); __PYX_ERR(0, 7, __pyx_L3_error)
+        }
+        case  4:
+        if (likely((values[4] = <span class='py_c_api'>PyDict_GetItem</span>(__pyx_kwds, __pyx_n_s_iyr)) != 0)) kw_args--;
+        else {
+          <span class='pyx_c_api'>__Pyx_RaiseArgtupleInvalid</span>("col", 1, 8, 8, 4); __PYX_ERR(0, 7, __pyx_L3_error)
+        }
+        case  5:
+        if (likely((values[5] = <span class='py_c_api'>PyDict_GetItem</span>(__pyx_kwds, __pyx_n_s_sden)) != 0)) kw_args--;
+        else {
+          <span class='pyx_c_api'>__Pyx_RaiseArgtupleInvalid</span>("col", 1, 8, 8, 5); __PYX_ERR(0, 7, __pyx_L3_error)
+        }
+        case  6:
+        if (likely((values[6] = <span class='py_c_api'>PyDict_GetItem</span>(__pyx_kwds, __pyx_n_s_nx)) != 0)) kw_args--;
+        else {
+          <span class='pyx_c_api'>__Pyx_RaiseArgtupleInvalid</span>("col", 1, 8, 8, 6); __PYX_ERR(0, 7, __pyx_L3_error)
+        }
+        case  7:
+        if (likely((values[7] = <span class='py_c_api'>PyDict_GetItem</span>(__pyx_kwds, __pyx_n_s_ny)) != 0)) kw_args--;
+        else {
+          <span class='pyx_c_api'>__Pyx_RaiseArgtupleInvalid</span>("col", 1, 8, 8, 7); __PYX_ERR(0, 7, __pyx_L3_error)
+        }
+      }
+      if (unlikely(kw_args &gt; 0)) {
+        if (unlikely(<span class='pyx_c_api'>__Pyx_ParseOptionalKeywords</span>(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "col") &lt; 0)) __PYX_ERR(0, 7, __pyx_L3_error)
+      }
+    } else if (<span class='py_macro_api'>PyTuple_GET_SIZE</span>(__pyx_args) != 8) {
+      goto __pyx_L5_argtuple_error;
+    } else {
+      values[0] = <span class='py_macro_api'>PyTuple_GET_ITEM</span>(__pyx_args, 0);
+      values[1] = <span class='py_macro_api'>PyTuple_GET_ITEM</span>(__pyx_args, 1);
+      values[2] = <span class='py_macro_api'>PyTuple_GET_ITEM</span>(__pyx_args, 2);
+      values[3] = <span class='py_macro_api'>PyTuple_GET_ITEM</span>(__pyx_args, 3);
+      values[4] = <span class='py_macro_api'>PyTuple_GET_ITEM</span>(__pyx_args, 4);
+      values[5] = <span class='py_macro_api'>PyTuple_GET_ITEM</span>(__pyx_args, 5);
+      values[6] = <span class='py_macro_api'>PyTuple_GET_ITEM</span>(__pyx_args, 6);
+      values[7] = <span class='py_macro_api'>PyTuple_GET_ITEM</span>(__pyx_args, 7);
+    }
+    __pyx_v_iin = ((PyArrayObject *)values[0]);
+    __pyx_v_ixl = ((PyArrayObject *)values[1]);
+    __pyx_v_ixr = ((PyArrayObject *)values[2]);
+    __pyx_v_iyl = ((PyArrayObject *)values[3]);
+    __pyx_v_iyr = ((PyArrayObject *)values[4]);
+    __pyx_v_sden = ((PyArrayObject *)values[5]);
+    __pyx_v_nx = <span class='pyx_c_api'>__Pyx_PyInt_As_int</span>(values[6]); if (unlikely((__pyx_v_nx == (int)-1) &amp;&amp; <span class='py_c_api'>PyErr_Occurred</span>())) __PYX_ERR(0, 13, __pyx_L3_error)
+    __pyx_v_ny = <span class='pyx_c_api'>__Pyx_PyInt_As_int</span>(values[7]); if (unlikely((__pyx_v_ny == (int)-1) &amp;&amp; <span class='py_c_api'>PyErr_Occurred</span>())) __PYX_ERR(0, 13, __pyx_L3_error)
+  }
+  goto __pyx_L4_argument_unpacking_done;
+  __pyx_L5_argtuple_error:;
+  <span class='pyx_c_api'>__Pyx_RaiseArgtupleInvalid</span>("col", 1, 8, 8, <span class='py_macro_api'>PyTuple_GET_SIZE</span>(__pyx_args)); __PYX_ERR(0, 7, __pyx_L3_error)
+  __pyx_L3_error:;
+  <span class='pyx_c_api'>__Pyx_AddTraceback</span>("draw.ppc.col", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  <span class='refnanny'>__Pyx_RefNannyFinishContext</span>();
+  return NULL;
+  __pyx_L4_argument_unpacking_done:;
+  if (unlikely(!<span class='pyx_c_api'>__Pyx_ArgTypeTest</span>(((PyObject *)__pyx_v_iin), __pyx_ptype_5numpy_ndarray, 1, "iin", 0))) __PYX_ERR(0, 7, __pyx_L1_error)
+  if (unlikely(!<span class='pyx_c_api'>__Pyx_ArgTypeTest</span>(((PyObject *)__pyx_v_ixl), __pyx_ptype_5numpy_ndarray, 1, "ixl", 0))) __PYX_ERR(0, 8, __pyx_L1_error)
+  if (unlikely(!<span class='pyx_c_api'>__Pyx_ArgTypeTest</span>(((PyObject *)__pyx_v_ixr), __pyx_ptype_5numpy_ndarray, 1, "ixr", 0))) __PYX_ERR(0, 9, __pyx_L1_error)
+  if (unlikely(!<span class='pyx_c_api'>__Pyx_ArgTypeTest</span>(((PyObject *)__pyx_v_iyl), __pyx_ptype_5numpy_ndarray, 1, "iyl", 0))) __PYX_ERR(0, 10, __pyx_L1_error)
+  if (unlikely(!<span class='pyx_c_api'>__Pyx_ArgTypeTest</span>(((PyObject *)__pyx_v_iyr), __pyx_ptype_5numpy_ndarray, 1, "iyr", 0))) __PYX_ERR(0, 11, __pyx_L1_error)
+  if (unlikely(!<span class='pyx_c_api'>__Pyx_ArgTypeTest</span>(((PyObject *)__pyx_v_sden), __pyx_ptype_5numpy_ndarray, 1, "sden", 0))) __PYX_ERR(0, 12, __pyx_L1_error)
+  __pyx_r = __pyx_pf_4draw_3ppc_col(__pyx_self, __pyx_v_iin, __pyx_v_ixl, __pyx_v_ixr, __pyx_v_iyl, __pyx_v_iyr, __pyx_v_sden, __pyx_v_nx, __pyx_v_ny);
+
+  /* function exit code */
+  goto __pyx_L0;
+  __pyx_L1_error:;
+  __pyx_r = NULL;
+  __pyx_L0:;
+  <span class='refnanny'>__Pyx_RefNannyFinishContext</span>();
+  return __pyx_r;
+}
+
+static PyObject *__pyx_pf_4draw_3ppc_col(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_iin, PyArrayObject *__pyx_v_ixl, PyArrayObject *__pyx_v_ixr, PyArrayObject *__pyx_v_iyl, PyArrayObject *__pyx_v_iyr, PyArrayObject *__pyx_v_sden, int __pyx_v_nx, int __pyx_v_ny) {
+  PyObject *__pyx_v_colden = NULL;
+  PyObject *__pyx_v_i = NULL;
+  __Pyx_LocalBuf_ND __pyx_pybuffernd_iin;
+  __Pyx_Buffer __pyx_pybuffer_iin;
+  __Pyx_LocalBuf_ND __pyx_pybuffernd_ixl;
+  __Pyx_Buffer __pyx_pybuffer_ixl;
+  __Pyx_LocalBuf_ND __pyx_pybuffernd_ixr;
+  __Pyx_Buffer __pyx_pybuffer_ixr;
+  __Pyx_LocalBuf_ND __pyx_pybuffernd_iyl;
+  __Pyx_Buffer __pyx_pybuffer_iyl;
+  __Pyx_LocalBuf_ND __pyx_pybuffernd_iyr;
+  __Pyx_Buffer __pyx_pybuffer_iyr;
+  __Pyx_LocalBuf_ND __pyx_pybuffernd_sden;
+  __Pyx_Buffer __pyx_pybuffer_sden;
+  PyObject *__pyx_r = NULL;
+  <span class='refnanny'>__Pyx_RefNannyDeclarations</span>
+  <span class='refnanny'>__Pyx_RefNannySetupContext</span>("col", 0);
+  __pyx_pybuffer_iin.pybuffer.buf = NULL;
+  __pyx_pybuffer_iin.refcount = 0;
+  __pyx_pybuffernd_iin.data = NULL;
+  __pyx_pybuffernd_iin.rcbuffer = &amp;__pyx_pybuffer_iin;
+  __pyx_pybuffer_ixl.pybuffer.buf = NULL;
+  __pyx_pybuffer_ixl.refcount = 0;
+  __pyx_pybuffernd_ixl.data = NULL;
+  __pyx_pybuffernd_ixl.rcbuffer = &amp;__pyx_pybuffer_ixl;
+  __pyx_pybuffer_ixr.pybuffer.buf = NULL;
+  __pyx_pybuffer_ixr.refcount = 0;
+  __pyx_pybuffernd_ixr.data = NULL;
+  __pyx_pybuffernd_ixr.rcbuffer = &amp;__pyx_pybuffer_ixr;
+  __pyx_pybuffer_iyl.pybuffer.buf = NULL;
+  __pyx_pybuffer_iyl.refcount = 0;
+  __pyx_pybuffernd_iyl.data = NULL;
+  __pyx_pybuffernd_iyl.rcbuffer = &amp;__pyx_pybuffer_iyl;
+  __pyx_pybuffer_iyr.pybuffer.buf = NULL;
+  __pyx_pybuffer_iyr.refcount = 0;
+  __pyx_pybuffernd_iyr.data = NULL;
+  __pyx_pybuffernd_iyr.rcbuffer = &amp;__pyx_pybuffer_iyr;
+  __pyx_pybuffer_sden.pybuffer.buf = NULL;
+  __pyx_pybuffer_sden.refcount = 0;
+  __pyx_pybuffernd_sden.data = NULL;
+  __pyx_pybuffernd_sden.rcbuffer = &amp;__pyx_pybuffer_sden;
+  {
+    __Pyx_BufFmt_StackElem __pyx_stack[1];
+    if (unlikely(<span class='pyx_c_api'>__Pyx_GetBufferAndValidate</span>(&amp;__pyx_pybuffernd_iin.rcbuffer-&gt;pybuffer, (PyObject*)__pyx_v_iin, &amp;__Pyx_TypeInfo_nn___pyx_t_5numpy_int32_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 7, __pyx_L1_error)
+  }
+  __pyx_pybuffernd_iin.diminfo[0].strides = __pyx_pybuffernd_iin.rcbuffer-&gt;pybuffer.strides[0]; __pyx_pybuffernd_iin.diminfo[0].shape = __pyx_pybuffernd_iin.rcbuffer-&gt;pybuffer.shape[0];
+  {
+    __Pyx_BufFmt_StackElem __pyx_stack[1];
+    if (unlikely(<span class='pyx_c_api'>__Pyx_GetBufferAndValidate</span>(&amp;__pyx_pybuffernd_ixl.rcbuffer-&gt;pybuffer, (PyObject*)__pyx_v_ixl, &amp;__Pyx_TypeInfo_nn___pyx_t_5numpy_int32_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 7, __pyx_L1_error)
+  }
+  __pyx_pybuffernd_ixl.diminfo[0].strides = __pyx_pybuffernd_ixl.rcbuffer-&gt;pybuffer.strides[0]; __pyx_pybuffernd_ixl.diminfo[0].shape = __pyx_pybuffernd_ixl.rcbuffer-&gt;pybuffer.shape[0];
+  {
+    __Pyx_BufFmt_StackElem __pyx_stack[1];
+    if (unlikely(<span class='pyx_c_api'>__Pyx_GetBufferAndValidate</span>(&amp;__pyx_pybuffernd_ixr.rcbuffer-&gt;pybuffer, (PyObject*)__pyx_v_ixr, &amp;__Pyx_TypeInfo_nn___pyx_t_5numpy_int32_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 7, __pyx_L1_error)
+  }
+  __pyx_pybuffernd_ixr.diminfo[0].strides = __pyx_pybuffernd_ixr.rcbuffer-&gt;pybuffer.strides[0]; __pyx_pybuffernd_ixr.diminfo[0].shape = __pyx_pybuffernd_ixr.rcbuffer-&gt;pybuffer.shape[0];
+  {
+    __Pyx_BufFmt_StackElem __pyx_stack[1];
+    if (unlikely(<span class='pyx_c_api'>__Pyx_GetBufferAndValidate</span>(&amp;__pyx_pybuffernd_iyl.rcbuffer-&gt;pybuffer, (PyObject*)__pyx_v_iyl, &amp;__Pyx_TypeInfo_nn___pyx_t_5numpy_int32_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 7, __pyx_L1_error)
+  }
+  __pyx_pybuffernd_iyl.diminfo[0].strides = __pyx_pybuffernd_iyl.rcbuffer-&gt;pybuffer.strides[0]; __pyx_pybuffernd_iyl.diminfo[0].shape = __pyx_pybuffernd_iyl.rcbuffer-&gt;pybuffer.shape[0];
+  {
+    __Pyx_BufFmt_StackElem __pyx_stack[1];
+    if (unlikely(<span class='pyx_c_api'>__Pyx_GetBufferAndValidate</span>(&amp;__pyx_pybuffernd_iyr.rcbuffer-&gt;pybuffer, (PyObject*)__pyx_v_iyr, &amp;__Pyx_TypeInfo_nn___pyx_t_5numpy_int32_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 7, __pyx_L1_error)
+  }
+  __pyx_pybuffernd_iyr.diminfo[0].strides = __pyx_pybuffernd_iyr.rcbuffer-&gt;pybuffer.strides[0]; __pyx_pybuffernd_iyr.diminfo[0].shape = __pyx_pybuffernd_iyr.rcbuffer-&gt;pybuffer.shape[0];
+  {
+    __Pyx_BufFmt_StackElem __pyx_stack[1];
+    if (unlikely(<span class='pyx_c_api'>__Pyx_GetBufferAndValidate</span>(&amp;__pyx_pybuffernd_sden.rcbuffer-&gt;pybuffer, (PyObject*)__pyx_v_sden, &amp;__Pyx_TypeInfo_nn___pyx_t_5numpy_float64_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 7, __pyx_L1_error)
+  }
+  __pyx_pybuffernd_sden.diminfo[0].strides = __pyx_pybuffernd_sden.rcbuffer-&gt;pybuffer.strides[0]; __pyx_pybuffernd_sden.diminfo[0].shape = __pyx_pybuffernd_sden.rcbuffer-&gt;pybuffer.shape[0];
+/* … */
+  /* function exit code */
+  __pyx_L1_error:;
+  <span class='pyx_macro_api'>__Pyx_XDECREF</span>(__pyx_t_1);
+  <span class='pyx_macro_api'>__Pyx_XDECREF</span>(__pyx_t_2);
+  <span class='pyx_macro_api'>__Pyx_XDECREF</span>(__pyx_t_3);
+  <span class='pyx_macro_api'>__Pyx_XDECREF</span>(__pyx_t_4);
+  <span class='pyx_macro_api'>__Pyx_XDECREF</span>(__pyx_t_5);
+  { PyObject *__pyx_type, *__pyx_value, *__pyx_tb;
+    __Pyx_PyThreadState_declare
+    __Pyx_PyThreadState_assign
+    <span class='pyx_c_api'>__Pyx_ErrFetch</span>(&amp;__pyx_type, &amp;__pyx_value, &amp;__pyx_tb);
+    <span class='pyx_c_api'>__Pyx_SafeReleaseBuffer</span>(&amp;__pyx_pybuffernd_iin.rcbuffer-&gt;pybuffer);
+    <span class='pyx_c_api'>__Pyx_SafeReleaseBuffer</span>(&amp;__pyx_pybuffernd_ixl.rcbuffer-&gt;pybuffer);
+    <span class='pyx_c_api'>__Pyx_SafeReleaseBuffer</span>(&amp;__pyx_pybuffernd_ixr.rcbuffer-&gt;pybuffer);
+    <span class='pyx_c_api'>__Pyx_SafeReleaseBuffer</span>(&amp;__pyx_pybuffernd_iyl.rcbuffer-&gt;pybuffer);
+    <span class='pyx_c_api'>__Pyx_SafeReleaseBuffer</span>(&amp;__pyx_pybuffernd_iyr.rcbuffer-&gt;pybuffer);
+    <span class='pyx_c_api'>__Pyx_SafeReleaseBuffer</span>(&amp;__pyx_pybuffernd_sden.rcbuffer-&gt;pybuffer);
+  <span class='pyx_c_api'>__Pyx_ErrRestore</span>(__pyx_type, __pyx_value, __pyx_tb);}
+  <span class='pyx_c_api'>__Pyx_AddTraceback</span>("draw.ppc.col", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = NULL;
+  goto __pyx_L2;
+  __pyx_L0:;
+  <span class='pyx_c_api'>__Pyx_SafeReleaseBuffer</span>(&amp;__pyx_pybuffernd_iin.rcbuffer-&gt;pybuffer);
+  <span class='pyx_c_api'>__Pyx_SafeReleaseBuffer</span>(&amp;__pyx_pybuffernd_ixl.rcbuffer-&gt;pybuffer);
+  <span class='pyx_c_api'>__Pyx_SafeReleaseBuffer</span>(&amp;__pyx_pybuffernd_ixr.rcbuffer-&gt;pybuffer);
+  <span class='pyx_c_api'>__Pyx_SafeReleaseBuffer</span>(&amp;__pyx_pybuffernd_iyl.rcbuffer-&gt;pybuffer);
+  <span class='pyx_c_api'>__Pyx_SafeReleaseBuffer</span>(&amp;__pyx_pybuffernd_iyr.rcbuffer-&gt;pybuffer);
+  <span class='pyx_c_api'>__Pyx_SafeReleaseBuffer</span>(&amp;__pyx_pybuffernd_sden.rcbuffer-&gt;pybuffer);
+  __pyx_L2:;
+  <span class='pyx_macro_api'>__Pyx_XDECREF</span>(__pyx_v_colden);
+  <span class='pyx_macro_api'>__Pyx_XDECREF</span>(__pyx_v_i);
+  <span class='refnanny'>__Pyx_XGIVEREF</span>(__pyx_r);
+  <span class='refnanny'>__Pyx_RefNannyFinishContext</span>();
+  return __pyx_r;
+}
+/* … */
+  __pyx_tuple__10 = <span class='py_c_api'>PyTuple_Pack</span>(10, __pyx_n_s_iin, __pyx_n_s_ixl, __pyx_n_s_ixr, __pyx_n_s_iyl, __pyx_n_s_iyr, __pyx_n_s_sden, __pyx_n_s_nx, __pyx_n_s_ny, __pyx_n_s_colden, __pyx_n_s_i); if (unlikely(!__pyx_tuple__10)) __PYX_ERR(0, 7, __pyx_L1_error)
+  <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_tuple__10);
+  <span class='refnanny'>__Pyx_GIVEREF</span>(__pyx_tuple__10);
+/* … */
+  __pyx_t_2 = PyCFunction_NewEx(&amp;__pyx_mdef_4draw_3ppc_1col, NULL, __pyx_n_s_draw_ppc); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 7, __pyx_L1_error)
+  <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_2);
+  if (<span class='py_c_api'>PyDict_SetItem</span>(__pyx_d, __pyx_n_s_col, __pyx_t_2) &lt; 0) __PYX_ERR(0, 7, __pyx_L1_error)
+  <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_codeobj__11 = (PyObject*)<span class='pyx_c_api'>__Pyx_PyCode_New</span>(8, 0, 10, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__10, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_hoseung_Work_pyclusterevol, __pyx_n_s_col, 7, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__11)) __PYX_ERR(0, 7, __pyx_L1_error)
+</pre><pre class="cython line score-0">&#xA0;<span class="">08</span>:    <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int32_t</span><span class="p">,</span> <span class="n">ndim</span><span class="o">=</span><span class="mf">1</span><span class="p">]</span> <span class="n">ixl</span><span class="p">,</span> \</pre>
+<pre class="cython line score-0">&#xA0;<span class="">09</span>:    <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int32_t</span><span class="p">,</span> <span class="n">ndim</span><span class="o">=</span><span class="mf">1</span><span class="p">]</span> <span class="n">ixr</span><span class="p">,</span> \</pre>
+<pre class="cython line score-0">&#xA0;<span class="">10</span>:    <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int32_t</span><span class="p">,</span> <span class="n">ndim</span><span class="o">=</span><span class="mf">1</span><span class="p">]</span> <span class="n">iyl</span><span class="p">,</span> \</pre>
+<pre class="cython line score-0">&#xA0;<span class="">11</span>:    <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int32_t</span><span class="p">,</span> <span class="n">ndim</span><span class="o">=</span><span class="mf">1</span><span class="p">]</span> <span class="n">iyr</span><span class="p">,</span> \</pre>
+<pre class="cython line score-0">&#xA0;<span class="">12</span>:    <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64_t</span><span class="p">,</span> <span class="n">ndim</span><span class="o">=</span><span class="mf">1</span><span class="p">]</span> <span class="n">sden</span><span class="p">,</span> \</pre>
+<pre class="cython line score-0">&#xA0;<span class="">13</span>:    <span class="nb">int</span> <span class="n">nx</span><span class="p">,</span> <span class="nb">int</span> <span class="n">ny</span><span class="p">):</span></pre>
+<pre class="cython line score-0">&#xA0;<span class="">14</span>: </pre>
+<pre class="cython line score-0">&#xA0;<span class="">15</span>: <span class="c">#    cdef int percent = 0</span></pre>
+<pre class="cython line score-43" onclick='toggleDiv(this)'>+<span class="">16</span>:    <span class="n">colden</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nx</span><span class="p">,</span><span class="n">ny</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span></pre>
+<pre class='cython code score-43 '>  __pyx_t_1 = <span class='pyx_c_api'>__Pyx_GetModuleGlobalName</span>(__pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 16, __pyx_L1_error)
+  <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_1);
+  __pyx_t_2 = <span class='pyx_c_api'>__Pyx_PyObject_GetAttrStr</span>(__pyx_t_1, __pyx_n_s_zeros); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 16, __pyx_L1_error)
+  <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_2);
+  <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_1 = <span class='pyx_c_api'>__Pyx_PyInt_From_int</span>(__pyx_v_nx); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 16, __pyx_L1_error)
+  <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_1);
+  __pyx_t_3 = <span class='pyx_c_api'>__Pyx_PyInt_From_int</span>(__pyx_v_ny); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 16, __pyx_L1_error)
+  <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_3);
+  __pyx_t_4 = <span class='py_c_api'>PyTuple_New</span>(2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 16, __pyx_L1_error)
+  <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_4);
+  <span class='refnanny'>__Pyx_GIVEREF</span>(__pyx_t_1);
+  <span class='py_macro_api'>PyTuple_SET_ITEM</span>(__pyx_t_4, 0, __pyx_t_1);
+  <span class='refnanny'>__Pyx_GIVEREF</span>(__pyx_t_3);
+  <span class='py_macro_api'>PyTuple_SET_ITEM</span>(__pyx_t_4, 1, __pyx_t_3);
+  __pyx_t_1 = 0;
+  __pyx_t_3 = 0;
+  __pyx_t_3 = <span class='py_c_api'>PyTuple_New</span>(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 16, __pyx_L1_error)
+  <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_3);
+  <span class='refnanny'>__Pyx_GIVEREF</span>(__pyx_t_4);
+  <span class='py_macro_api'>PyTuple_SET_ITEM</span>(__pyx_t_3, 0, __pyx_t_4);
+  __pyx_t_4 = 0;
+  __pyx_t_4 = <span class='py_c_api'>PyDict_New</span>(); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 16, __pyx_L1_error)
+  <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_4);
+  __pyx_t_1 = <span class='pyx_c_api'>__Pyx_GetModuleGlobalName</span>(__pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 16, __pyx_L1_error)
+  <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_1);
+  __pyx_t_5 = <span class='pyx_c_api'>__Pyx_PyObject_GetAttrStr</span>(__pyx_t_1, __pyx_n_s_float64); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 16, __pyx_L1_error)
+  <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_5);
+  <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_1); __pyx_t_1 = 0;
+  if (<span class='py_c_api'>PyDict_SetItem</span>(__pyx_t_4, __pyx_n_s_dtype, __pyx_t_5) &lt; 0) __PYX_ERR(0, 16, __pyx_L1_error)
+  <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_5); __pyx_t_5 = 0;
+  __pyx_t_5 = <span class='pyx_c_api'>__Pyx_PyObject_Call</span>(__pyx_t_2, __pyx_t_3, __pyx_t_4); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 16, __pyx_L1_error)
+  <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_5);
+  <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_2); __pyx_t_2 = 0;
+  <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_3); __pyx_t_3 = 0;
+  <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_4); __pyx_t_4 = 0;
+  __pyx_v_colden = __pyx_t_5;
+  __pyx_t_5 = 0;
+</pre><pre class="cython line score-0">&#xA0;<span class="">17</span>: </pre>
+<pre class="cython line score-46" onclick='toggleDiv(this)'>+<span class="">18</span>:    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">iin</span><span class="p">:</span></pre>
+<pre class='cython code score-46 '>  if (likely(<span class='py_c_api'>PyList_CheckExact</span>(((PyObject *)__pyx_v_iin))) || <span class='py_c_api'>PyTuple_CheckExact</span>(((PyObject *)__pyx_v_iin))) {
+    __pyx_t_5 = ((PyObject *)__pyx_v_iin); <span class='pyx_macro_api'>__Pyx_INCREF</span>(__pyx_t_5); __pyx_t_6 = 0;
+    __pyx_t_7 = NULL;
+  } else {
+    __pyx_t_6 = -1; __pyx_t_5 = <span class='py_c_api'>PyObject_GetIter</span>(((PyObject *)__pyx_v_iin)); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 18, __pyx_L1_error)
+    <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_5);
+    __pyx_t_7 = Py_TYPE(__pyx_t_5)-&gt;tp_iternext; if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 18, __pyx_L1_error)
+  }
+  for (;;) {
+    if (likely(!__pyx_t_7)) {
+      if (likely(<span class='py_c_api'>PyList_CheckExact</span>(__pyx_t_5))) {
+        if (__pyx_t_6 &gt;= <span class='py_macro_api'>PyList_GET_SIZE</span>(__pyx_t_5)) break;
+        #if CYTHON_ASSUME_SAFE_MACROS &amp;&amp; !CYTHON_AVOID_BORROWED_REFS
+        __pyx_t_4 = <span class='py_macro_api'>PyList_GET_ITEM</span>(__pyx_t_5, __pyx_t_6); <span class='pyx_macro_api'>__Pyx_INCREF</span>(__pyx_t_4); __pyx_t_6++; if (unlikely(0 &lt; 0)) __PYX_ERR(0, 18, __pyx_L1_error)
+        #else
+        __pyx_t_4 = <span class='py_macro_api'>PySequence_ITEM</span>(__pyx_t_5, __pyx_t_6); __pyx_t_6++; if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 18, __pyx_L1_error)
+        <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_4);
+        #endif
+      } else {
+        if (__pyx_t_6 &gt;= <span class='py_macro_api'>PyTuple_GET_SIZE</span>(__pyx_t_5)) break;
+        #if CYTHON_ASSUME_SAFE_MACROS &amp;&amp; !CYTHON_AVOID_BORROWED_REFS
+        __pyx_t_4 = <span class='py_macro_api'>PyTuple_GET_ITEM</span>(__pyx_t_5, __pyx_t_6); <span class='pyx_macro_api'>__Pyx_INCREF</span>(__pyx_t_4); __pyx_t_6++; if (unlikely(0 &lt; 0)) __PYX_ERR(0, 18, __pyx_L1_error)
+        #else
+        __pyx_t_4 = <span class='py_macro_api'>PySequence_ITEM</span>(__pyx_t_5, __pyx_t_6); __pyx_t_6++; if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 18, __pyx_L1_error)
+        <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_4);
+        #endif
+      }
+    } else {
+      __pyx_t_4 = __pyx_t_7(__pyx_t_5);
+      if (unlikely(!__pyx_t_4)) {
+        PyObject* exc_type = <span class='py_c_api'>PyErr_Occurred</span>();
+        if (exc_type) {
+          if (likely(exc_type == PyExc_StopIteration || <span class='py_c_api'>PyErr_GivenExceptionMatches</span>(exc_type, PyExc_StopIteration))) <span class='py_c_api'>PyErr_Clear</span>();
+          else __PYX_ERR(0, 18, __pyx_L1_error)
+        }
+        break;
+      }
+      <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_4);
+    }
+    <span class='pyx_macro_api'>__Pyx_XDECREF_SET</span>(__pyx_v_i, __pyx_t_4);
+    __pyx_t_4 = 0;
+/* … */
+  }
+  <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_5); __pyx_t_5 = 0;
+</pre><pre class="cython line score-71" onclick='toggleDiv(this)'>+<span class="">19</span>:        <span class="n">colden</span><span class="p">[</span><span class="n">ixl</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span><span class="n">ixr</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">+</span><span class="mf">1</span><span class="p">,</span> <span class="n">iyl</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span><span class="n">iyr</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">+</span><span class="mf">1</span><span class="p">]</span> <span class="o">+=</span> <span class="n">sden</span><span class="p">[</span><span class="n">i</span><span class="p">]</span></pre>
+<pre class='cython code score-71 '>    __pyx_t_4 = <span class='py_c_api'>PyObject_GetItem</span>(((PyObject *)__pyx_v_ixl), __pyx_v_i); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 19, __pyx_L1_error)
+    <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_4);
+    __pyx_t_3 = <span class='py_c_api'>PyObject_GetItem</span>(((PyObject *)__pyx_v_ixr), __pyx_v_i); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 19, __pyx_L1_error)
+    <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_3);
+    __pyx_t_2 = <span class='pyx_c_api'>__Pyx_PyInt_AddObjC</span>(__pyx_t_3, __pyx_int_1, 1, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 19, __pyx_L1_error)
+    <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_2);
+    <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_3); __pyx_t_3 = 0;
+    __pyx_t_3 = <span class='py_c_api'>PySlice_New</span>(__pyx_t_4, __pyx_t_2, Py_None); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 19, __pyx_L1_error)
+    <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_3);
+    <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_4); __pyx_t_4 = 0;
+    <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_2); __pyx_t_2 = 0;
+    __pyx_t_2 = <span class='py_c_api'>PyObject_GetItem</span>(((PyObject *)__pyx_v_iyl), __pyx_v_i); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 19, __pyx_L1_error)
+    <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_2);
+    __pyx_t_4 = <span class='py_c_api'>PyObject_GetItem</span>(((PyObject *)__pyx_v_iyr), __pyx_v_i); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 19, __pyx_L1_error)
+    <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_4);
+    __pyx_t_1 = <span class='pyx_c_api'>__Pyx_PyInt_AddObjC</span>(__pyx_t_4, __pyx_int_1, 1, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 19, __pyx_L1_error)
+    <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_1);
+    <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_4); __pyx_t_4 = 0;
+    __pyx_t_4 = <span class='py_c_api'>PySlice_New</span>(__pyx_t_2, __pyx_t_1, Py_None); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 19, __pyx_L1_error)
+    <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_4);
+    <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_2); __pyx_t_2 = 0;
+    <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_1); __pyx_t_1 = 0;
+    __pyx_t_1 = <span class='py_c_api'>PyTuple_New</span>(2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 19, __pyx_L1_error)
+    <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_1);
+    <span class='refnanny'>__Pyx_GIVEREF</span>(__pyx_t_3);
+    <span class='py_macro_api'>PyTuple_SET_ITEM</span>(__pyx_t_1, 0, __pyx_t_3);
+    <span class='refnanny'>__Pyx_GIVEREF</span>(__pyx_t_4);
+    <span class='py_macro_api'>PyTuple_SET_ITEM</span>(__pyx_t_1, 1, __pyx_t_4);
+    __pyx_t_3 = 0;
+    __pyx_t_4 = 0;
+    __pyx_t_4 = <span class='py_c_api'>PyObject_GetItem</span>(__pyx_v_colden, __pyx_t_1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 19, __pyx_L1_error)
+    <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_4);
+    __pyx_t_3 = <span class='py_c_api'>PyObject_GetItem</span>(((PyObject *)__pyx_v_sden), __pyx_v_i); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 19, __pyx_L1_error)
+    <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_3);
+    __pyx_t_2 = <span class='py_c_api'>PyNumber_InPlaceAdd</span>(__pyx_t_4, __pyx_t_3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 19, __pyx_L1_error)
+    <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_2);
+    <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_4); __pyx_t_4 = 0;
+    <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_3); __pyx_t_3 = 0;
+    if (unlikely(<span class='py_c_api'>PyObject_SetItem</span>(__pyx_v_colden, __pyx_t_1, __pyx_t_2) &lt; 0)) __PYX_ERR(0, 19, __pyx_L1_error)
+    <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_2); __pyx_t_2 = 0;
+    <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_1); __pyx_t_1 = 0;
+</pre><pre class="cython line score-2" onclick='toggleDiv(this)'>+<span class="">20</span>:    <span class="k">return</span> <span class="n">colden</span></pre>
+<pre class='cython code score-2 '>  <span class='pyx_macro_api'>__Pyx_XDECREF</span>(__pyx_r);
+  <span class='pyx_macro_api'>__Pyx_INCREF</span>(__pyx_v_colden);
+  __pyx_r = __pyx_v_colden;
+  goto __pyx_L0;
+</pre><pre class="cython line score-0">&#xA0;<span class="">21</span>: </pre>
+<pre class="cython line score-0">&#xA0;<span class="">22</span>: </pre>
+<pre class="cython line score-208" onclick='toggleDiv(this)'>+<span class="">23</span>: <span class="k">def</span> <span class="nf">col_over_denom</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int32_t</span><span class="p">,</span> <span class="n">ndim</span><span class="o">=</span><span class="mf">1</span><span class="p">]</span> <span class="n">iin</span><span class="p">,</span> \</pre>
 <pre class='cython code score-208 '>/* Python wrapper */
-static PyObject *__pyx_pw_4draw_3ppc_1col_over_denom(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static PyMethodDef __pyx_mdef_4draw_3ppc_1col_over_denom = {"col_over_denom", (PyCFunction)__pyx_pw_4draw_3ppc_1col_over_denom, METH_VARARGS|METH_KEYWORDS, 0};
-static PyObject *__pyx_pw_4draw_3ppc_1col_over_denom(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_4draw_3ppc_3col_over_denom(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyMethodDef __pyx_mdef_4draw_3ppc_3col_over_denom = {"col_over_denom", (PyCFunction)__pyx_pw_4draw_3ppc_3col_over_denom, METH_VARARGS|METH_KEYWORDS, 0};
+static PyObject *__pyx_pw_4draw_3ppc_3col_over_denom(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyArrayObject *__pyx_v_iin = 0;
   PyArrayObject *__pyx_v_ixl = 0;
   PyArrayObject *__pyx_v_ixr = 0;
@@ -407,7 +791,7 @@ static PyObject *__pyx_pw_4draw_3ppc_1col_over_denom(PyObject *__pyx_self, PyObj
   PyArrayObject *__pyx_v_sden = 0;
   int __pyx_v_nx;
   int __pyx_v_ny;
-  int __pyx_v_column;
+  CYTHON_UNUSED int __pyx_v_column;
   PyObject *__pyx_r = 0;
   <span class='refnanny'>__Pyx_RefNannyDeclarations</span>
   <span class='refnanny'>__Pyx_RefNannySetupContext</span>("col_over_denom (wrapper)", 0);
@@ -439,51 +823,51 @@ static PyObject *__pyx_pw_4draw_3ppc_1col_over_denom(PyObject *__pyx_self, PyObj
         case  1:
         if (likely((values[1] = <span class='py_c_api'>PyDict_GetItem</span>(__pyx_kwds, __pyx_n_s_ixl)) != 0)) kw_args--;
         else {
-          <span class='pyx_c_api'>__Pyx_RaiseArgtupleInvalid</span>("col_over_denom", 1, 10, 10, 1); __PYX_ERR(0, 7, __pyx_L3_error)
+          <span class='pyx_c_api'>__Pyx_RaiseArgtupleInvalid</span>("col_over_denom", 1, 10, 10, 1); __PYX_ERR(0, 23, __pyx_L3_error)
         }
         case  2:
         if (likely((values[2] = <span class='py_c_api'>PyDict_GetItem</span>(__pyx_kwds, __pyx_n_s_ixr)) != 0)) kw_args--;
         else {
-          <span class='pyx_c_api'>__Pyx_RaiseArgtupleInvalid</span>("col_over_denom", 1, 10, 10, 2); __PYX_ERR(0, 7, __pyx_L3_error)
+          <span class='pyx_c_api'>__Pyx_RaiseArgtupleInvalid</span>("col_over_denom", 1, 10, 10, 2); __PYX_ERR(0, 23, __pyx_L3_error)
         }
         case  3:
         if (likely((values[3] = <span class='py_c_api'>PyDict_GetItem</span>(__pyx_kwds, __pyx_n_s_iyl)) != 0)) kw_args--;
         else {
-          <span class='pyx_c_api'>__Pyx_RaiseArgtupleInvalid</span>("col_over_denom", 1, 10, 10, 3); __PYX_ERR(0, 7, __pyx_L3_error)
+          <span class='pyx_c_api'>__Pyx_RaiseArgtupleInvalid</span>("col_over_denom", 1, 10, 10, 3); __PYX_ERR(0, 23, __pyx_L3_error)
         }
         case  4:
         if (likely((values[4] = <span class='py_c_api'>PyDict_GetItem</span>(__pyx_kwds, __pyx_n_s_iyr)) != 0)) kw_args--;
         else {
-          <span class='pyx_c_api'>__Pyx_RaiseArgtupleInvalid</span>("col_over_denom", 1, 10, 10, 4); __PYX_ERR(0, 7, __pyx_L3_error)
+          <span class='pyx_c_api'>__Pyx_RaiseArgtupleInvalid</span>("col_over_denom", 1, 10, 10, 4); __PYX_ERR(0, 23, __pyx_L3_error)
         }
         case  5:
         if (likely((values[5] = <span class='py_c_api'>PyDict_GetItem</span>(__pyx_kwds, __pyx_n_s_mass)) != 0)) kw_args--;
         else {
-          <span class='pyx_c_api'>__Pyx_RaiseArgtupleInvalid</span>("col_over_denom", 1, 10, 10, 5); __PYX_ERR(0, 7, __pyx_L3_error)
+          <span class='pyx_c_api'>__Pyx_RaiseArgtupleInvalid</span>("col_over_denom", 1, 10, 10, 5); __PYX_ERR(0, 23, __pyx_L3_error)
         }
         case  6:
         if (likely((values[6] = <span class='py_c_api'>PyDict_GetItem</span>(__pyx_kwds, __pyx_n_s_sden)) != 0)) kw_args--;
         else {
-          <span class='pyx_c_api'>__Pyx_RaiseArgtupleInvalid</span>("col_over_denom", 1, 10, 10, 6); __PYX_ERR(0, 7, __pyx_L3_error)
+          <span class='pyx_c_api'>__Pyx_RaiseArgtupleInvalid</span>("col_over_denom", 1, 10, 10, 6); __PYX_ERR(0, 23, __pyx_L3_error)
         }
         case  7:
         if (likely((values[7] = <span class='py_c_api'>PyDict_GetItem</span>(__pyx_kwds, __pyx_n_s_nx)) != 0)) kw_args--;
         else {
-          <span class='pyx_c_api'>__Pyx_RaiseArgtupleInvalid</span>("col_over_denom", 1, 10, 10, 7); __PYX_ERR(0, 7, __pyx_L3_error)
+          <span class='pyx_c_api'>__Pyx_RaiseArgtupleInvalid</span>("col_over_denom", 1, 10, 10, 7); __PYX_ERR(0, 23, __pyx_L3_error)
         }
         case  8:
         if (likely((values[8] = <span class='py_c_api'>PyDict_GetItem</span>(__pyx_kwds, __pyx_n_s_ny)) != 0)) kw_args--;
         else {
-          <span class='pyx_c_api'>__Pyx_RaiseArgtupleInvalid</span>("col_over_denom", 1, 10, 10, 8); __PYX_ERR(0, 7, __pyx_L3_error)
+          <span class='pyx_c_api'>__Pyx_RaiseArgtupleInvalid</span>("col_over_denom", 1, 10, 10, 8); __PYX_ERR(0, 23, __pyx_L3_error)
         }
         case  9:
         if (likely((values[9] = <span class='py_c_api'>PyDict_GetItem</span>(__pyx_kwds, __pyx_n_s_column)) != 0)) kw_args--;
         else {
-          <span class='pyx_c_api'>__Pyx_RaiseArgtupleInvalid</span>("col_over_denom", 1, 10, 10, 9); __PYX_ERR(0, 7, __pyx_L3_error)
+          <span class='pyx_c_api'>__Pyx_RaiseArgtupleInvalid</span>("col_over_denom", 1, 10, 10, 9); __PYX_ERR(0, 23, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args &gt; 0)) {
-        if (unlikely(<span class='pyx_c_api'>__Pyx_ParseOptionalKeywords</span>(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "col_over_denom") &lt; 0)) __PYX_ERR(0, 7, __pyx_L3_error)
+        if (unlikely(<span class='pyx_c_api'>__Pyx_ParseOptionalKeywords</span>(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "col_over_denom") &lt; 0)) __PYX_ERR(0, 23, __pyx_L3_error)
       }
     } else if (<span class='py_macro_api'>PyTuple_GET_SIZE</span>(__pyx_args) != 10) {
       goto __pyx_L5_argtuple_error;
@@ -506,26 +890,26 @@ static PyObject *__pyx_pw_4draw_3ppc_1col_over_denom(PyObject *__pyx_self, PyObj
     __pyx_v_iyr = ((PyArrayObject *)values[4]);
     __pyx_v_mass = ((PyArrayObject *)values[5]);
     __pyx_v_sden = ((PyArrayObject *)values[6]);
-    __pyx_v_nx = <span class='pyx_c_api'>__Pyx_PyInt_As_int</span>(values[7]); if (unlikely((__pyx_v_nx == (int)-1) &amp;&amp; <span class='py_c_api'>PyErr_Occurred</span>())) __PYX_ERR(0, 14, __pyx_L3_error)
-    __pyx_v_ny = <span class='pyx_c_api'>__Pyx_PyInt_As_int</span>(values[8]); if (unlikely((__pyx_v_ny == (int)-1) &amp;&amp; <span class='py_c_api'>PyErr_Occurred</span>())) __PYX_ERR(0, 14, __pyx_L3_error)
-    __pyx_v_column = <span class='pyx_c_api'>__Pyx_PyInt_As_int</span>(values[9]); if (unlikely((__pyx_v_column == (int)-1) &amp;&amp; <span class='py_c_api'>PyErr_Occurred</span>())) __PYX_ERR(0, 14, __pyx_L3_error)
+    __pyx_v_nx = <span class='pyx_c_api'>__Pyx_PyInt_As_int</span>(values[7]); if (unlikely((__pyx_v_nx == (int)-1) &amp;&amp; <span class='py_c_api'>PyErr_Occurred</span>())) __PYX_ERR(0, 30, __pyx_L3_error)
+    __pyx_v_ny = <span class='pyx_c_api'>__Pyx_PyInt_As_int</span>(values[8]); if (unlikely((__pyx_v_ny == (int)-1) &amp;&amp; <span class='py_c_api'>PyErr_Occurred</span>())) __PYX_ERR(0, 30, __pyx_L3_error)
+    __pyx_v_column = <span class='pyx_c_api'>__Pyx_PyInt_As_int</span>(values[9]); if (unlikely((__pyx_v_column == (int)-1) &amp;&amp; <span class='py_c_api'>PyErr_Occurred</span>())) __PYX_ERR(0, 30, __pyx_L3_error)
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  <span class='pyx_c_api'>__Pyx_RaiseArgtupleInvalid</span>("col_over_denom", 1, 10, 10, <span class='py_macro_api'>PyTuple_GET_SIZE</span>(__pyx_args)); __PYX_ERR(0, 7, __pyx_L3_error)
+  <span class='pyx_c_api'>__Pyx_RaiseArgtupleInvalid</span>("col_over_denom", 1, 10, 10, <span class='py_macro_api'>PyTuple_GET_SIZE</span>(__pyx_args)); __PYX_ERR(0, 23, __pyx_L3_error)
   __pyx_L3_error:;
   <span class='pyx_c_api'>__Pyx_AddTraceback</span>("draw.ppc.col_over_denom", __pyx_clineno, __pyx_lineno, __pyx_filename);
   <span class='refnanny'>__Pyx_RefNannyFinishContext</span>();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!<span class='pyx_c_api'>__Pyx_ArgTypeTest</span>(((PyObject *)__pyx_v_iin), __pyx_ptype_5numpy_ndarray, 1, "iin", 0))) __PYX_ERR(0, 7, __pyx_L1_error)
-  if (unlikely(!<span class='pyx_c_api'>__Pyx_ArgTypeTest</span>(((PyObject *)__pyx_v_ixl), __pyx_ptype_5numpy_ndarray, 1, "ixl", 0))) __PYX_ERR(0, 8, __pyx_L1_error)
-  if (unlikely(!<span class='pyx_c_api'>__Pyx_ArgTypeTest</span>(((PyObject *)__pyx_v_ixr), __pyx_ptype_5numpy_ndarray, 1, "ixr", 0))) __PYX_ERR(0, 9, __pyx_L1_error)
-  if (unlikely(!<span class='pyx_c_api'>__Pyx_ArgTypeTest</span>(((PyObject *)__pyx_v_iyl), __pyx_ptype_5numpy_ndarray, 1, "iyl", 0))) __PYX_ERR(0, 10, __pyx_L1_error)
-  if (unlikely(!<span class='pyx_c_api'>__Pyx_ArgTypeTest</span>(((PyObject *)__pyx_v_iyr), __pyx_ptype_5numpy_ndarray, 1, "iyr", 0))) __PYX_ERR(0, 11, __pyx_L1_error)
-  if (unlikely(!<span class='pyx_c_api'>__Pyx_ArgTypeTest</span>(((PyObject *)__pyx_v_mass), __pyx_ptype_5numpy_ndarray, 1, "mass", 0))) __PYX_ERR(0, 12, __pyx_L1_error)
-  if (unlikely(!<span class='pyx_c_api'>__Pyx_ArgTypeTest</span>(((PyObject *)__pyx_v_sden), __pyx_ptype_5numpy_ndarray, 1, "sden", 0))) __PYX_ERR(0, 13, __pyx_L1_error)
-  __pyx_r = __pyx_pf_4draw_3ppc_col_over_denom(__pyx_self, __pyx_v_iin, __pyx_v_ixl, __pyx_v_ixr, __pyx_v_iyl, __pyx_v_iyr, __pyx_v_mass, __pyx_v_sden, __pyx_v_nx, __pyx_v_ny, __pyx_v_column);
+  if (unlikely(!<span class='pyx_c_api'>__Pyx_ArgTypeTest</span>(((PyObject *)__pyx_v_iin), __pyx_ptype_5numpy_ndarray, 1, "iin", 0))) __PYX_ERR(0, 23, __pyx_L1_error)
+  if (unlikely(!<span class='pyx_c_api'>__Pyx_ArgTypeTest</span>(((PyObject *)__pyx_v_ixl), __pyx_ptype_5numpy_ndarray, 1, "ixl", 0))) __PYX_ERR(0, 24, __pyx_L1_error)
+  if (unlikely(!<span class='pyx_c_api'>__Pyx_ArgTypeTest</span>(((PyObject *)__pyx_v_ixr), __pyx_ptype_5numpy_ndarray, 1, "ixr", 0))) __PYX_ERR(0, 25, __pyx_L1_error)
+  if (unlikely(!<span class='pyx_c_api'>__Pyx_ArgTypeTest</span>(((PyObject *)__pyx_v_iyl), __pyx_ptype_5numpy_ndarray, 1, "iyl", 0))) __PYX_ERR(0, 26, __pyx_L1_error)
+  if (unlikely(!<span class='pyx_c_api'>__Pyx_ArgTypeTest</span>(((PyObject *)__pyx_v_iyr), __pyx_ptype_5numpy_ndarray, 1, "iyr", 0))) __PYX_ERR(0, 27, __pyx_L1_error)
+  if (unlikely(!<span class='pyx_c_api'>__Pyx_ArgTypeTest</span>(((PyObject *)__pyx_v_mass), __pyx_ptype_5numpy_ndarray, 1, "mass", 0))) __PYX_ERR(0, 28, __pyx_L1_error)
+  if (unlikely(!<span class='pyx_c_api'>__Pyx_ArgTypeTest</span>(((PyObject *)__pyx_v_sden), __pyx_ptype_5numpy_ndarray, 1, "sden", 0))) __PYX_ERR(0, 29, __pyx_L1_error)
+  __pyx_r = __pyx_pf_4draw_3ppc_2col_over_denom(__pyx_self, __pyx_v_iin, __pyx_v_ixl, __pyx_v_ixr, __pyx_v_iyl, __pyx_v_iyr, __pyx_v_mass, __pyx_v_sden, __pyx_v_nx, __pyx_v_ny, __pyx_v_column);
 
   /* function exit code */
   goto __pyx_L0;
@@ -536,7 +920,7 @@ static PyObject *__pyx_pw_4draw_3ppc_1col_over_denom(PyObject *__pyx_self, PyObj
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_4draw_3ppc_col_over_denom(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_iin, PyArrayObject *__pyx_v_ixl, PyArrayObject *__pyx_v_ixr, PyArrayObject *__pyx_v_iyl, PyArrayObject *__pyx_v_iyr, PyArrayObject *__pyx_v_mass, PyArrayObject *__pyx_v_sden, int __pyx_v_nx, int __pyx_v_ny, int __pyx_v_column) {
+static PyObject *__pyx_pf_4draw_3ppc_2col_over_denom(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_iin, PyArrayObject *__pyx_v_ixl, PyArrayObject *__pyx_v_ixr, PyArrayObject *__pyx_v_iyl, PyArrayObject *__pyx_v_iyr, PyArrayObject *__pyx_v_mass, PyArrayObject *__pyx_v_sden, int __pyx_v_nx, int __pyx_v_ny, CYTHON_UNUSED int __pyx_v_column) {
   PyObject *__pyx_v_colden = NULL;
   PyObject *__pyx_v_denom = NULL;
   PyObject *__pyx_v_i = NULL;
@@ -591,37 +975,37 @@ static PyObject *__pyx_pf_4draw_3ppc_col_over_denom(CYTHON_UNUSED PyObject *__py
   __pyx_pybuffernd_sden.rcbuffer = &amp;__pyx_pybuffer_sden;
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(<span class='pyx_c_api'>__Pyx_GetBufferAndValidate</span>(&amp;__pyx_pybuffernd_iin.rcbuffer-&gt;pybuffer, (PyObject*)__pyx_v_iin, &amp;__Pyx_TypeInfo_nn___pyx_t_5numpy_int32_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 7, __pyx_L1_error)
+    if (unlikely(<span class='pyx_c_api'>__Pyx_GetBufferAndValidate</span>(&amp;__pyx_pybuffernd_iin.rcbuffer-&gt;pybuffer, (PyObject*)__pyx_v_iin, &amp;__Pyx_TypeInfo_nn___pyx_t_5numpy_int32_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 23, __pyx_L1_error)
   }
   __pyx_pybuffernd_iin.diminfo[0].strides = __pyx_pybuffernd_iin.rcbuffer-&gt;pybuffer.strides[0]; __pyx_pybuffernd_iin.diminfo[0].shape = __pyx_pybuffernd_iin.rcbuffer-&gt;pybuffer.shape[0];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(<span class='pyx_c_api'>__Pyx_GetBufferAndValidate</span>(&amp;__pyx_pybuffernd_ixl.rcbuffer-&gt;pybuffer, (PyObject*)__pyx_v_ixl, &amp;__Pyx_TypeInfo_nn___pyx_t_5numpy_int32_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 7, __pyx_L1_error)
+    if (unlikely(<span class='pyx_c_api'>__Pyx_GetBufferAndValidate</span>(&amp;__pyx_pybuffernd_ixl.rcbuffer-&gt;pybuffer, (PyObject*)__pyx_v_ixl, &amp;__Pyx_TypeInfo_nn___pyx_t_5numpy_int32_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 23, __pyx_L1_error)
   }
   __pyx_pybuffernd_ixl.diminfo[0].strides = __pyx_pybuffernd_ixl.rcbuffer-&gt;pybuffer.strides[0]; __pyx_pybuffernd_ixl.diminfo[0].shape = __pyx_pybuffernd_ixl.rcbuffer-&gt;pybuffer.shape[0];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(<span class='pyx_c_api'>__Pyx_GetBufferAndValidate</span>(&amp;__pyx_pybuffernd_ixr.rcbuffer-&gt;pybuffer, (PyObject*)__pyx_v_ixr, &amp;__Pyx_TypeInfo_nn___pyx_t_5numpy_int32_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 7, __pyx_L1_error)
+    if (unlikely(<span class='pyx_c_api'>__Pyx_GetBufferAndValidate</span>(&amp;__pyx_pybuffernd_ixr.rcbuffer-&gt;pybuffer, (PyObject*)__pyx_v_ixr, &amp;__Pyx_TypeInfo_nn___pyx_t_5numpy_int32_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 23, __pyx_L1_error)
   }
   __pyx_pybuffernd_ixr.diminfo[0].strides = __pyx_pybuffernd_ixr.rcbuffer-&gt;pybuffer.strides[0]; __pyx_pybuffernd_ixr.diminfo[0].shape = __pyx_pybuffernd_ixr.rcbuffer-&gt;pybuffer.shape[0];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(<span class='pyx_c_api'>__Pyx_GetBufferAndValidate</span>(&amp;__pyx_pybuffernd_iyl.rcbuffer-&gt;pybuffer, (PyObject*)__pyx_v_iyl, &amp;__Pyx_TypeInfo_nn___pyx_t_5numpy_int32_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 7, __pyx_L1_error)
+    if (unlikely(<span class='pyx_c_api'>__Pyx_GetBufferAndValidate</span>(&amp;__pyx_pybuffernd_iyl.rcbuffer-&gt;pybuffer, (PyObject*)__pyx_v_iyl, &amp;__Pyx_TypeInfo_nn___pyx_t_5numpy_int32_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 23, __pyx_L1_error)
   }
   __pyx_pybuffernd_iyl.diminfo[0].strides = __pyx_pybuffernd_iyl.rcbuffer-&gt;pybuffer.strides[0]; __pyx_pybuffernd_iyl.diminfo[0].shape = __pyx_pybuffernd_iyl.rcbuffer-&gt;pybuffer.shape[0];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(<span class='pyx_c_api'>__Pyx_GetBufferAndValidate</span>(&amp;__pyx_pybuffernd_iyr.rcbuffer-&gt;pybuffer, (PyObject*)__pyx_v_iyr, &amp;__Pyx_TypeInfo_nn___pyx_t_5numpy_int32_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 7, __pyx_L1_error)
+    if (unlikely(<span class='pyx_c_api'>__Pyx_GetBufferAndValidate</span>(&amp;__pyx_pybuffernd_iyr.rcbuffer-&gt;pybuffer, (PyObject*)__pyx_v_iyr, &amp;__Pyx_TypeInfo_nn___pyx_t_5numpy_int32_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 23, __pyx_L1_error)
   }
   __pyx_pybuffernd_iyr.diminfo[0].strides = __pyx_pybuffernd_iyr.rcbuffer-&gt;pybuffer.strides[0]; __pyx_pybuffernd_iyr.diminfo[0].shape = __pyx_pybuffernd_iyr.rcbuffer-&gt;pybuffer.shape[0];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(<span class='pyx_c_api'>__Pyx_GetBufferAndValidate</span>(&amp;__pyx_pybuffernd_mass.rcbuffer-&gt;pybuffer, (PyObject*)__pyx_v_mass, &amp;__Pyx_TypeInfo_nn___pyx_t_5numpy_float64_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 7, __pyx_L1_error)
+    if (unlikely(<span class='pyx_c_api'>__Pyx_GetBufferAndValidate</span>(&amp;__pyx_pybuffernd_mass.rcbuffer-&gt;pybuffer, (PyObject*)__pyx_v_mass, &amp;__Pyx_TypeInfo_nn___pyx_t_5numpy_float64_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 23, __pyx_L1_error)
   }
   __pyx_pybuffernd_mass.diminfo[0].strides = __pyx_pybuffernd_mass.rcbuffer-&gt;pybuffer.strides[0]; __pyx_pybuffernd_mass.diminfo[0].shape = __pyx_pybuffernd_mass.rcbuffer-&gt;pybuffer.shape[0];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(<span class='pyx_c_api'>__Pyx_GetBufferAndValidate</span>(&amp;__pyx_pybuffernd_sden.rcbuffer-&gt;pybuffer, (PyObject*)__pyx_v_sden, &amp;__Pyx_TypeInfo_nn___pyx_t_5numpy_float64_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 7, __pyx_L1_error)
+    if (unlikely(<span class='pyx_c_api'>__Pyx_GetBufferAndValidate</span>(&amp;__pyx_pybuffernd_sden.rcbuffer-&gt;pybuffer, (PyObject*)__pyx_v_sden, &amp;__Pyx_TypeInfo_nn___pyx_t_5numpy_float64_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 23, __pyx_L1_error)
   }
   __pyx_pybuffernd_sden.diminfo[0].strides = __pyx_pybuffernd_sden.rcbuffer-&gt;pybuffer.strides[0]; __pyx_pybuffernd_sden.diminfo[0].shape = __pyx_pybuffernd_sden.rcbuffer-&gt;pybuffer.shape[0];
 /* … */
@@ -668,34 +1052,34 @@ static PyObject *__pyx_pf_4draw_3ppc_col_over_denom(CYTHON_UNUSED PyObject *__py
   return __pyx_r;
 }
 /* … */
-  __pyx_tuple__10 = <span class='py_c_api'>PyTuple_Pack</span>(17, __pyx_n_s_iin, __pyx_n_s_ixl, __pyx_n_s_ixr, __pyx_n_s_iyl, __pyx_n_s_iyr, __pyx_n_s_mass, __pyx_n_s_sden, __pyx_n_s_nx, __pyx_n_s_ny, __pyx_n_s_column, __pyx_n_s_colden, __pyx_n_s_denom, __pyx_n_s_i, __pyx_n_s_i1, __pyx_n_s_i2, __pyx_n_s_j1, __pyx_n_s_j2); if (unlikely(!__pyx_tuple__10)) __PYX_ERR(0, 7, __pyx_L1_error)
-  <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_tuple__10);
-  <span class='refnanny'>__Pyx_GIVEREF</span>(__pyx_tuple__10);
+  __pyx_tuple__12 = <span class='py_c_api'>PyTuple_Pack</span>(17, __pyx_n_s_iin, __pyx_n_s_ixl, __pyx_n_s_ixr, __pyx_n_s_iyl, __pyx_n_s_iyr, __pyx_n_s_mass, __pyx_n_s_sden, __pyx_n_s_nx, __pyx_n_s_ny, __pyx_n_s_column, __pyx_n_s_colden, __pyx_n_s_denom, __pyx_n_s_i, __pyx_n_s_i1, __pyx_n_s_i2, __pyx_n_s_j1, __pyx_n_s_j2); if (unlikely(!__pyx_tuple__12)) __PYX_ERR(0, 23, __pyx_L1_error)
+  <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_tuple__12);
+  <span class='refnanny'>__Pyx_GIVEREF</span>(__pyx_tuple__12);
 /* … */
-  __pyx_t_2 = PyCFunction_NewEx(&amp;__pyx_mdef_4draw_3ppc_1col_over_denom, NULL, __pyx_n_s_draw_ppc); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 7, __pyx_L1_error)
+  __pyx_t_2 = PyCFunction_NewEx(&amp;__pyx_mdef_4draw_3ppc_3col_over_denom, NULL, __pyx_n_s_draw_ppc); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 23, __pyx_L1_error)
   <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_2);
-  if (<span class='py_c_api'>PyDict_SetItem</span>(__pyx_d, __pyx_n_s_col_over_denom, __pyx_t_2) &lt; 0) __PYX_ERR(0, 7, __pyx_L1_error)
+  if (<span class='py_c_api'>PyDict_SetItem</span>(__pyx_d, __pyx_n_s_col_over_denom, __pyx_t_2) &lt; 0) __PYX_ERR(0, 23, __pyx_L1_error)
   <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_2); __pyx_t_2 = 0;
-</pre><pre class="cython line score-0">&#xA0;<span class="">08</span>:      <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int32_t</span><span class="p">,</span> <span class="n">ndim</span><span class="o">=</span><span class="mf">1</span><span class="p">]</span> <span class="n">ixl</span><span class="p">,</span> \</pre>
-<pre class="cython line score-0">&#xA0;<span class="">09</span>:      <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int32_t</span><span class="p">,</span> <span class="n">ndim</span><span class="o">=</span><span class="mf">1</span><span class="p">]</span> <span class="n">ixr</span><span class="p">,</span> \</pre>
-<pre class="cython line score-0">&#xA0;<span class="">10</span>:      <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int32_t</span><span class="p">,</span> <span class="n">ndim</span><span class="o">=</span><span class="mf">1</span><span class="p">]</span> <span class="n">iyl</span><span class="p">,</span> \</pre>
-<pre class="cython line score-0">&#xA0;<span class="">11</span>:      <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int32_t</span><span class="p">,</span> <span class="n">ndim</span><span class="o">=</span><span class="mf">1</span><span class="p">]</span> <span class="n">iyr</span><span class="p">,</span> \</pre>
-<pre class="cython line score-0">&#xA0;<span class="">12</span>:      <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64_t</span><span class="p">,</span> <span class="n">ndim</span><span class="o">=</span><span class="mf">1</span><span class="p">]</span> <span class="n">mass</span><span class="p">,</span> \</pre>
-<pre class="cython line score-0">&#xA0;<span class="">13</span>:      <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64_t</span><span class="p">,</span> <span class="n">ndim</span><span class="o">=</span><span class="mf">1</span><span class="p">]</span> <span class="n">sden</span><span class="p">,</span> \</pre>
-<pre class="cython line score-0">&#xA0;<span class="">14</span>:      <span class="nb">int</span> <span class="n">nx</span><span class="p">,</span> <span class="nb">int</span> <span class="n">ny</span><span class="p">,</span> <span class="nb">int</span> <span class="n">column</span><span class="p">):</span></pre>
-<pre class="cython line score-0">&#xA0;<span class="">15</span>: </pre>
-<pre class="cython line score-0">&#xA0;<span class="">16</span>: <span class="c">#    cdef int percent = 0</span></pre>
-<pre class="cython line score-43" onclick='toggleDiv(this)'>+<span class="">17</span>:     <span class="n">colden</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nx</span><span class="p">,</span><span class="n">ny</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span></pre>
-<pre class='cython code score-43 '>  __pyx_t_1 = <span class='pyx_c_api'>__Pyx_GetModuleGlobalName</span>(__pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 17, __pyx_L1_error)
+</pre><pre class="cython line score-0">&#xA0;<span class="">24</span>:     <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int32_t</span><span class="p">,</span> <span class="n">ndim</span><span class="o">=</span><span class="mf">1</span><span class="p">]</span> <span class="n">ixl</span><span class="p">,</span> \</pre>
+<pre class="cython line score-0">&#xA0;<span class="">25</span>:     <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int32_t</span><span class="p">,</span> <span class="n">ndim</span><span class="o">=</span><span class="mf">1</span><span class="p">]</span> <span class="n">ixr</span><span class="p">,</span> \</pre>
+<pre class="cython line score-0">&#xA0;<span class="">26</span>:     <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int32_t</span><span class="p">,</span> <span class="n">ndim</span><span class="o">=</span><span class="mf">1</span><span class="p">]</span> <span class="n">iyl</span><span class="p">,</span> \</pre>
+<pre class="cython line score-0">&#xA0;<span class="">27</span>:     <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int32_t</span><span class="p">,</span> <span class="n">ndim</span><span class="o">=</span><span class="mf">1</span><span class="p">]</span> <span class="n">iyr</span><span class="p">,</span> \</pre>
+<pre class="cython line score-0">&#xA0;<span class="">28</span>:     <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64_t</span><span class="p">,</span> <span class="n">ndim</span><span class="o">=</span><span class="mf">1</span><span class="p">]</span> <span class="n">mass</span><span class="p">,</span> \</pre>
+<pre class="cython line score-0">&#xA0;<span class="">29</span>:     <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64_t</span><span class="p">,</span> <span class="n">ndim</span><span class="o">=</span><span class="mf">1</span><span class="p">]</span> <span class="n">sden</span><span class="p">,</span> \</pre>
+<pre class="cython line score-0">&#xA0;<span class="">30</span>:     <span class="nb">int</span> <span class="n">nx</span><span class="p">,</span> <span class="nb">int</span> <span class="n">ny</span><span class="p">,</span> <span class="nb">int</span> <span class="n">column</span><span class="p">):</span></pre>
+<pre class="cython line score-0">&#xA0;<span class="">31</span>: </pre>
+<pre class="cython line score-0">&#xA0;<span class="">32</span>: <span class="c">#    cdef int percent = 0</span></pre>
+<pre class="cython line score-43" onclick='toggleDiv(this)'>+<span class="">33</span>:    <span class="n">colden</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nx</span><span class="p">,</span><span class="n">ny</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span></pre>
+<pre class='cython code score-43 '>  __pyx_t_1 = <span class='pyx_c_api'>__Pyx_GetModuleGlobalName</span>(__pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 33, __pyx_L1_error)
   <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_1);
-  __pyx_t_2 = <span class='pyx_c_api'>__Pyx_PyObject_GetAttrStr</span>(__pyx_t_1, __pyx_n_s_zeros); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 17, __pyx_L1_error)
+  __pyx_t_2 = <span class='pyx_c_api'>__Pyx_PyObject_GetAttrStr</span>(__pyx_t_1, __pyx_n_s_zeros); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 33, __pyx_L1_error)
   <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_2);
   <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = <span class='pyx_c_api'>__Pyx_PyInt_From_int</span>(__pyx_v_nx); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 17, __pyx_L1_error)
+  __pyx_t_1 = <span class='pyx_c_api'>__Pyx_PyInt_From_int</span>(__pyx_v_nx); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 33, __pyx_L1_error)
   <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_1);
-  __pyx_t_3 = <span class='pyx_c_api'>__Pyx_PyInt_From_int</span>(__pyx_v_ny); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 17, __pyx_L1_error)
+  __pyx_t_3 = <span class='pyx_c_api'>__Pyx_PyInt_From_int</span>(__pyx_v_ny); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 33, __pyx_L1_error)
   <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_3);
-  __pyx_t_4 = <span class='py_c_api'>PyTuple_New</span>(2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 17, __pyx_L1_error)
+  __pyx_t_4 = <span class='py_c_api'>PyTuple_New</span>(2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 33, __pyx_L1_error)
   <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_4);
   <span class='refnanny'>__Pyx_GIVEREF</span>(__pyx_t_1);
   <span class='py_macro_api'>PyTuple_SET_ITEM</span>(__pyx_t_4, 0, __pyx_t_1);
@@ -703,38 +1087,40 @@ static PyObject *__pyx_pf_4draw_3ppc_col_over_denom(CYTHON_UNUSED PyObject *__py
   <span class='py_macro_api'>PyTuple_SET_ITEM</span>(__pyx_t_4, 1, __pyx_t_3);
   __pyx_t_1 = 0;
   __pyx_t_3 = 0;
-  __pyx_t_3 = <span class='py_c_api'>PyTuple_New</span>(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 17, __pyx_L1_error)
+  __pyx_t_3 = <span class='py_c_api'>PyTuple_New</span>(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 33, __pyx_L1_error)
   <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_3);
   <span class='refnanny'>__Pyx_GIVEREF</span>(__pyx_t_4);
   <span class='py_macro_api'>PyTuple_SET_ITEM</span>(__pyx_t_3, 0, __pyx_t_4);
   __pyx_t_4 = 0;
-  __pyx_t_4 = <span class='py_c_api'>PyDict_New</span>(); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 17, __pyx_L1_error)
+  __pyx_t_4 = <span class='py_c_api'>PyDict_New</span>(); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 33, __pyx_L1_error)
   <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_4);
-  __pyx_t_1 = <span class='pyx_c_api'>__Pyx_GetModuleGlobalName</span>(__pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 17, __pyx_L1_error)
+  __pyx_t_1 = <span class='pyx_c_api'>__Pyx_GetModuleGlobalName</span>(__pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 33, __pyx_L1_error)
   <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_1);
-  __pyx_t_5 = <span class='pyx_c_api'>__Pyx_PyObject_GetAttrStr</span>(__pyx_t_1, __pyx_n_s_float32); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 17, __pyx_L1_error)
+  __pyx_t_5 = <span class='pyx_c_api'>__Pyx_PyObject_GetAttrStr</span>(__pyx_t_1, __pyx_n_s_float32); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 33, __pyx_L1_error)
   <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_5);
   <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_1); __pyx_t_1 = 0;
-  if (<span class='py_c_api'>PyDict_SetItem</span>(__pyx_t_4, __pyx_n_s_dtype, __pyx_t_5) &lt; 0) __PYX_ERR(0, 17, __pyx_L1_error)
+  if (<span class='py_c_api'>PyDict_SetItem</span>(__pyx_t_4, __pyx_n_s_dtype, __pyx_t_5) &lt; 0) __PYX_ERR(0, 33, __pyx_L1_error)
   <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_5); __pyx_t_5 = 0;
-  __pyx_t_5 = <span class='pyx_c_api'>__Pyx_PyObject_Call</span>(__pyx_t_2, __pyx_t_3, __pyx_t_4); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 17, __pyx_L1_error)
+  __pyx_t_5 = <span class='pyx_c_api'>__Pyx_PyObject_Call</span>(__pyx_t_2, __pyx_t_3, __pyx_t_4); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 33, __pyx_L1_error)
   <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_5);
   <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_2); __pyx_t_2 = 0;
   <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_3); __pyx_t_3 = 0;
   <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_4); __pyx_t_4 = 0;
   __pyx_v_colden = __pyx_t_5;
   __pyx_t_5 = 0;
-</pre><pre class="cython line score-43" onclick='toggleDiv(this)'>+<span class="">18</span>:     <span class="n">denom</span> <span class="o">=</span>  <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nx</span><span class="p">,</span><span class="n">ny</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span></pre>
-<pre class='cython code score-43 '>  __pyx_t_5 = <span class='pyx_c_api'>__Pyx_GetModuleGlobalName</span>(__pyx_n_s_np); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 18, __pyx_L1_error)
+</pre><pre class="cython line score-0">&#xA0;<span class="">34</span>: </pre>
+<pre class="cython line score-0">&#xA0;<span class="">35</span>: </pre>
+<pre class="cython line score-43" onclick='toggleDiv(this)'>+<span class="">36</span>:    <span class="n">denom</span> <span class="o">=</span>  <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nx</span><span class="p">,</span><span class="n">ny</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span></pre>
+<pre class='cython code score-43 '>  __pyx_t_5 = <span class='pyx_c_api'>__Pyx_GetModuleGlobalName</span>(__pyx_n_s_np); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 36, __pyx_L1_error)
   <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_5);
-  __pyx_t_4 = <span class='pyx_c_api'>__Pyx_PyObject_GetAttrStr</span>(__pyx_t_5, __pyx_n_s_zeros); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 18, __pyx_L1_error)
+  __pyx_t_4 = <span class='pyx_c_api'>__Pyx_PyObject_GetAttrStr</span>(__pyx_t_5, __pyx_n_s_zeros); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 36, __pyx_L1_error)
   <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_4);
   <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_5); __pyx_t_5 = 0;
-  __pyx_t_5 = <span class='pyx_c_api'>__Pyx_PyInt_From_int</span>(__pyx_v_nx); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 18, __pyx_L1_error)
+  __pyx_t_5 = <span class='pyx_c_api'>__Pyx_PyInt_From_int</span>(__pyx_v_nx); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 36, __pyx_L1_error)
   <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_5);
-  __pyx_t_3 = <span class='pyx_c_api'>__Pyx_PyInt_From_int</span>(__pyx_v_ny); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 18, __pyx_L1_error)
+  __pyx_t_3 = <span class='pyx_c_api'>__Pyx_PyInt_From_int</span>(__pyx_v_ny); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 36, __pyx_L1_error)
   <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_3);
-  __pyx_t_2 = <span class='py_c_api'>PyTuple_New</span>(2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 18, __pyx_L1_error)
+  __pyx_t_2 = <span class='py_c_api'>PyTuple_New</span>(2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 36, __pyx_L1_error)
   <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_2);
   <span class='refnanny'>__Pyx_GIVEREF</span>(__pyx_t_5);
   <span class='py_macro_api'>PyTuple_SET_ITEM</span>(__pyx_t_2, 0, __pyx_t_5);
@@ -742,265 +1128,158 @@ static PyObject *__pyx_pf_4draw_3ppc_col_over_denom(CYTHON_UNUSED PyObject *__py
   <span class='py_macro_api'>PyTuple_SET_ITEM</span>(__pyx_t_2, 1, __pyx_t_3);
   __pyx_t_5 = 0;
   __pyx_t_3 = 0;
-  __pyx_t_3 = <span class='py_c_api'>PyTuple_New</span>(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 18, __pyx_L1_error)
+  __pyx_t_3 = <span class='py_c_api'>PyTuple_New</span>(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 36, __pyx_L1_error)
   <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_3);
   <span class='refnanny'>__Pyx_GIVEREF</span>(__pyx_t_2);
   <span class='py_macro_api'>PyTuple_SET_ITEM</span>(__pyx_t_3, 0, __pyx_t_2);
   __pyx_t_2 = 0;
-  __pyx_t_2 = <span class='py_c_api'>PyDict_New</span>(); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 18, __pyx_L1_error)
+  __pyx_t_2 = <span class='py_c_api'>PyDict_New</span>(); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 36, __pyx_L1_error)
   <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_2);
-  __pyx_t_5 = <span class='pyx_c_api'>__Pyx_GetModuleGlobalName</span>(__pyx_n_s_np); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 18, __pyx_L1_error)
+  __pyx_t_5 = <span class='pyx_c_api'>__Pyx_GetModuleGlobalName</span>(__pyx_n_s_np); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 36, __pyx_L1_error)
   <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_5);
-  __pyx_t_1 = <span class='pyx_c_api'>__Pyx_PyObject_GetAttrStr</span>(__pyx_t_5, __pyx_n_s_float32); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 18, __pyx_L1_error)
+  __pyx_t_1 = <span class='pyx_c_api'>__Pyx_PyObject_GetAttrStr</span>(__pyx_t_5, __pyx_n_s_float32); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 36, __pyx_L1_error)
   <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_1);
   <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_5); __pyx_t_5 = 0;
-  if (<span class='py_c_api'>PyDict_SetItem</span>(__pyx_t_2, __pyx_n_s_dtype, __pyx_t_1) &lt; 0) __PYX_ERR(0, 18, __pyx_L1_error)
+  if (<span class='py_c_api'>PyDict_SetItem</span>(__pyx_t_2, __pyx_n_s_dtype, __pyx_t_1) &lt; 0) __PYX_ERR(0, 36, __pyx_L1_error)
   <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = <span class='pyx_c_api'>__Pyx_PyObject_Call</span>(__pyx_t_4, __pyx_t_3, __pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 18, __pyx_L1_error)
+  __pyx_t_1 = <span class='pyx_c_api'>__Pyx_PyObject_Call</span>(__pyx_t_4, __pyx_t_3, __pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 36, __pyx_L1_error)
   <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_1);
   <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_4); __pyx_t_4 = 0;
   <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_3); __pyx_t_3 = 0;
   <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_2); __pyx_t_2 = 0;
   __pyx_v_denom = __pyx_t_1;
   __pyx_t_1 = 0;
-</pre><pre class="cython line score-0">&#xA0;<span class="">19</span>: </pre>
-<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">20</span>:     <span class="k">if</span> <span class="n">column</span><span class="p">:</span></pre>
-<pre class='cython code score-0 '>  __pyx_t_6 = (__pyx_v_column != 0);
-  if (__pyx_t_6) {
-/* … */
-  }
-</pre><pre class="cython line score-46" onclick='toggleDiv(this)'>+<span class="">21</span>:         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">iin</span><span class="p">:</span></pre>
-<pre class='cython code score-46 '>    if (likely(<span class='py_c_api'>PyList_CheckExact</span>(((PyObject *)__pyx_v_iin))) || <span class='py_c_api'>PyTuple_CheckExact</span>(((PyObject *)__pyx_v_iin))) {
-      __pyx_t_1 = ((PyObject *)__pyx_v_iin); <span class='pyx_macro_api'>__Pyx_INCREF</span>(__pyx_t_1); __pyx_t_7 = 0;
-      __pyx_t_8 = NULL;
-    } else {
-      __pyx_t_7 = -1; __pyx_t_1 = <span class='py_c_api'>PyObject_GetIter</span>(((PyObject *)__pyx_v_iin)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 21, __pyx_L1_error)
-      <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_1);
-      __pyx_t_8 = Py_TYPE(__pyx_t_1)-&gt;tp_iternext; if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 21, __pyx_L1_error)
-    }
-    for (;;) {
-      if (likely(!__pyx_t_8)) {
-        if (likely(<span class='py_c_api'>PyList_CheckExact</span>(__pyx_t_1))) {
-          if (__pyx_t_7 &gt;= <span class='py_macro_api'>PyList_GET_SIZE</span>(__pyx_t_1)) break;
-          #if CYTHON_ASSUME_SAFE_MACROS &amp;&amp; !CYTHON_AVOID_BORROWED_REFS
-          __pyx_t_2 = <span class='py_macro_api'>PyList_GET_ITEM</span>(__pyx_t_1, __pyx_t_7); <span class='pyx_macro_api'>__Pyx_INCREF</span>(__pyx_t_2); __pyx_t_7++; if (unlikely(0 &lt; 0)) __PYX_ERR(0, 21, __pyx_L1_error)
-          #else
-          __pyx_t_2 = <span class='py_macro_api'>PySequence_ITEM</span>(__pyx_t_1, __pyx_t_7); __pyx_t_7++; if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 21, __pyx_L1_error)
-          <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_2);
-          #endif
-        } else {
-          if (__pyx_t_7 &gt;= <span class='py_macro_api'>PyTuple_GET_SIZE</span>(__pyx_t_1)) break;
-          #if CYTHON_ASSUME_SAFE_MACROS &amp;&amp; !CYTHON_AVOID_BORROWED_REFS
-          __pyx_t_2 = <span class='py_macro_api'>PyTuple_GET_ITEM</span>(__pyx_t_1, __pyx_t_7); <span class='pyx_macro_api'>__Pyx_INCREF</span>(__pyx_t_2); __pyx_t_7++; if (unlikely(0 &lt; 0)) __PYX_ERR(0, 21, __pyx_L1_error)
-          #else
-          __pyx_t_2 = <span class='py_macro_api'>PySequence_ITEM</span>(__pyx_t_1, __pyx_t_7); __pyx_t_7++; if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 21, __pyx_L1_error)
-          <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_2);
-          #endif
-        }
-      } else {
-        __pyx_t_2 = __pyx_t_8(__pyx_t_1);
-        if (unlikely(!__pyx_t_2)) {
-          PyObject* exc_type = <span class='py_c_api'>PyErr_Occurred</span>();
-          if (exc_type) {
-            if (likely(exc_type == PyExc_StopIteration || <span class='py_c_api'>PyErr_GivenExceptionMatches</span>(exc_type, PyExc_StopIteration))) <span class='py_c_api'>PyErr_Clear</span>();
-            else __PYX_ERR(0, 21, __pyx_L1_error)
-          }
-          break;
-        }
-        <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_2);
-      }
-      <span class='pyx_macro_api'>__Pyx_XDECREF_SET</span>(__pyx_v_i, __pyx_t_2);
-      __pyx_t_2 = 0;
-/* … */
-    }
-    <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_1); __pyx_t_1 = 0;
-</pre><pre class="cython line score-0">&#xA0;<span class="">22</span>: <span class="c">#            i1 = ixl[i]</span></pre>
-<pre class="cython line score-0">&#xA0;<span class="">23</span>: <span class="c">#            i2 = ixr[i]</span></pre>
-<pre class="cython line score-0">&#xA0;<span class="">24</span>: <span class="c">#            j1 = iyl[i]</span></pre>
-<pre class="cython line score-0">&#xA0;<span class="">25</span>: <span class="c">#            j2 = iyr[i]</span></pre>
-<pre class="cython line score-0">&#xA0;<span class="">26</span>: <span class="c">#            colden[i1:i2+1, j1:j2+1] += sden[i]</span></pre>
-<pre class="cython line score-71" onclick='toggleDiv(this)'>+<span class="">27</span>:             <span class="n">colden</span><span class="p">[</span><span class="n">ixl</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span><span class="n">ixr</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">+</span><span class="mf">1</span><span class="p">,</span> <span class="n">iyl</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span><span class="n">iyr</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">+</span><span class="mf">1</span><span class="p">]</span> <span class="o">+=</span> <span class="n">sden</span><span class="p">[</span><span class="n">i</span><span class="p">]</span></pre>
-<pre class='cython code score-71 '>      __pyx_t_2 = <span class='py_c_api'>PyObject_GetItem</span>(((PyObject *)__pyx_v_ixl), __pyx_v_i); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 27, __pyx_L1_error)
-      <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_2);
-      __pyx_t_3 = <span class='py_c_api'>PyObject_GetItem</span>(((PyObject *)__pyx_v_ixr), __pyx_v_i); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 27, __pyx_L1_error)
-      <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_3);
-      __pyx_t_4 = <span class='pyx_c_api'>__Pyx_PyInt_AddObjC</span>(__pyx_t_3, __pyx_int_1, 1, 0); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 27, __pyx_L1_error)
-      <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_4);
-      <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_3); __pyx_t_3 = 0;
-      __pyx_t_3 = <span class='py_c_api'>PySlice_New</span>(__pyx_t_2, __pyx_t_4, Py_None); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 27, __pyx_L1_error)
-      <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_3);
-      <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_2); __pyx_t_2 = 0;
-      <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_4); __pyx_t_4 = 0;
-      __pyx_t_4 = <span class='py_c_api'>PyObject_GetItem</span>(((PyObject *)__pyx_v_iyl), __pyx_v_i); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 27, __pyx_L1_error)
-      <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_4);
-      __pyx_t_2 = <span class='py_c_api'>PyObject_GetItem</span>(((PyObject *)__pyx_v_iyr), __pyx_v_i); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 27, __pyx_L1_error)
-      <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_2);
-      __pyx_t_5 = <span class='pyx_c_api'>__Pyx_PyInt_AddObjC</span>(__pyx_t_2, __pyx_int_1, 1, 0); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 27, __pyx_L1_error)
-      <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_5);
-      <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_2); __pyx_t_2 = 0;
-      __pyx_t_2 = <span class='py_c_api'>PySlice_New</span>(__pyx_t_4, __pyx_t_5, Py_None); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 27, __pyx_L1_error)
-      <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_2);
-      <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_4); __pyx_t_4 = 0;
-      <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_5); __pyx_t_5 = 0;
-      __pyx_t_5 = <span class='py_c_api'>PyTuple_New</span>(2); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 27, __pyx_L1_error)
-      <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_5);
-      <span class='refnanny'>__Pyx_GIVEREF</span>(__pyx_t_3);
-      <span class='py_macro_api'>PyTuple_SET_ITEM</span>(__pyx_t_5, 0, __pyx_t_3);
-      <span class='refnanny'>__Pyx_GIVEREF</span>(__pyx_t_2);
-      <span class='py_macro_api'>PyTuple_SET_ITEM</span>(__pyx_t_5, 1, __pyx_t_2);
-      __pyx_t_3 = 0;
-      __pyx_t_2 = 0;
-      __pyx_t_2 = <span class='py_c_api'>PyObject_GetItem</span>(__pyx_v_colden, __pyx_t_5); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 27, __pyx_L1_error)
-      <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_2);
-      __pyx_t_3 = <span class='py_c_api'>PyObject_GetItem</span>(((PyObject *)__pyx_v_sden), __pyx_v_i); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 27, __pyx_L1_error)
-      <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_3);
-      __pyx_t_4 = <span class='py_c_api'>PyNumber_InPlaceAdd</span>(__pyx_t_2, __pyx_t_3); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 27, __pyx_L1_error)
-      <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_4);
-      <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_2); __pyx_t_2 = 0;
-      <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_3); __pyx_t_3 = 0;
-      if (unlikely(<span class='py_c_api'>PyObject_SetItem</span>(__pyx_v_colden, __pyx_t_5, __pyx_t_4) &lt; 0)) __PYX_ERR(0, 27, __pyx_L1_error)
-      <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_4); __pyx_t_4 = 0;
-      <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_5); __pyx_t_5 = 0;
-</pre><pre class="cython line score-2" onclick='toggleDiv(this)'>+<span class="">28</span>:         <span class="k">return</span> <span class="n">colden</span></pre>
-<pre class='cython code score-2 '>    <span class='pyx_macro_api'>__Pyx_XDECREF</span>(__pyx_r);
-    <span class='pyx_macro_api'>__Pyx_INCREF</span>(__pyx_v_colden);
-    __pyx_r = __pyx_v_colden;
-    goto __pyx_L0;
-</pre><pre class="cython line score-0">&#xA0;<span class="">29</span>:     <span class="k">else</span><span class="p">:</span></pre>
-<pre class="cython line score-46" onclick='toggleDiv(this)'>+<span class="">30</span>:         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">iin</span><span class="p">:</span></pre>
-<pre class='cython code score-46 '>  /*else*/ {
-    if (likely(<span class='py_c_api'>PyList_CheckExact</span>(((PyObject *)__pyx_v_iin))) || <span class='py_c_api'>PyTuple_CheckExact</span>(((PyObject *)__pyx_v_iin))) {
-      __pyx_t_1 = ((PyObject *)__pyx_v_iin); <span class='pyx_macro_api'>__Pyx_INCREF</span>(__pyx_t_1); __pyx_t_7 = 0;
-      __pyx_t_8 = NULL;
-    } else {
-      __pyx_t_7 = -1; __pyx_t_1 = <span class='py_c_api'>PyObject_GetIter</span>(((PyObject *)__pyx_v_iin)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 30, __pyx_L1_error)
-      <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_1);
-      __pyx_t_8 = Py_TYPE(__pyx_t_1)-&gt;tp_iternext; if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 30, __pyx_L1_error)
-    }
-    for (;;) {
-      if (likely(!__pyx_t_8)) {
-        if (likely(<span class='py_c_api'>PyList_CheckExact</span>(__pyx_t_1))) {
-          if (__pyx_t_7 &gt;= <span class='py_macro_api'>PyList_GET_SIZE</span>(__pyx_t_1)) break;
-          #if CYTHON_ASSUME_SAFE_MACROS &amp;&amp; !CYTHON_AVOID_BORROWED_REFS
-          __pyx_t_5 = <span class='py_macro_api'>PyList_GET_ITEM</span>(__pyx_t_1, __pyx_t_7); <span class='pyx_macro_api'>__Pyx_INCREF</span>(__pyx_t_5); __pyx_t_7++; if (unlikely(0 &lt; 0)) __PYX_ERR(0, 30, __pyx_L1_error)
-          #else
-          __pyx_t_5 = <span class='py_macro_api'>PySequence_ITEM</span>(__pyx_t_1, __pyx_t_7); __pyx_t_7++; if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 30, __pyx_L1_error)
-          <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_5);
-          #endif
-        } else {
-          if (__pyx_t_7 &gt;= <span class='py_macro_api'>PyTuple_GET_SIZE</span>(__pyx_t_1)) break;
-          #if CYTHON_ASSUME_SAFE_MACROS &amp;&amp; !CYTHON_AVOID_BORROWED_REFS
-          __pyx_t_5 = <span class='py_macro_api'>PyTuple_GET_ITEM</span>(__pyx_t_1, __pyx_t_7); <span class='pyx_macro_api'>__Pyx_INCREF</span>(__pyx_t_5); __pyx_t_7++; if (unlikely(0 &lt; 0)) __PYX_ERR(0, 30, __pyx_L1_error)
-          #else
-          __pyx_t_5 = <span class='py_macro_api'>PySequence_ITEM</span>(__pyx_t_1, __pyx_t_7); __pyx_t_7++; if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 30, __pyx_L1_error)
-          <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_5);
-          #endif
-        }
-      } else {
-        __pyx_t_5 = __pyx_t_8(__pyx_t_1);
-        if (unlikely(!__pyx_t_5)) {
-          PyObject* exc_type = <span class='py_c_api'>PyErr_Occurred</span>();
-          if (exc_type) {
-            if (likely(exc_type == PyExc_StopIteration || <span class='py_c_api'>PyErr_GivenExceptionMatches</span>(exc_type, PyExc_StopIteration))) <span class='py_c_api'>PyErr_Clear</span>();
-            else __PYX_ERR(0, 30, __pyx_L1_error)
-          }
-          break;
-        }
-        <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_5);
-      }
-      <span class='pyx_macro_api'>__Pyx_XDECREF_SET</span>(__pyx_v_i, __pyx_t_5);
-      __pyx_t_5 = 0;
-/* … */
-    }
-    <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_1); __pyx_t_1 = 0;
-</pre><pre class="cython line score-6" onclick='toggleDiv(this)'>+<span class="">31</span>:             <span class="n">i1</span> <span class="o">=</span> <span class="n">ixl</span><span class="p">[</span><span class="n">i</span><span class="p">]</span></pre>
-<pre class='cython code score-6 '>      __pyx_t_5 = <span class='py_c_api'>PyObject_GetItem</span>(((PyObject *)__pyx_v_ixl), __pyx_v_i); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 31, __pyx_L1_error)
-      <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_5);
-      <span class='pyx_macro_api'>__Pyx_XDECREF_SET</span>(__pyx_v_i1, __pyx_t_5);
-      __pyx_t_5 = 0;
-</pre><pre class="cython line score-6" onclick='toggleDiv(this)'>+<span class="">32</span>:             <span class="n">i2</span> <span class="o">=</span> <span class="n">ixr</span><span class="p">[</span><span class="n">i</span><span class="p">]</span></pre>
-<pre class='cython code score-6 '>      __pyx_t_5 = <span class='py_c_api'>PyObject_GetItem</span>(((PyObject *)__pyx_v_ixr), __pyx_v_i); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 32, __pyx_L1_error)
-      <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_5);
-      <span class='pyx_macro_api'>__Pyx_XDECREF_SET</span>(__pyx_v_i2, __pyx_t_5);
-      __pyx_t_5 = 0;
-</pre><pre class="cython line score-6" onclick='toggleDiv(this)'>+<span class="">33</span>:             <span class="n">j1</span> <span class="o">=</span> <span class="n">iyl</span><span class="p">[</span><span class="n">i</span><span class="p">]</span></pre>
-<pre class='cython code score-6 '>      __pyx_t_5 = <span class='py_c_api'>PyObject_GetItem</span>(((PyObject *)__pyx_v_iyl), __pyx_v_i); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 33, __pyx_L1_error)
-      <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_5);
-      <span class='pyx_macro_api'>__Pyx_XDECREF_SET</span>(__pyx_v_j1, __pyx_t_5);
-      __pyx_t_5 = 0;
-</pre><pre class="cython line score-6" onclick='toggleDiv(this)'>+<span class="">34</span>:             <span class="n">j2</span> <span class="o">=</span> <span class="n">iyr</span><span class="p">[</span><span class="n">i</span><span class="p">]</span></pre>
-<pre class='cython code score-6 '>      __pyx_t_5 = <span class='py_c_api'>PyObject_GetItem</span>(((PyObject *)__pyx_v_iyr), __pyx_v_i); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 34, __pyx_L1_error)
-      <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_5);
-      <span class='pyx_macro_api'>__Pyx_XDECREF_SET</span>(__pyx_v_j2, __pyx_t_5);
-      __pyx_t_5 = 0;
-</pre><pre class="cython line score-0">&#xA0;<span class="">35</span>:             <span class="c"># no smoothing or max, no column</span></pre>
-<pre class="cython line score-47" onclick='toggleDiv(this)'>+<span class="">36</span>:             <span class="n">colden</span><span class="p">[</span><span class="n">i1</span><span class="p">:</span><span class="n">i2</span><span class="o">+</span><span class="mf">1</span><span class="p">,</span> <span class="n">j1</span><span class="p">:</span><span class="n">j2</span><span class="o">+</span><span class="mf">1</span><span class="p">]</span> <span class="o">+=</span> <span class="n">sden</span><span class="p">[</span><span class="n">i</span><span class="p">]</span></pre>
-<pre class='cython code score-47 '>      __pyx_t_5 = <span class='pyx_c_api'>__Pyx_PyInt_AddObjC</span>(__pyx_v_i2, __pyx_int_1, 1, 0); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 36, __pyx_L1_error)
-      <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_5);
-      __pyx_t_4 = <span class='py_c_api'>PySlice_New</span>(__pyx_v_i1, __pyx_t_5, Py_None); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 36, __pyx_L1_error)
-      <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_4);
-      <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_5); __pyx_t_5 = 0;
-      __pyx_t_5 = <span class='pyx_c_api'>__Pyx_PyInt_AddObjC</span>(__pyx_v_j2, __pyx_int_1, 1, 0); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 36, __pyx_L1_error)
-      <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_5);
-      __pyx_t_3 = <span class='py_c_api'>PySlice_New</span>(__pyx_v_j1, __pyx_t_5, Py_None); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 36, __pyx_L1_error)
-      <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_3);
-      <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_5); __pyx_t_5 = 0;
-      __pyx_t_5 = <span class='py_c_api'>PyTuple_New</span>(2); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 36, __pyx_L1_error)
-      <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_5);
-      <span class='refnanny'>__Pyx_GIVEREF</span>(__pyx_t_4);
-      <span class='py_macro_api'>PyTuple_SET_ITEM</span>(__pyx_t_5, 0, __pyx_t_4);
-      <span class='refnanny'>__Pyx_GIVEREF</span>(__pyx_t_3);
-      <span class='py_macro_api'>PyTuple_SET_ITEM</span>(__pyx_t_5, 1, __pyx_t_3);
-      __pyx_t_4 = 0;
-      __pyx_t_3 = 0;
-      __pyx_t_3 = <span class='py_c_api'>PyObject_GetItem</span>(__pyx_v_colden, __pyx_t_5); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 36, __pyx_L1_error)
-      <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_3);
-      __pyx_t_4 = <span class='py_c_api'>PyObject_GetItem</span>(((PyObject *)__pyx_v_sden), __pyx_v_i); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 36, __pyx_L1_error)
-      <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_4);
-      __pyx_t_2 = <span class='py_c_api'>PyNumber_InPlaceAdd</span>(__pyx_t_3, __pyx_t_4); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 36, __pyx_L1_error)
-      <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_2);
-      <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_3); __pyx_t_3 = 0;
-      <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_4); __pyx_t_4 = 0;
-      if (unlikely(<span class='py_c_api'>PyObject_SetItem</span>(__pyx_v_colden, __pyx_t_5, __pyx_t_2) &lt; 0)) __PYX_ERR(0, 36, __pyx_L1_error)
-      <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_2); __pyx_t_2 = 0;
-      <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_5); __pyx_t_5 = 0;
-</pre><pre class="cython line score-47" onclick='toggleDiv(this)'>+<span class="">37</span>:             <span class="n">denom</span><span class="p">[</span><span class="n">i1</span><span class="p">:</span><span class="n">i2</span><span class="o">+</span><span class="mf">1</span><span class="p">,</span> <span class="n">j1</span><span class="p">:</span><span class="n">j2</span><span class="o">+</span><span class="mf">1</span><span class="p">]</span> <span class="o">+=</span> <span class="n">mass</span><span class="p">[</span><span class="n">i</span><span class="p">]</span></pre>
-<pre class='cython code score-47 '>      __pyx_t_5 = <span class='pyx_c_api'>__Pyx_PyInt_AddObjC</span>(__pyx_v_i2, __pyx_int_1, 1, 0); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 37, __pyx_L1_error)
-      <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_5);
-      __pyx_t_2 = <span class='py_c_api'>PySlice_New</span>(__pyx_v_i1, __pyx_t_5, Py_None); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 37, __pyx_L1_error)
-      <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_2);
-      <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_5); __pyx_t_5 = 0;
-      __pyx_t_5 = <span class='pyx_c_api'>__Pyx_PyInt_AddObjC</span>(__pyx_v_j2, __pyx_int_1, 1, 0); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 37, __pyx_L1_error)
-      <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_5);
-      __pyx_t_4 = <span class='py_c_api'>PySlice_New</span>(__pyx_v_j1, __pyx_t_5, Py_None); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 37, __pyx_L1_error)
-      <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_4);
-      <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_5); __pyx_t_5 = 0;
-      __pyx_t_5 = <span class='py_c_api'>PyTuple_New</span>(2); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 37, __pyx_L1_error)
-      <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_5);
-      <span class='refnanny'>__Pyx_GIVEREF</span>(__pyx_t_2);
-      <span class='py_macro_api'>PyTuple_SET_ITEM</span>(__pyx_t_5, 0, __pyx_t_2);
-      <span class='refnanny'>__Pyx_GIVEREF</span>(__pyx_t_4);
-      <span class='py_macro_api'>PyTuple_SET_ITEM</span>(__pyx_t_5, 1, __pyx_t_4);
-      __pyx_t_2 = 0;
-      __pyx_t_4 = 0;
-      __pyx_t_4 = <span class='py_c_api'>PyObject_GetItem</span>(__pyx_v_denom, __pyx_t_5); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 37, __pyx_L1_error)
-      <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_4);
-      __pyx_t_2 = <span class='py_c_api'>PyObject_GetItem</span>(((PyObject *)__pyx_v_mass), __pyx_v_i); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 37, __pyx_L1_error)
-      <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_2);
-      __pyx_t_3 = <span class='py_c_api'>PyNumber_InPlaceAdd</span>(__pyx_t_4, __pyx_t_2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 37, __pyx_L1_error)
-      <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_3);
-      <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_4); __pyx_t_4 = 0;
-      <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_2); __pyx_t_2 = 0;
-      if (unlikely(<span class='py_c_api'>PyObject_SetItem</span>(__pyx_v_denom, __pyx_t_5, __pyx_t_3) &lt; 0)) __PYX_ERR(0, 37, __pyx_L1_error)
-      <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_3); __pyx_t_3 = 0;
-      <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_5); __pyx_t_5 = 0;
-</pre><pre class="cython line score-3" onclick='toggleDiv(this)'>+<span class="">38</span>:         <span class="k">return</span> <span class="n">colden</span> <span class="o">/</span> <span class="n">denom</span></pre>
-<pre class='cython code score-3 '>    <span class='pyx_macro_api'>__Pyx_XDECREF</span>(__pyx_r);
-    __pyx_t_1 = <span class='pyx_c_api'>__Pyx_PyNumber_Divide</span>(__pyx_v_colden, __pyx_v_denom); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 38, __pyx_L1_error)
+</pre><pre class="cython line score-46" onclick='toggleDiv(this)'>+<span class="">37</span>:    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">iin</span><span class="p">:</span></pre>
+<pre class='cython code score-46 '>  if (likely(<span class='py_c_api'>PyList_CheckExact</span>(((PyObject *)__pyx_v_iin))) || <span class='py_c_api'>PyTuple_CheckExact</span>(((PyObject *)__pyx_v_iin))) {
+    __pyx_t_1 = ((PyObject *)__pyx_v_iin); <span class='pyx_macro_api'>__Pyx_INCREF</span>(__pyx_t_1); __pyx_t_6 = 0;
+    __pyx_t_7 = NULL;
+  } else {
+    __pyx_t_6 = -1; __pyx_t_1 = <span class='py_c_api'>PyObject_GetIter</span>(((PyObject *)__pyx_v_iin)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 37, __pyx_L1_error)
     <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_1);
-    __pyx_r = __pyx_t_1;
-    __pyx_t_1 = 0;
-    goto __pyx_L0;
+    __pyx_t_7 = Py_TYPE(__pyx_t_1)-&gt;tp_iternext; if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 37, __pyx_L1_error)
   }
-</pre><pre class="cython line score-0">&#xA0;<span class="">39</span>: </pre>
-</div></body></html>
+  for (;;) {
+    if (likely(!__pyx_t_7)) {
+      if (likely(<span class='py_c_api'>PyList_CheckExact</span>(__pyx_t_1))) {
+        if (__pyx_t_6 &gt;= <span class='py_macro_api'>PyList_GET_SIZE</span>(__pyx_t_1)) break;
+        #if CYTHON_ASSUME_SAFE_MACROS &amp;&amp; !CYTHON_AVOID_BORROWED_REFS
+        __pyx_t_2 = <span class='py_macro_api'>PyList_GET_ITEM</span>(__pyx_t_1, __pyx_t_6); <span class='pyx_macro_api'>__Pyx_INCREF</span>(__pyx_t_2); __pyx_t_6++; if (unlikely(0 &lt; 0)) __PYX_ERR(0, 37, __pyx_L1_error)
+        #else
+        __pyx_t_2 = <span class='py_macro_api'>PySequence_ITEM</span>(__pyx_t_1, __pyx_t_6); __pyx_t_6++; if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 37, __pyx_L1_error)
+        <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_2);
+        #endif
+      } else {
+        if (__pyx_t_6 &gt;= <span class='py_macro_api'>PyTuple_GET_SIZE</span>(__pyx_t_1)) break;
+        #if CYTHON_ASSUME_SAFE_MACROS &amp;&amp; !CYTHON_AVOID_BORROWED_REFS
+        __pyx_t_2 = <span class='py_macro_api'>PyTuple_GET_ITEM</span>(__pyx_t_1, __pyx_t_6); <span class='pyx_macro_api'>__Pyx_INCREF</span>(__pyx_t_2); __pyx_t_6++; if (unlikely(0 &lt; 0)) __PYX_ERR(0, 37, __pyx_L1_error)
+        #else
+        __pyx_t_2 = <span class='py_macro_api'>PySequence_ITEM</span>(__pyx_t_1, __pyx_t_6); __pyx_t_6++; if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 37, __pyx_L1_error)
+        <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_2);
+        #endif
+      }
+    } else {
+      __pyx_t_2 = __pyx_t_7(__pyx_t_1);
+      if (unlikely(!__pyx_t_2)) {
+        PyObject* exc_type = <span class='py_c_api'>PyErr_Occurred</span>();
+        if (exc_type) {
+          if (likely(exc_type == PyExc_StopIteration || <span class='py_c_api'>PyErr_GivenExceptionMatches</span>(exc_type, PyExc_StopIteration))) <span class='py_c_api'>PyErr_Clear</span>();
+          else __PYX_ERR(0, 37, __pyx_L1_error)
+        }
+        break;
+      }
+      <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_2);
+    }
+    <span class='pyx_macro_api'>__Pyx_XDECREF_SET</span>(__pyx_v_i, __pyx_t_2);
+    __pyx_t_2 = 0;
+/* … */
+  }
+  <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_1); __pyx_t_1 = 0;
+</pre><pre class="cython line score-6" onclick='toggleDiv(this)'>+<span class="">38</span>:        <span class="n">i1</span> <span class="o">=</span> <span class="n">ixl</span><span class="p">[</span><span class="n">i</span><span class="p">]</span></pre>
+<pre class='cython code score-6 '>    __pyx_t_2 = <span class='py_c_api'>PyObject_GetItem</span>(((PyObject *)__pyx_v_ixl), __pyx_v_i); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 38, __pyx_L1_error)
+    <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_2);
+    <span class='pyx_macro_api'>__Pyx_XDECREF_SET</span>(__pyx_v_i1, __pyx_t_2);
+    __pyx_t_2 = 0;
+</pre><pre class="cython line score-6" onclick='toggleDiv(this)'>+<span class="">39</span>:        <span class="n">i2</span> <span class="o">=</span> <span class="n">ixr</span><span class="p">[</span><span class="n">i</span><span class="p">]</span></pre>
+<pre class='cython code score-6 '>    __pyx_t_2 = <span class='py_c_api'>PyObject_GetItem</span>(((PyObject *)__pyx_v_ixr), __pyx_v_i); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 39, __pyx_L1_error)
+    <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_2);
+    <span class='pyx_macro_api'>__Pyx_XDECREF_SET</span>(__pyx_v_i2, __pyx_t_2);
+    __pyx_t_2 = 0;
+</pre><pre class="cython line score-6" onclick='toggleDiv(this)'>+<span class="">40</span>:        <span class="n">j1</span> <span class="o">=</span> <span class="n">iyl</span><span class="p">[</span><span class="n">i</span><span class="p">]</span></pre>
+<pre class='cython code score-6 '>    __pyx_t_2 = <span class='py_c_api'>PyObject_GetItem</span>(((PyObject *)__pyx_v_iyl), __pyx_v_i); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 40, __pyx_L1_error)
+    <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_2);
+    <span class='pyx_macro_api'>__Pyx_XDECREF_SET</span>(__pyx_v_j1, __pyx_t_2);
+    __pyx_t_2 = 0;
+</pre><pre class="cython line score-6" onclick='toggleDiv(this)'>+<span class="">41</span>:        <span class="n">j2</span> <span class="o">=</span> <span class="n">iyr</span><span class="p">[</span><span class="n">i</span><span class="p">]</span></pre>
+<pre class='cython code score-6 '>    __pyx_t_2 = <span class='py_c_api'>PyObject_GetItem</span>(((PyObject *)__pyx_v_iyr), __pyx_v_i); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 41, __pyx_L1_error)
+    <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_2);
+    <span class='pyx_macro_api'>__Pyx_XDECREF_SET</span>(__pyx_v_j2, __pyx_t_2);
+    __pyx_t_2 = 0;
+</pre><pre class="cython line score-0">&#xA0;<span class="">42</span>:        <span class="c"># no smoothing or max, no column</span></pre>
+<pre class="cython line score-47" onclick='toggleDiv(this)'>+<span class="">43</span>:        <span class="n">colden</span><span class="p">[</span><span class="n">i1</span><span class="p">:</span><span class="n">i2</span><span class="o">+</span><span class="mf">1</span><span class="p">,</span> <span class="n">j1</span><span class="p">:</span><span class="n">j2</span><span class="o">+</span><span class="mf">1</span><span class="p">]</span> <span class="o">+=</span> <span class="n">sden</span><span class="p">[</span><span class="n">i</span><span class="p">]</span></pre>
+<pre class='cython code score-47 '>    __pyx_t_2 = <span class='pyx_c_api'>__Pyx_PyInt_AddObjC</span>(__pyx_v_i2, __pyx_int_1, 1, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 43, __pyx_L1_error)
+    <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_2);
+    __pyx_t_3 = <span class='py_c_api'>PySlice_New</span>(__pyx_v_i1, __pyx_t_2, Py_None); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 43, __pyx_L1_error)
+    <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_3);
+    <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_2); __pyx_t_2 = 0;
+    __pyx_t_2 = <span class='pyx_c_api'>__Pyx_PyInt_AddObjC</span>(__pyx_v_j2, __pyx_int_1, 1, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 43, __pyx_L1_error)
+    <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_2);
+    __pyx_t_4 = <span class='py_c_api'>PySlice_New</span>(__pyx_v_j1, __pyx_t_2, Py_None); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 43, __pyx_L1_error)
+    <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_4);
+    <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_2); __pyx_t_2 = 0;
+    __pyx_t_2 = <span class='py_c_api'>PyTuple_New</span>(2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 43, __pyx_L1_error)
+    <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_2);
+    <span class='refnanny'>__Pyx_GIVEREF</span>(__pyx_t_3);
+    <span class='py_macro_api'>PyTuple_SET_ITEM</span>(__pyx_t_2, 0, __pyx_t_3);
+    <span class='refnanny'>__Pyx_GIVEREF</span>(__pyx_t_4);
+    <span class='py_macro_api'>PyTuple_SET_ITEM</span>(__pyx_t_2, 1, __pyx_t_4);
+    __pyx_t_3 = 0;
+    __pyx_t_4 = 0;
+    __pyx_t_4 = <span class='py_c_api'>PyObject_GetItem</span>(__pyx_v_colden, __pyx_t_2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 43, __pyx_L1_error)
+    <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_4);
+    __pyx_t_3 = <span class='py_c_api'>PyObject_GetItem</span>(((PyObject *)__pyx_v_sden), __pyx_v_i); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 43, __pyx_L1_error)
+    <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_3);
+    __pyx_t_5 = <span class='py_c_api'>PyNumber_InPlaceAdd</span>(__pyx_t_4, __pyx_t_3); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 43, __pyx_L1_error)
+    <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_5);
+    <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_4); __pyx_t_4 = 0;
+    <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_3); __pyx_t_3 = 0;
+    if (unlikely(<span class='py_c_api'>PyObject_SetItem</span>(__pyx_v_colden, __pyx_t_2, __pyx_t_5) &lt; 0)) __PYX_ERR(0, 43, __pyx_L1_error)
+    <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_5); __pyx_t_5 = 0;
+    <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_2); __pyx_t_2 = 0;
+</pre><pre class="cython line score-47" onclick='toggleDiv(this)'>+<span class="">44</span>:        <span class="n">denom</span><span class="p">[</span><span class="n">i1</span><span class="p">:</span><span class="n">i2</span><span class="o">+</span><span class="mf">1</span><span class="p">,</span> <span class="n">j1</span><span class="p">:</span><span class="n">j2</span><span class="o">+</span><span class="mf">1</span><span class="p">]</span> <span class="o">+=</span> <span class="n">mass</span><span class="p">[</span><span class="n">i</span><span class="p">]</span></pre>
+<pre class='cython code score-47 '>    __pyx_t_2 = <span class='pyx_c_api'>__Pyx_PyInt_AddObjC</span>(__pyx_v_i2, __pyx_int_1, 1, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 44, __pyx_L1_error)
+    <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_2);
+    __pyx_t_5 = <span class='py_c_api'>PySlice_New</span>(__pyx_v_i1, __pyx_t_2, Py_None); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 44, __pyx_L1_error)
+    <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_5);
+    <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_2); __pyx_t_2 = 0;
+    __pyx_t_2 = <span class='pyx_c_api'>__Pyx_PyInt_AddObjC</span>(__pyx_v_j2, __pyx_int_1, 1, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 44, __pyx_L1_error)
+    <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_2);
+    __pyx_t_3 = <span class='py_c_api'>PySlice_New</span>(__pyx_v_j1, __pyx_t_2, Py_None); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 44, __pyx_L1_error)
+    <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_3);
+    <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_2); __pyx_t_2 = 0;
+    __pyx_t_2 = <span class='py_c_api'>PyTuple_New</span>(2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 44, __pyx_L1_error)
+    <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_2);
+    <span class='refnanny'>__Pyx_GIVEREF</span>(__pyx_t_5);
+    <span class='py_macro_api'>PyTuple_SET_ITEM</span>(__pyx_t_2, 0, __pyx_t_5);
+    <span class='refnanny'>__Pyx_GIVEREF</span>(__pyx_t_3);
+    <span class='py_macro_api'>PyTuple_SET_ITEM</span>(__pyx_t_2, 1, __pyx_t_3);
+    __pyx_t_5 = 0;
+    __pyx_t_3 = 0;
+    __pyx_t_3 = <span class='py_c_api'>PyObject_GetItem</span>(__pyx_v_denom, __pyx_t_2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 44, __pyx_L1_error)
+    <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_3);
+    __pyx_t_5 = <span class='py_c_api'>PyObject_GetItem</span>(((PyObject *)__pyx_v_mass), __pyx_v_i); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 44, __pyx_L1_error)
+    <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_5);
+    __pyx_t_4 = <span class='py_c_api'>PyNumber_InPlaceAdd</span>(__pyx_t_3, __pyx_t_5); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 44, __pyx_L1_error)
+    <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_4);
+    <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_3); __pyx_t_3 = 0;
+    <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_5); __pyx_t_5 = 0;
+    if (unlikely(<span class='py_c_api'>PyObject_SetItem</span>(__pyx_v_denom, __pyx_t_2, __pyx_t_4) &lt; 0)) __PYX_ERR(0, 44, __pyx_L1_error)
+    <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_4); __pyx_t_4 = 0;
+    <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_2); __pyx_t_2 = 0;
+</pre><pre class="cython line score-3" onclick='toggleDiv(this)'>+<span class="">45</span>:    <span class="k">return</span> <span class="n">colden</span> <span class="o">/</span> <span class="n">denom</span></pre>
+<pre class='cython code score-3 '>  <span class='pyx_macro_api'>__Pyx_XDECREF</span>(__pyx_r);
+  __pyx_t_1 = <span class='pyx_c_api'>__Pyx_PyNumber_Divide</span>(__pyx_v_colden, __pyx_v_denom); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 45, __pyx_L1_error)
+  <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_1);
+  __pyx_r = __pyx_t_1;
+  __pyx_t_1 = 0;
+  goto __pyx_L0;
+</pre></div></body></html>

@@ -21,6 +21,7 @@ Fix it
 """
 
 import numpy as np
+from load.info import get_minimal_info
 #import  matplotlib.pyplot as plt
 
 def print_large_number(q):
@@ -30,6 +31,19 @@ def print_large_number(q):
         return("{:.3e}".format(q))
     else:
         return("{:.2f}".format(q))
+
+
+def convert_catalog(catalog, pboxsize, unit="code"):
+    """
+    Default unit = code unit.
+    (tree.halomodule converts units to code units on reading catalogs)
+    """
+    catalog['x'] = (catalog['x'] -0.5) * pboxsize
+    catalog['y'] = (catalog['y'] -0.5) * pboxsize
+    catalog['z'] = (catalog['z'] -0.5) * pboxsize
+    catalog['r'] = catalog['r'] * pboxsize  #* info.cboxsize * 1e3
+    catalog['rvir'] = catalog['rvir'] * pboxsize #* info.cboxsize * 1e3
+
 
 class Meta():
     def __init__(self):
@@ -56,6 +70,7 @@ class Meta():
         self.d2t=0.0
         self.nvec=None
         self.lvec=None
+        self.debug=False
 
     def show_summary(self):
         """
@@ -80,18 +95,36 @@ class Meta():
 
 
 
-class Galaxy(object):
+class Galaxy():
+    """
+    Maybe.. this class is growing too heavy...?
+    If I have to deal with millions of these...
 
-    def __init__(self, halo=None, info=None):
+    """
+    def __init__(self, info=None, halo=None,
+                 catalog=None, convert_cat=True):
         self.meta = Meta()
-        self.set_halo(halo)
-        self.info = info
+        #if info is not None:
+        #    print("AAAAAA")
+        self.set_info(info)
+        self.set_catalog(catalog, convert_cat)
+        self._has_star=False
+        self._has_dm=False
+        self._has_cell=False
         #self.meta.id=-1 # why did I do this...??
 
-    def set_halo(self, halo):
-        if halo is not None:
-            self.halo = halo
-            self.meta.id = int(halo['id'])
+    def set_info(self, info):
+        self.info = get_minimal_info(info)
+
+    def set_catalog(self, catalog, convert):
+        # Copy so not to be affected by the original data
+        # being modified outside later.
+        self.gcat = np.copy(catalog)
+
+        if convert:
+            convert_catalog(self.gcat, self.info.pboxsize)
+        if catalog is not None:
+            self.meta.id = int(catalog['id'])
 
     def set_ptypes(self, pt=None):
         pass
@@ -100,7 +133,6 @@ class Galaxy(object):
         # If length,
 
         print([i * self.info.pboxsize * 100 for i in list(x)])
-
 
     def radial_profile_cut(self, xx, yy, mm, vx, vy, vz,
                            den_lim=1e6, den_lim2=5e6,
@@ -182,7 +214,8 @@ class Galaxy(object):
 #       as the system velocity is WRONG.
 #       If 1Reff is huge, try smaller aperture when measuring the system velocity.
 #
-        if debug: print("[galaxy.Galaxy.radial_profile_cut] mtot, mtot2", mtot1, mtot2)
+        if debug:
+            print("[galaxy.Galaxy.radial_profile_cut] mtot, mtot2", mtot1, mtot2)
 
         i_close = i_sort[:np.argmax(np.cumsum(m_sorted) > (0.2*mtot2))] # 20% closest particles
 
@@ -199,13 +232,13 @@ class Galaxy(object):
             convert meta data into convenient unit.
         """
         if unit_conversion == "code":
-            self.meta.xc = xc * self.info.pboxsize*1000
-            self.meta.yc = yc * self.info.pboxsize*1000
-            self.meta.zc = zc * self.info.pboxsize*1000
+            self.meta.xc *= self.info.pboxsize*1000
+            self.meta.yc *= self.info.pboxsize*1000
+            self.meta.zc *= self.info.pboxsize*1000
         elif unit_conversion == "GM":
-            self.meta.xc = xc * self.info.pboxsize
-            self.meta.yc = yc * self.info.pboxsize
-            self.meta.zc = zc * self.info.pboxsize
+            self.meta.xc *= self.info.pboxsize
+            self.meta.yc *= self.info.pboxsize
+            self.meta.zc *= self.info.pboxsize
         else:
             print("[galaxy._convert_unit_meta] Unknown unit_conversion option")
 
@@ -219,9 +252,9 @@ class Galaxy(object):
         # Unit conversion
         if unit_conversion == "code":
             if "x" in data.dtype.names:
-                data['x'] = (data['x'] - xc) * self.info.pboxsize*1000
-                data['y'] = (data['y'] - yc) * self.info.pboxsize*1000
-                data['z'] = (data['z'] - zc) * self.info.pboxsize*1000
+                data['x'] = (data['x'] - self.meta.xc) * self.info.pboxsize*1000
+                data['y'] = (data['y'] - self.meta.yc) * self.info.pboxsize*1000
+                data['z'] = (data['z'] - self.meta.zc) * self.info.pboxsize*1000
             if 'm' in data.dtype.names:
                 data['m'] = data['m'] * self.info.msun
             if "vx" in data.dtype.names:
@@ -230,9 +263,9 @@ class Galaxy(object):
                 data['vz'] = data['vz'] * self.info.kms - self.meta.vzc
         elif unit_conversion == "GM":
             if "x" in data.dtype.names:
-                data['x'] = (data['x'] - (xc - 0.5) * self.info.pboxsize)*1e3
-                data['y'] = (data['y'] - (yc - 0.5) * self.info.pboxsize)*1e3
-                data['z'] = (data['z'] - (zc - 0.5) * self.info.pboxsize)*1e3
+                data['x'] = (data['x'] - (self.meta.xc - 0.5) * self.info.pboxsize)*1e3
+                data['y'] = (data['y'] - (self.meta.yc - 0.5) * self.info.pboxsize)*1e3
+                data['z'] = (data['z'] - (self.meta.zc - 0.5) * self.info.pboxsize)*1e3
             if 'm' in data.dtype.names:
                 data['m'] = data['m'] * 1e11 # in Msun.
             if "vx" in data.dtype.names:
@@ -281,16 +314,19 @@ class Galaxy(object):
         self.cell['temp'] = cell['var4'][icell]
         self.cell['metal'] = cell['var5'][icell]
 
-    def mk_gal(self, star, dm, cell,
-               save=False, verbose=False,
-               mstar_min=1e9,
-               den_lim=1e6, den_lim2=5e6,
-               rmin = -1, Rgal_to_reff=5.0, method_com=1, follow_bp=None,
-               unit_conversion="code", debug=False):
+    def mk_gal(self,
+                save=False, verbose=False,
+                mstar_min=1e9,
+                den_lim=1e6, den_lim2=5e6,
+                rmin = -1, Rgal_to_reff=5.0, method_com=1, follow_bp=None,
+                unit_conversion="code"):
         """
-            Input data in code unit.
+            Refine given data (star, DM, gas) to define a realistic galaxy.
+            Raw star/DM/gas data as give are only rough representation of a galaxy.
+            But not much have to be thrown away, either.
 
-            Returns True if it is a "good" galaxy
+            Returns True if a "good" galaxy is made.
+
 
             Parameters
             ----------
@@ -302,37 +338,54 @@ class Galaxy(object):
 
             Notes
             -----
-            Since now (as of 2016.03) galaxy calculation is based on the GalaxyMaker results,
-            let's just believe and minimize redundant processes to determine the center of mass,
-            system velocity, and to check the presence of additional components.
+            1. Since now (as of 2016.03) galaxy calculation is based on the GalaxyMaker results,
+            let's just believe and minimize redundant processes such as determining the center of mass,
+            system velocity, and checking the presence of (unwanted) substructure.
 
-            Assuming all data in the code units.
+            2. Assuming all data in the code units.
 
-            dr, bin size for radial profile cut measure, scales with exponential factor.
+            3. dr, bin size in determining the radial profile cut scales with exponential factor.
             Without scaling, 0.5kpc bin size is too large for ~1kpc galaxies at high-z.
 
         """
-        assert (self.halo is not None), "Need halo information,"
+        # Need halo information
+        assert (self.gcat is not None), ("Need a catalog,"
         "use Galaxy.set_halo() and provide x,y,z,vx,vy,vz,r,rvir, at least"
-        "Units are - "
+        "Units are.. ?? ")
 
-        member="Reff"
+        # And at least one component.
+        star = self.star
+        dm = self.dm
+        cell = self.cell
+
+        assert (self._has_star or self._has_dm or self._has_cell), ("At least"
+        "one of three(star, dm, gas) component is needed")
+
+        if self.star is not None:
+            self._convert_unit_meta(unit_conversion)
+            self._convert_unit("star", unit_conversion)
+        if dm is not None:
+            self._convert_unit("dm", unit_conversion)
+
+        # all tests passed.
         if verbose:
             print("Making a galaxy:", self.meta.id)
             print("SAVE:", save)
-            print("Halo size:", self.halo['rvir'])
+            print("Halo size:", self.gcat['rvir'])
 
+        #
+        member="Reff"
 
         # galaxy center from GalaxyMaker. - good enough.
-        xc = self.halo['x']
-        yc = self.halo['y']
-        zc = self.halo['z']
+        xc = self.gcat['x']
+        yc = self.gcat['y']
+        zc = self.gcat['z']
 
-        if verbose: print("xc, yxc,zc =", xc, yc, zc)
+        if verbose: print("xc, yc, zc =", xc, yc, zc)
 
-
-        rgal_tmp = min([self.halo['r'] * self.info.pboxsize * 1000.0, 30])
+        rgal_tmp = min([self.gcat['r'] * 1e3, 30]) # gcat["rvir"] in kpc
         if verbose: print("Rgal_tmp", rgal_tmp)
+        print("self.debug",self.debug)
         dense_enough = self.radial_profile_cut(star['x'], star['y'], star['m'],
                                 star['vx'], star['vy'], star['vz'],
                                 den_lim=den_lim, den_lim2=den_lim2,
@@ -340,7 +393,7 @@ class Galaxy(object):
                                 nbins=int(rgal_tmp/0.5),
                                 dr=0.5 * self.info.aexp,
                                 rmax=rgal_tmp,
-                                debug=debug)
+                                debug=self.debug)
 
         if not dense_enough:
             print("Not dense enough")
@@ -351,7 +404,8 @@ class Galaxy(object):
 
         self.star = star[ind]
 
-        if debug: print('[galaxy.Galaxy.mk_gal] mima vx 1', min(self.star['vx']), max(self.star['vx']))
+        if self.debug:
+            print('[galaxy.Galaxy.mk_gal] mima vx 1', min(self.star['vx']), max(self.star['vx']))
 
 
         self.meta.nstar = len(ind)
@@ -392,26 +446,24 @@ class Galaxy(object):
 
         # Now, get cov
 #        self.get_cov(center_only=True)
-        if self.star is not None:
-            self._convert_unit_meta(unit_conversion)
-            self._convert_unit("star", unit_conversion)
 
-        if debug:
+
+        if self.debug:
             print('[galaxy.Galaxy.mk_gal] meta.v[x,y,z]c', self.meta.vxc, self.meta.vyc, self.meta.vzc)
             print('[galaxy.Galaxy.mk_gal] mima vx 2', min(self.star['vx']), max(self.star['vx']))
 
         if dm is not None:
             if member == "Reff":
-                idm = np.where( np.square(dm["x"] - self.meta.xc) +
-                                np.square(dm["y"] - self.meta.yc) +
-                                np.square(dm["z"] - self.meta.zc) <= np.square(rgal_tmp))[0]
+                idm = np.where( np.square(dm["x"]) +
+                                np.square(dm["y"]) +
+                                np.square(dm["z"]) <= np.square(rgal_tmp))[0]
             elif member == "v200":
             # Although the velocity is redefined later,
             # particle membership is fixed at this point.
                 idm = np.where( np.square(dm["vx"] - self.meta.vxc / self.info.kms)+
                                 np.square(dm["vy"] - self.meta.vyc / self.info.kms)+
                                 np.square(dm["vz"] - self.meta.vzc / self.info.kms) <= np.square(200**2))[0]
-            self._convert_unit("dm", unit_conversion)
+
 
         if cell is not None:
             if verbose: print("Cell is NOT none")
@@ -534,7 +586,7 @@ class Galaxy(object):
         """
         import numpy as np
         if method == "simple":
-            return self.halo['rvir']
+            return self.gcat['rvir']
         elif method == "eff":
             # requires galaxy center to be determined.
             dd = xx**2 + yy**2 + zz**2
@@ -698,9 +750,9 @@ class Galaxy(object):
             vy = self.star['vy']
             vz = self.star['vz']
 
-        vhalx = self.halo['vx']
-        vhaly = self.halo['vy']
-        vhalz = self.halo['vz']
+        vhalx = self.gcat['vx']
+        vhaly = self.gcat['vy']
+        vhalz = self.gcat['vz']
 
         r_frac = 0.7
         vrange = max([np.std(vx),

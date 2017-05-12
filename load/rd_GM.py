@@ -6,10 +6,9 @@ Inherits galaxy.Galaxy class
 
 @author: hoseung
 """
+from galaxymodule.galaxy import Galaxy
 from load.utils import read_header, read_fortran
 import numpy as np
-from galaxy.galaxy import Galaxy
-
 
 class Header():
     def __init__(self):
@@ -95,7 +94,9 @@ class Dummy():
         pass
 
 class Gal(Galaxy):
-    def __init__(self, nout, idgal, wdir='./', idhal = -1, load=True, info=None, rscale=1.5):
+    def __init__(self, nout, idgal=None,
+                 catalog=None, halo=None, info=None,
+                 wdir='./', idhal = -1, load=True, rscale=1.5):
         """
 
         Parameters
@@ -107,9 +108,13 @@ class Gal(Galaxy):
         -----
         By default, loaded data (star, dm, cell) are in "gm" units.
 
-
         """
-        super(Gal, self).__init__()
+        assert(not(idgal == None and catalog == None)), ("either idgal or a catalog"
+        " is needed.")
+        print("info", info)
+        if idgal == None:
+            idgal = catalog["id"]
+        super(Gal, self).__init__(catalog=catalog, info=info, halo=halo)
         self.star = None # data -> star
         self.header = None
         self.dm = None
@@ -134,23 +139,22 @@ class Gal(Galaxy):
 
     def _get_minimal_info(self, info):
         """
-        exclude method.
+        from an info instance, exclude methods and leave variables.
         """
         keep_list=["msun", "unit_Z", "unit_l", "unit_d", "unit_t", "unit_v",\
                    "unit_T2", "pboxsize","kms","unit_nH",\
                    "base", "nout", "aexp","zred","h","H0","time",\
                    "ob","ol","om","tGyr","unit_flux","boxtokpc"]
-#        if self.info is None:
-#            self.info = Dummy()
+#
         for name, val in info.__dict__.items():
             if name in keep_list:
                 setattr(self.info, name, val)
 #                print(self.info.unit_d)
 
-    def set_info(self, info=None):
-        if info is None:
-            from load.info import Info
-            self.info = Info(self.nout, base=self.wdir)
+    #def set_info(self, info=None):
+    #    if info is None:
+    #        from load.info import Info
+    #        self.info = Info(self.nout, base=self.wdir)
         #self._get_minimal_info(info)
         # Most of the information are needed.
         # No point filtering few attributes.
@@ -158,8 +162,13 @@ class Gal(Galaxy):
 
     def get_rgal(self):
         """
-        get rgal as ptp() of star position.
+        Set Gal.rgal as ptp() of star position in kpc.
         If necessary, only the resulting value is converted.
+
+        When we try to extract components from the whole data,
+        the
+        Rgal is required to guess the size of the region that encompasses all galactic components.
+
         """
         if not self._check_info():
             print("Aborting...")
@@ -174,7 +183,7 @@ class Gal(Galaxy):
              info=None, rscale=None, radius=None):
         """
         Load per-galaxy data (if exist).
-        Automatically skips missing species.
+        Automatically skips missing components.
 
         Parameters
         ----------
@@ -245,6 +254,7 @@ class Gal(Galaxy):
                           region=self.region, load=True)
                 self.star = pp.star
                 self.units.star.name="code"
+            self._has_star=True
         except FileNotFoundError as e:
             print("File Not Found:", e.filename)
             print("No stellar data loaded")
@@ -261,6 +271,7 @@ class Gal(Galaxy):
                       region=self.region, load=True)
                 self.dm = pp.dm
                 self.units.dm.name="code"
+            self._has_dm=True
         except FileNotFoundError as e:
             print("File Not Found:", e.filename)
             print("No DM data loaded")
@@ -277,6 +288,7 @@ class Gal(Galaxy):
                 hh.amr2cell()
                 self.cell = hh.cell
                 self.units.cell= unit_raw
+            self._has_cell=True
         except FileNotFoundError as e:
             print("File Not Found:", e.filename)
             print("No CELL data loaded")

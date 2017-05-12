@@ -31,6 +31,10 @@ class Tree():
         self.n_all_sons = 0
         self.is_gal = is_gal
         self.wdir = wdir
+        self.aexps = None
+        self.omega_ts = None
+        self.age_univs = None
+        self.nsteps = None
 
         if fn is None:
             self.get_fn()
@@ -60,14 +64,14 @@ class Tree():
                 return
             dump_temp.append(attr)
 
-# No need to check individual data. 
-# They should go altogether always. 
-#            
+# No need to check individual data.
+# They should go altogether always.
+#
 #                fn = self.wdir + suffix + attr_name + ".npz"
                 #np.save(fn, self.tree)
 #            else:
 #                print("Nothing to save ", attr_name)
-        
+
         fn = self.wdir + suffix + "data.npy"
         np.save(fn, dump_temp)
         self.dump_files.update({"data":fn})
@@ -99,8 +103,8 @@ class Tree():
                     Overwrite_ok=True
         #            return
         self.tree, self.fatherID, self.fatherIDx, self.fatherMass, self.sonID = np.load(self.dump_files["data"])
-        
-        
+
+
         #fn = self.wdir + suffix + "tree_meta_" + ["hal","gal"][self.is_gal]
         #if not fn.endswith(".pickle"):
         #    fn += ".pickle"
@@ -121,8 +125,8 @@ class Tree():
         else:
             self.set_fn(None)
             print(fn, "is not found")
-        
-        
+
+
     def load(self, BIG_RUN=True, nout_now = None):
         """
             Parameters
@@ -144,9 +148,12 @@ class Tree():
             return
         from tree import cnt_tree
 
-        self.n_all_halos, self.n_all_fathers, self.n_all_sons = cnt_tree.count_tree(self.fn, int(BIG_RUN))
-        self.fatherID, self.fatherIDx, self.sonID, self.fatherMass, i_arr, f_arr = \
-                cnt_tree.load_tree(self.fn, self.n_all_halos, self.n_all_fathers, self.n_all_sons, int(BIG_RUN))
+        self.n_all_halos, self.n_all_fathers, self.n_all_sons, self.nsteps = cnt_tree.count_tree(self.fn, int(BIG_RUN))
+        self.fatherID, self.fatherIDx, self.sonID, \
+        self.fatherMass, i_arr, f_arr, \
+        self.aexps, self.omega_ts, self.age_univs = \
+                cnt_tree.load_tree(self.fn, self.n_all_halos, \
+                self.n_all_fathers, self.n_all_sons, int(BIG_RUN), self.nsteps)
 
         dtype_tree = [('zred', '<f8'),
                       ('nstep', '<i4'), ('id', '<i4'), ('m', '<f8'),
@@ -171,45 +178,45 @@ class Tree():
                       ('nprgs', '<i4'),
                       ('f_ind', '<i4'), ('s_ind', '<i4')]
 
-        tt = np.recarray(self.n_all_halos, dtype = dtype_tree)
+        tt = np.recarray(self.n_all_halos +1, dtype = dtype_tree)
         self.tree = tt
 
-        tt["m"] = f_arr[:,0]
-        tt["macc"] = f_arr[:,1]
-        tt["xp"] = f_arr[:,2:5]
-        tt["vp"] = f_arr[:,5:8]
-        tt["lp"] = f_arr[:,8:11]
-        tt["abc"] = f_arr[:,11:15]
-        tt["ek"] = f_arr[:,15]
-        tt["ep"] = f_arr[:,16]
-        tt["et"] = f_arr[:,17]
-        tt["spin"] = f_arr[:,18]
+        tt["m"][1:] = f_arr[:,0]
+        tt["macc"][1:] = f_arr[:,1]
+        tt["xp"][1:] = f_arr[:,2:5]
+        tt["vp"][1:] = f_arr[:,5:8]
+        tt["lp"][1:] = f_arr[:,8:11]
+        tt["abc"][1:] = f_arr[:,11:15]
+        tt["ek"][1:] = f_arr[:,15]
+        tt["ep"][1:] = f_arr[:,16]
+        tt["et"][1:] = f_arr[:,17]
+        tt["spin"][1:] = f_arr[:,18]
 
-        tt["rvir"] = f_arr[:,19]
-        tt["mvir"] = f_arr[:,20]* 1e11
-        tt["tvir"] = f_arr[:,21]
-        tt["cvel"] = f_arr[:,22]
-        tt["rho_0"] = f_arr[:,23]
-        tt["rho_c"] = f_arr[:,24]
+        tt["rvir"][1:] = f_arr[:,19]
+        tt["mvir"][1:] = f_arr[:,20]* 1e11
+        tt["tvir"][1:] = f_arr[:,21]
+        tt["cvel"][1:] = f_arr[:,22]
+        tt["rho_0"][1:] = f_arr[:,23]
+        tt["rho_c"][1:] = f_arr[:,24]
 
-        tt["idx"] = i_arr[:,0]
-        tt["id"] = i_arr[:,1]
+        tt["idx"][1:] = i_arr[:,0]
+        tt["id"][1:] = i_arr[:,1]
         #tt["bushID"] = i_arr[:,2]
         #tt["st"] = i_arr[:,3]
-        tt["level"] = i_arr[:,4]
-        tt["hosthalo"] = i_arr[:,5]
-        tt["hostsub"] = i_arr[:,6]
-        tt["nsub"] = i_arr[:,7]
-        tt["nextsub"] = i_arr[:,8]
-        tt["nprgs"] = i_arr[:,9]
+        tt["level"][1:] = i_arr[:,4]
+        tt["hosthalo"][1:] = i_arr[:,5]
+        tt["hostsub"][1:] = i_arr[:,6]
+        tt["nsub"][1:] = i_arr[:,7]
+        tt["nextsub"][1:] = i_arr[:,8]
+        tt["nprgs"][1:] = i_arr[:,9]
         if nout_now is not None:
-            tt["nstep"] = i_arr[:,10] + (nout_now - max(tt["nstep"]))
+            tt["nstep"][1:] = i_arr[:,10] + (nout_now - max(tt["nstep"]))
         else:
-            tt["nstep"] = i_arr[:,10]
+            tt["nstep"][1:] = i_arr[:,10]
         if not BIG_RUN:
-            tt["np"] = i_arr[:,11]
-        tt["f_ind"] = i_arr[:,12] -1
-        tt["s_ind"] = i_arr[:,13] -1
+            tt["np"][1:] = i_arr[:,11]
+        tt["f_ind"][1:] = i_arr[:,12] -1
+        tt["s_ind"][1:] = i_arr[:,13] -1
 
         #return
 
@@ -247,15 +254,14 @@ class Tree():
         for i in range(1, nstep + 1):
             try:
                 id_father = fatherID[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]]
-                if len(id_father) > 1:
+                if len(id_father) > 0:
                     mass_father = fatherMass[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]]
-
                     id_father = id_father[np.argmax(mass_father)]
-                    ind_father = id_father[id_father > 0]# -1
 
                     nstep -= 1
-                    t_father = t[np.where(t["nstep"] == nstep)[0]][ind_father]
-                    idx = t_father["idx"]
+                    t_next = t[np.where(t["nstep"] == nstep)[0]]
+                    t_father = t_next[t_next["id"]==id_father]
+                    idx = t_father["idx"][0] # need to be a integer scalar.
                     atree[i]=t_father
                     nouts.append(nstep)
                 else:
@@ -264,7 +270,6 @@ class Tree():
                 break
 
         return np.copy(atree[:i])
-
 
 
 def load_fits(base=None, work_dir=None, filename="halo/TMtree.fits"):
