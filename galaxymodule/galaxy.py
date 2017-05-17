@@ -117,14 +117,20 @@ class Galaxy():
         self.info = get_minimal_info(info)
 
     def set_catalog(self, catalog, convert):
-        # Copy so not to be affected by the original data
-        # being modified outside later.
+		"""
+        Copy so not to be affected by the original data being modified outside.
+        center of galaxy may be updated by more sophisticated method.
+
+		"""
         self.gcat = catalog
 
         if convert:
             convert_catalog(self.gcat, self.info.pboxsize)
         if catalog is not None:
             self.meta.id = int(catalog['id'])
+            self.xc = catalog["x"]
+            self.yc = catalog["y"]
+            self.zc = catalog["z"]
 
     def set_ptypes(self, pt=None):
         pass
