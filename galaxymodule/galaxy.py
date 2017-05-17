@@ -128,9 +128,9 @@ class Galaxy():
             convert_catalog(self.gcat, self.info.pboxsize)
         if catalog is not None:
             self.meta.id = int(catalog['id'])
-            self.xc = catalog["x"]
-            self.yc = catalog["y"]
-            self.zc = catalog["z"]
+            self.meta.xc = catalog["x"]
+            self.meta.yc = catalog["y"]
+            self.meta.zc = catalog["z"]
 
     def set_ptypes(self, pt=None):
         pass
