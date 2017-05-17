@@ -117,11 +117,11 @@ class Galaxy():
         self.info = get_minimal_info(info)
 
     def set_catalog(self, catalog, convert):
-		"""
+        """
         Copy so not to be affected by the original data being modified outside.
         center of galaxy may be updated by more sophisticated method.
 
-		"""
+        """
         self.gcat = catalog
 
         if convert:
