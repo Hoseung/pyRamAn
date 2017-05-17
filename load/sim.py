@@ -73,8 +73,8 @@ class Simbase():
         """
         After determining cpus, read the cpu files and cut off data
         that are outside ranges.
-        -> cpu files contain data points within a given ragnes
-        BUT! they also contain other data points outside the ragnes.
+        -> cpu files contain data points within a given ranges
+        BUT! they also contain other data points outside the ranges.
         """
 
         from load.a2c import hilbert3d
