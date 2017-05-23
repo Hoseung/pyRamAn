@@ -22,7 +22,7 @@ Contents:
 .. automodule:: utils
 .. automodule:: load
 .. automodule:: tree
-.. automodule:: galaxy
+.. automodule:: galaxymodule
 .. automodule:: draw
 .. automodule:: analysis
 .. automodule:: general

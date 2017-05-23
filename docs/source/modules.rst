@@ -6,7 +6,7 @@ pyclusterevol
 
    analysis
    draw
-   galaxy
+   galaxymodule
    general
    load
    tree

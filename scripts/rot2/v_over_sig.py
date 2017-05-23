@@ -6,7 +6,7 @@
 import load
 import numpy as np
 import matplotlib.pyplot as plt
-from galaxy import galaxy
+from galaxymodule import galaxy
 import tree
 
 

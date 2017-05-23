@@ -227,7 +227,6 @@ class Tree():
         """
         Extracts main progenitors from a TreeMaker tree.
 
-
         example
         -------
         >>> tt = tmtree.Tree("tree.dat")
@@ -273,7 +272,26 @@ class Tree():
 
         return atree, idx_prgs_alltime
 
-    def get_all_trees(self,idx_prgs_alltime):
+    def get_all_trees(self, idx_prgs_alltime, skip_main=True):
+        """
+        For a given idx_prgs list of lists, find main progenitor tree of all entries.
+
+        Parameteres
+        -----------
+        skip_main : True
+            skip main progenitor tree.
+
+        Note
+        ----
+            1. About "skip_main" option.
+            Main halo Tree is redundant. Main progenitor tree of the main halo at nstep = n
+            includes all the main progenitors of the main halo at nstep = n-1.
+
+        .. figure:: imgs/tmtree-get_all_trees.jpg
+           :align:  center
+
+
+        """
         all_main_prgs=[]
         # Per nstep
         for j, satellie_roots in enumerate(idx_prgs_alltime):

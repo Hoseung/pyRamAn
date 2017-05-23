@@ -34,7 +34,7 @@ extensions = [
     'sphinx.ext.todo',
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
-    'numpydoc',
+    'numpydoc'
 ]
 #'sphinx.ext.autosummary',
 numpydoc_show_class_members = False

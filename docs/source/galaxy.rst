@@ -1,53 +1,45 @@
-galaxy package
-==============
+galaxymodule package
+====================
 
 Submodules
 ----------
 
-galaxy.Galaxymodule module
+galaxymodule.galaxy module
+---------------------------
+
+.. automodule:: galaxymodule.galaxy
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+galaxymodule.galaxy_mp module
+-----------------------------
+
+.. automodule:: galaxymodule.galaxy_mp
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+galaxymodule.lambda_functions module
+------------------------------------
+
+.. automodule:: galaxymodule.lambda_functions
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+galaxymodule.make_gal module
+----------------------------
+
+.. automodule:: galaxymodule.make_gal
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+galaxymodule.rd_gal module
 --------------------------
 
-.. automodule:: galaxy.Galaxymodule
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-galaxy.galaxy module
---------------------
-
-.. automodule:: galaxy.galaxy
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-galaxy.galaxy_mp module
------------------------
-
-.. automodule:: galaxy.galaxy_mp
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-galaxy.lambda_functions module
-------------------------------
-
-.. automodule:: galaxy.lambda_functions
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-galaxy.make_gal module
-----------------------
-
-.. automodule:: galaxy.make_gal
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-galaxy.rd_gal module
---------------------
-
-.. automodule:: galaxy.rd_gal
+.. automodule:: galaxymodule.rd_gal
     :members:
     :undoc-members:
     :show-inheritance:
@@ -56,7 +48,7 @@ galaxy.rd_gal module
 Module contents
 ---------------
 
-.. automodule:: galaxy
+.. automodule:: galaxymodule
     :members:
     :undoc-members:
     :show-inheritance:

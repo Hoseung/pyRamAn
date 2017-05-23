@@ -23,7 +23,7 @@ def load_ascii(filename = None):
 
     '''
     if filename is None :
-        from tkinter import Tk 
+        from tkinter import Tk
         # Note that the name has changes from Tkinter (python2) to tkinter (python3)
         from tkinter.filedialog import askopenfilename
         Tk().withdraw() # we don't want a full GUI, so keep the root window from appearing
@@ -171,7 +171,7 @@ def get_main_prgTM(tree, halos, nout_ini=None, nout_fi=None):
         nout_ini = max(tree['NOUT'])
     if nout_fi is None:
         nout_fi = min(tree['NOUT'])
-        
+
     prg_list = np.zeros([len(halos), abs(nout_ini - nout_fi) + 1], dtype=int)
     hnu_list = np.zeros([len(halos), abs(nout_ini - nout_fi) + 1], dtype=int)
 
@@ -179,7 +179,7 @@ def get_main_prgTM(tree, halos, nout_ini=None, nout_fi=None):
         i_prg = np.where(tree[i_nout_final]["HALNUM"] == halo)[0]
         prg_idx = tree[i_nout_final[i_prg]]['IDX'][0]
         hnu_list[ihalo][0] = halo
-        
+
 #        print(prg_idx)
         prg_list[ihalo][0] = prg_idx
         for i in range(nout_fi, nout_ini):
@@ -195,22 +195,20 @@ def get_main_prg(trees, haloids=None, haloinds=None, unique_id=True,
     """
     returns list of main progenitors of the given halo
     and indices of the halos in the tree data.
-    
+
     parameters
     ----------
     id : int
         list of halos (Tree ID by default)
-    tree_root_id is unique id. So if a non-unique id is given, 
-    convert it to unique id.
-
+    	tree_root_id is a unique id. So if a non-unique id is given,
+    	convert it to a unique id.
     unique_id : bool
-        False means that the input id is halo id, not a unique tree id.    
-
-    If no 'ROOT' galaxy is found, return false
+        False means that the input id is halo id, not a unique tree id.
+    	If no 'ROOT' galaxy is found, return false
 
 
     Examples
-    --------   
+    --------
     >>> inds_arr = np.zeros((n_good, 82), dtype=int)
     >>> i_good = 0
     >>> for hid in halo_list:
@@ -240,13 +238,13 @@ def get_main_prg(trees, haloids=None, haloinds=None, unique_id=True,
         else:
             if unique_id is False:
                 haloid = trees.trees_idx[np.where(trees.trees_id == haloid)]
-    
+
         itt = np.where(trees.data['tree_root_id'] == haloid)[0]
-    
+
         if len(itt) == 0 :
             return False, False
         tt = trees.data[itt]
-    
+
         prgs=[]
         prg_inds=[]
         i_hal = [0]
@@ -270,7 +268,7 @@ def check_tree_complete(tree, halo_list, nout_ini=None, nout_fi=None):
     '''
     returns a list of halo IDs at nout_fi that with trees fully linked
     from nout_ini to nout_fi.
-    
+
     example
     -------
     >>> roots = [1630412, 1630413, 1630414, 1630415, 1630416]
@@ -278,15 +276,15 @@ def check_tree_complete(tree, halo_list, nout_ini=None, nout_fi=None):
                                             nout_ini = 0, nout_fi =81)
     >>> print(halo_ok.shape)
     >>> (5, 82)
-    
-    -------  
-    
+
+    -------
+
     '''
     if nout_fi is None:
         nout_fi = max(tree.data['nout'])
     if nout_ini is None:
         nout_ini = min(tree.data['nout'])
-        
+
     # Make sure all parameters are given
     complete_list=np.zeros(len(halo_list), dtype=bool)
     #for ihal,halo in enumerate(halo_list):
@@ -297,7 +295,7 @@ def check_tree_complete(tree, halo_list, nout_ini=None, nout_fi=None):
                                    nout_ini=nout_ini, nout_fi=nout_fi)
 
     # If no tree branch is found, false returned.
-    if idxlist is False:   
+    if idxlist is False:
         return False, False
     else:
         for i in range(len(halo_list)):
@@ -329,7 +327,7 @@ def final_halo_list(data,nout=None):
             ii = data['NOUT'] == nout
             return data['HALNUM'][ii] # HM
 
-    
+
 
 def tm2ct(tm):
     import numpy as np
@@ -345,10 +343,9 @@ def tm2ct(tm):
  ('last_progenitor_d_id', '<f8'), ('ax', '<f8'), ('ay', '<f8'), ('az', '<f8'),
  ('tree', '<i8', 50)]
 
-    
+
 #    newtree = np.zeros(len(hm), dtype=dtype)
     tm['id'] = tm.pop('HALNUM')
     tm['nout'] = tm.pop('NOUT')
-       
+
     return newtree
-    

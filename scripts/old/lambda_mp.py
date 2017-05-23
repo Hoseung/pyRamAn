@@ -51,7 +51,7 @@ def mk_gal(halodata, out_q, info, i, final_gal,
     Draw ed map of galaxy.
     
     """
-    from galaxy import galaxy
+    from galaxymodule import galaxy
     import utils.sampling as smp
     import draw
     import matplotlib.pyplot as plt    

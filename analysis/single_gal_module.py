@@ -160,7 +160,7 @@ def load_prg_gal_data(gg, info, fname=None):
 
 def gal_from_GM(gcat, info, nout=None, idgal=None, fname=None,
                 dm=False, cell=False, **kwargs):
-    from galaxy import galaxy
+    from galaxymodule import galaxy
     if fname is None:
         gm = load.rd_GM.rd_gal(nout, idgal)
     else:

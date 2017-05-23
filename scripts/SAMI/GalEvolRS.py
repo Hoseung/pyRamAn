@@ -8,7 +8,7 @@ Created on Mon Jun  8 03:20:07 2015
 import matplotlib.pyplot as plt
 import numpy as np
 import load
-from galaxy import galaxy
+from galaxymodule import galaxy
 
 rscale = 0.8
 npix=800

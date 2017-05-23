@@ -4,9 +4,6 @@ tree package
 Subpackages
 -----------
 
-.. toctree::
-
-    tree.load_c
 
 Submodules
 ----------
@@ -15,14 +12,6 @@ tree.Do_Consistent_Tree module
 ------------------------------
 
 .. automodule:: tree.Do_Consistent_Tree
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-tree.TMtree module
-------------------
-
-.. automodule:: tree.TMtree
     :members:
     :undoc-members:
     :show-inheritance:

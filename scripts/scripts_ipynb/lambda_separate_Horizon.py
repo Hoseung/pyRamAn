@@ -49,7 +49,7 @@ matplotlib.use("Agg")
 
 import numpy as np
 import collections
-from galaxy import galaxy
+from galaxymodule import galaxy
 import pickle
 import load
 from load.hydro import Hydro
@@ -109,7 +109,7 @@ def worker(gcatdata, additional_info,  hals, out_q, info, inds,
            **kwargs):
     
     import galaxy.make_gal as mkg
-    from galaxy import galaxy
+    from galaxymodule import galaxy
     nout = info.nout
     for i in inds:
         gcat_single = gcatdata[i]
