@@ -4,64 +4,64 @@ load package
 Submodules
 ----------
 
-load\.amr module
-----------------
+load.amr module
+---------------
 
 .. automodule:: load.amr
     :members:
     :undoc-members:
     :show-inheritance:
 
-load\.hydro module
-------------------
+load.hydro module
+-----------------
 
 .. automodule:: load.hydro
     :members:
     :undoc-members:
     :show-inheritance:
 
-load\.info module
------------------
+load.info module
+----------------
 
 .. automodule:: load.info
     :members:
     :undoc-members:
     :show-inheritance:
 
-load\.part module
------------------
+load.part module
+----------------
 
 .. automodule:: load.part
     :members:
     :undoc-members:
     :show-inheritance:
 
-load\.rd\_GM module
--------------------
+load.rd_GM module
+-----------------
 
 .. automodule:: load.rd_GM
     :members:
     :undoc-members:
     :show-inheritance:
 
-load\.runparam module
----------------------
+load.runparam module
+--------------------
 
 .. automodule:: load.runparam
     :members:
     :undoc-members:
     :show-inheritance:
 
-load\.sim module
-----------------
+load.sim module
+---------------
 
 .. automodule:: load.sim
     :members:
     :undoc-members:
     :show-inheritance:
 
-load\.utils module
-------------------
+load.utils module
+-----------------
 
 .. automodule:: load.utils
     :members:

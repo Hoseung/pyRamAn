@@ -1,13 +1,13 @@
-general package
-===============
+temp package
+============
 
 Submodules
 ----------
 
-general\.defaults module
-------------------------
+temp\.makegal module
+--------------------
 
-.. automodule:: general.defaults
+.. automodule:: temp.makegal
     :members:
     :undoc-members:
     :show-inheritance:
@@ -16,7 +16,7 @@ general\.defaults module
 Module contents
 ---------------
 
-.. automodule:: general
+.. automodule:: temp
     :members:
     :undoc-members:
     :show-inheritance:

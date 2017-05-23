@@ -1,115 +1,95 @@
 tree package
 ============
 
+Subpackages
+-----------
+
+
 Submodules
 ----------
 
-tree\.Do\_Consistent\_Tree module
----------------------------------
+tree.Do_Consistent_Tree module
+------------------------------
 
 .. automodule:: tree.Do_Consistent_Tree
     :members:
     :undoc-members:
     :show-inheritance:
 
-tree\.ctutils module
---------------------
+tree.ctutils module
+-------------------
 
 .. automodule:: tree.ctutils
     :members:
     :undoc-members:
     :show-inheritance:
 
-tree\.draw\_merger\_tree module
--------------------------------
+tree.draw_merger_tree module
+----------------------------
 
 .. automodule:: tree.draw_merger_tree
     :members:
     :undoc-members:
     :show-inheritance:
 
-tree\.halomodule module
------------------------
+tree.halomodule module
+----------------------
 
 .. automodule:: tree.halomodule
     :members:
     :undoc-members:
     :show-inheritance:
 
-tree\.hmutil module
--------------------
+tree.hmutil module
+------------------
 
 .. automodule:: tree.hmutil
     :members:
     :undoc-members:
     :show-inheritance:
 
-tree\.hmutils module
---------------------
-
-.. automodule:: tree.hmutils
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-tree\.load\_hal module
-----------------------
-
-.. automodule:: tree.load_hal
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-tree\.rshalo module
--------------------
+tree.rshalo module
+------------------
 
 .. automodule:: tree.rshalo
     :members:
     :undoc-members:
     :show-inheritance:
 
-tree\.setup module
+tree.tmtree module
 ------------------
-
-.. automodule:: tree.setup
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-tree\.tmtree module
--------------------
 
 .. automodule:: tree.tmtree
     :members:
     :undoc-members:
     :show-inheritance:
 
-tree\.tree\_builder module
---------------------------
+tree.tree_builder module
+------------------------
 
 .. automodule:: tree.tree_builder
     :members:
     :undoc-members:
     :show-inheritance:
 
-tree\.treemodule module
------------------------
+tree.treemodule module
+----------------------
 
 .. automodule:: tree.treemodule
     :members:
     :undoc-members:
     :show-inheritance:
 
-tree\.treeplots module
-----------------------
+tree.treeplots module
+---------------------
 
 .. automodule:: tree.treeplots
     :members:
     :undoc-members:
     :show-inheritance:
 
-tree\.treeutils module
-----------------------
+tree.treeutils module
+---------------------
 
 .. automodule:: tree.treeutils
     :members:
