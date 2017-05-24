@@ -293,13 +293,14 @@ class Tree():
 
         """
         all_main_prgs=[]
-        # Per nstep
-        for j, satellie_roots in enumerate(idx_prgs_alltime):
-            #print("{}-th step".format(j))
+        # loop over all nstep
+        for j, satellite_roots in enumerate(idx_prgs_alltime):
             mainprgs=[]
-            # Per galaxy
-            for sat in satellie_roots:
-                mainprgs.append(self.extract_main_tree(sat))
+            # loop over all satellites at each step
+            for i,sat in enumerate(satellite_roots):
+                if not skip_main or i!=0:
+                    print("sat ind", i)
+                    mainprgs.append(self.extract_main_tree(sat))
             all_main_prgs.append(mainprgs)
 
         return all_main_prgs

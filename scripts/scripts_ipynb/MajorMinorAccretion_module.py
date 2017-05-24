@@ -1,1 +1,0 @@
-/home/hoseung/Work/pyclusterevol/analysis/MajorMinorAccretion_module.py
