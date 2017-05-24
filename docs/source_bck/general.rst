@@ -4,8 +4,8 @@ general package
 Submodules
 ----------
 
-general\.defaults module
-------------------------
+general.defaults module
+-----------------------
 
 .. automodule:: general.defaults
     :members:

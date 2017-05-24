@@ -9,7 +9,5 @@ pyclusterevol
    galaxymodule
    general
    load
-   temp
    tree
    utils
-   zoom
