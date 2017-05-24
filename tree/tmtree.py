@@ -251,13 +251,12 @@ class Tree():
         atree[0] = t_now
 
         idx_prgs_alltime = [[idx]]
-        #idx_prgs_alltime.append(idx)
 
         for i in range(1, nstep + 1):
             try:
                 idx_father = fatherIDx[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]] -1
                 if len(idx_father) > 0:
-                    idx_prgs_alltime.append(idx_father[idx_father>0])
+                    idx_prgs_alltime.append(list(idx_father[idx_father>0]))
                     mass_father = fatherMass[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]]
                     idx = idx_father[np.argmax(mass_father)]
                     if idx < 1:
@@ -272,9 +271,15 @@ class Tree():
 
         return atree, idx_prgs_alltime
 
-    def get_all_trees(self, idx_prgs_alltime, skip_main=True):
+    def get_all_trees(self, idx_prgs_alltime, skip_main=True, filter_dup =True):
         """
-        For a given idx_prgs list of lists, find main progenitor tree of all entries.
+        * For a given idx_prgs list of lists, find main progenitor tree of all entries.
+        * A satellite can contribute to a host over multiple snapshots by
+        given fractions of DM particles each time. In such case, the satellite
+        appears in the host's progenitor tree several times.
+        * Note that a 'multi-snapshot' satellite never be a main progenitor.
+        However, I don't see a reason it can't be a secondary progenitor of
+        another host halo. Let's just keep that in mind.
 
         Parameteres
         -----------
@@ -294,6 +299,7 @@ class Tree():
         """
         all_main_prgs=[]
         # loop over all nstep
+
         for j, satellite_roots in enumerate(idx_prgs_alltime):
             mainprgs=[]
             # loop over all satellites at each step
@@ -302,6 +308,17 @@ class Tree():
                     print("sat ind", i)
                     mainprgs.append(self.extract_main_tree(sat))
             all_main_prgs.append(mainprgs)
+            all_idxs_filter = []
+            if filter_dup:
+                if len(mainprgs) > 0:
+                    for aa in mainprgs:
+                        all_idxs_filter.extend(aa["idx"][1:])
+                        # last idx MUST remain in the prgs.
+                    for idxs in idx_prgs_alltime[j+1:]:
+                        if len(idxs) > 1:
+                            for idx in idxs[1:]:
+                                if idx in all_idxs:
+                                    idxs.remove(idx)
 
         return all_main_prgs
 
