@@ -1,6 +1,5 @@
 import numpy as np
 
-
 def mk_gal(gal,
             save=False, verbose=False,
             mstar_min=1e9,

@@ -27,7 +27,7 @@ def time2gyr(times, z_now=None, info=None):
     returns the age of "universe" at the given time.
 
     """
-    import pyfits
+    from astropy.io import fits
     import numpy as np
     
 #    repodir = '/home/hoseung/Copy/pyclusterevol/repo/'
@@ -45,7 +45,7 @@ def time2gyr(times, z_now=None, info=None):
 
     tablefile  = repodir+'Table_taz_H'+sh0+'_Om'+som+'_Ol'+sol+'.fits'
 
-    hdu = pyfits.open(tablefile)
+    hdu = fits.open(tablefile)
     ttable = hdu[1].data
 
     tu       = ttable['t_unit'][0]

@@ -94,7 +94,7 @@ for fid,fidx in zip(final_ids, final_idxs):
             pickle.dump(adp, open("./all_direct_prgs/all_direct_prgs_"+str(fidx)+".pickle", "wb"))
         
     all_data=[]
-    #main_gal=[]
+
     for sats_in_this_step in adp:
         # adp[0] = all mergers at the last snapshot.
         # adp[1] = all mergers at the last -1 snapshot.
