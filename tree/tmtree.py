@@ -149,6 +149,7 @@ class Tree():
         from tree import cnt_tree
 
         self.n_all_halos, self.n_all_fathers, self.n_all_sons, self.nsteps = cnt_tree.count_tree(self.fn, int(BIG_RUN))
+        print(self.n_all_halos, self.n_all_fathers, self.n_all_sons, self.nsteps)
         self.fatherID, self.fatherIDx, self.sonID, \
         self.fatherMass, i_arr, f_arr, \
         self.aexps, self.omega_ts, self.age_univs = \
