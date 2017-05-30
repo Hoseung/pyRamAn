@@ -133,7 +133,6 @@ subroutine load_tree(fn, fatherID, fatherIDx, sonID, fatherMass, &
             read(1)fid_tmp(1:n_fathers)
             fatherID(flist_index:flist_index+n_fathers-1)=fid_tmp(1:n_fathers)
             read(1)fatherMass(flist_index:flist_index+n_fathers-1)
-            !write(*,*) "check1"
 
             if (i > 0) then
                 ! from the previous step.

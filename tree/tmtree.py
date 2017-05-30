@@ -149,7 +149,6 @@ class Tree():
         from tree import cnt_tree
 
         self.n_all_halos, self.n_all_fathers, self.n_all_sons, self.nsteps = cnt_tree.count_tree(self.fn, int(BIG_RUN))
-        print(self.n_all_halos, self.n_all_fathers, self.n_all_sons, self.nsteps)
         self.fatherID, self.fatherIDx, self.sonID, \
         self.fatherMass, i_arr, f_arr, \
         self.aexps, self.omega_ts, self.age_univs = \
@@ -306,19 +305,23 @@ class Tree():
             # loop over all satellites at each step
             for i,sat in enumerate(satellite_roots):
                 if not skip_main or i!=0:
-                    print("sat ind", i)
+                    #print("sat ind", i)
                     mainprgs.append(self.extract_main_tree(sat))
             all_main_prgs.append(mainprgs)
             all_idxs_filter = []
             if filter_dup:
                 if len(mainprgs) > 0:
                     for aa in mainprgs:
-                        all_idxs_filter.extend(aa["idx"][1:])
+                        try:
+                            all_idxs_filter.extend(aa["idx"][1:])
+                        except:
+                            print(mainprgs)
+                            return mainprgs
                         # last idx MUST remain in the prgs.
                     for idxs in idx_prgs_alltime[j+1:]:
                         if len(idxs) > 1:
                             for idx in idxs[1:]:
-                                if idx in all_idxs:
+                                if idx in all_idxs_filter:
                                     idxs.remove(idx)
 
         return all_main_prgs
