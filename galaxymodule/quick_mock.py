@@ -1,10 +1,11 @@
-import numpy as np00
+import numpy as np
 class Simplemock():
     """
     Calculate flux through a filter for all stellar particle.
 
     Example
     >>> from general import defaults
+    >>> import quick_mock
     >>> dfl = defaults.Default()
     >>> nout = 312#782 # 312
     >>> s = load.sim.Sim(nout=nout)
@@ -24,8 +25,8 @@ class Simplemock():
                  gg.star.Flux_r,
                  gg.star.Flux_i,
                  gg.star.Flux_z]
-    >>> draw(Fluxs, gg1.star["x"], gg1.star["y"], suffix="face")
-    >>> draw(Fluxs, gg1.star["x"], gg1.star["z"], suffix="edge")
+    >>> quick_mock.draw(Fluxs, gg.star["x"], gg.star["y"], suffix="face")
+    >>> quick_mock.draw(Fluxs, gg.star["x"], gg.star["z"], suffix="edge")
 
     TODO
 
@@ -214,9 +215,9 @@ def draw(Fluxs, x1, x2, suffix="edge", npix=200, cr=1.0, cg=1.0, cb=3.0):
 
     # Try scaling Flux_x arrays to make a better composite image
     comp_img = composite_rgb(x1,x2,
-                             Flux_z,
-                             Flux_i,
-                             Flux_u,
+                             Fluxs[3],
+                             Fluxs[2],
+                             Fluxs[1],
                              npix=npix,
                              multiply_r = cr,
                              multiply_g = cg,

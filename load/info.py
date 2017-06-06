@@ -148,13 +148,13 @@ class Info:
         self.pboxsize = rarr[0] * scale_l/(kpc*1000.)
         self.time = rarr[1]
         self.aexp = rarr[2]
-        self.zred = 1/rarr[2]-1
+        self.zred = 1.0/rarr[2]-1.0
         self.H0 = rarr[3]
-        self.h = self.H0 * self.aexp
         self.om = rarr[4]
         self.ol = rarr[5]
         self.ok = rarr[6]
         self.ob = rarr[7]
+        self.h = np.sqrt(self.H0**2 * ((self.om+self.ob) * (1+self.zred)**3 + self.ok * (1+self.zred)**2 + self.ol))
         self.msun = scale_d*scale_l**3/m_sun
         self.cboxsize = self.H0 * self.pboxsize / self.aexp * 1e-2
         if self.cosmo:
