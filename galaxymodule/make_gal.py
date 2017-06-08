@@ -1,18 +1,28 @@
 import numpy as np
 
 def mk_gal(gal,
-            save=False, verbose=False,
+            save=False,
+            verbose=False,
             mstar_min=1e9,
-            den_lim=1e6, den_lim2=5e6,
-            rmin = -1, Rgal_to_reff=5.0, method_com=1, follow_bp=None,
+            den_lim=1e6,
+            den_lim2=5e6,
+            rmin = -1,
+            Rgal_to_reff=5.0,
+            method_com="catalog",
+            method_cov="catalog",
+            method_member="Reff",
+            follow_bp=False,
             unit_conversion="code"):
     """
-        Refine given catalog (star, DM, gas) to define a realistic galaxy.
-        Raw star/DM/gas catalog as give are only rough representation of a galaxy.
+        Determine if this is a legitimate galxy. re-center components.
+
+        This routine consists of three parts:
+        1) decide if the system is dense enough.
+        2) determine member components
+        3) re-center components and do simple calculations (com, cov, total mass, ...)
+
+        Raw star/DM/gas data are only rough representations of a galaxy.
         But not much have to be thrown away, either.
-
-        Returns True if a "good" galaxy is made.
-
 
         Parameters
         ----------
@@ -21,6 +31,18 @@ def mk_gal(gal,
             Galaxy radius = Reff * Rgal_to_reff.
             By default, Rgal = 5*Reff.
             (E's have smaller R_t_r, L's have larger.)
+        save: False,
+        verbose:False,
+        mstar_min:1e9,
+        den_lim:1e6,
+        den_lim2:5e6,
+        rmin : -1,
+        Rgal_to_reff:5.0,
+        method_com:"catalog",
+        method_cov:"catalog",
+        method_member:"Reff",
+        follow_bp:False,
+        unit_conversion:"code"
 
         Notes
         -----
@@ -41,36 +63,41 @@ def mk_gal(gal,
 
     pbx = gal.info.pboxsize
 
-    # And at least one component.
+    # galaxy center from GalaxyMaker. - good enough.
     xc = gal.gcat["x"]
     yc = gal.gcat["y"]
     zc = gal.gcat["z"]
+    if verbose:
+        print("Galaxy center : {} {} {} using {}".format(xc, yc, zc, method_com))
 
-    print("catalog center", xc, yc, zc)
-    print("star x",gal.star["x"])
+    vxc = gal.gcat["vx"]
+    vyc = gal.gcat["vy"]
+    vzc = gal.gcat["vz"]
+    if verbose:
+        print("Velocity center : {} {} {} using {}".format(vxc,vyc,vzc,method_cov))
 
     star = gal.star
+    # re-center position first.
     if star is not None:
         star["x"] = (star["x"] - xc)*1e3
         star["y"] = (star["y"] - yc)*1e3
         star["z"] = (star["z"] - zc)*1e3
         star["m"] *= 1e11#gal.info.msun
-    print("star x", gal.star["x"])
+    if verbose: print("star x", gal.star["x"])
+
     dm = gal.dm
     if dm is not None:
+        gal._has_dm = True
         dm["x"] = (dm["x"] - xc)*1e3
         dm["y"] = (dm["y"] - yc)*1e3
         dm["z"] = (dm["z"] - zc)*1e3
         dm["m"] *= gal.info.msun
 
-
     cell = gal.cell
     # Don't convert cell units here,
     # COPY only relevant cells and then modify them.
-    #print("cell x", cell["x"])
     if cell is not None:
         gal.__has_cell = True
-
 
     assert (gal._has_star or gal._has_dm or gal._has_cell), ("At least"
     "one of three(star, dm, gas) component is needed")
@@ -81,40 +108,48 @@ def mk_gal(gal,
         print("SAVE:", save)
         print("Halo size:", gal.gcat['rvir'])
 
-    #
-    member="Reff"
-
-    # galaxy center from GalaxyMaker. - good enough.
-    xc = gal.gcat['x']
-    yc = gal.gcat['y']
-    zc = gal.gcat['z']
-
-    if verbose: print("xc, yc, zc =", xc, yc, zc)
+    #########################
+    #########################
 
     rgal_tmp = min([gal.gcat['r'] * 1e3, 30]) # gcat["rvir"] in kpc
-    if verbose: print("Rgal_tmp", rgal_tmp)
-    print("gal.debug",gal.debug)
+    if verbose:
+        print("Rgal_tmp", rgal_tmp)
+        print("gal.debug",gal.debug)
     dense_enough = radial_profile_cut(gal, star['x'], star['y'], star['m'],
-                         star['vx'], star['vy'], star['vz'],
                          den_lim=den_lim, den_lim2=den_lim2,
                          mag_lim=25,
                          nbins=int(rgal_tmp/0.5),
                          dr=0.5 * gal.info.aexp,
                          rmax=rgal_tmp,
                          debug=gal.debug)
-
     if not dense_enough:
         print("Not dense enough")
         return False
+
+    if method_com=="catalog":
+        gal.meta.xc, gal.meta.yc, gal.meta.zc = gal.header["xg"]
+
+    if method_cov=="close_member":
+        gal.meta.vxc = np.average(vx[i_close])
+        gal.meta.vyc = np.average(vy[i_close])
+        gal.meta.vzc = np.average(vz[i_close])
+    elif method_cov=="catalog":
+        gal.meta.vxc, gal.meta.vyc, gal.meta.vzc = gal.header["vg"]
+
+    # Membership
     ind = np.where((np.square(star['x']) +
                     np.square(star['y']) +
                     np.square(star['z'])) < gal.meta.rgal**2)[0]# in kpc unit
 
     gal.star = star[ind]
+    gal.star["vx"] -= gal.meta.vxc
+    gal.star["vy"] -= gal.meta.vyc
+    gal.star["vz"] -= gal.meta.vzc
 
     if gal.debug:
-        print('[galaxy.Galaxy.mk_gal] mima vx 1', min(gal.star['vx']), max(gal.star['vx']))
-
+        print('[galaxy.Galaxy.mk_gal] mimax vx :',
+              min(gal.star['vx']),
+              max(gal.star['vx']))
 
     gal.meta.nstar = len(ind)
     gal.meta.mstar = sum(gal.star['m'])
@@ -146,18 +181,23 @@ def mk_gal(gal,
 
     #print(".........", gal.star['m'][100:120], gal.mstar)
     import utils.sampling as smp
-    gal.region = smp.set_region(xc=gal.meta.xc, yc=gal.meta.yc, zc=gal.meta.zc, radius = gal.meta.rgal)
+    gal.region = smp.set_region(xc=gal.meta.xc,
+                                yc=gal.meta.yc,
+                                zc=gal.meta.zc,
+                                radius = gal.meta.rgal)
 
     if gal.debug:
-        print('[galaxy.Galaxy.mk_gal] meta.v[x,y,z]c', gal.meta.vxc, gal.meta.vyc, gal.meta.vzc)
-        print('[galaxy.Galaxy.mk_gal] mima vx 2', min(gal.star['vx']), max(gal.star['vx']))
+        print('[galaxy.Galaxy.mk_gal] meta.v[x,y,z]c',
+              gal.meta.vxc, gal.meta.vyc, gal.meta.vzc)
+        print('[galaxy.Galaxy.mk_gal] mima vx 2',
+              min(gal.star['vx']), max(gal.star['vx']))
 
     if dm is not None:
-        if member == "Reff":
+        if method_member == "Reff":
             idm = np.where( np.square(dm["x"] - gal.meta.xc) +
                             np.square(dm["y"] - gal.meta.yc) +
                             np.square(dm["z"] - gal.meta.zc) <= np.square(rgal_tmp))[0]
-        elif member == "v200":
+        elif method_member == "v200":
         # Although the velocity is redefined later,
         # particle membership is fixed at this point.
             idm = np.where( np.square(dm["vx"] - gal.meta.vxc / gal.info.kms)+
@@ -211,22 +251,31 @@ def mk_gal(gal,
         # Save sink particle as a BH, not cloud particles.
 
     """
-    gal.meta.xc, gal.meta.yc, gal.meta.zc = gal.header["xg"]
+
     return True
 
 
-def radial_profile_cut(gal, xx, yy, mm, vx, vy, vz,
+def radial_profile_cut(gal, xx, yy, mm,
                        den_lim=1e6, den_lim2=5e6,
                        mag_lim=25, nbins=100, rmax=20, dr=0.5,
                        debug=False):
-    # 2D photometry. (if rotated towards +y, then use x and z)
-    # now assuming +z alignment.
+    """
+    System velocity determined as np.average(vx[i_close]) sometimes fail,
+    which may indicate that this function fails to extract reliable member stars.
+    This occurs more frequently with high-z or high resolution data.
+    Todo
+    ----
+        Adaptive member determination over varying resolution and redshift.
+
+
+    """
+
     rr = np.sqrt(np.square(xx) + np.square(yy))# in kpc unit
     if debug:
         print("min(rr) {}\n max(rr){}\n min(xx){}\n max(xx){}".format(
                                min(rr), max(rr), min(xx), max(xx)))
 
-    # Account for weights.
+    # Mass weight.
     i_sort = np.argsort(rr)
     r_sorted = rr[i_sort]
     m_sorted = mm[i_sort]
@@ -286,25 +335,18 @@ def radial_profile_cut(gal, xx, yy, mm, vx, vy, vz,
     i_reff1 = np.argmax(np.cumsum(m_sorted) > (0.5*mtot1))
     gal.meta.reff2 = r_sorted[i_reff2]
     gal.meta.reff  = r_sorted[i_reff1]
-    #print(bin_centers, i_r_cut2, m_radial)
     gal.meta.rgal2 = max([bin_centers[i_r_cut2],4*gal.meta.reff2])
     gal.meta.rgal  = max([bin_centers[i_r_cut1],4*gal.meta.reff])#bin_centers[i_r_cut1]
 
-    #       velocity center
     #       It is not wrong for BCGs to have very large Reff(~50kpc).
     #       But referring the average velocity of stellar particles inside 50kpc
     #       as the system velocity is WRONG.
     #       If 1Reff is huge, try smaller aperture when measuring the system velocity.
-    #
+
     if debug:
         print("[galaxy.Galaxy.radial_profile_cut] mtot, mtot2", mtot1, mtot2)
 
     i_close = i_sort[:np.argmax(np.cumsum(m_sorted) > (0.2*mtot2))] # 20% closest particles
-
-
-    gal.meta.vxc = np.average(vx[i_close])
-    gal.meta.vyc = np.average(vy[i_close])
-    gal.meta.vzc = np.average(vz[i_close])
 
     return True
 

@@ -14,7 +14,6 @@ from scipy.interpolate import UnivariateSpline
 s = load.sim.Sim(nout=782)
 s.add_part()
 
-
 def weighted_std(values, weights):
     import numpy as np
     import math
@@ -27,6 +26,7 @@ def weighted_std(values, weights):
     variance = np.average((values-average)**2, weights=weights)  # Fast and numerically precise
 
     return math.sqrt(variance)
+
 
 
 wdir = './'
@@ -67,6 +67,7 @@ for gid in large_galaxies:
     if not good_gal or gal.meta.mstar < 5e9:
         continue
     #print(len(gal.star))
+
 
     lambdas = gal.cal_lambda_r_eps(save_result=False, n_pseudo=n_pseudo,
                                    npix_per_reff=npix_per_reff)

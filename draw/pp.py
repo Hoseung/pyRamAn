@@ -4,16 +4,16 @@ Created on Mon Mar 16 14:01:14 2015
 
 @author: hoseung
 """
-
+import numpy as np
 def circle_scatter(ax, x_array, y_array, radii_array,
                    colors=None,
                    cmap='RdYlBu_r', **kwargs):
     """
     draws circles of gievn x,y, and radii
-    
+
     To Do:
         zip only works with iterables (not with a single value, int or float.)
-        Can I make it more general? 
+        Can I make it more general?
     """
     import matplotlib.pylab as plt
     from matplotlib.collections import PatchCollection
@@ -23,13 +23,13 @@ def circle_scatter(ax, x_array, y_array, radii_array,
         for (x, y, r) in zip(x_array, y_array, radii_array):
             circle = plt.Circle((x,y), radius=r)#, **kwargs)
             mypatches.append(circle)
-            
+
     except:
         circle = plt.Circle((x_array,y_array), radius=radii_array)#, **kwargs)
         mypatches.append(circle)
-        
+
     color_map = plt.get_cmap(cmap)
- 
+
     p = PatchCollection(mypatches, alpha=1.0, **kwargs)
                         #facecolors = color_map(colors))
     if colors is not None:
@@ -68,13 +68,13 @@ def part2den(part, info, region=None, proj='z', npix=800, ptype=None,
 
     import numpy as np
     from draw import img_obj
-    
+
     if region is None:
         import utils.sampling as smp
-    
+
         region = smp.set_region(xr=[part['x'].min() + offset[0], part['x'].max() + offset[0]],
                                 yr=[part['y'].min() + offset[1], part['y'].max() + offset[1]],
-                                zr=[part['z'].min() + offset[2], part['z'].max() + offset[2]])       
+                                zr=[part['z'].min() + offset[2], part['z'].max() + offset[2]])
         ind_ok = np.arange(len(part['x']))
     else:
         ind_ok = np.where((part.x > region["xr"][0] - offset[0])
@@ -83,7 +83,7 @@ def part2den(part, info, region=None, proj='z', npix=800, ptype=None,
                         & (part.y < region["yr"][1] - offset[1])
                         & (part.z > region["zr"][0] - offset[2])
                         & (part.z < region["zr"][1] - offset[2]))
-    
+
     if len(ind_ok) > 0:
         img = img_obj.MapImg(info=info, proj=proj, npix=npix, ptype=ptype)
         img.set_region(region)
@@ -104,15 +104,15 @@ def den2d(x, y, z, m, npix, region=None, proj='z',
                     hist=True):
     """
     Return 2D density map of given particle distribution in (npix,npix) array.
-    
+
     Parameters
     ----------
     x : float array
         x position of particles
     y : float array
-        y position of particles            
+        y position of particles
     z : float array
-        z position of particles        
+        z position of particles
     m : float array
         mass (or any types of charge) of particles
     npix : int
@@ -123,7 +123,7 @@ def den2d(x, y, z, m, npix, region=None, proj='z',
         minimum value of map, below which are cut-off.
     vmax : float
         maximum value of map, above which are cut-off.
-    
+
     NOTE
     ----
     Region must be in double precision.
@@ -137,22 +137,22 @@ def den2d(x, y, z, m, npix, region=None, proj='z',
 
 #   range = in data unit.   # prange = in physical unit
     if region is not None:
-        lbox = 2.0 * region['radius']        
-        
-        buffer = 0.0001 * lbox        
-        
+        lbox = 2.0 * region['radius']
+
+        buffer = 0.0001 * lbox
+
         ind_ok = np.where((x > region["xr"][0] + buffer) & (x < region["xr"][1] - buffer) &
                           (y > region["yr"][0] + buffer) & (y < region["yr"][1] - buffer) &
                           (z > region["zr"][0] + buffer) & (z < region["zr"][1] - buffer))[0]
-    
-        print(len(ind_ok))        
+
+        print(len(ind_ok))
         if len(ind_ok) < 10:
             print("Too few particles to construct a density map")
             return False
-    
-        m = m[ind_ok]        
+
+        m = m[ind_ok]
         #   image center = region center
-        #   position, region in the same unit. 
+        #   position, region in the same unit.
         if proj == 'z':
             x = ((x[ind_ok] - region['xc']) / lbox + 0.5) * npix
             y = ((y[ind_ok] - region['yc']) / lbox + 0.5) * npix
@@ -166,8 +166,8 @@ def den2d(x, y, z, m, npix, region=None, proj='z',
     else:
         if len(x) < 10:
             print("Too few particles to construct a density map")
-            return False        
-        
+            return False
+
         lbox = max([x.ptp(), y.ptp(), z.ptp()])
         # image center = 0.5 * ptp
         if proj == 'z':
@@ -197,28 +197,28 @@ def den2d(x, y, z, m, npix, region=None, proj='z',
         if ngp is False and cic is False and tsc is False: cic = True
         if ngp:
             field = assign.ngp(m, x, npix, y, npix, wraparound=True)
-        
+
         print("x.ptp()", x.ptp(), "npix", npix)
- 
+
         if cic:
             field = assign.cic(m, x, npix, y, npix, wraparound=True,
                                average=False, norm_integer=False)
- 
+
         if tsc:
             field = assign.tsc(m, x, npix, y, npix, wraparound=True)
 
     if verbose:
         print("minmax field", field.min(), field.max())
 
-    
+
     ppdx = npix / lbox  # pixel per dx. physical density is density * npix^2 / dx^2
     ppddxx = ppdx * ppdx
-    
+
     if vmin is None:
         vmin = field.min() * ppddxx
     if vmax is None:
         vmax = field.max() * ppddxx
-    
+
     val_ok = (field > vmin/ ppddxx) * (field < vmax / ppddxx)
     field[val_ok] = field[val_ok] * ppddxx
     # normalize into solar mass / kpc^2
@@ -226,6 +226,43 @@ def den2d(x, y, z, m, npix, region=None, proj='z',
         print("minmax field after crop and converting into physical unit", field[val_ok].min(), field[val_ok].max())
 
     return(field)
+
+
+def update_tick_labels(ax):
+
+    proj = ax.pp_hal_meta.proj
+    npix = ax.pp_hal_meta.npix
+
+    if proj == "x":
+        axis1 = "z"
+        axis2 = "y"
+        xrn, yrn, zrn ="zr", "yr", "xr"
+    elif proj == "y":
+        axis1 = "x"
+        axis2 = "z"
+        xrn, yrn, zrn="xr", "zr", "yr"
+    elif proj == "z":
+        axis1 = "x"
+        axis2 = "y"
+        xrn, yrn, zrn="xr", "yr", "zr"
+
+    axis1_range = ax.pp_hal_meta.region[xrn]
+    axis2_range = ax.pp_hal_meta.region[yrn]
+
+    ax.set_xlabel(axis1 + " [Mpc]")
+    ax.set_xticks(np.linspace(0,npix,5))
+    xticks = ["{:.1f}".format(x) for x in np.linspace(axis1_range[0],
+                                                      axis1_range[1],
+                                                      num=5)]
+    ax.set_xticklabels(xticks)
+
+    ax.set_ylabel(axis2 + " [Mpc]")
+    ax.set_yticks(np.linspace(0,npix,5))
+    yticks = ["{:.1f}".format(y) for y in np.linspace(axis2_range[0],
+                                                      axis2_range[1],
+                                                      num=5)]
+    ax.set_yticklabels(yticks)
+
 
 def pp_halo(h, npix, rscale=1.0, region=None, ind=None, ax=None,
             name=False, radius="rvir",
@@ -236,41 +273,42 @@ def pp_halo(h, npix, rscale=1.0, region=None, ind=None, ax=None,
             vmin=None, vmax=None,
             keep_clim=True,
             cmap="RdYlBu_r",
+            proj="z",
             **kwargs):
     """
     plot halos as circles on the current/given/new ax.
-    
+
     Parameters
     ----------
-    h : tree.halomodule.Halo instance OR Halo.data is also acceptable. 
+    h : tree.halomodule.Halo instance OR Halo.data is also acceptable.
     npix : int
         number of pixels. (assuming square image)
     rscale : float, default = 1.0
-        Radii of halos are magnified by rscale. 
+        Radii of halos are magnified by rscale.
     region : Optional[dict; see utils.sampling.set_region]
         If region is given, only halos inside the region are plotted.
         If region and ind are both given,
     radius : str, (rvir by default)
-        Name of 'radius' field.   
+        Name of 'radius' field.
     ind : int array
-        If ind is given, 
+        If ind is given,
         only selected halos are plotted out of the bigger halo sample.
     ax : pyplot ax instance
         If ax is given, halos are plotted on the ax.
     new_ax : Boolean, default = False
-        If True, make a new ax and plot halos onto it. 
+        If True, make a new ax and plot halos onto it.
         If ax is None and new_ax is False, then ax = plt.gca()
     color_field: str
-        Name of field by whch value halos are colored. 
+        Name of field by whch value halos are colored.
     color_log : Boolean
-        If True, coloring by color_field is in log scale. 
+        If True, coloring by color_field is in log scale.
     keep_clim: Boolean
-        If True, keep the color range of given axis 
+        If True, keep the color range of given axis
         so that halos overplotted on top of a prexisting axis
-        has a consistent color scheme.)   
-    
+        has a consistent color scheme.)
+
     Both raw halo catalog (x=[0,1]) and tree-like catalog (x=[0,pboxsize]) are OK
-    as long as position and radius are in the same unit. 
+    as long as position and radius are in the same unit.
     ->  xrange, yrange are determined relatively.
 
     Example
@@ -288,7 +326,7 @@ def pp_halo(h, npix, rscale=1.0, region=None, ind=None, ax=None,
 
     Notes
     -----
-    1. Region does NOT modify x,y labels. 
+    1. Region does NOT modify x,y labels.
        better to modify labels outside.
     2. Unless only halos are being plotted, it is better to pass a region.
     """
@@ -298,8 +336,10 @@ def pp_halo(h, npix, rscale=1.0, region=None, ind=None, ax=None,
     import numpy as np
 
     class ax_meta():
-        def __init__(self):
+        def __init__(self, proj, npix):
             self.region=None
+            self.proj=proj
+            self.npix=npix
             pass
 
 	# h can be either a halo.data or just a halo.
@@ -316,83 +356,108 @@ def pp_halo(h, npix, rscale=1.0, region=None, ind=None, ax=None,
     posname=0
     try:
         hd["x"]
-        xn, yn, zn = "x", "y", "z"
+        xn_org, yn_org, zn_org = "x", "y", "z"
     except:
         hd["xc"]
-        xn, yn, zn = "xc", "yc", "zc"
+        xn_org, yn_org, zn_org = "xc", "yc", "zc"
+
+    if proj == "x":
+        xn,yn,zn = yn_org, zn_org, xn_org
+        xrn, yrn, zrn ="zr", "yr", "xr"
+    elif proj == "y":
+        xn,yn,zn = xn_org, zn_org, yn_org
+        xrn, yrn, zrn="xr", "zr", "yr"
+    elif proj == "z":
+        xn,yn,zn = xn_org, yn_org, zn_org
+        xrn, yrn, zrn="xr", "yr", "zr"
 
     # use pp_halo rather then the script below.
     if ax is None:
         ax = plt.gca()
-    
+
     if not hasattr(ax, "pp_hal_meta"):
-        ax.pp_hal_meta = ax_meta()
+        ax.pp_hal_meta = ax_meta(proj, npix)
     elif ax.pp_hal_meta.region is not None:
         if region is None:
             # If the given ax already has a region defined, and
-            # no new region is explicitly given, use the region 
-            # from the ax.
-            region = ax.pp_hal_meta.region 
+            # no new region is explicitly given, use the region
+            # from the ax IF the projection is the same.
+            region = ax.pp_hal_meta.region
 
     if ind is None:
         if region is None:
-            # If no region, plot all 
+            # If no region, plot all
             ind = np.arange(len(hd))
             xmin = min(hd[xn][ind] - hd[radius][ind])
             ymin = min(hd[yn][ind] - hd[radius][ind])
+            zmin = min(hd[zn][ind] - hd[radius][ind])
             xmax = max(hd[xn][ind] + hd[radius][ind])
             ymax = max(hd[yn][ind] + hd[radius][ind])
+            zmax = max(hd[zn][ind] + hd[radius][ind])
+
             xspan= xmax - xmin
             yspan= ymax - ymin
-            
+            zspan= zmax - zmin
+
         else:
             # If reion is given, only plot halos inside the region.
-            # The size of region is retained. 
+            # The size of region is retained.
             # image area does not shrink to fit only valid halos.
-            ind = np.where( (hd[xn] > region["xr"][0]) &
-                            (hd[xn] < region["xr"][1]) &
-                            (hd[yn] > region["yr"][0]) & 
-                            (hd[yn] < region["yr"][1]) &
-                            (hd[zn] > region["zr"][0]) &
-                            (hd[zn] < region["zr"][1]))[0]
-            
-            xmin = region["xr"][0]
-            ymin = region["yr"][0]
-            xspan = np.ptp(region["xr"])
-            yspan = np.ptp(region["yr"])
-            
+            ind = np.where( (hd[xn] > region[xrn][0]) &
+                            (hd[xn] < region[xrn][1]) &
+                            (hd[yn] > region[yrn][0]) &
+                            (hd[yn] < region[yrn][1]) &
+                            (hd[zn] > region[zrn][0]) &
+                            (hd[zn] < region[zrn][1]))[0]
+
+            xmin = region[xrn][0]
+            ymin = region[yrn][0]
+            zmin = region[zrn][0]
+            xspan = np.ptp(region[xrn])
+            yspan = np.ptp(region[yrn])
+            zspan = np.ptp(region[zrn])
+
+
     else:
         # if ind is a boolean array, convert it to an index array.
         if ind.dtype == 'bool':
             ind = np.arange(len(ind))[ind]
-        
+
         if region is None:
+            # in the original direction.
+
             xmin = min(hd[xn][ind] - hd[radius][ind])
             ymin = min(hd[yn][ind] - hd[radius][ind])
+            zmin = min(hd[zn][ind] - hd[radius][ind])
             xmax = max(hd[xn][ind] + hd[radius][ind])
             ymax = max(hd[yn][ind] + hd[radius][ind])
+            zmax = max(hd[zn][ind] + hd[radius][ind])
+
             xspan= xmax - xmin
             yspan= ymax - ymin
-            
-        else:
-            xmin = region["xr"][0]
-            ymin = region["yr"][0]
-            xspan = np.ptp(region["xr"])
-            yspan = np.ptp(region["yr"])
-            
+            zspan= zmax - zmin
 
-    x = (hd[xn][ind] - xmin) / xspan * npix 
-    y = (hd[yn][ind] - ymin) / yspan * npix 
-    r =  hd[radius][ind]/xspan * npix * rscale # Assuing xspan == yspan
-    
-    import utils.sampling as smp
-    
+        else:
+            xmin = region[xrn][0]
+            ymin = region[yrn][0]
+            zmin = region[zrn][0]
+            xspan = np.ptp(region[xrn])
+            yspan = np.ptp(region[yrn])
+            zspan = np.ptp(region[zrn])
+
+
     if ax.pp_hal_meta.region is None:
-        # Keep a physical region so that I can plot multiple set of halos 
-        # in a ax consistently. 
-        ax.pp_hal_meta.region = smp.set_region(xr = (xmin, xmin+xspan),
-                                                yr = (ymin, ymin+yspan),
-                                                zr = (0, 1e9))
+        import utils.sampling as smp
+        # Keep a physical region so that I can plot multiple set of halos
+        # in a ax consistently.
+        ax.pp_hal_meta.region = smp.set_region(**{xrn:(xmin, xmin+xspan),
+                                                  yrn:(ymin, ymin+yspan),
+                                                  zrn:(zmin, zmin+zspan)})
+
+    x = (hd[xn][ind] - xmin) / xspan * npix
+    y = (hd[yn][ind] - ymin) / yspan * npix
+    r =  hd[radius][ind]/xspan * npix * rscale # Assuing xspan == yspan
+
 
     if verbose:
         print("# of halos to plot:", len(ind))
@@ -415,7 +480,7 @@ def pp_halo(h, npix, rscale=1.0, region=None, ind=None, ax=None,
         if not (hasattr(ax, "clim") and keep_clim):
             #ax.clim=None
             ax.clim = ccc.min(), ccc.max()
-                    
+
         print("MinMax ccc", ccc.min(), ccc.max())
         kwargs.update({"colors": ccc})
     #else:
@@ -457,7 +522,7 @@ def pp_colden(cell, npix, info, proj="z", verbose=False, autosize=False):
     """
     Warning
     -------
-    incomplete. 
+    incomplete.
     column density is simpler (no need to divide by projected mass.)
     """
     import numpy as np
@@ -577,9 +642,9 @@ def pp_colden(cell, npix, info, proj="z", verbose=False, autosize=False):
     sden.transpose()
 #    print("shape of sden", sden.shape)
 #    finalmap = ppc.col_over_denom(iin, ixl, ixr, iyl, iyr, mass, sden, nx, ny)
-    
-    # original size != npix * npix. 
-    # rescale it to npix * npix image. 
+
+    # original size != npix * npix.
+    # rescale it to npix * npix image.
     return(resize(sden.reshape(npix,npix), [npix,npix]))
 
 
@@ -597,7 +662,7 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
     >>> gas_map = pp_cell(gal.cell, 200, info)
     >>> plt.imshow(gas_map, origin="lower")
     >>> plt.show()
-    -> Without range or region, all cells are taken. 
+    -> Without range or region, all cells are taken.
 
     >>> region = smp.set_region(centers=[0.,0.,0.], radius=gal.region['radius'])
     >>> gas_map = pp_cell(gal.cell, 200, info, region=region)
@@ -612,10 +677,10 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
     """
     import numpy as np
     from draw import ppc
-    
+
     sig = 1.0
     sigrange = sig * 2# what is sigrange?
-    
+
     if proj=="z":
         dim1 = "x"
         dim1r = "xr"
@@ -645,7 +710,7 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
 
 #    di = [0, 1]  # What is this?
 #    zh = xh[2]  # what is this?
-    if (xmin is None) & (xmax is None) & (ymin is None) & (ymax is None): 
+    if (xmin is None) & (xmax is None) & (ymin is None) & (ymax is None):
         if region is not None:
             xmi0, xma0 = region[dim1r][0], region[dim1r][1]
             ymi0, yma0 = region[dim2r][0], region[dim2r][1]
@@ -654,12 +719,12 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
     if xmi0 is None:
         xmi0 = min(x)
     if xma0 is None:
-        xma0 = max(x)        
+        xma0 = max(x)
     if ymi0 is None:
         ymi0 = min(y)
     if yma0 is None:
         yma0 = max(y)
-       
+
     xl = x - cell['dx']/2*sigrange # array as long as x
     xr = x + cell['dx']/2*sigrange
     yl = y - cell['dx']/2*sigrange
@@ -737,7 +802,7 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
     iyr = np.round(yr / mindx).astype(np.int32) - iymi -1
     iin = np.where((ixr >= 0) & (ixl <= nx-1) & (iyr >= 0) & (iyl <= ny-1))[0].astype(np.int32)
     # What does it mean?
-    
+
     fd = ixl < 0
     if len(fd) > 0:
         ixl[fd] = 0
@@ -750,7 +815,7 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
     fd = ixl < 0
     if len(fd) > 0:
         ixl[fd] = 0
-    
+
     ixl[ixl < 0] = 0
     ixr[ixr > nx -1] = nx -1
     iyl[iyl < 0] = 0
@@ -762,7 +827,7 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
     fd = np.where((iyl >= 0) & (iyr >=0) & (iyl > iyr))[0]
     if len(fd):
         iyr[fd] = iyl[fd]
-    
+
 #    sden.transpose()
 #    colden = np.zeros((nx,ny), dtype=np.float32)
 #    denom =  np.zeros((nx,ny), dtype=np.float32)
@@ -773,7 +838,7 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
         print(all(np.isfinite(mass)), all(np.isfinite(sden)))
         print(mass[100:110])
         print(sden[100:110])
-        
+
     #print(nx, ny, npix)
     # if ppc.col_over_denom throw an type missmatch error,
     # compile the ppc module locally once more.
@@ -781,4 +846,3 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
             ixl, ixr, iyl, iyr,
             mass, sden,
             nx, ny, column), [npix,npix])
-
