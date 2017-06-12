@@ -77,12 +77,12 @@ def part2den(part, info, region=None, proj='z', npix=800, ptype=None,
                                 zr=[part['z'].min() + offset[2], part['z'].max() + offset[2]])
         ind_ok = np.arange(len(part['x']))
     else:
-        ind_ok = np.where((part.x > region["xr"][0] - offset[0])
-                        & (part.x < region["xr"][1] - offset[0])
-                        & (part.y > region["yr"][0] - offset[1])
-                        & (part.y < region["yr"][1] - offset[1])
-                        & (part.z > region["zr"][0] - offset[2])
-                        & (part.z < region["zr"][1] - offset[2]))
+        ind_ok = np.where((part["x"] > region["xr"][0] - offset[0])
+                        & (part["x"] < region["xr"][1] - offset[0])
+                        & (part["y"] > region["yr"][0] - offset[1])
+                        & (part["y"] < region["yr"][1] - offset[1])
+                        & (part["z"] > region["zr"][0] - offset[2])
+                        & (part["z"] < region["zr"][1] - offset[2]))
 
     if len(ind_ok) > 0:
         img = img_obj.MapImg(info=info, proj=proj, npix=npix, ptype=ptype)
@@ -340,6 +340,8 @@ def pp_halo(h, npix, rscale=1.0, region=None, ind=None, ax=None,
             self.region=None
             self.proj=proj
             self.npix=npix
+            self.xrange=None
+            self.yrange=None
             pass
 
 	# h can be either a halo.data or just a halo.
@@ -362,7 +364,7 @@ def pp_halo(h, npix, rscale=1.0, region=None, ind=None, ax=None,
         xn_org, yn_org, zn_org = "xc", "yc", "zc"
 
     if proj == "x":
-        xn,yn,zn = yn_org, zn_org, xn_org
+        xn,yn,zn = zn_org, yn_org, xn_org
         xrn, yrn, zrn ="zr", "yr", "xr"
     elif proj == "y":
         xn,yn,zn = xn_org, zn_org, yn_org
@@ -388,27 +390,34 @@ def pp_halo(h, npix, rscale=1.0, region=None, ind=None, ax=None,
         if region is None:
             # If no region, plot all
             ind = np.arange(len(hd))
-            xmin = min(hd[xn][ind] - hd[radius][ind])
-            ymin = min(hd[yn][ind] - hd[radius][ind])
-            zmin = min(hd[zn][ind] - hd[radius][ind])
-            xmax = max(hd[xn][ind] + hd[radius][ind])
-            ymax = max(hd[yn][ind] + hd[radius][ind])
-            zmax = max(hd[zn][ind] + hd[radius][ind])
+            xmin = min(hd[ind][xn] - hd[ind][radius])
+            ymin = min(hd[ind][yn] - hd[ind][radius])
+            zmin = min(hd[ind][zn] - hd[ind][radius])
+            xmax = max(hd[ind][xn] + hd[ind][radius])
+            ymax = max(hd[ind][yn] + hd[ind][radius])
+            zmax = max(hd[ind][zn] + hd[ind][radius])
 
             xspan= xmax - xmin
             yspan= ymax - ymin
             zspan= zmax - zmin
 
         else:
+            #print("Region is NOT none")
+
             # If reion is given, only plot halos inside the region.
             # The size of region is retained.
             # image area does not shrink to fit only valid halos.
+
             ind = np.where( (hd[xn] > region[xrn][0]) &
                             (hd[xn] < region[xrn][1]) &
                             (hd[yn] > region[yrn][0]) &
                             (hd[yn] < region[yrn][1]) &
                             (hd[zn] > region[zrn][0]) &
                             (hd[zn] < region[zrn][1]))[0]
+
+            # Make iterable
+            if ind is 0:
+                hd = np.array([hd])
 
             xmin = region[xrn][0]
             ymin = region[yrn][0]
@@ -426,12 +435,12 @@ def pp_halo(h, npix, rscale=1.0, region=None, ind=None, ax=None,
         if region is None:
             # in the original direction.
 
-            xmin = min(hd[xn][ind] - hd[radius][ind])
-            ymin = min(hd[yn][ind] - hd[radius][ind])
-            zmin = min(hd[zn][ind] - hd[radius][ind])
-            xmax = max(hd[xn][ind] + hd[radius][ind])
-            ymax = max(hd[yn][ind] + hd[radius][ind])
-            zmax = max(hd[zn][ind] + hd[radius][ind])
+            xmin = min(hd[ind][xn] - hd[ind][radius])
+            ymin = min(hd[ind][yn] - hd[ind][radius])
+            zmin = min(hd[ind][zn] - hd[ind][radius])
+            xmax = max(hd[ind][xn] + hd[ind][radius])
+            ymax = max(hd[ind][yn] + hd[ind][radius])
+            zmax = max(hd[ind][zn] + hd[ind][radius])
 
             xspan= xmax - xmin
             yspan= ymax - ymin
@@ -454,8 +463,8 @@ def pp_halo(h, npix, rscale=1.0, region=None, ind=None, ax=None,
                                                   yrn:(ymin, ymin+yspan),
                                                   zrn:(zmin, zmin+zspan)})
 
-    x = (hd[xn][ind] - xmin) / xspan * npix
-    y = (hd[yn][ind] - ymin) / yspan * npix
+    x = (hd[ind][xn] - xmin) / xspan * npix
+    y = (hd[ind][yn] - ymin) / yspan * npix
     r =  hd[radius][ind]/xspan * npix * rscale # Assuing xspan == yspan
 
 
@@ -472,27 +481,31 @@ def pp_halo(h, npix, rscale=1.0, region=None, ind=None, ax=None,
         # If ax is given, decide whether to keep colormap range or update.
         # Of course, this does not modify patches already added to the ax.
         if color_log:
-            ccc = np.log10(hd[color_field][ind])
+            ccc = np.log10(hd[ind][color_field])
         else:
-            ccc = hd[color_field][ind]
+            ccc = hd[ind][color_field]
         # normalize colors
         ccc = 256 * (ccc-ccc.min()) /ccc.ptp()
         if not (hasattr(ax, "clim") and keep_clim):
-            #ax.clim=None
             ax.clim = ccc.min(), ccc.max()
 
-        print("MinMax ccc", ccc.min(), ccc.max())
+        #print("MinMax ccc", ccc.min(), ccc.max())
         kwargs.update({"colors": ccc})
     #else:
         #kwargs.update({"colors": None})
     pp.circle_scatter(ax, x, y, r, facecolors='none',
                       linewidth=linewidth, cmap=cmap, **kwargs)
 
-    ax.set_xlim([min(x), max(x)])
-    ax.set_ylim([min(y), max(y)])
+    #if hasattr(ax,"pp_hal_meta"):
+    #    if ax.pp_hal_meta.xrange is None:
+    #        ax.pp_hal_meta.xrange = [min(x), max(x)]
+    #        ax.pp_hal_meta.yrange = [min(y), max(y)]
+    ax.set_xlim([0,npix])
+    ax.set_ylim([0,npix])
+
     if name:
         for i, ii in enumerate(ind):
-            ax.annotate(str(hd["id"][ii]), (x[i],y[i]),
+            ax.annotate(str(hd[ii]["id"]), (x[i],y[i]),
                               fontsize=fontsize)
     return ax
 
