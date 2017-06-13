@@ -26,9 +26,6 @@ class Timeconvert():
         import numpy as np
         from general import defaults
         from astropy.io import fits
-        #import inspect
-        #import os
-        #import utils
         dfl = defaults.Default()
         self.repodir = dfl.dir_repo
         self.info = info
@@ -42,16 +39,15 @@ class Timeconvert():
         hdu = fits.open(tablefile)
         ttable = hdu[1].data
 
-        self.tu       = ttable['t_unit'][0]
-        self.tlb      = ttable['t_lback'][0]
-        self.zred     = ttable['z'][0]
-        self.aexp     = ttable['aexp'][0]
+        isort=np.argsort(ttable['z'][0])
+        self.zred     = ttable['z'][0][isort]
+        self.tu       = ttable['t_unit'][0][isort]
+        self.tlb      = ttable['t_lback'][0][isort]
+        self.aexp     = ttable['aexp'][0][isort]
 
     def time2gyr(self, times, z_now=None):
         """
-        
         returns the age of "universe" at the given time.
-
         """
         import numpy as np
         if z_now is None:
@@ -60,7 +56,7 @@ class Timeconvert():
         z_now = max([z_now,1e-10])
 
         t_lback_now = np.interp(z_now, self.zred, self.tlb)  # interpolation
-
+      
         fd = np.where(times < min(self.tu))[0]
         if len(fd) > 0:
             ctime2 = times
@@ -70,4 +66,5 @@ class Timeconvert():
             t_lback_in  = np.interp(times, self.tu, self.tlb)
 
         return t_lback_in - t_lback_now
+
 
