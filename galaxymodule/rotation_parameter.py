@@ -26,7 +26,8 @@ def gen_vmap_sigmap(self,
                     rscale=3.0,
                     n_pseudo=1,
                     voronoi=None,
-                    verbose=False):
+                    verbose=False,
+                    weight="mass"):
     """
     generates mass, velocity, sigma map from stellar particles.
     npix = (npix_per_reff * 2 * (rsacle + 1))
@@ -83,23 +84,35 @@ def gen_vmap_sigmap(self,
     # 100% means that the galaxy radius is smaller than 4Reff.
     # Considering ellipticity, even 4Reff may not be enough to derive.
 
+
     if n_pseudo > 1:
         # sig in kpc unit. up to 1M particles
         # sig = 0.3kpc from Naab 2014.
         # Todo
         # sig = 0.3kpc should scale with aexp.
         n_pseudo = max([round(1e6/self.meta.nstar), n_pseudo])
-        xstars, ystars, mm, vz = self._pseudo_particles(self.star['x'][ind],
+        if weight == "mass":
+            xstars, ystars, mm, vz = self._pseudo_particles(self.star['x'][ind],
                                                   self.star['y'][ind],
                                                   self.star['m'][ind],
+                                                  self.star['vz'][ind],
+                                                  sig=0.3,
+                                                  n_times=n_pseudo)
+        elif weight == "luminosity":
+            xstars, ystars, mm, vz = self._pseudo_particles(self.star['x'][ind],
+                                                  self.star['y'][ind],
+                                                  self.star.Flux_r[ind],
                                                   self.star['vz'][ind],
                                                   sig=0.3,
                                                   n_times=n_pseudo)
     else:
         xstars = self.star['x'][ind]
         ystars = self.star['y'][ind]
-        mm = self.star['m'][ind]
         vz = self.star['vz'][ind]
+        if weight == "mass":
+            mm = self.star['m'][ind]
+        elif weight == "luminosity":
+            mm = self.star.Flux_r
 
     if verbose: print(("\n" "Calculating rotation parameter using {} particles "
     "inside {:.3f}kpc, or {}Reff".format(len(ind), r_img_kpc, rscale + 1)))

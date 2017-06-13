@@ -105,7 +105,6 @@ class Info:
 # from M import * does not import _blah_blah.
 
     def _cal_units(self, arr, rarr):
-        import utils.cosmology
         # in cgs unit
         kpc = 3.08e21
         twopi = 6.2831853e0
@@ -158,7 +157,9 @@ class Info:
         self.msun = scale_d*scale_l**3/m_sun
         self.cboxsize = self.H0 * self.pboxsize / self.aexp * 1e-2
         if self.cosmo:
-            self.tGyr = utils.cosmology.time2gyr(rarr[1], z_now = self.zred, info = self)
+            from utils.cosmology import Timeconvert
+            tc = Timeconvert(self)
+            self.tGyr = tc.time2gyr(rarr[1], z_now = self.zred)
 
     def keys(self):
         from pprint import pprint

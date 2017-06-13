@@ -58,9 +58,6 @@ def get_vmax_sig(gal,
     sig_good= sig_good[d_sort]
     d_good = d_good[d_sort]
 
-    plt.scatter(d_good, v_good, color="r")
-    plt.scatter(d_good, sig_good, color="b")
-
     npoints = len(v_good)
     binsize = np.int(npoints/10)
 
@@ -80,6 +77,8 @@ def get_vmax_sig(gal,
 
     vmax = v_smooth[imax]
     if make_plot:
+        plt.scatter(d_good, v_good, color="r")
+        plt.scatter(d_good, sig_good, color="b")
         plt.plot(d_smooth, v_smooth, color="r")
         plt.scatter(d_smooth[imax], v_smooth[imax], s=200, marker="^", color="r")
         plt.scatter(0, sig, s=200, marker="v", color='b')

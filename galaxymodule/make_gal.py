@@ -12,7 +12,8 @@ def mk_gal(gal,
             method_cov="catalog",
             method_member="Reff",
             follow_bp=False,
-            unit_conversion="code"):
+            unit_conversion="code",
+            convert_time=False):
     """
         Determine if this is a legitimate galxy. re-center components.
 
@@ -43,6 +44,10 @@ def mk_gal(gal,
         method_member:"Reff",
         follow_bp:False,
         unit_conversion:"code"
+        convert_time:
+            default = False
+            because it is more efficient to create an timecoverter instance once (load table) and
+            convert multiple galaxies altogether.
 
         Notes
         -----
@@ -170,11 +175,11 @@ def mk_gal(gal,
         if verbose: print("nstar tot:", nstar_tot)
         if verbose: print("Store stellar particle")
 
-        if 'time' in gal.star.dtype.names and unit_conversion == "code":
-            import utils.cosmology
-            gal.star['time'] = utils.cosmology.time2gyr(gal.star['time'],
-                                         z_now = gal.info.zred,
-                                         info=gal.info)
+        if 'time' in gal.star.dtype.names and convert_time:
+            from utils.cosmology import Timeconvert
+            tc = Timeconvert(gal.info)
+            gal.star['time'] = tc.time2gyr(gal.star['time'],
+                                 z_now = gal.info.zred)
 
     # VERY arbitrary..
     rgal_tmp = gal.meta.Rgal_to_reff *gal.meta.reff

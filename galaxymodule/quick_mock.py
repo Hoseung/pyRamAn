@@ -12,7 +12,7 @@ class Simplemock():
     >>> gcat = tree.halomodule.Halo(nout=nout, is_gal=True)
     >>> gg = load.rd_GM.Gal(nout, catalog=gcat.data[21].copy(), info=s.info)
     >>> gg.debug=False
-    >>> make_gal.mk_gal(gg1)
+    >>> make_gal.mk_gal(gg)
     >>> from galaxymodule import quick_mock as qmc
     >>> MockSED = qmc.Simplemock(repo=dfl.dir_repo+'sed/')
     >>> gg.star.Flux_u= MockSED.get_flux(star=gg.star, filter_name='u')
@@ -96,8 +96,7 @@ class Simplemock():
         nmetals = len(relevant_metals)
 
         # Star Age
-        t_univ = 13.7
-        starage = t_univ - star["time"]
+        starage = star["time"]
 
         locate_age = np.digitize(starage, self.age_points)-1 # GOOD
         relevant_ages = self.age_points[:max(locate_age)+2]

@@ -58,10 +58,10 @@ class Meta():
         self.mstar = 0.0
         self.nstar = 0
         self.mgas = 0.0
-        self.lambda_arr = None
+        #self.lambda_arr = None
         self.lambda_r = 0.0
-        self.lambda_arr2 = None # reoriented values
-        self.lambda_r2 = 0.0 # reoriented values
+        #self.lambda_arr2 = None # reoriented values
+        #self.lambda_r2 = 0.0 # reoriented values
         self.vmap = None
         self.pt=[]
         self.pq=[]
