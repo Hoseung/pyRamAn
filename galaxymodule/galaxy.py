@@ -127,9 +127,9 @@ class Galaxy():
             if len(catalog["xp"]) == 3:
         	   	is_tree = True
         	   	tt = catalog.copy()
-        	   	catalog = dict( x=tt["xp"][0]+0.5*self.info.pboxsize,
-              	      	   	  	y=tt["xp"][1]+0.5*self.info.pboxsize,
-              	      	   	 	z=tt["xp"][2]+0.5*self.info.pboxsize,
+        	   	catalog = dict( x=tt["xp"][0],#*self.info.pboxsize,
+              	      	   	  	y=tt["xp"][1],#*self.info.pboxsize,
+              	      	   	 	z=tt["xp"][2],#*self.info.pboxsize,
               	      	   	  	vx=tt["vp"][0],
               	      	   	  	vy=tt["vp"][1],
               	      	        vz=tt["vp"][2],
