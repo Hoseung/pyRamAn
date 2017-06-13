@@ -58,9 +58,9 @@ timeconverter = Timeconvert(s.info)
 
 #for large_gal in large_gals[100:200]:
 if True:
-    maintree, pidx, large_gals = pickle.load(open("all_direct_prgs_gal/ptrees/all_direct_prgs_7988258_gal.pickle", "rb"))
+    maintree, pidx, large_gals = pickle.load(open("all_direct_prgs_gal/ptrees/all_direct_prgs_7988516_gal.pickle", "rb"))
 	
-    gg = rd_GM.Gal(782, catalog=maintree[0], info=s.info)
+    gg = rd_GM.Gal(782, catalog=maintree[0].copy(), info=s.info)
 
     gg.debug=False
     #gg.mk_gal(**mgp.HAGN)
