@@ -2,11 +2,11 @@
 """
 Created on Thu Mar 10 04:50:37 2016
 
-Inherits galaxy.Galaxy class
+Inherits galaxymodule.galaxy.Galaxy class
 
 @author: hoseung
 """
-from galaxymodule.galaxy import Galaxy
+import galaxymodule
 from load.utils import read_header, read_fortran
 import numpy as np
 
@@ -93,7 +93,7 @@ class Dummy():
     def __init__(self):
         pass
 
-class Gal(Galaxy):
+class Gal(galaxymodule.galaxy.Galaxy):
     def __init__(self, nout, idgal=None,
                  catalog=None, halo=None, info=None,
                  wdir='./', idhal = -1, load=True, rscale=1.5):

@@ -204,7 +204,7 @@ for inout, nout in enumerate(nouts):
 
     def mk_gal(halodata, out_q, info, i, wdir,
                 save=False, rscale=0.3, verbose=True, def_param=(dm, star, cell)):
-        from galaxy import galaxy
+        from galaxymodule import galaxy
     
     #    print(halodata['id'])
         print("{}-th **********************************************".format(i))

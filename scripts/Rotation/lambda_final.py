@@ -34,7 +34,7 @@ import numpy as np
 import utils.sampling as smp
 
 import collections
-from galaxy import galaxy
+from galaxymodule import galaxy
 import utils.match as mtc
 import tree.ctutils as ctu
 import pickle

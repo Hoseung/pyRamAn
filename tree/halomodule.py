@@ -424,8 +424,8 @@ class Halo(HaloMeta):
     def derive_from(self, old_halo, ind=None):
         """
         derive a subset from another halo instance.
-        1) all meta data will be overwritten.
-        2) ind specifies the part of .data to be inherited.
+        1) all meta data is overwritten.
+        2) ind specifies the part of .data to be copied.
 
         """
         if ind is None:

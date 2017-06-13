@@ -8,11 +8,11 @@ import numpy as np
 from cython.view cimport array as cvarray
 
 cdef extern from "c_rd_halo.h":    
-    cdef void load(string, Meta&, Data2&, int)
-    cdef cppclass Meta:
+    void load(string, Meta&, Data2&, int)
+    cppclass Meta:
         int nbodies, halnum, subnum;
         float massp, aexp, omegat, age;
-    cdef cppclass Data2:
+    cppclass Data2:
         int * np;
         int * hnu;
         int * hhost ;

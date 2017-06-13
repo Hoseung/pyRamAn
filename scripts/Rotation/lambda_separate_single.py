@@ -34,7 +34,7 @@ import numpy as np
 import utils.sampling as smp
 
 import collections
-from galaxy import galaxy
+from galaxymodule import galaxy
 import utils.match as mtc
 import tree.ctutils as ctu
 import pickle
@@ -60,7 +60,7 @@ def worker(gals, hals, out_all, out_young, out_old, info, i,
            **kwargs):
 
     import galaxy.make_gal as mkg
-    from galaxy import galaxy
+    from galaxymodule import galaxy
     import copy
     import utils.cosmology
 

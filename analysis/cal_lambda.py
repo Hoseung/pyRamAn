@@ -11,13 +11,12 @@ import general
 from load.part import Part
 from load.hydro import Hydro
 
-#%%
+
 def get_mstar_min(aexp):
     masscut_a = 1256366362.16
     masscut_b = -20583566.5218
 
     return masscut_a * aexp + masscut_b
-
 
 
 def extract_halos_within(halos, i_center, info, dist_in_mpc=1.0):
@@ -42,8 +41,8 @@ def all_gals_org(treedata, final_gals, nout_ini=None, nout_fi=None):
     """
        build a list of all progenitors of the final_gals from nout_fi up to nout_ini
        [ [final_gals (at nout = nout_fi) ],
-         [all progenitors of final gals at nout = nout_fi -1],
-         [ '' at the at nout = nout_fi -2 ], ...]
+       [all progenitors of final gals at nout = nout_fi -1],
+       [ '' at the at nout = nout_fi -2 ], ...]
     """
     if nout_ini == None:
         nout_ini = min(treedata['nout'])
@@ -66,10 +65,10 @@ def all_gals_org(treedata, final_gals, nout_ini=None, nout_fi=None):
 
 def all_gals(treedata, final_gals, nout_ini=None, nout_fi=None):
     """
-    build a list of all progenitors of the final_gals from nout_fi up to nout_ini
-    [ [final_gals (at nout = nout_fi) ],
-    [all progenitors of final gals at nout = nout_fi -1],
-    [ '' at the at nout = nout_fi -2 ], ...]
+        build a list of all progenitors of the final_gals from nout_fi up to nout_ini
+        [ [final_gals (at nout = nout_fi) ],
+        [all progenitors of final gals at nout = nout_fi -1],
+        [ '' at the at nout = nout_fi -2 ], ...]
     """
     if nout_ini == None:
         nout_ini = min(treedata['nout'])
@@ -128,8 +127,8 @@ def dist2(data, center):
 
 def associate_gal_hal(allgal, allhal, plot_check=False, dir_out=""):
     """
-    associate halos with galaxies.
-    Arbitrary maching parameters are used.
+        associate halos with galaxies.
+        Arbitrary maching parameters are used.
     """
     import numpy as np
 

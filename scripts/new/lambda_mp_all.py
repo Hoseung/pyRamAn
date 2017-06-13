@@ -156,7 +156,7 @@ def mk_gal(halodata, out_q, info, i,
     """
 
     print("This is {}-th halo".format(i))
-    from galaxy import galaxy
+    from galaxymodule import galaxy
 
 
     gal_out = {"id":0, "xc":0.0, "yc":0.0, "zc":0.0,

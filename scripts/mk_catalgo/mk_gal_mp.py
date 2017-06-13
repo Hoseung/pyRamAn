@@ -6,7 +6,7 @@ Created on Mon Jun  1 00:15:25 2015
 
 @author: hoseung
 """
-from galaxy import galaxy
+from galaxymodule import galaxy
 import load
 import tree
 import numpy as np

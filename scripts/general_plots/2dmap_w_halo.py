@@ -9,9 +9,9 @@ Created on Thu Apr  2 00:11:20 2015
 
 #sim_dir = ['C29195', 'C01605_hi/', 'C04466/', 'G2/kisti'][3]
 #base_dir = path.join(base, '', sim_dir, '')
-base_dir = '/home/hoseung/Work/data/05427/'
+base_dir = '/home/hoseung/Work/data/29172/'
 
-nout=186
+nout=187
 
 import matplotlib.pyplot as plt
 

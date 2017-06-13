@@ -86,9 +86,10 @@ subroutine load_tree(fn, fatherID, fatherIDx, sonID, fatherMass, &
     real(KIND=4), dimension(1:n_halos_all,1:25), INTENT(OUT) ::f_arr
     real(KIND=4), dimension(1:nsteps), INTENT(OUT) ::aexp_arr, omega_t_arr, age_univ_arr
 
-    ! iarr = idx, id, level, hosthalo,
+    integer::n_fathers_max
 
-    allocate(fid_tmp(1:500)) ! At most 500 fathers for a halo.
+    n_fathers_max = 5000
+    allocate(fid_tmp(1:n_fathers_max)) ! At most 100 fathers for a halo.
 
     open(unit=1,file=fn,status='old',form='unformatted')
 
@@ -118,7 +119,7 @@ subroutine load_tree(fn, fatherID, fatherIDx, sonID, fatherMass, &
             read(1)i_arr(idx,5:9) ! hosts
             read(1)f_arr(idx,1) ! m
             read(1)macc ! macc alone is double
-            f_arr(idx,2) = macc
+            f_arr(idx,2) = real(macc)
             read(1)f_arr(idx,3:5)!xp
             read(1)f_arr(idx,6:8)!vp
             read(1)f_arr(idx,9:11)!lp
@@ -126,7 +127,9 @@ subroutine load_tree(fn, fatherID, fatherIDx, sonID, fatherMass, &
             read(1)f_arr(idx,16:18)!energy
             read(1)f_arr(idx,19)!spin
             read(1)n_fathers!nfathers
-
+            if (n_fathers .gt. n_fathers_max) then 
+                write(*,*) "Increase n_fathers_max above ",n_fathers
+            endif
             read(1)fid_tmp(1:n_fathers)
             fatherID(flist_index:flist_index+n_fathers-1)=fid_tmp(1:n_fathers)
             read(1)fatherMass(flist_index:flist_index+n_fathers-1)
@@ -144,7 +147,6 @@ subroutine load_tree(fn, fatherID, fatherIDx, sonID, fatherMass, &
             i_arr(idx,13) = flist_index
             flist_index = flist_index + n_fathers
 
-
             read(1)nsons
             if (nsons .gt. 0) then
                 read(1)sonID(slist_index:slist_index+nsons-1)
@@ -157,10 +159,10 @@ subroutine load_tree(fn, fatherID, fatherIDx, sonID, fatherMass, &
             if (.not. big_run) then
                 read(1)i_arr(idx,12) ! np
             endif
-
             idx = idx +1
         enddo
         nhals_old = nhals_now
+
 
     enddo
     deallocate(nb_of_halos, nb_of_subhalos)

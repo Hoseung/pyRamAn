@@ -49,7 +49,7 @@ matplotlib.use("Agg")
 
 import numpy as np
 import collections
-from galaxy import galaxy
+from galaxymodule import galaxy
 import pickle
 import load
 from load.hydro import Hydro
@@ -124,7 +124,7 @@ def worker(gals, hals, out_q, info, inds,
     """
 
     import galaxy.make_gal as mkg
-    from galaxy import galaxy
+    from galaxymodule import galaxy
 
     nout = info.nout
     if type(inds) == int:

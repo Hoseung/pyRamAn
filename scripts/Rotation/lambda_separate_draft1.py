@@ -78,7 +78,7 @@ def worker(gals, hals, out_q, info, inds,
     """
 
     import galaxy.make_gal as mkg
-    from galaxy import galaxy
+    from galaxymodule import galaxy
 
     nout = info.nout
     if type(inds) == int:

@@ -1,26 +1,24 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon May 30 15:37:03 2016
+    Created on Mon May 30 15:37:03 2016
 
-@author: hoseung
-"""
+    @author: hoseung
 
-"""
     MODIFICATIONS
-    
-    2015.12.03  
+
+    2015.12.03
         final_gal is removed as non-main-progenitors are also analized,
         there is no 1:1 correlation between final galaxies and earlier galaxies.
-        
+
     2015.12.21
         Galaxies are saved in HDF format at selected nouts.
-        (for example, 
-         nouts_dump_gal = [187, 154, 130, 112,  98,  87,  67,  54,  37,  20]
-         nouts close to zred = [0,0.2,0.4,0.6,0.8,1.0, 1.5, 2.0, 3.0, 5.0].)
-         
+        (for example,
+        nouts_dump_gal = [187, 154, 130, 112,  98,  87,  67,  54,  37,  20]
+        nouts close to zred = [0,0.2,0.4,0.6,0.8,1.0, 1.5, 2.0, 3.0, 5.0].)
+
     2016.01.01
         idx is stored in catalog along with id.
-        
+
     2016.01.02
         lambdar measured after re-oriented.
 
@@ -30,20 +28,19 @@ Created on Mon May 30 15:37:03 2016
 
     2016.03.26
         Only close galaxies were accounted before (i_gal_near), - why...??
-        and that restriction is now gone. 
+        and that restriction is now gone.
 
 """
 #import matplotlib
 #matplotlib.use("Agg")
-import matplotlib.pyplot as plt 
+import matplotlib.pyplot as plt
 
 import numpy as np
 import utils.sampling as smp
-
-from galaxy import galaxy
+from galaxymodule import galaxy
 import utils.match as mtc
 import tree.ctutils as ctu
-import tree.halomodule as hmo 
+import tree.halomodule as hmo
 
 #%%
 def extract_halos_within(halos, i_center, info, dist_in_mpc=1.0):
@@ -66,10 +63,10 @@ def distance_to(xc, xx):
 
 def all_gals_org(treedata, final_gals, nout_ini=None, nout_fi=None):
     """
-       build a list of all progenitors of the final_gals from nout_fi up to nout_ini
-       [ [final_gals (at nout = nout_fi) ], 
-         [all progenitors of final gals at nout = nout_fi -1],
-         [ '' at the at nout = nout_fi -2 ], ...]
+        build a list of all progenitors of the final_gals from nout_fi up to nout_ini
+        [ [final_gals (at nout = nout_fi) ],
+        [all progenitors of final gals at nout = nout_fi -1],
+        [ '' at the at nout = nout_fi -2 ], ...]
     """
     if nout_ini == None:
         nout_ini = min(treedata['nout'])
@@ -92,10 +89,10 @@ def all_gals_org(treedata, final_gals, nout_ini=None, nout_fi=None):
 
 def all_gals(treedata, final_gals, nout_ini=None, nout_fi=None):
     """
-       build a list of all progenitors of the final_gals from nout_fi up to nout_ini
-       [ [final_gals (at nout = nout_fi) ], 
-         [all progenitors of final gals at nout = nout_fi -1],
-         [ '' at the at nout = nout_fi -2 ], ...]
+        build a list of all progenitors of the final_gals from nout_fi up to nout_ini
+        [ [final_gals (at nout = nout_fi) ],
+        [all progenitors of final gals at nout = nout_fi -1],
+        [ '' at the at nout = nout_fi -2 ], ...]
     """
     if nout_ini == None:
         nout_ini = min(treedata['nout'])
@@ -106,7 +103,7 @@ def all_gals(treedata, final_gals, nout_ini=None, nout_fi=None):
     for finalgal in final_gals:
         inds.extend(np.where(treedata['tree_root_id'] == finalgal)[0])
         # Add main progenitor tag
-    
+
     return treedata[inds]
 
 
@@ -170,36 +167,33 @@ def unique(a,b):
 def get_mstar_min(aexp):
     masscut_a = 1256366362.16
     masscut_b = -20583566.5218
-    
+
     return masscut_a * aexp + masscut_b
 
-
-
-
 def associate_gal_hal(allgal, allhal, plot_check=False, dir_out=""):
-    """ 
-    associate halos with galaxies. 
-    Arbitrary maching parameters are used.
+    """
+        associate halos with galaxies.
+        Arbitrary maching parameters are used.
     """
     import numpy as np
-    
+
     def dist(data, center):
         return np.sqrt(np.square(center['x'] - data['x']) +
                 np.square(center['y'] - data['y']) +
                 np.square(center['z'] - data['z']))
-    
+
     def distv(halo, center):
-        norm = np.sqrt(np.square(center['vx'] - halo.vx) + 
-                       np.square(center['vy'] - halo.vy) + 
+        norm = np.sqrt(np.square(center['vx'] - halo.vx) +
+                       np.square(center['vy'] - halo.vy) +
                        np.square(center['vz'] - halo.vz))
-    
+
         return norm
 
     i0=[] # matched list
     i1=[] # unmatched list
 
     newhals = np.recarray(len(allgal.data), dtype=allhal.data.dtype) # equivalent with allhal.data
-    
+
     for i, gal in enumerate(allgal.data):
         dd = dist(allhal.data, gal)# 3d distance. simply sqrt((x-xc)**2 + ...)
         d_sort = np.argsort(dd)
@@ -208,7 +202,7 @@ def associate_gal_hal(allgal, allhal, plot_check=False, dir_out=""):
             gal['hosthalo'] = allhal.data['id'][d_sort[0]]
             i0.append(i)
             newhals[i] = allhal.data[d_sort[0]]
-    
+
         # if closest halo is closer by 0.3 and than the second and closer than 5kpc/h, good match.
         elif (dd[d_sort[0]] < 0.3 * dd[d_sort[1]]) and (dd[d_sort[0]] < 2.5e-5):
             gal['hosthalo'] = allhal.data['id'][d_sort[0]]
@@ -217,8 +211,8 @@ def associate_gal_hal(allgal, allhal, plot_check=False, dir_out=""):
         else:
             # if closet than 40kpc/h and has similar velocity.
             dv = distv(allhal.data, gal)
-            d_nomi = dd < 2e-4 # within 40kpc!! 
-            v_nomi = dv < 150 
+            d_nomi = dd < 2e-4 # within 40kpc!!
+            v_nomi = dv < 150
             dvnomi = d_nomi * v_nomi
             if sum(dvnomi) > 1:
                 dddv = dd[dvnomi]/2e-4 + dv[dvnomi]/150
@@ -230,7 +224,7 @@ def associate_gal_hal(allgal, allhal, plot_check=False, dir_out=""):
                 # otherwise non-matched.
                 gal['hosthalo'] = -1
                 i1.append(i)
-                # copy galaxy catalog data to new 'fake' halo catalog. 
+                # copy galaxy catalog data to new 'fake' halo catalog.
                 newhals[i]['x'] = gal['x']
                 newhals[i]['y'] = gal['y']
                 newhals[i]['z'] = gal['z']
@@ -246,7 +240,7 @@ def associate_gal_hal(allgal, allhal, plot_check=False, dir_out=""):
                 newhals[i]['id'] = -1 * gal['id'] # negative ID = fake halo.
 
     allhal.data = newhals
-    
+
     if plot_check:
         from draw import pp
         import matplotlib.pyplot as plt
@@ -261,11 +255,11 @@ def associate_gal_hal(allgal, allhal, plot_check=False, dir_out=""):
         ax.set_aspect('equal')
         plt.savefig(dir_out + "associate_gal_hal.pdf")
         plt.close()
-    
-    
+
+
     return allhal
 
-    
+
     #%%
     #import numpy as np
 
@@ -273,39 +267,39 @@ def get_sample_tree(alltrees,
                     info,
                     wdir = './',
                     nout_ini=57,
-                    nout_fi = 18,  
+                    nout_fi = 18,
                     is_gal = True,
                     r_cluster_scale = 2.9,
                     m_halo_min = 5e9,
                     nout_complete = 87):
-                            
+
     td = alltrees.data
-    
+
     # halo catalog
     hhal = hmo.Halo(base=wdir, nout=nout_fi, halofinder='HM', load=True, is_gal=False)
-    # cluster radius 
-    
+    # cluster radius
+
     i_center = np.where(hhal.data['np'] == max(hhal.data['np']))[0]
     r_cluster = hhal.data['rvir'][i_center].squeeze() * hhal.info.pboxsize
-    
+
     # galaxies
     hh = hmo.Halo(base=wdir, nout=nout_fi, halofinder='HM', info=info, load=True, is_gal=is_gal)
     i_center = np.where(hh.data['np'] == max(hh.data['np']))[0]
-    # galaxies that are within r_cluster_scale * the cluster halo from the BCG 
+    # galaxies that are within r_cluster_scale * the cluster halo from the BCG
     # (not the cluster halo center, although two must be virtually identical)
-    
+
     # All galaxies inside the cluster radius * r_scale
     i_satellites = extract_halos_within(hh.data, i_center, info, dist_in_mpc = r_cluster * r_cluster_scale)
     print("Total {} galaxies \n {} galaxies are within {} times the cluster virial radius, {:.2f} Mpc (No mass cut)".format(
           len(i_satellites),sum(i_satellites), r_cluster_scale, r_cluster_scale * r_cluster))
-    
+
     # Above a mass cut at nout_fi
     # halos found inside the cluster and have complete tree back to nout_ini
     large_enough = hh.data['mvir'] > m_halo_min
     halo_list = hh.data['id'][i_satellites * large_enough]
     final_ids = ctu.check_tree_complete(td, nout_complete, nout_fi, halo_list, idx=False) # 87: z = 1
-    
-    
+
+
     # build list of progenitors (all mass)
     tt_final = td[td['nout'] == nout_fi]
     final_gals_idx = [tt_final['id'][tt_final['Orig_halo_id'] == final_gal] for final_gal in final_ids]
@@ -322,60 +316,60 @@ def get_sample_tree(alltrees,
     return prg_only_tree
 
 #%%
-def get_sample_gal(wdir, nout, info, prg_only_tree, mstar_min, verbose=False): 
+def get_sample_gal(wdir, nout, info, prg_only_tree, mstar_min, verbose=False):
     #gals_in_tree_now = halo_from_tree(t_now[mtc.match_list_ind(t_now['id'], np.array(idxs_tree_now))], info)
     gals_in_tree_now = prg_only_tree[prg_only_tree['nout'] == nout]
     id_now = gals_in_tree_now['Orig_halo_id'] # this is Orig_halo_id
-    
+
     # Galaxies near the cluster
     allhal = hmo.Halo(base=wdir, nout=nout, is_gal=False, halofinder='HM', return_id=False, load=True)
     cluster_now = allhal.data[allhal.data.np.argmax()]
-    
-    max_dist_prg = max(np.sqrt(np.square(cluster_now['x'] * 200 - gals_in_tree_now['x']) + 
-                               np.square(cluster_now['y'] * 200 - gals_in_tree_now['y']) + 
+
+    max_dist_prg = max(np.sqrt(np.square(cluster_now['x'] * 200 - gals_in_tree_now['x']) +
+                               np.square(cluster_now['y'] * 200 - gals_in_tree_now['y']) +
                                np.square(cluster_now['z'] * 200 - gals_in_tree_now['z']))) # in Mpc/h
-                        
+
     if verbose: print(nout, max_dist_prg)
-    
+
     # unless you have "perfect" trees, do not rely on what tree gives you.
     #mstar_min = min(gals_in_tree_now['m'][(gals_in_tree_now['mmp'] == 1) * (gals_in_tree_now['phantom'] == 0)])
-    
+
     # Galaxy with enough stellar mass
     # -> there is no stellar mass cut when building all_gals_in_trees list.
     allgal = hmo.Halo(base=wdir, nout=nout, is_gal=True, halofinder='HM',
                       return_id=False, load=True)
-    
-    dd_cat = np.sqrt(np.square(cluster_now['x'] - allgal.data['x']) + 
-                     np.square(cluster_now['y'] - allgal.data['y']) + 
+
+    dd_cat = np.sqrt(np.square(cluster_now['x'] - allgal.data['x']) +
+                     np.square(cluster_now['y'] - allgal.data['y']) +
                      np.square(cluster_now['z'] - allgal.data['z'])) * 200
-    
+
     igal_ok_cat = (dd_cat < max_dist_prg) * (allgal.data['m'] > mstar_min)
-    if verbose: 
+    if verbose:
         print("(catalogue) # galaxies more massive than {:.2e} at nout ="
         " {}".format(mstar_min, nout, sum(igal_ok_cat)))
-    
+
     final_sample_galaxies = \
         np.unique(np.concatenate((allgal.data[igal_ok_cat]['id'], id_now)))
-    if verbose: 
+    if verbose:
         print(" Originally the tree selected:", len(id_now))
         print("Total set length:", len(final_sample_galaxies))
-    
+
     # load GalaxyMaker output again, with return_id this time.
     allgal = hmo.Halo(base=wdir, nout=nout, is_gal=True, halofinder='HM',
                       return_id=final_sample_galaxies, load=True)
     if verbose: print("length of the original allgal: {}".format(len(allgal.data)))
 
-    
-    # Associate galaxies with halos. 
+
+    # Associate galaxies with halos.
     # Mark non-matching galaxies.
-    if verbose: 
-        print("Before associate_gal_hal," 
+    if verbose:
+        print("Before associate_gal_hal,"
             "length of the original allhal: {}".format(len(allhal.data)))
     allhal = associate_gal_hal(allgal, allhal, plot_check=True, dir_out=wdir)
-    # there     
-    
+    # there
+
     if verbose: print("Now, {}".format(len(allhal.data)))
-    
+
     #print()
     # load DM ids
     allhal = hmo.Halo(base=wdir, nout=nout, is_gal=False, halofinder='HM',
@@ -396,7 +390,7 @@ def get_sample_gal(wdir, nout, info, prg_only_tree, mstar_min, verbose=False):
     allhal.data['idx'] = allgal.data['idx']
 
     return allgal, allhal
-    
+
 
 ##########################################################################
 def mk_gal(galdata, halodata, info, star_all, cell_all, dm_all,
@@ -407,18 +401,18 @@ def mk_gal(galdata, halodata, info, star_all, cell_all, dm_all,
            method_com=2, mstar_min=5e9, dump_gal=False,
            min_gas_density = 1e-1):
     """
-    Direct plot,
-    Create galaxy, 
-    Calculate lambda_r (using Cappellari 2003)
-    Draw ed map of galaxy.
+        Direct plot,
+        Create galaxy,
+        Calculate lambda_r (using Cappellari 2003)
+        Draw ed map of galaxy.
 
-    minimum gas densiy = mean gas density of the universe?
-    Galaxy center = galdata['x'], ['y'], ['z']. Not halo center.
+        minimum gas densiy = mean gas density of the universe?
+        Galaxy center = galdata['x'], ['y'], ['z']. Not halo center.
 
-    To do:
-    extract cells by density threshold, not radial cut. 
-    Gas extent varies a lot, and there no good single choice of radius cut. 
-    
+        To do:
+        extract cells by density threshold, not radial cut.
+        Gas extent varies a lot, and there no good single choice of radius cut.
+
     """
     print("mk_gal ID", galdata['id'])
     plt.close()
@@ -433,11 +427,11 @@ def mk_gal(galdata, halodata, info, star_all, cell_all, dm_all,
             return -1, False
         return
     else:
-        xc_tmp = galdata['x'] # 
+        xc_tmp = galdata['x'] #
         yc_tmp = galdata['y']
         zc_tmp = galdata['z']
         rr_tmp0 = galdata['r']
-# If memory access is the bottle neck, 
+# If memory access is the bottle neck,
 # There is no reason the following part need to be called
 # by individual process.
 # put it in the main body.
@@ -464,9 +458,8 @@ def mk_gal(galdata, halodata, info, star_all, cell_all, dm_all,
                              (dm_all['z'] - zc_tmp)**2 < halodata['r']**2)[0]]
 
 
-    # Direct plot ---------------------------------------------------------                                
+    # Direct plot ---------------------------------------------------------
     if region_plot:
-        print("RRRRRRRRRRRRRRegion plot")
         import draw
         region = smp.set_region(xc=halodata['x'],
                             yc=halodata['y'],
@@ -536,7 +529,7 @@ def save_dict_scalar(cc, f, delim="   "):
     f.write("\n")
 
 
-    
+
 def worker(gals, hals, out_q, info, inds,
            star_all, cell_all, dm_all,
            dump_gal=False,

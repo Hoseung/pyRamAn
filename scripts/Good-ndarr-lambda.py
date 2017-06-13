@@ -5,7 +5,7 @@
 
 def mk_gal(halodata, out_q, info, i,
             save=False, rscale=0.3, verbose=False, galaxy_plot_dir='./'):
-    from galaxy import galaxy
+    from galaxymodule import galaxy
 #    print("IDs:", id(star), id(dm), id(cell))
     rscale_lambda = 2
     print(halodata['id'])

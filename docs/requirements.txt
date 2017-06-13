@@ -4,3 +4,4 @@ cython
 pandas
 astropy
 PyQt5
+nbsphinx

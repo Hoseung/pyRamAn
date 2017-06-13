@@ -47,7 +47,7 @@ def mk_gal(halodata, out_q, info, i, final_gal,
 #    print(" !!!!!!!!!!" )
     print("This is {}-th halo".format(i))
 #    print(" !!!!!!!!!! \n" )
-    from galaxy import galaxy
+    from galaxymodule import galaxy
 
     #print("IDs:", id(star), id(dm), id(cell))
 

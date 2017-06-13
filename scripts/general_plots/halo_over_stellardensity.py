@@ -61,9 +61,7 @@ def plot_halo_region(region, info, star, cell,
 
 if __name__ == '__main__':
     #base = './'
-    base = "./"
-    frefine= 'refine_params.txt'
-    fnml = 'cosmo_200.nml'
+    base = "./29172/"
     #scale = 0.3
     ptype=["star pos mass"]
     hydro = True
@@ -78,8 +76,9 @@ if __name__ == '__main__':
     import tree
     import numpy as np
     import matplotlib.pyplot as plt
-    nout_ini = int(input("First snapshot: \n"))
-    nout_end = int(input("Last snapshot: \n"))
+    #nout_ini = int(input("First snapshot: \n"))
+    #nout_end = int(input("Last snapshot: \n"))
+    nout_ini, nout_end = 187, 187
     nouts = range(nout_ini, nout_end + 1)
     
     halofinder = "HM"

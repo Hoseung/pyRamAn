@@ -227,7 +227,6 @@ class Tree():
         """
         Extracts main progenitors from a TreeMaker tree.
 
-
         example
         -------
         >>> tt = tmtree.Tree("tree.dat")
@@ -252,13 +251,12 @@ class Tree():
         atree[0] = t_now
 
         idx_prgs_alltime = [[idx]]
-        #idx_prgs_alltime.append(idx)
 
         for i in range(1, nstep + 1):
             try:
                 idx_father = fatherIDx[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]] -1
                 if len(idx_father) > 0:
-                    idx_prgs_alltime.append(idx_father[idx_father>0])
+                    idx_prgs_alltime.append(list(idx_father[idx_father>0]))
                     mass_father = fatherMass[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]]
                     idx = idx_father[np.argmax(mass_father)]
                     if idx < 1:
@@ -273,16 +271,58 @@ class Tree():
 
         return atree, idx_prgs_alltime
 
-    def get_all_trees(self,idx_prgs_alltime):
+    def get_all_trees(self, idx_prgs_alltime, skip_main=True, filter_dup =True):
+        """
+        * For a given idx_prgs list of lists, find main progenitor tree of all entries.
+        * A satellite can contribute to a host over multiple snapshots by
+        given fractions of DM particles each time. In such case, the satellite
+        appears in the host's progenitor tree several times.
+        * Note that a 'multi-snapshot' satellite never be a main progenitor.
+        However, I don't see a reason it can't be a secondary progenitor of
+        another host halo. Let's just keep that in mind.
+
+        Parameteres
+        -----------
+        skip_main : True
+            skip main progenitor tree.
+
+        Note
+        ----
+            1. About "skip_main" option.
+            Main halo Tree is redundant. Main progenitor tree of the main halo at nstep = n
+            includes all the main progenitors of the main halo at nstep = n-1.
+
+        .. figure:: imgs/tmtree-get_all_trees.jpg
+           :align:  center
+
+
+        """
         all_main_prgs=[]
-        # Per nstep
-        for j, satellie_roots in enumerate(idx_prgs_alltime):
-            #print("{}-th step".format(j))
+        # loop over all nstep
+
+        for j, satellite_roots in enumerate(idx_prgs_alltime):
             mainprgs=[]
-            # Per galaxy
-            for sat in satellie_roots:
-                mainprgs.append(self.extract_main_tree(sat))
+            # loop over all satellites at each step
+            for i,sat in enumerate(satellite_roots):
+                if not skip_main or i!=0:
+                    #print("sat ind", i)
+                    mainprgs.append(self.extract_main_tree(sat))
             all_main_prgs.append(mainprgs)
+            all_idxs_filter = []
+            if filter_dup:
+                if len(mainprgs) > 0:
+                    for aa in mainprgs:
+                        try:
+                            all_idxs_filter.extend(aa["idx"][1:])
+                        except:
+                            print(mainprgs)
+                            return mainprgs
+                        # last idx MUST remain in the prgs.
+                    for idxs in idx_prgs_alltime[j+1:]:
+                        if len(idxs) > 1:
+                            for idx in idxs[1:]:
+                                if idx in all_idxs_filter:
+                                    idxs.remove(idx)
 
         return all_main_prgs
 

@@ -39,7 +39,7 @@ def mk_gal(halodata, info, idx,
            rscale_lambda=3.0, npix_lambda=50, npix=400, galaxy_plot=False,
            method_com=2, mstar_min=5e9):
     
-    from galaxy import galaxy
+    from galaxymodule import galaxy
    
     rscale_extract = 1.1
     star, dm, cell = extract_data(h.data[i], rscale=rscale_extract, radius='rvir')

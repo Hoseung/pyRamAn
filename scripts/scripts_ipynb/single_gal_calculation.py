@@ -497,7 +497,7 @@ import os
 import load
 import utils.cosmology
 import utils.match as mtc
-from galaxy import galaxy
+from galaxymodule import galaxy
 from analysis.single_gal_module import *
 #from analysis.single_gal_module import angular_momentum
 import pandas as pd

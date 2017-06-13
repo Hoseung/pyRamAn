@@ -38,6 +38,7 @@ def convert_catalog(catalog, pboxsize, unit="code"):
     Default unit = code unit.
     (tree.halomodule converts units to code units on reading catalogs)
     """
+
     catalog['x'] = (catalog['x'] -0.5) * pboxsize
     catalog['y'] = (catalog['y'] -0.5) * pboxsize
     catalog['z'] = (catalog['z'] -0.5) * pboxsize
@@ -76,6 +77,7 @@ class Meta():
         """
             prints a summary of the galaxy meta data.
         """
+
         for name in sorted(self.__dict__):
             q = self.__dict__[name]
             if q is not None:
@@ -97,10 +99,10 @@ class Meta():
 
 class Galaxy():
     """
-    Maybe.. this class is growing too heavy...?
-    If I have to deal with millions of these...
-
+        Maybe.. this class is growing too heavy...?
+        If I have to deal with millions of these...
     """
+
     def __init__(self, info=None, halo=None,
                  catalog=None, convert_cat=True):
         self.meta = Meta()
@@ -118,10 +120,10 @@ class Galaxy():
 
     def set_catalog(self, catalog, convert):
         """
-        Copy so not to be affected by the original data being modified outside.
-        center of galaxy may be updated by more sophisticated method.
-
+            Copy so not to be affected by the original data being modified outside.
+            center of galaxy may be updated by more sophisticated method.
         """
+
         self.gcat = catalog
 
         if convert:
@@ -237,6 +239,7 @@ class Galaxy():
         """
             convert meta data into convenient unit.
         """
+
         if unit_conversion == "code":
             self.meta.xc *= self.info.pboxsize*1000
             self.meta.yc *= self.info.pboxsize*1000
@@ -333,7 +336,6 @@ class Galaxy():
 
             Returns True if a "good" galaxy is made.
 
-
             Parameters
             ----------
 
@@ -344,13 +346,11 @@ class Galaxy():
 
             Notes
             -----
-            1. Since now (as of 2016.03) galaxy calculation is based on the GalaxyMaker results,
+            #. Since now (as of 2016.03) galaxy calculation is based on the GalaxyMaker results,
             let's just believe and minimize redundant processes such as determining the center of mass,
             system velocity, and checking the presence of (unwanted) substructure.
-
-            2. Assuming all data in the code units.
-
-            3. dr, bin size in determining the radial profile cut scales with exponential factor.
+            #. Assuming all data in the code units.
+            #. dr, bin size in determining the radial profile cut scales with exponential factor.
             Without scaling, 0.5kpc bin size is too large for ~1kpc galaxies at high-z.
 
         """
@@ -494,13 +494,6 @@ class Galaxy():
             self.cell['metal'] = cell['var5'][icell]
 
 
-        # Some more sophistications.
-        """
-        print("Rgal = 4 * Reff = ", rgal_tmp * self.info.pboxsize * 1000)
-
-            # Save sink particle as a BH, not cloud particles.
-
-        """
         return True
 
 
@@ -510,18 +503,22 @@ class Galaxy():
             If there is another galaxy, Rgal is limited to the
             Finally returns temporary galaxy radius.
 
-          1) peaks of components are far enough.
-          2) minor component is larger than `10%' of the major component (number of stars)
-           - second peak is also a considerable galaxy, large enough to be considered as
+            #. peaks of components are far enough.
+
+            #. minor component is larger than `10%' of the major component (number of stars)
+            * second peak is also a considerable galaxy, large enough to be considered as
             a minor merging counter part. (or minor interaction counter part.)
-          3) minimum value is significantly smaller than the second peak.
-           - two galaxise are not closely connected.
-           - minor components are not background from a larger structure.
-             Because smooth background should not have significant peak.
-             Or, a background with significant peak would be the host galaxy of this galaxy.
-             If that is the case, this galaxy should not be identified as a 'main' galaxy,
-             and accounting for embeded satellites is another thing.
+
+            #. minimum value is significantly smaller than the second peak.
+            * two galaxise are not closely connected.
+            * minor components are not background from a larger structure.
+
+            Because smooth background should not have significant peak.
+            Or, a background with significant peak would be the host galaxy of this galaxy.
+            If that is the case, this galaxy should not be identified as a 'main' galaxy,
+            and accounting for embeded satellites is another thing.
         """
+
         def _find_maxima(a, exclude_end=False):
             """
                 Return indices of points that has larger values than neighbouring points
@@ -590,6 +587,7 @@ class Galaxy():
             Method 1: Radius = Rvir_halo
             Method 2: Radius = half mass radius of given stellar particles
         """
+
         import numpy as np
         if method == "simple":
             return self.gcat['rvir']
@@ -626,11 +624,12 @@ class Galaxy():
 
     def get_center(self, x, y, z, m, method='default', tol=1e-7, niter=10):
         """
-        Determines the center of mass of given particles.
-        IDL version iteratively searches for mass weighted mean position of
-        particles within gradually decreasing search radius.
-        Let's do the same thing here.
+            Determines the center of mass of given particles.
+            IDL version iteratively searches for mass weighted mean position of
+            particles within gradually decreasing search radius.
+            Let's do the same thing here.
         """
+
         import numpy as np
         r = 10. / 200 * 1000  # 10kpc/h
         # Stops if r < 10pc
@@ -686,6 +685,7 @@ class Galaxy():
                 by dividing by the array.ptp() and then
                 moving the element with maximum value inside.
             """
+
             return (x - x.min())/x.ptp()
 
 
@@ -725,7 +725,6 @@ class Galaxy():
 
 
     def e_vdiff(self, iv, vxt, vyt, vzt):
-        import numpy as np
         vdiff = np.sqrt(((vxt - vxt[iv])**2 +
                          (vyt - vyt[iv])**2 +
                          (vzt - vzt[iv])**2))
@@ -733,8 +732,6 @@ class Galaxy():
 
 
     def get_cov(self, multithreaded=False, center_only=False):
-        import numpy as np
-
         if center_only:
             # It is especially important when making galaxies
             # based on GalaxyMaker output because GalaxyMaker output
@@ -819,7 +816,6 @@ class Galaxy():
 
     def cal_sfr(self):
         import utils
-        import numpy as np
         # average over last 100Myrs
         time_new = 100 * 1e-3 # in Myr
         ind_new_star = np.where(utils.cosmology.time2gyr(
@@ -833,13 +829,7 @@ class Galaxy():
             self.cal_sfr()
         self.meta.ssfr = self.meta.sfr / self.meta.mstar
 
-    def cal_vrot(self):
-        #d = np.sqrt(self.star['x']**2 +self.star['y']**2 +self.star['z']**2)
-        #dsort = np.sort(d)
-        pass
-
     def dist_map(self, npix=40):
-        import numpy as np
         nx = npix
         ny = npix
 
@@ -850,13 +840,13 @@ class Galaxy():
         return dist_map
 
     def weighted_std(self, values, weights):
-        import numpy as np
         import math
         """
         Return the weighted average and standard deviation.
 
         values, weights -- Numpy ndarrays with the same shape.
         """
+
         average = np.average(values, weights=weights)
         variance = np.average((values-average)**2, weights=weights)  # Fast and numerically precise
 
@@ -883,8 +873,6 @@ class Galaxy():
                          save_result = True,
                          iterate_mge = False,
                          mge_interpol = False):
-
-
         """
         Parameters
         ----------
@@ -895,6 +883,8 @@ class Galaxy():
         rscale:
             Lambda_r is calculated for annuli up to Reff*rscale.
 
+        Notes
+        -----
         Calculate rotation parameter(lambda_r).
         rotation parameter is calculated at all points (r < rscale*self.reff)
         constructing a curve. But only the value at 0.5Reff is used as
@@ -919,7 +909,7 @@ class Galaxy():
                        It's better to interpolate when iterate_mge = True.
 
         """
-        import numpy as np
+
         import matplotlib.pyplot as plt
 
         # already centered.
@@ -1401,7 +1391,6 @@ class Galaxy():
         --------
             Naab + 2014: normal vector from the most bound 50% particles.
         """
-        import numpy as np
 
         nelements = 0
 
@@ -1464,7 +1453,7 @@ class Galaxy():
         http://stackoverflow.com/a/6802723
         https://en.wikipedia.org/wiki/Euler%E2%80%93Rodrigues_formula
         """
-        import numpy as np
+
         import math
         axis = np.asarray(axis)
         theta = np.asarray(theta)
@@ -1489,7 +1478,7 @@ class Galaxy():
         dest : destination vector ( not axis of rotation!).
                +z direction ([0, 0, 1]) by default.
         """
-        import numpy as np
+
         import numpy.linalg as lag
         import math
         # rotation axis
@@ -1624,8 +1613,6 @@ class Galaxy():
             msun = 1.98892e33 # solar mass in gram.
             return (cell['rho'] * info.unit_d) * (cell['dx'] * info.unit_l)**3 / msun
 
-        import numpy as np
-
         if proj=="x":
             pos1, pos2, vel1, vel2 = 'y', 'z', 'vy', 'vz'
         if proj=="y":
@@ -1744,8 +1731,7 @@ class Galaxy():
         from matplotlib import ticker
         from draw import pp
         from matplotlib.colors import LogNorm
-#        import utils.prettyplot as ptt
-        import numpy as np
+
         if ioff:
             plt.ioff()
 
