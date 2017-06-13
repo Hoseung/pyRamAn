@@ -6,4 +6,3 @@ from load import part
 from load import a2c
 from load import part_shared
 from load import runparam
-from load import rd_GM

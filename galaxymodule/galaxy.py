@@ -102,12 +102,10 @@ class Galaxy():
         Maybe.. this class is growing too heavy...?
         If I have to deal with millions of these...
     """
-
     def __init__(self, info=None, halo=None,
                  catalog=None, convert_cat=True):
         self.meta = Meta()
         #if info is not None:
-        #    print("AAAAAA")
         self.set_info(info)
         self.set_catalog(np.copy(catalog), convert_cat)
         self._has_star=False
@@ -123,10 +121,27 @@ class Galaxy():
             Copy so not to be affected by the original data being modified outside.
             center of galaxy may be updated by more sophisticated method.
         """
+        is_tree=False
+        if "xp" in catalog.dtype.fields:
+            print(catalog["xp"])
+            if len(catalog["xp"]) == 3:
+        	   	is_tree = True
+        	   	tt = catalog.copy()
+        	   	catalog = dict( x=tt["xp"][0]+0.5*self.info.pboxsize,
+              	      	   	  	y=tt["xp"][1]+0.5*self.info.pboxsize,
+              	      	   	 	z=tt["xp"][2]+0.5*self.info.pboxsize,
+              	      	   	  	vx=tt["vp"][0],
+              	      	   	  	vy=tt["vp"][1],
+              	      	        vz=tt["vp"][2],
+              	      	   	  	m=tt["m"]*1e11,
+              	      	        id=tt["id"],
+                                mvir=tt["mvir"],
+                                rvir=tt["rvir"],
+ 	   	                        idx=tt["idx"])
 
         self.gcat = catalog
 
-        if convert:
+        if not is_tree and convert:
             convert_catalog(self.gcat, self.info.pboxsize)
         if catalog is not None:
             self.meta.id = int(catalog['id'])
