@@ -133,6 +133,7 @@ class Galaxy():
               	      	   	  	vx=tt["vp"][0],
               	      	   	  	vy=tt["vp"][1],
               	      	        vz=tt["vp"][2],
+                                r=tt["r"],
               	      	   	  	m=tt["m"]*1e11,
               	      	        id=tt["id"],
                                 mvir=tt["mvir"],
