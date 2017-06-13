@@ -9,7 +9,7 @@ Created on Wed Jan 21 11:45:42 2015
 """
 import numpy as np
 from utils.io_module import read_fortran, skip_fortran
-import time
+
 
 class Tree():
     def __init__(self, fn=None,
@@ -271,7 +271,9 @@ class Tree():
 
         return atree, idx_prgs_alltime
 
-    def get_all_trees(self, idx_prgs_alltime, skip_main=True, filter_dup =True):
+    def get_all_trees(self, idx_prgs_alltime,
+					 skip_main=True,
+					 filter_dup=True):
         """
         * For a given idx_prgs list of lists, find main progenitor tree of all entries.
         * A satellite can contribute to a host over multiple snapshots by

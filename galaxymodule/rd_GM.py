@@ -6,7 +6,7 @@ Inherits galaxymodule.galaxy.Galaxy class
 
 @author: hoseung
 """
-import galaxymodule
+from galaxymodule.galaxy import Galaxy
 from load.utils import read_header, read_fortran
 import numpy as np
 
@@ -93,7 +93,7 @@ class Dummy():
     def __init__(self):
         pass
 
-class Gal(galaxymodule.galaxy.Galaxy):
+class Gal(Galaxy):
     def __init__(self, nout, idgal=None,
                  catalog=None, halo=None, info=None,
                  wdir='./', idhal = -1, load=True, rscale=1.5):

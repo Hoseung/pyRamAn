@@ -11,10 +11,10 @@ from load.utils import read_header
 import numpy as np
 
 
-class Gal():
-    def __init__(self):
-        self.data = None
-        self.header = None
+#class Gal():
+#    def __init__(self):
+#        self.data = None
+#        self.header = None
 
 
 def rd_gal(nout, idgal, wdir="GalaxyMaker/", metal=True, nchem=0,long=True):
