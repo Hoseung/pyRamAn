@@ -14,16 +14,17 @@ class Dummy():
 
 
 class Hydro(Simbase):
-    def __init__(self, 
-                 nout=None, 
-                 info=None, 
-                 amr=None, 
-                 region=None, 
-                 ranges=None, 
+    def __init__(self,
+                 nout=None,
+                 info=None,
+                 amr=None,
+                 region=None,
+                 ranges=None,
                  load=False,
                  cosmo=True,
                  cpus=None,
-                 cpu_fixed=None):
+                 cpu_fixed=None,
+                 nvarh=None):
         """
         Parameters
         ----------
@@ -31,6 +32,10 @@ class Hydro(Simbase):
             d
         ranges : array-like (3 by 2)
             region preceeds(?) ranges.
+        nvarh : int
+            Desired number of hydro variable to load.
+            nvarh=5 loads rho, vel, temp, and metal.
+            nvarh=12 load all chemical components (HAGN)
         """
         super(Hydro, self).__init__()
         self.cosmo = cosmo
@@ -43,6 +48,7 @@ class Hydro(Simbase):
         self.nout = info.nout
         self.cpus = cpus
         self.cpu_fixed=cpu_fixed
+        self.nvarh=nvarh
         try:
             self.ncpu = len(self.cpus)
         except:
@@ -109,11 +115,11 @@ class Hydro(Simbase):
         self.header.nlevelmax = h1['nlevelmax']
         self.header.nboundary = h1['nboundary']
         self.header.gamma = h1['gamma']
-        self.header.nvarh = h1['nvarh']
+        self.header.nvarh_org = h1['nvarh']
 
     def amr2cell(self, lmax=None, icpu=0, cpu=True,
                  verbose=False, return_meta=False,
-                 ranges=None):
+                 ranges=None, nvarh=None):
         """
         Loads AMR and HYDRO and output hydro data into particle-like format(cell).
 
@@ -122,14 +128,18 @@ class Hydro(Simbase):
         cpu : bool, optional
             If True, cpu number of each cell is stored.
         icpu : int, array-like, optional
-            list of cpus to load, has no effect... 
+            list of cpus to load, has no effect...
         lmax : int, optional
             Limit the maximum level of hydro data returned.
         return_meta : bool, optional
             If True, returns meta data instead. (Why would I want that??)
         verbose : bool, optional
-            
-        """       
+
+        """
+        if nvarh is None:
+            nvarh = self.header.nvarh_org
+
+        self.header.nvarh = nvarh
         nvarh = self.header.nvarh
         nlevelmax = self.header.nlevelmax
         if lmax is None:
@@ -147,7 +157,7 @@ class Hydro(Simbase):
         if verbose:
             print("[hydro.amr2cell] Ranges", xmi, xma, ymi, yma, zmi,zma)
             print("[hydro.amr2cell] cpus", self.cpus)
-        
+
         from load import a2c
         out = a2c.a2c_count(work_dir, xmi, xma, ymi, yma, zmi, zma, lmax, self.cpus)
         if verbose: print("[hydro.amr2ell] a2c_count done")
@@ -158,7 +168,7 @@ class Hydro(Simbase):
         else:
             cell = a2c.a2c_load(work_dir, xmi, xma, ymi, yma, zmi, zma,\
                                 lmax, out[0], nvarh, self.cpus)
-            dtype_cell = [('x', '<f8'), ('y', '<f8'), ('z', '<f8'), ('dx', '<f8')] 
+            dtype_cell = [('x', '<f8'), ('y', '<f8'), ('z', '<f8'), ('dx', '<f8')]
             if cpu:
                 dtype_cell.append(('cpu', '<f8'))
             for i in range(nvarh):
@@ -173,8 +183,8 @@ class Hydro(Simbase):
             self.cell['var' + str(i)] = cell[2][:,i]
         if cpu:
             self.cell['cpu'] = cell[3]
-            
-            
+
+
     def amr2cell_old(self, lmax=None, icpu=0, verbose=False):
         """
         Reads AMR and HYDRO and output hydro variables in particle-like data format.

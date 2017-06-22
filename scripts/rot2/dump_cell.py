@@ -10,7 +10,7 @@ def radial_cut(xc,yc,zc,r, x,y,z):
                     np.square(yc-y) +
                     np.square(zc-z) < r**2)[0]
 
-def dump_cell(cell, fname, nout, gid):
+def dump_cell(cell, fname, nout, gid, skip_elements=True):
     from utils import io
     import struct
     
@@ -28,7 +28,11 @@ def dump_cell(cell, fname, nout, gid):
         f.write(struct.pack('i', 4))
         f.write(struct.pack('i', len(cell)))
         f.write(struct.pack('i', 4))
-        for field in cell.dtype.names:
+        if skip_elements:
+            fields_to_dump = ["x", "y", "z", "dx", "var0", "var1", "var2", "var3", "var4", "var5"] 
+        else:
+            fields_to_dump = cell.dtype.names
+        for field in fields_to_dump:
             io.write_fortran(f, cell[field])
 
             
