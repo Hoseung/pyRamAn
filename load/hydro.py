@@ -24,7 +24,7 @@ class Hydro(Simbase):
                  cosmo=True,
                  cpus=None,
                  cpu_fixed=None,
-                 nvarh=None):
+                 nvarh=5):
         """
         Parameters
         ----------
