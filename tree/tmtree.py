@@ -223,7 +223,7 @@ class Tree():
         # idx, id, bushID, st, hosts(5), nprgs, np(if not big_run)
         # m, macc, xp(3), vp(3), lp(3), abc(4), energy(3), spin, virial(4), rho(2)
 
-    def extract_direct_full_tree(self, idx):
+    def extract_direct_full_tree(self, idx, return_id=False):
         """
         Extracts main progenitors from a TreeMaker tree.
 
@@ -240,7 +240,8 @@ class Tree():
         """
 
         t = self.tree
-        #fatherID = self.fatherID
+        if return_id:
+            fatherID = self.fatherID
         fatherIDx = self.fatherIDx
         fatherMass = self.fatherMass
 
@@ -252,24 +253,46 @@ class Tree():
 
         idx_prgs_alltime = [[idx]]
 
-        for i in range(1, nstep + 1):
-            try:
-                idx_father = fatherIDx[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]] -1
-                if len(idx_father) > 0:
-                    idx_prgs_alltime.append(list(idx_father[idx_father>0]))
-                    mass_father = fatherMass[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]]
-                    idx = idx_father[np.argmax(mass_father)]
-                    if idx < 1:
+        if return_id:
+            id_prgs_alltime = [[t[idx]["id"]]]
+            for i in range(1, nstep + 1):
+                try:
+                    idx_father = fatherIDx[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]] -1
+                    id_father = fatherID[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]] -1
+                    if len(idx_father) > 0:
+                        idx_prgs_alltime.append(list(idx_father[idx_father>0]))
+                        id_prgs_alltime.append(list(id_father[id_father>0]))
+                        mass_father = fatherMass[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]]
+                        idx = idx_father[np.argmax(mass_father)]
+                        if idx < 1:
+                            break
+                        t_father=t[idx]
+                        atree[i]=t_father
+                        nouts.append(nstep)
+                    else:
                         break
-                    t_father=t[idx]
-                    atree[i]=t_father
-                    nouts.append(nstep)
-                else:
+                except:
                     break
-            except:
-                break
+            return atree, idx_prgs_alltime, id_prgs_alltime
+        else:
+            for i in range(1, nstep + 1):
+                try:
+                    idx_father = fatherIDx[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]] -1
+                    if len(idx_father) > 0:
+                        idx_prgs_alltime.append(list(idx_father[idx_father>0]))
+                        mass_father = fatherMass[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]]
+                        idx = idx_father[np.argmax(mass_father)]
+                        if idx < 1:
+                            break
+                        t_father=t[idx]
+                        atree[i]=t_father
+                        nouts.append(nstep)
+                    else:
+                        break
+                except:
+                    break
 
-        return atree, idx_prgs_alltime
+            return atree, idx_prgs_alltime
 
     def get_all_trees(self, idx_prgs_alltime,
 					 skip_main=True,
