@@ -111,9 +111,10 @@ class Gal(Galaxy):
         """
         assert(not(idgal == None and catalog == None)), ("either idgal or a catalog"
         " is needed.")
-        print("info", info)
-        if idgal == None:
+        assert(not(info == None)), "Need info, use info=gcat.info"
+        if idgal is None:
             idgal = catalog["id"]
+
         super(Gal, self).__init__(catalog=catalog, info=info, halo=halo)
         self.star = None # data -> star
         self.header = None
@@ -263,7 +264,7 @@ class Gal(Galaxy):
 
         try:
             if type_dm == "gm":
-                self.dm = rd_dm(self.nout, self.gid, wdir=self.wdir)
+                self.dm = rd_dm(self.nout, self.hid, wdir=self.wdir)
                 self.units.dm.name="gm"
             elif type_dm == 'raw':
                 from load.part import Part

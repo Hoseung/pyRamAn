@@ -24,7 +24,7 @@ class Hydro(Simbase):
                  cosmo=True,
                  cpus=None,
                  cpu_fixed=None,
-                 nvarh=None):
+                 nvarh=5):
         """
         Parameters
         ----------
@@ -48,7 +48,6 @@ class Hydro(Simbase):
         self.nout = info.nout
         self.cpus = cpus
         self.cpu_fixed=cpu_fixed
-        self.nvarh=nvarh
         try:
             self.ncpu = len(self.cpus)
         except:
@@ -63,6 +62,7 @@ class Hydro(Simbase):
                                  + '.out'
         self._get_basic_info()
         self.set_info(info)
+        self.header.nvarh=nvarh
         if region is not None:
             ranges = region['ranges']
         if ranges is not None:
@@ -137,10 +137,12 @@ class Hydro(Simbase):
 
         """
         if nvarh is None:
-            nvarh = self.header.nvarh_org
+            if self.header.nvarh is None:
+                nvarh = self.header.nvarh_org
+                self.header.nvarh = nvarh
+            else: 
+                nvarh = self.header.nvarh
 
-        self.header.nvarh = nvarh
-        nvarh = self.header.nvarh
         nlevelmax = self.header.nlevelmax
         if lmax is None:
             lmax = nlevelmax
@@ -167,7 +169,8 @@ class Hydro(Simbase):
             return (out[0], work_dir, xmi, xma, ymi, yma, zmi, zma, lmax)
         else:
             cell = a2c.a2c_load(work_dir, xmi, xma, ymi, yma, zmi, zma,\
-                                lmax, out[0], nvarh, self.cpus)
+                                lmax, out[0], nvarh+2, self.cpus)
+            # nvarh + 2 because fortran stars from 1, and nvarh=5 means 0,1,2,3,4,5.
             dtype_cell = [('x', '<f8'), ('y', '<f8'), ('z', '<f8'), ('dx', '<f8')]
             if cpu:
                 dtype_cell.append(('cpu', '<f8'))

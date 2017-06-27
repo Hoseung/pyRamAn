@@ -314,7 +314,7 @@ subroutine a2c_load(xarr, dxarr, varr, cpuarr, repository, xmin, xmax, ymin, yma
 !  real::boxlen,t
 
   integer::imin,imax,jmin,jmax,kmin,kmax
-  integer::nvarh
+  integer::nvarh, nvarh_org
   integer::ix,iy,iz
   integer::nx_full,ny_full,nz_full
   real(kind=8)::xxmin,xxmax,yymin,yymax,zzmin,zzmax,dx,dx2
@@ -463,7 +463,7 @@ subroutine a2c_load(xarr, dxarr, varr, cpuarr, repository, xmin, xmax, ymin, yma
      nomfich=TRIM(repository)//'/hydro_'//TRIM(nchar)//'.out'//TRIM(ncharcpu)
      open(unit=11,file=nomfich,status='old',form='unformatted')
      read(11)
-     read(11)nvarh
+     read(11)nvarh_org
      read(11)
      read(11)
      read(11)
@@ -543,8 +543,8 @@ subroutine a2c_load(xarr, dxarr, varr, cpuarr, repository, xmin, xmax, ymin, yma
            if(ngridfile(j,ilevel)>0)then
               ! Read hydro variables
               do ind=1,twotondim
-                 do ivar=1,nvarh
-                    if(j.eq.icpu)then
+                 do ivar=1,nvarh_org
+                    if(j.eq.icpu .and. ivar .le. nvarh)then
                        read(11)var(:,ind,ivar)
                     else
                        read(11)
