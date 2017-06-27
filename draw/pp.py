@@ -511,18 +511,28 @@ def pp_halo(h, npix, rscale=1.0, region=None, ind=None, ax=None,
 
 
 def resize(X,shape=None):
+    from scipy.ndimage import zoom
+    shape = [shape[0]/X.shape[0], shape[1]/X.shape[1]]
+
+    return zoom(np.nan_to_num(X), shape)
+
+def resize_deprecated(X,shape=None):
     """
+    Deprecated since 2017.06.26
+
     resizes N-D array X into shape.
     For example,
     2D 100 * 100 array -> 200 * 200
     new = resize(img, [200,200])
+
+    NOTE
+    ----
+        Doesn't work if the image is not rectangular.
     """
     import numpy as np
     if shape==None:
         return X
     m,n = shape
-#    print(shape)
-#    print(m,n)
     Y = np.zeros((m,n),dtype=type(X[0,0]))
     k = len(X)
     p,q = k/m,k/n
@@ -665,7 +675,8 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
             column=False,
             region=None,
             xmin=None, xmax=None, ymin=None, ymax=None,
-            hvar="rho", field_var=None):
+            hvar="rho", field_var=None,
+            do_resize=True):
     """
     Accepts cell data and returns 2D projected gas map.
      *position and dx must be in the same unit.
@@ -738,17 +749,18 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
     if yma0 is None:
         yma0 = max(y)
 
-    xl = x - cell['dx']/2*sigrange # array as long as x
-    xr = x + cell['dx']/2*sigrange
-    yl = y - cell['dx']/2*sigrange
-    yr = y + cell['dx']/2*sigrange
+    xl = x - cell['dx']*0.5*sigrange # array as long as x
+    xr = x + cell['dx']*0.5*sigrange
+    yl = y - cell['dx']*0.5*sigrange
+    yr = y + cell['dx']*0.5*sigrange
 
     maxdx = max(cell['dx'])
 
 # Assuming no slice.
     tol = maxdx #
+    print("maxdx", tol)
     val = np.where((xr >= xmi0-tol) & (xl <= xma0+tol) &
-                  (yr >= ymi0-tol) & (yl <= yma0+tol))[0]
+                   (yr >= ymi0-tol) & (yl <= yma0+tol))[0]
 
 # Check for valid cell existing.
     if len(val) == 0:
@@ -784,15 +796,18 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
     mass.transpose()
 
     mindx = min(dx)
+    print("mindx", mindx)
+    print("xmi, ymi", xmi0, xma0, ymi0, yma0)
 
     xmi = np.floor(xmi0/mindx)*mindx
     xma = np.ceil(xma0/mindx)*mindx
     nx = np.round((xma-xmi-mindx)/mindx).astype(np.int32)
 
     ymi = np.floor(ymi0/mindx)*mindx
-    yma = ymi + mindx*nx + mindx
+    yma = np.ceil(yma0/mindx)*mindx#ymi + mindx*nx + mindx
     ny = np.round((yma-ymi-mindx)/mindx).astype(np.int32)
 
+    #nx=ny=max([nx,ny])
     if verbose:
         print(" ... working resolution % npix ", nx, ny)
         print(" ... given npix:", npix)
@@ -813,7 +828,8 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
     ixr = np.round(xr / mindx).astype(np.int32) - ixmi -1
     iyl = np.round(yl / mindx).astype(np.int32) - iymi
     iyr = np.round(yr / mindx).astype(np.int32) - iymi -1
-    iin = np.where((ixr >= 0) & (ixl <= nx-1) & (iyr >= 0) & (iyl <= ny-1))[0].astype(np.int32)
+    iin = np.where((ixr >= 0) * (ixl <= nx-1) * (iyr >= 0) * (iyl <= ny-1))[0].astype(np.int32)
+    print(len(iin))
     # What does it mean?
 
     fd = ixl < 0
@@ -852,10 +868,15 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
         print(mass[100:110])
         print(sden[100:110])
 
-    #print(nx, ny, npix)
     # if ppc.col_over_denom throw an type missmatch error,
     # compile the ppc module locally once more.
-    return resize(ppc.col_over_denom(iin,
+    if do_resize:
+        return resize(ppc.col_over_denom(iin,
+                ixl, ixr, iyl, iyr,
+                mass, sden,
+                nx, ny, column), [npix,npix])
+    else:
+        return ppc.col_over_denom(iin,
             ixl, ixr, iyl, iyr,
             mass, sden,
-            nx, ny, column), [npix,npix])
+            nx, ny, column)
