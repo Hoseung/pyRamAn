@@ -33,13 +33,12 @@ def do_work(sub_sample, nout,
     """ 
     Per process. 
     """ 
-     
     import utils.sampling as smp 
     import galaxymodule as galm 
     from utils.cosmology import Timeconvert 
-    from galaxymodule import mk_gal_params as mgp
-    
+    from galaxymodule import mk_gal_params as mgp    
     from scipy.spatial import cKDTree
+    from load.sim import Sim
     
     gen_vmap_sigmap_params = dict(npix_per_reff=5,
                                   rscale=3.0,
@@ -59,9 +58,9 @@ def do_work(sub_sample, nout,
     mgp.HAGN["verbose"] = False
     Mcut = 1e10
  
-    s = load.sim.Sim(nout=nout)
+    s = Sim(nout=nout)
     tc = timeconverter = Timeconvert(s.info)
-    
+    print("11")
     xrange = [min(sub_sample["x"] - sub_sample["r"] * rscale),
           max(sub_sample["x"] + sub_sample["r"] * rscale)]
     yrange = [min(sub_sample["y"] - sub_sample["r"] * rscale),
@@ -70,7 +69,6 @@ def do_work(sub_sample, nout,
           max(sub_sample["z"] + sub_sample["r"] * rscale)]
     #print(xrange, yrange, zrange)
     region = smp.set_region(ranges=[xrange, yrange, zrange])
-
 
 
     s.set_ranges(region["ranges"])

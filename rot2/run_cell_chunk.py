@@ -12,6 +12,10 @@ from rot2 import cell_chunk_module as ccm
 import pickle
 #from rot2 import prg_modules as prm
 
+def test(nout):
+    print(nout)
+    return(nout**2)
+
 if __name__ == "__main__":
 
     # for nout in nouts:
@@ -27,8 +31,9 @@ if __name__ == "__main__":
         args.append([cat_chunk, nout])
 
     # Parallelize
-    with Pool(processes=4) as pool:
-        pool.starmap_async(ccm.do_work, args)
+    with Pool(processes=2) as pool:
+        pool.starmap(ccm.do_work, args)
+        # Why can't I use starmap_async?
 
     print("DONE")
 
