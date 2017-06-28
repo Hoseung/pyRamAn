@@ -18,14 +18,17 @@ def get_cell(allcell, region):
     return allcell[ind] 
  
      
-def get_cell_kd(kdtree, gal, rscale=15.0): 
+def get_cell_kd(kdtree, gal, pboxsize, rscale=25.0): 
     """ 
     Extract cells within rscale * Rreff and add to the galaxy.  
     """ 
     xc,yc,zc = gal.meta.xc, gal.meta.yc, gal.meta.zc 
-    rgal = gal.meta.reff * rscale 
+    rgal = gal.meta.reff * rscale / (pboxsize*1e3) # kpc -> code unit
     #index = kdtree.query_ball_point((xc,yc,zc), rgal) 
-    return kdtree.query_ball_point((xc,yc,zc), rgal)
+    xyzcen = (xc/pboxsize + 0.5,
+              yc/pboxsize + 0.5,
+              zc/pboxsize + 0.5)
+    return kdtree.query_ball_point(xyzcen, rgal)
  
 
 def do_work(sub_sample, nout,
@@ -43,6 +46,7 @@ def do_work(sub_sample, nout,
     from load.sim import Sim
     from galaxymodule import vmax_sig
     import pickle
+    from galaxymodule.quick_mock import Simplemock
     
     gen_vmap_sigmap_params = dict(npix_per_reff=5,
                                   rscale=3.0,
@@ -94,7 +98,6 @@ def do_work(sub_sample, nout,
 
     # Common 5
     # Mock image generator
-    from galaxymodule.quick_mock import Simplemock
     MockSED = Simplemock()#repo=dfl.dir_repo+'sed/')
 
     result_sub_sample=[]    
@@ -105,7 +108,7 @@ def do_work(sub_sample, nout,
                             catalog=gcat_this.copy(),
                             info=s.info)
         #print("s.info.pboxsize", s.info.pboxsize)
-        #print("loading galaxy ")
+        print("loading galaxy ")
         gg.debug=False
         make_gal.mk_gal(gg,**mgp.HAGN)
         if gg.meta.nstar < 60:
@@ -118,8 +121,8 @@ def do_work(sub_sample, nout,
         # r-band luminosity to be used as weights.
         gg.star.Flux_r= MockSED.get_flux(star=gg.star, filter_name='r')
 
-        gg.cell=s.hydro.cell[get_cell_kd(kdtree, gg)]
-        if len(gg.cell) > 0:
+        gg.cell=s.hydro.cell[get_cell_kd(kdtree, gg, s.info.pboxsize)]
+        if len(gg.cell) > 1:
             #print(s.hydro.cell["x"].ptp())
             if save_cell:
                 pickle.dump(gg.cell, open("CELL_"+str(nout) + "_" + str(gg.meta.id) + ".pickle", "wb"))
@@ -133,21 +136,26 @@ def do_work(sub_sample, nout,
             # Do other calculations
             gg.meta.mgas_tot = np.sum(gg.cell["var0"]*gg.cell["dx"]**3)
             cold_cell = gg.cell[rho_t_cut(gg.cell, s.info)]
-            #print("Numbe of cold cells", len(cold_cell))
-            i_dense = ind_dense(cold_cell, dr=5, rmax=200)
-            if len(i_dense)/len(cold_cell) < 1e-3:
-                print("Warning.. only a tiny fraction of cold gas is bound to the galaxy?")
-            gg.cell = cold_cell[i_dense]
-            #make_gal.extract_cold_gas(gg, dr=5, rmax=200)
-         
-            gg.meta.mgas_cold = np.sum(gg.cell["var0"]*gg.cell["dx"]**3) # Unit??
-         
-            vec_rot = np.cross(np.stack((gg.cell["x"],gg.cell["y"],gg.cell["z"])).T,
-                           np.stack((gg.cell["var1"],
-                                     gg.cell["var2"],
-                                     gg.cell["var3"])).T)
-         
-            gg.meta.Ln_gas = (vec_rot.T * (gg.cell["dx"]**3 *gg.cell["var0"])).sum(axis=1)
+            if len(cold_cell) < 1:
+                # this galaxy has no cold gas. That's possible. 
+                gg.meta.mgas_cold = 0
+                gg.meta.Ln_gas = (-1,-1,-1)
+            else:
+                #print("Numbe of cold cells", len(cold_cell))
+                i_dense = ind_dense(cold_cell, dr=5, rmax=200)
+                if len(i_dense)/len(cold_cell) < 1e-3:
+                    print("Warning.. only a tiny fraction of cold gas is bound to the galaxy?")
+                gg.cell = cold_cell[i_dense]
+                #make_gal.extract_cold_gas(gg, dr=5, rmax=200)
+          
+                gg.meta.mgas_cold = np.sum(gg.cell["var0"]*gg.cell["dx"]**3) # Unit??
+          
+                vec_rot = np.cross(np.stack((gg.cell["x"],gg.cell["y"],gg.cell["z"])).T,
+                               np.stack((gg.cell["var1"],
+                                         gg.cell["var2"],
+                                         gg.cell["var3"])).T)
+          
+                gg.meta.Ln_gas = (vec_rot.T * (gg.cell["dx"]**3 *gg.cell["var0"])).sum(axis=1)
 
 
         # Now star and cell memberships are determined. 
@@ -168,7 +176,7 @@ def do_work(sub_sample, nout,
 
         result_sub_sample.append(gg.meta)
 
-    fout = out_dir + "result_sub_sample_" + str(nout) + "_from" + str(sub_sample[0]["idx"]) + ".pickle"
+    fout = out_dir + "result_sub_sample_" + str(nout) + "_from" + str(sub_sample[0]["id"]) + ".pickle"
     pickle.dump(result_sub_sample, open(fout, "wb"))
 
 
@@ -203,7 +211,7 @@ def cat_only_relevant_gals(gcat, all_sample_ids, nout):
 
 #def do_my_jobs(gg):
 
-def ind_dense(cell, rmax = 180, dr = 5, rmin=1):
+def ind_dense(cell, rmax = 200, dr = 5, rmin=1):
     """
         Measure radial profile and returns indices of cells inside r_min,
         where r_min is the local minima of radial MASS profile.
@@ -219,9 +227,8 @@ def ind_dense(cell, rmax = 180, dr = 5, rmin=1):
     r_sorted = rr[i_sort]
     mm = cell["dx"]**3 * cell["var0"]
     m_sorted = mm[i_sort]
-
     rmax = min([np.max(rr), rmax])
-    
+    #print("rmax now", rmax)
     # Note 1.
     # Depends on the cell resolution. How about 8 * dx_min? 
     # Larger dx will count in small satellites,
@@ -246,7 +253,10 @@ def ind_dense(cell, rmax = 180, dr = 5, rmin=1):
     if i_zero > 0:
         ind_min = i_zero -1
     else:
-        ind_min= argrelmin(m_radial)[0] -1 # 1D array for 1D input. 
+        try:
+            ind_min= min(argrelmin(m_radial)[0]) -1 # 1D array for 1D input. 
+        except:
+            ind_min = -1
         #ind_min = ind_min[np.argmax(ind_min * dr > rmin)]* dr
     
     # Note 2.
