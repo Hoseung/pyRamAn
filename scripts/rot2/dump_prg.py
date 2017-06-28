@@ -53,9 +53,10 @@ np.savetxt("final_ids_allmassive_gal.txt", final_ids, fmt='%d')
 num_gal = len(final_ids)
 
 for i, (fid,fidx) in enumerate(zip(final_ids, final_idxs)):
-    maintree, idx_prgs_alltime = tt.extract_direct_full_tree(fidx)
+    maintree, idx_prgs_alltime, id_prgs_alltime = tt.extract_direct_full_tree(fidx, return_id=True)
     # All list
-    pickle.dump(idx_prgs_alltime, open(basedir+"pidxs/"+fname(fidx, is_gal), "wb"))
+    pickle.dump(idx_prgs_alltime, open(basedir+"pidxs/IDx"+fname(fidx, is_gal), "wb"))
+    pickle.dump(id_prgs_alltime, open(basedir+"pidxs/ID"+fname(fidx, is_gal), "wb"))
     adp = tt.get_all_trees(idx_prgs_alltime)
     pickle.dump((maintree, idx_prgs_alltime, adp), open(basedir+"ptrees/"+fname(fidx, is_gal), "wb"))
     print("{}-th / {}".format(i, num_gal), end="\r")

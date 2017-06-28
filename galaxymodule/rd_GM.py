@@ -133,7 +133,7 @@ class Gal(Galaxy):
         self.set_info(info)
         self.rscale=rscale
         if load:
-            self.load()
+            self.load(type_dm=None, type_cell=None)
 
     def _check_info(self):
         return hasattr(self.info, "unit_l")

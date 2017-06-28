@@ -171,7 +171,7 @@ class Simplemock():
         #Flux = np.multiply(filter_in_sed_wavelengths[:-1] * \
         #                   (filter_in_sed_wavelengths[:-1] \
         #                    - filter_in_sed_wavelengths[1:]), Flux)
-        Flux = np.multiply(filter_in_sed_wavelengths[:-1] * wavelength, Flux)#\
+        Flux = np.multiply(filter_in_sed_wavelengths[:-1] * wavelength[-1], Flux)#\
 
         # Need to multiply stellar mass
 

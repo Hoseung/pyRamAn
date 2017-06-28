@@ -1,25 +1,26 @@
 #import matplotlib
 #matplotlib.use("Qt5Agg")
 #import matplotlib.pyplot as plt
-import load 
+#import load 
 import numpy as np
 import tree.halomodule as hmo
-from general import defaults
-from galaxymodule import rotation_parameter, rd_GM
-from utils import hagn
+#from utils import hagn
 from multiprocessing import Pool
 from rot2 import cell_chunk_module as ccm
 import pickle
 #from rot2 import prg_modules as prm
 
-def test(nout):
-    print(nout)
-    return(nout**2)
-
 if __name__ == "__main__":
 
+    nnza = np.genfromtxt("./nout_nstep_zred_aexp.txt",
+                     dtype=[("nout", int),
+                            ("nstep", int),
+                            ("zred", float),
+                            ("aexp", float)])
+
     # for nout in nouts:
-    nout = 782 
+    nouts = nnza["nout"]
+    nout = nouts[3]
     gcat = hmo.Halo(nout=nout, is_gal=True)
 
     prg_dir = "./all_direct_prgs_gal/"
@@ -27,12 +28,13 @@ if __name__ == "__main__":
     ccm.cat_only_relevant_gals(gcat, all_sample_ids, nout) 
 
     args =[]
-    for cat_chunk in ccm.domain_decompose_cat(gcat, nbins=5):
+    for cat_chunk in ccm.domain_decompose_cat(gcat, nbins=10):
         args.append([cat_chunk, nout])
+        ccm.do_work(cat_chunk, nout)
 
     # Parallelize
-    with Pool(processes=2) as pool:
-        pool.starmap(ccm.do_work, args)
+    #with Pool(processes=2) as pool:
+    #    __ = pool.starmap_async(ccm.do_work, args)
         # Why can't I use starmap_async?
 
     print("DONE")
