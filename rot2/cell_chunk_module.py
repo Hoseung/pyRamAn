@@ -227,7 +227,9 @@ def ind_dense(cell, rmax = 200, dr = 5, rmin=1):
     r_sorted = rr[i_sort]
     mm = cell["dx"]**3 * cell["var0"]
     m_sorted = mm[i_sort]
-    rmax = min([np.max(rr), rmax])
+    rmax = max([10, min([np.max(rr), rmax])])
+    #print(rmax)
+    
     #print("rmax now", rmax)
     # Note 1.
     # Depends on the cell resolution. How about 8 * dx_min? 

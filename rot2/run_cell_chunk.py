@@ -20,7 +20,7 @@ if __name__ == "__main__":
 
     # for nout in nouts:
     nouts = nnza["nout"]
-    nout = nouts[1]
+    nout = nouts[0]
     gcat = hmo.Halo(nout=nout, is_gal=True)
 
     prg_dir = "./all_direct_prgs_gal/"
@@ -29,12 +29,16 @@ if __name__ == "__main__":
 
     args =[]
     for i, cat_chunk in enumerate(ccm.domain_decompose_cat(gcat, nbins=10)):
+        if i < 64:
+            continue
+        if len(cat_chunk) == 0:
+            continue
         args.append([cat_chunk, nout])
-    #    ccm.do_work(cat_chunk, nout)
+        ccm.do_work(cat_chunk, nout)
 
     # Parallelize
-    with Pool(processes=3) as pool:
-        pool.starmap(ccm.do_work, args)
+    #with Pool(processes=3) as pool:
+    #    pool.starmap(ccm.do_work, args)
         # Why can't I use starmap_async?
 
     print("DONE")
