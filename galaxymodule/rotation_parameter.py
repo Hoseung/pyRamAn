@@ -51,9 +51,19 @@ def gen_vmap_sigmap(self,
     Todo
     1. if n_pseudo > 1, sig = 0.3kpc should scale with aexp.
     2. Separate lambda calculation with voronoi tesselation.
+
+    Note
+    ----
+    As an analogy to np.histogram2d, there is a convenience function binned_statistic_2d.
+    For example, you can calculate std of each pixel as
+    >>> sig_map = binned_statistic_2d(gg.star["x"], gg.star["y"], gg.star["vz"], statistic=np.std, bins=40)
+
+    However, this convenience function is slower than this gen_vmap_sigmap() function (all packages updated at 2017.07.01).
+    ( > 18s Vs 10s for 60*1e5 particles, > 0.6s Vs 0.5s for 1e5 particles)
+    So, don't bother looking for other implementations ;)
+
     """
     # already centered.
-    self.meta.rscale_lambda = rscale
     reff = self.meta.reff
     # reff restriction must be given at earlier stage, radial_profile_cut()
     r_img_kpc = reff * (rscale+1) # in kpc

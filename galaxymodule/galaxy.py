@@ -158,104 +158,11 @@ class Galaxy():
 
         print([i * self.info.pboxsize * 100 for i in list(x)])
 
-    def radial_profile_cut(self, xx, yy, mm, vx, vy, vz,
-                           den_lim=1e6, den_lim2=5e6,
-                           mag_lim=25, nbins=100, rmax=20, dr=0.5,
-                           debug=False):
-        # 2D photometry. (if rotated towards +y, then use x and z)
-        # now assuming +z alignment.
-        rr = np.sqrt(np.square(xx) + np.square(yy))# in kpc unit
-        if debug:
-            print(min(rr), max(rr), min(xx), max(xx))
-
-        # Account for weights.
-        i_sort = np.argsort(rr)
-        r_sorted = rr[i_sort]
-        m_sorted = mm[i_sort]
-
-        rmax = min([np.max(rr), rmax])
-        nbins = int(rmax/dr)
-
-        if nbins < 3:
-            print("Too small size \n # of stars:", len(rr))
-            return False
-
-        frequency, bins = np.histogram(r_sorted, bins = nbins, range=[0, rmax])
-        bin_centers = bins[:-1] + 0.5 * dr # remove the rightmost boundary.
-
-        m_radial = np.zeros(nbins)
-        ibins = np.concatenate((np.zeros(1), np.cumsum(frequency)))
-
-        i_r_cut1 = nbins -1 # Maximum value
-        # on rare occasions, a galaxy's stellar surface density
-        # never crosses the density limit. Then i_r_cut1 = last index.
-        for i in range(nbins):
-            m_radial[i] = np.sum(m_sorted[ibins[i]:ibins[i+1]])
-            # Check stellar surface density
-            sig_at_r = m_radial[i]/(2 * np.pi * bin_centers[i] * dr)
-            if debug:
-                print(sig_at_r, den_lim)
-            if sig_at_r < den_lim:
-                i_r_cut1 = i-1
-                break
-        #i_r_cut2= np.argmax(m_radial/(2 * np.pi * bin_centers * dr) < den_lim2)
-        # If for some reason central region is less dense,
-        # profile can end at the first index.
-        # Instead coming from backward, search for the point the opposite condition satisfied.
-        if debug:
-            print(rmax, nbins)
-            print("frequency", frequency)
-            print("bins", bins)
-            print("ibins", ibins)
-            print("bin centers", bin_centers)
-            print("m_radial", m_radial)
-
-        den_radial_inverse = m_radial[::-1]/(2 * np.pi * bin_centers[::-1] * dr)
-        if debug: print("den_radial_inverse", den_radial_inverse)
-        if max(den_radial_inverse) < 2 * den_lim2:
-            np.set_printoptions(precision=3)
-            print("radial density :",den_radial_inverse)
-            return False
-        i_r_cut2=len(m_radial) - np.argmax(den_radial_inverse > den_lim2) -1
-        if debug:
-            print("[galaxy.Galaxy.radial_profile_cut] m_radial \n", m_radial)
-            print("[galaxy.Galaxy.radial_profile_cut] den_radial_inverse \n", den_radial_inverse)
-            print("[galaxy.Galaxy.radial_profile_cut] i_r_cut2", i_r_cut2)
-
-        mtot2 = sum(m_radial[:i_r_cut2])
-        mtot1 = sum(m_radial[:i_r_cut1])
-        i_reff2 = np.argmax(np.cumsum(m_sorted) > (0.5*mtot2))
-        i_reff1 = np.argmax(np.cumsum(m_sorted) > (0.5*mtot1))
-        self.meta.reff2 = r_sorted[i_reff2]
-        self.meta.reff  = r_sorted[i_reff1]
-        #print(bin_centers, i_r_cut2, m_radial)
-        self.meta.rgal2 = max([bin_centers[i_r_cut2],4*self.meta.reff2])
-        self.meta.rgal  = max([bin_centers[i_r_cut1],4*self.meta.reff])#bin_centers[i_r_cut1]
-
-#       velocity center
-#       It is not wrong for BCGs to have very large Reff(~50kpc).
-#       But referring the average velocity of stellar particles inside 50kpc
-#       as the system velocity is WRONG.
-#       If 1Reff is huge, try smaller aperture when measuring the system velocity.
-#
-        if debug:
-            print("[galaxy.Galaxy.radial_profile_cut] mtot, mtot2", mtot1, mtot2)
-
-        i_close = i_sort[:np.argmax(np.cumsum(m_sorted) > (0.2*mtot2))] # 20% closest particles
-
-
-        self.meta.vxc = np.average(vx[i_close])
-        self.meta.vyc = np.average(vy[i_close])
-        self.meta.vzc = np.average(vz[i_close])
-
-        return True
-
 
     def _convert_unit_meta(self, unit_conversion):
         """
             convert meta data into convenient unit.
         """
-
         if unit_conversion == "code":
             self.meta.xc *= self.info.pboxsize*1000
             self.meta.yc *= self.info.pboxsize*1000
@@ -338,179 +245,6 @@ class Galaxy():
         self.cell['vz'] = cell['var3'][icell]
         self.cell['temp'] = cell['var4'][icell]
         self.cell['metal'] = cell['var5'][icell]
-
-    def mk_gal(self,
-                save=False, verbose=False,
-                mstar_min=1e9,
-                den_lim=1e6, den_lim2=5e6,
-                rmin = -1, Rgal_to_reff=5.0, method_com=1, follow_bp=None,
-                unit_conversion="code"):
-        """
-            Refine given data (star, DM, gas) to define a realistic galaxy.
-            Raw star/DM/gas data as give are only rough representation of a galaxy.
-            But not much have to be thrown away, either.
-
-            Returns True if a "good" galaxy is made.
-
-            Parameters
-            ----------
-
-            Rgal_to_reff:
-                Galaxy radius = Reff * Rgal_to_reff.
-                By default, Rgal = 5*Reff.
-                (E's have smaller R_t_r, L's have larger.)
-
-            Notes
-            -----
-            #. Since now (as of 2016.03) galaxy calculation is based on the GalaxyMaker results,
-            let's just believe and minimize redundant processes such as determining the center of mass,
-            system velocity, and checking the presence of (unwanted) substructure.
-            #. Assuming all data in the code units.
-            #. dr, bin size in determining the radial profile cut scales with exponential factor.
-            Without scaling, 0.5kpc bin size is too large for ~1kpc galaxies at high-z.
-
-        """
-        # Need halo information
-        assert (self.gcat is not None), ("Need a catalog,"
-        "use Galaxy.set_halo() and provide x,y,z,vx,vy,vz,r,rvir, at least"
-        "Units are.. ?? ")
-
-        # And at least one component.
-        star = self.star
-        dm = self.dm
-        cell = self.cell
-
-        assert (self._has_star or self._has_dm or self._has_cell), ("At least"
-        "one of three(star, dm, gas) component is needed")
-
-        if self.star is not None:
-            self._convert_unit_meta(unit_conversion)
-            self._convert_unit("star", unit_conversion)
-        if dm is not None:
-            self._convert_unit("dm", unit_conversion)
-
-        # all tests passed.
-        if verbose:
-            print("Making a galaxy:", self.meta.id)
-            print("SAVE:", save)
-            print("Halo size:", self.gcat['rvir'])
-
-        #
-        member="Reff"
-
-        # galaxy center from GalaxyMaker. - good enough.
-        xc = self.gcat['x']
-        yc = self.gcat['y']
-        zc = self.gcat['z']
-
-        if verbose: print("xc, yc, zc =", xc, yc, zc)
-
-        rgal_tmp = min([self.gcat['r'] * 1e3, 30]) # gcat["rvir"] in kpc
-        if verbose: print("Rgal_tmp", rgal_tmp)
-        print("self.debug",self.debug)
-        dense_enough = self.radial_profile_cut(star['x'], star['y'], star['m'],
-                                star['vx'], star['vy'], star['vz'],
-                                den_lim=den_lim, den_lim2=den_lim2,
-                                mag_lim=25,
-                                nbins=int(rgal_tmp/0.5),
-                                dr=0.5 * self.info.aexp,
-                                rmax=rgal_tmp,
-                                debug=self.debug)
-
-        if not dense_enough:
-            print("Not dense enough")
-            return False
-        ind = np.where((np.square(star['x']) +
-                        np.square(star['y']) +
-                        np.square(star['z'])) < self.meta.rgal**2)[0]# in kpc unit
-
-        self.star = star[ind]
-
-        if self.debug:
-            print('[galaxy.Galaxy.mk_gal] mima vx 1', min(self.star['vx']), max(self.star['vx']))
-
-
-        self.meta.nstar = len(ind)
-        self.meta.mstar = sum(self.star['m'])
-
-        if self.meta.mstar < mstar_min:
-            print("Not enough stars: {:.2e} Msun".format(self.meta.mstar))
-            print("{} Aborting... \n".format(len(self.star['m'])))
-            self.meta.star = False
-            return False
-
-        self.meta.Rgal_to_reff = self.meta.rgal / self.meta.reff
-        # should not surpass rr_tmp, over where another galaxy might be.
-
-        # Test if the outer annulus has significant amount of stars
-        # -> it shouldn't.
-#        if verbose: print("Reff: ", reff_tmp)
-
-        # extract galaxy (particles and gas)
-        if star is not None:
-            nstar_tot = len(star['x'][ind])
-            if verbose: print("nstar tot:", nstar_tot)
-            if verbose: print("Store stellar particle")
-
-            if 'time' in self.star.dtype.names and unit_conversion == "code":
-                import utils.cosmology
-                self.star['time'] = utils.cosmology.time2gyr(self.star['time'],
-                                             z_now = self.info.zred,
-                                             info=self.info)
-
-        # VERY arbitrary..
-#        self.Rgal_to_reff = 4 #rgal_tmp / reff_tmp
-        rgal_tmp = self.meta.Rgal_to_reff *self.meta.reff
-
-        #print(".........", self.star['m'][100:120], self.mstar)
-        import utils.sampling as smp
-        self.region = smp.set_region(xc=self.meta.xc, yc=self.meta.yc, zc=self.meta.zc, radius = self.meta.rgal)
-
-        # Now, get cov
-#        self.get_cov(center_only=True)
-
-
-        if self.debug:
-            print('[galaxy.Galaxy.mk_gal] meta.v[x,y,z]c', self.meta.vxc, self.meta.vyc, self.meta.vzc)
-            print('[galaxy.Galaxy.mk_gal] mima vx 2', min(self.star['vx']), max(self.star['vx']))
-
-        if dm is not None:
-            if member == "Reff":
-                idm = np.where( np.square(dm["x"]) +
-                                np.square(dm["y"]) +
-                                np.square(dm["z"]) <= np.square(rgal_tmp))[0]
-            elif member == "v200":
-            # Although the velocity is redefined later,
-            # particle membership is fixed at this point.
-                idm = np.where( np.square(dm["vx"] - self.meta.vxc / self.info.kms)+
-                                np.square(dm["vy"] - self.meta.vyc / self.info.kms)+
-                                np.square(dm["vz"] - self.meta.vzc / self.info.kms) <= np.square(200**2))[0]
-
-
-        if cell is not None:
-            if verbose: print("Cell is NOT none")
-            icell = np.where(np.square(cell["x"] - xc) +
-                             np.square(cell["y"] - yc) +
-                             np.square(cell["z"] - zc) <= np.square(rgal_tmp))[0]
-
-            self._add_cell(cell, icell)
-            self._convert_unit("cell", unit_conversion)
-            self.cal_mgas()
-
-            self.cell = np.recarray(ncell_tot, dtype=dtype_cell)
-            self.cell['x'] = (cell['x'][icell] - xc) * self.info.pboxsize * 1000
-            self.cell['y'] = (cell['y'][icell] - yc) * self.info.pboxsize * 1000
-            self.cell['z'] = (cell['z'][icell] - zc) * self.info.pboxsize * 1000
-            self.cell['dx'] = cell['dx'][icell] * self.info.pboxsize * 1000
-            self.cell['rho'] = cell['var0'][icell]
-            self.cell['vx'] = cell['var1'][icell] * self.info.kms - self.meta.vxc
-            self.cell['vy'] = cell['var2'][icell] * self.info.kms - self.meta.vyc
-            self.cell['vz'] = cell['var3'][icell] * self.info.kms - self.meta.vzc
-            self.cell['temp'] = cell['var4'][icell]
-            self.cell['metal'] = cell['var5'][icell]
-
-
-        return True
 
 
     def reff_main_gal(self, x, y, z):
@@ -830,16 +564,6 @@ class Galaxy():
                              (self.cell['dx']  * kpc_in_cm)**3) / msun
         # [g/cm^3] * [cm^3] / [g/msun] = [msun]
 
-    def cal_sfr(self):
-        import utils
-        # average over last 100Myrs
-        time_new = 100 * 1e-3 # in Myr
-        ind_new_star = np.where(utils.cosmology.time2gyr(
-                        self.star['time'], z_now=self.info.zred, info=self.info) * 1e3 < time_new)[0]
-        m_star_new = sum(self.star['m'][ind_new_star])
-        self.meta.sfr=m_star_new / time_new
-        return m_star_new / time_new
-
     def cal_ssfr(self):
         if self.meta.sfr == 0:
             self.cal_sfr()
@@ -877,435 +601,6 @@ class Galaxy():
             mm = np.repeat(mm,n_times)/n_times
             vz = np.repeat(vz,n_times)
             return xnew, ynew, mm, vz
-
-    def cal_lambda_r_eps(self,
-                         npix_per_reff=5,
-                         rscale=3.0,
-                         method='ellip',
-                         verbose=False,
-                         galaxy_plot_dir='./',
-                         n_pseudo=1,
-                         voronoi=None,
-                         save_result = True,
-                         iterate_mge = False,
-                         mge_interpol = False):
-        """
-        Parameters
-        ----------
-        npix: int
-            number of points per 2*reff.
-        r:
-            ??
-        rscale:
-            Lambda_r is calculated for annuli up to Reff*rscale.
-
-        Notes
-        -----
-        Calculate rotation parameter(lambda_r).
-        rotation parameter is calculated at all points (r < rscale*self.reff)
-        constructing a curve. But only the value at 0.5Reff is used as
-        a representative value (Emsellem + 07).
-        Values at r = 1.0 Reff is reported to behave similar to the value at 0.5Reff.
-
-        Fixed number of pixels for all galaxies.
-        boxsize = rscale * Reff * 2
-        dx = Reff / npix
-        npix_all = npix * rscale
-
-        method1:
-
-
-        method2:
-
-        MGE parameters
-        iterate_mge : run MGE with various light fraction
-                      to find out half light radius.
-        mge_interpol : from iterative measruements of MGE,
-                       interpolate quantities at the half light radius.
-                       It's better to interpolate when iterate_mge = True.
-
-        """
-
-        import matplotlib.pyplot as plt
-
-        # already centered.
-        self.meta.rscale_lambda = rscale
-
-        reff = self.meta.reff
-        # reff restriction must be given at earlier stage, radial_profile_cut()
-        r_img_kpc = reff * (rscale+1)
-        # in kpc
-        # Some margin makes mmap and vmap look better.
-        # If rscale = 3 is given, calculate inside 3Reff,
-        # but plot a map of 4Reff.
-
-        dx = reff / npix_per_reff # kpc/pixel
-        npix = round(npix_per_reff * 2 * (rscale + 1))
-        nx, ny = npix, npix
-        # to suppress contamination from tidal tail,
-        # give a cylindrical cut, not spherical cut.
-        # Cappellari 2002 assumes Cylindrical velocity ellipsoid.
-        # particles inside 4Reff.
-        ind = (np.square(self.star['x']) + \
-               np.square(self.star['y'])) < np.square(reff * (rscale + 1))
-
-        n_frac = sum(ind)/self.meta.nstar*100
-        if verbose :
-            print("{:.2f}% of stellar particles selected".format(n_frac))
-        if n_frac < 10:
-            print("Too few stars are selected. Check:")
-            print("min max x", min(self.star['x']), max(self.star['x']))
-            print("min max y", min(self.star['y']), max(self.star['y']))
-            print("min max z", min(self.star['z']), max(self.star['z']))
-            print("# star", len(ind))
-            return [-1,-1,-1], [-1,-1,-1]
-        # 100% means that the galaxy radius is smaller than 4Reff.
-        # Considering ellipticity, even 4Reff may not be enough to derive.
-
-        if n_pseudo > 1:
-            # sig in kpc unit. up to 1M particles
-            # sig = 0.3kpc from Naab 2014.
-            n_pseudo = max([round(1e6/self.meta.nstar), n_pseudo])
-            xstars, ystars, mm, vz = self._pseudo_particles(self.star['x'][ind],
-                                                      self.star['y'][ind],
-                                                      self.star['m'][ind],
-                                                      self.star['vz'][ind],
-                                                      sig=0.3,
-                                                      n_times=n_pseudo)
-        else:
-            xstars = self.star['x'][ind]
-            ystars = self.star['y'][ind]
-            mm = self.star['m'][ind]
-            vz = self.star['vz'][ind]
-
-        if verbose: print(("\n" "Calculating Lambda_r using {} particles "
-        "inside {:.3f}kpc, or {}Reff".format(len(self.star), r_img_kpc, rscale + 1)))
-
-#
-# 1. Construct mass map, velocity map, sigma map.
-#
-        # using NGP charge assignment
-        # fix center explicitely.
-        # 0.5 * (min + max) != center
-        xstars = (xstars + r_img_kpc) / r_img_kpc * 0.5 * nx # 0 < xstarts < nx
-        ystars = (ystars + r_img_kpc) / r_img_kpc * 0.5 * ny
-        # because of Gaussian smoothing, pseudo particles can go out of cic region.
-        # But don't worry, np.clip is ready.
-
-        # NGP assignment
-        ngx = np.clip(np.fix(xstars), 0, nx-1)
-        ngy = np.clip(np.fix(ystars), 0, ny-1)
-        indices = (ngx + ngy * nx).astype(np.int32)
-
-        # Mass map
-        mmap = np.zeros(nx * ny, dtype=float) # should cover 4Reff.
-        if voronoi is not None:
-            count_map = np.zeros(nx * ny, dtype=float)
-            for i, ind in enumerate(indices):
-                count_map[ind] += 1
-                mmap[ind] += mm[i]
-        else:
-            for i, ind in enumerate(indices):
-                mmap[ind] += mm[i]
-
-        mmap = mmap / (dx*dx)
-        self.mmap = mmap.reshape(nx, ny)
-
-        # Velocity and dispersion map
-        vmap = np.zeros(nx * ny, dtype=float)
-        sigmap=np.zeros(nx * ny, dtype=float)
-
-        if voronoi is not None:
-            noise_map = np.sqrt(count_map)
-            noise_map[noise_map < 1] = 1 # minimum noise for empty pixeles
-
-            xpos_regular = np.repeat(np.arange(nx),ny)
-            ypos_regular = np.tile(np.arange(ny),nx)
-            from Cappellari.voronoi.voronoi_2d_binning import voronoi_2d_binning
-            """
-            This function accepts only data on uniform grid...?
-            """
-            binNum, xNode, yNode, xBar, yBar, sn, nPixels, scale = \
-                voronoi_2d_binning(xpos_regular, ypos_regular, count_map,
-                                 noise_map, targetSN=voronoi["targetSN"],
-                                 plot=voronoi["plot"], quiet=voronoi["quiet"])
-
-
-            def _display_pixels(x, y, counts, pixelSize):
-                """
-                Display pixels at coordinates (x, y) coloured with "counts".
-                This routine is fast but not fully general as it assumes the spaxels
-                are on a regular grid. This needs not be the case for Voronoi binning.
-
-                """
-                xmin, xmax = np.min(x), np.max(x)
-                ymin, ymax = np.min(y), np.max(y)
-                nx = round((xmax - xmin)/pixelSize) + 1
-                ny = round((ymax - ymin)/pixelSize) + 1
-                img = np.full((nx, ny), np.nan)  # use nan for missing data
-                j = np.round((x - xmin)/pixelSize).astype(int)
-                k = np.round((y - ymin)/pixelSize).astype(int)
-                img[j, k] = counts
-
-                plt.imshow(np.rot90(img), interpolation='none', cmap='prism',
-                           extent=[xmin - pixelSize/2, xmax + pixelSize/2,
-                                   ymin - pixelSize/2, ymax + pixelSize/2])
-
-
-            mmap_v = np.zeros(len(xNode))
-            vmap_v = np.zeros(len(xNode)) # Not actually maps, but 1-D arrays.
-            sigmap_v = np.zeros(len(xNode))
-
-            # Quantities in Voronoi bin
-            for ibin in np.arange(len(xNode)):
-                ind = np.where(binNum == ibin)[0] # pixels in this Voronoi bin
-                i_part = np.empty((0,0), dtype=int)
-                for j in ind:
-                    i_part = np.append(i_part, np.where(indices == j)[0])
-                # all particles belonging to one Voronoi cell
-                mmap_v[ibin] = sum(mm[i_part])
-                try:
-                    vmap_v[ibin] = np.average(vz[i_part], weights=mm[i_part])
-                except:
-                     continue #
-
-                # mass-weighted sigma
-                sigmap_v[ibin] = self.weighted_std(vz[i_part], weights=mm[i_part])
-
-                # update original map too.
-                vmap[ind] = vmap_v[ibin]
-                sigmap[ind] = sigmap_v[ibin]
-
-            lambdamap_v = vmap_v / sigmap_v
-
-            mmap_org = mmap
-            vmap_org = vmap
-            sigmap_org = sigmap
-            self.sigmap = sigmap_org.reshape(nx, ny)
-            self.vmap = vmap_org.reshape(nx,ny)
-
-            for ibin in range(len(xNode)):
-                ind = np.where(binNum == ibin)[0]
-                vmap_org[ind] = vmap_v[ibin]
-                sigmap_org[ind] = sigmap_v[ibin]
-
-            # update maps.
-            # keep oroginal mmap to draw plots
-            # Don't worry.  it's just switching pointer. No memory copy.
-            sigmap = sigmap_v
-            vmap = vmap_v # overwrite??
-            mmap = mmap_v
-
-        else:
-            # No Voronoi tessellation.
-            for i in range(nx * ny):
-                ind = np.where(indices == i)[0]
-                if len(ind) > 0:
-                    # mass-weighted sigma
-                    sigmap[i] = self.weighted_std(vz[ind], mm[ind])
-                    # mass-weighted velocity
-                    vmap[i] = np.average(vz[ind], weights=mm[ind])
-                else:
-                    sigmap[i] = 0
-                    vmap[i] = 0
-            xNode = np.tile(np.arange(nx),ny) # x = tile? or repeat?
-            yNode = np.repeat(np.arange(ny),nx)
-            self.sigmap = sigmap.reshape(nx, ny)
-            self.vmap = vmap.reshape(nx,ny)
-
-
-#
-# 2. calculate profile over radial bins.
-# iterate_mge : run MGE with various light fraction
-#               to find out half light radius.
-# mge_interpol : from iterative measruements of MGE,
-#                interpolate quantities at the half light radius.
-
-
-        mmap_tot = sum(mmap)
-        dist = np.sqrt(np.square(xNode - nx/2) + np.square(yNode - ny/2))
-        if method == 'ellip':
-            from Cappellari import mge
-            if iterate_mge:
-                eps_arr = []
-                mjr_arr = []
-                pa_arr = []
-                xpos_arr=[]
-                ypos_arr=[]
-                f_light_arr=[]
-                for i in range(6):
-                    # mmap = 1D, self.mmap = mmap.reshap(nx,ny)
-                    f = mge.find_galaxy.find_galaxy(self.mmap, quiet=True, plot=False,
-                                                    mask_shade=True,
-                                                    fraction=0.04*(i+1)**1.5)
-                    mjr_arr.append(f.majoraxis)#f.majoraxis * 3.5 / npix * l_img
-                    eps_arr.append(f.eps)
-                    pa_arr.append(f.theta)
-                    xpos_arr.append(f.xmed)
-                    ypos_arr.append(f.ymed)
-                    sma = f.majoraxis# * 3.5
-                    smi = sma * (1-f.eps)
-
-                    pa_rad = -1 * f.theta / 180 * np.pi
-                    cos = np.cos(pa_rad)
-                    sin = np.sin(pa_rad)
-
-                    f_light_arr.append(sum(mmap[((xNode-f.xmed)*cos + (yNode-f.ymed)*sin)**2/sma**2 + \
-                                            ((yNode-f.ymed)*cos - (xNode-f.xmed)*sin)**2/smi**2 \
-                                            < 3.5])/ mmap_tot)
-                print("Reff = half light?, mjr, epss", f_light_arr[i], f.majoraxis, f.eps)
-
-    # Determine eps, pa, sma, xcen, ycen
-                if mge_interpol:
-                    def interpol(x, x0, arrays):
-                         ind = max([1,np.argmax(x > x0)])
-                         xl, xr = x[ind -1], x[ind]
-                         fl = (x0 - xl)/(xr-xl)
-                         fr = (xr - x0)/(xr-xl)
-
-                         return [y[ind -1]*fr + y[ind]*fl for y in arrays]
-
-                    self.meta.eps, self.meta.pa, self.meta.sma, self.meta.xcen, self.meta.ycen = \
-                        interpol(np.array(f_light_arr), 0.5, (eps_arr, pa_arr, mjr_arr, xpos_arr, ypos_arr))
-                    print('eps arra', eps_arr)
-                    print("interpolated eps, pa, sma, xcen, ycen", \
-                          self.meta.eps, self.meta.pa, self.meta.sma, self.meta.xcen, self.meta.ycen)
-                    self.meta.smi = self.meta.sma * (1 - self.meta.eps)
-
-                else:
-                    i_reff = np.argmax(np.array(f_light_arr) > 0.5) -1# first element > 0.5 -1
-                    self.meta.eps = eps_arr[i_reff] # eps at 1 * R_half(=eff)
-                    self.meta.pa  = pa_arr[i_reff]
-                    sma = reff# / np.sqrt(1-self.meta.eps) / dx
-                    # sma becomes too large with large e, (when e = 0.9, sma = 10 * reff).
-                    smi = sma*(1-self.meta.eps)
-                    self.meta.sma = mjr_arr[i_reff] * 3.5
-                    self.meta.smi = self.meta.sma*(1-self.meta.eps)
-                    #xcen = xpos_arr[i_reff]
-                    #ycen = ypos_arr[i_reff]
-                    #sma=mjr_arr[i_reff] * 0.5 * 3.5 # SEMI major axis, pixel unit
-            else:
-                # MGE at one go.
-
-                # mmap = 1D, self.mmap = mmap.reshap(nx,ny)
-                def _measure_lambda(mge_par, voronoi=False):
-                    xcen=mge_par["xcen"]
-                    ycen=mge_par["ycen"]
-                    cos=mge_par["cos"]
-                    sin=mge_par["sin"]
-                    sma=mge_par["sma"]
-                    smi=mge_par["smi"]
-                    dd = np.sqrt(((xNode-xcen)*cos + (yNode-ycen)*sin)**2/sma**2 + \
-                                 ((yNode-ycen)*cos - (xNode-xcen)*sin)**2/smi**2) * \
-                                 npix_per_reff
-                    # lambda calculaed over '3'Reff.
-                    points = np.zeros(round(npix_per_reff * rscale))
-
-                    if verbose: print("Reff = half light?1", sum(mmap[dd < 1.0])/ sum(mmap))
-                    dist1d = np.sqrt(np.square(xNode - xcen) + np.square(yNode - ycen))
-                    for i in range(len(points)):
-#                        ind = np.where( (dd > i/reff) & (dd < (i+1)/reff))[0]
-                        ind = np.where( (dd > i) & (dd < (i+1)))[0]
-
-                        if len(ind) >  0:
-                            a = sum(mmap[ind] * dist1d[ind] * abs(vmap[ind]))
-                            if a > 0:
-                                ind2 = np.where(sigmap[ind] > 0)[0]
-                                b = sum(mmap[ind[ind2]] * dist1d[ind[ind2]]
-                                        * np.sqrt(vmap[ind[ind2]]**2 + sigmap[ind[ind2]]**2))
-#                                b = sum(mmap[ind] * dist1d[ind]
-#                                    * np.sqrt(np.square(vmap[ind]) + np.square(sigmap[ind])))
-                                points[i] = a/b
-
-
-                    if voronoi == 12312312435:
-                        dd = np.sqrt((xNode - 0.5*npix)**2 + (yNode - 0.5*npix)**2) *\
-                             npix_per_reff
-                        i_radius = np.fix(dd).astype(int)
-                        new_arr = np.zeros(np.fix(max(dd)) + 1)
-                        new_cnt = np.zeros(np.fix(max(dd)) + 1)
-                        # NGP, Average
-                        for i, i_r in enumerate(i_radius):
-                            new_arr[i_r] = new_arr[i_r] + lambdamap_v[i]
-                            new_cnt[i_r] = new_cnt[i_r] + 1
-
-                    # npix * npix map for plots
-                        for ibin in range(len(xNode)):
-                            ind = np.where(binNum == ibin)[0]
-                            vmap_org[ind] = vmap_v[ibin]
-                            sigmap_org[ind] = sigmap_v[ibin]
-
-                        #fig.suptitle("ID: {}    z: {:2f}".format(str(self.meta.id).zfill(5),
-                                         #self.info.zred))
-
-#### St St St Stellar particle density map
-                        fig, axs = plt.subplots(2,2)
-                        axs[0,0].imshow(mmap_org.reshape(nx,ny),interpolation='nearest')
-                        axs[0,1].imshow(vmap_org.reshape(nx,ny),interpolation='nearest')
-                        axs[1,0].imshow(sigmap_org.reshape(nx,ny),interpolation='nearest')
-                        axs[1,1].plot(new_arr / new_cnt)
-                        axs[1,1].set_ylim(0,1)
-
-                    return points
-
-#
-# Multiple choices for where to measure ellipticity.
-# I need a list of MGE outputs.
-#
-                def get_mge_out(f, frac, npix_per_reff, name):
-                    sma = npix_per_reff
-                    pa_rad = -1*f.theta/180*np.pi
-                    return dict({"name":name,
-                                 "frac":frac,
-                                 "eps":f.eps,
-                                 "sma":sma,
-                                 "smi":sma * (1-f.eps),
-                                 "pa":f.theta,
-                                 "pa_rad":pa_rad,
-                                 "cos":np.cos(pa_rad),
-                                 "sin":np.sin(pa_rad),
-                                 "xcen":f.xmed,
-                                 "ycen":f.ymed})
-
-                # No iteration, 50% light in one shot.
-                dsort = np.argsort(dist)
-                # level = pixel value at cumsum = 50%.
-                i_reff = np.argmax(np.cumsum(mmap[dsort]) > 0.5*mmap_tot)
-                frac1 = i_reff/ len(mmap)
-
-                d_05reff = np.argmax(dsort > 0.5*dsort[i_reff]) # dsort[d_05reff] = 0.5Reff
-                frac05 = d_05reff/len(mmap)
-
-                frac15 = np.pi / self.meta.rscale_lambda**2 * (10/(2*reff))**2
-                # fraction of 15kpc in the mmap.
-                frac15 = min([0.99, frac15])
-
-                fracs = [frac1, frac05, frac15]
-                names = ["1Reff", "0.5Reff", "15kpc"]
-                self.meta.mge_result_list=[]
-                self.meta.lambda_result_list=[]
-                self.meta.lambda_r=[]
-                for frac, name in zip(fracs, names):
-                    if verbose: print("frac", frac)
-                    f = mge.find_galaxy.find_galaxy(self.mmap, quiet=True, plot=False,
-                                                mask_shade=False,
-                                                fraction=frac)
-                    mge_now = get_mge_out(f, frac, npix_per_reff, name)
-                    self.meta.mge_result_list.append(mge_now)
-                    larr = _measure_lambda(mge_now, voronoi=False)
-                    self.meta.lambda_result_list.append(larr)
-                    self.meta.lambda_r.append(np.average(larr[npix_per_reff - 1 : npix_per_reff + 2]))
-                # End of mge_iterate=False
-
-        #if save_result:
-        #    self.meta.lambda_arr = result_1reff
-        #    self.meta.lambda_r   = np.average(result_1reff[npix_per_reff])
-        #    self.meta.lambda_arrh= result_hreff
-        #    self.meta.lambda_rh  = np.average(result_hreff[npix_per_reff])
-        #    self.meta.lambda_12kpc = result_15kpc
-        #    self.meta.lambda_r12kpc =np.average(result_15kpc[npix_per_reff])
-
-#        return self.lambda_result_list, self.lambda_r, self.mge_result_list
 
 
     def reorient(self, dest=[0., 0., 1], pop_nvec = ['star'],
@@ -1726,235 +1021,228 @@ class Galaxy():
             pickle.dump(self, f, pickle.HIGHEST_PROTOCOL)
 
 
-    def stellar_map(self, npix=400, proj='z'):
+def plot_gal(self, npix=200, fn_save=None, ioff=True,
+             do9plots = False, i_lambda=0, representative="1Reff", **kwargs):
+    """
+        parameters
+        ----------
+        i_lambda: int
+            index of gal.meta.lambda_result_list to be plotted as lambda profile.
+
+    """
+
+    import matplotlib.pyplot as plt
+    from matplotlib import ticker
+    from draw import pp
+    from matplotlib.colors import LogNorm
+
+    if ioff:
+        plt.ioff()
+
+    def fmt(x, pos):
+        a, b = '{:.2e}'.format(x).split('e')
+        b = int(b)
+        return r'${} \times 10^{{{}}}$'.format(a, b)
+
+
+    def _close_to(values, v_ref):
         """
-            returns stellar density map.
+            returns the index of the value which is close to the v_ref.
         """
+        ind = 0
+        good=values[ind]
+        for i, vv in enumerate(values):
+            if abs(vv - v_ref) < good:
+                good = vv
+                ind = i
 
+        return ind
 
+    rgal_to_reff = self.meta.Rgal_to_reff
 
-    def plot_gal(self, npix=200, fn_save=None, ioff=True,
-                 do9plots = False, i_lambda=0, representative="1Reff", **kwargs):
-        """
-            parameters
-            ----------
-            i_lambda: int
-                index of gal.meta.lambda_result_list to be plotted as lambda profile.
+    if do9plots:
+        fig, axs = plt.subplots(3,3)
+        fig.set_size_inches(12,9) # 9 plots
+    else:
+        fig, axs = plt.subplots(2,2)
 
-        """
-
-        import matplotlib.pyplot as plt
-        from matplotlib import ticker
-        from draw import pp
-        from matplotlib.colors import LogNorm
-
-        if ioff:
-            plt.ioff()
-
-        def fmt(x, pos):
-            a, b = '{:.2e}'.format(x).split('e')
-            b = int(b)
-            return r'${} \times 10^{{{}}}$'.format(a, b)
-
-
-        def _close_to(values, v_ref):
-            """
-                returns the index of the value which is close to the v_ref.
-            """
-            ind = 0
-            good=values[ind]
-            for i, vv in enumerate(values):
-                if abs(vv - v_ref) < good:
-                    good = vv
-                    ind = i
-
-            return ind
-
-        rgal_to_reff = self.meta.Rgal_to_reff
-
-        if do9plots:
-            fig, axs = plt.subplots(3,3)
-            fig.set_size_inches(12,9) # 9 plots
-        else:
-            fig, axs = plt.subplots(2,2)
-
-        try:
-            fig.suptitle("ID: {}    z: {:2f}".format(str(self.meta.id).zfill(5), self.info.zred))
-        except:
-            fig.suptitle("ID: {}    z: not available".format(str(self.meta.id).zfill(5)))
+    try:
+        fig.suptitle("ID: {}    z: {:2f}".format(str(self.meta.id).zfill(5), self.info.zred))
+    except:
+        fig.suptitle("ID: {}    z: not available".format(str(self.meta.id).zfill(5)))
 
 # Stellar particle density map
-        ax = axs[0,0]
-        """
-            1st plot. - Stellar density map.
+    ax = axs[0,0]
+    """
+        1st plot. - Stellar density map.
 
-        """
-        # if hist=True, use histogram instead of custom CIC.
-        img = pp.part2den(self.star, self.info, npix=npix, hist=True)
-        im = ax.imshow(img.data, cmap=plt.get_cmap('brg'),
-                       norm=LogNorm(vmin=1e6))
+    """
+    # if hist=True, use histogram instead of custom CIC.
+    img = pp.part2den(self.star, self.info, npix=npix, hist=True)
+    im = ax.imshow(img.data, cmap=plt.get_cmap('brg'),
+                   norm=LogNorm(vmin=1e6))
 #        _,_,_,im = ax.hist2d( self.star['x'], self.star['y'], norm=LogNorm(), bins=npix)
-        fig.colorbar(im, ax=ax)
+    fig.colorbar(im, ax=ax)
 
-        ax.set_xlabel("["+ r'$R/R_{eff}$'+"]")
+    ax.set_xlabel("["+ r'$R/R_{eff}$'+"]")
 #   Todo:
 #   If rgal_to_reff is not too large, say 10. xticks are too dense.
 #   If 8, or 9 is given, use 4, if 10, use 5, and so on..
 #   Utilize _close_to function.
 
-        ax.set_xticks(np.linspace(0, npix, rgal_to_reff))
-        xticks = np.linspace(-rgal_to_reff, rgal_to_reff, rgal_to_reff)
-        ax.set_xticklabels(["{:.1f}".format(xx) for xx in xticks])
+    ax.set_xticks(np.linspace(0, npix, rgal_to_reff))
+    xticks = np.linspace(-rgal_to_reff, rgal_to_reff, rgal_to_reff)
+    ax.set_xticklabels(["{:.1f}".format(xx) for xx in xticks])
 
-        ax.set_ylabel("[kpc]")
-        ax.set_yticks(np.linspace(0,npix, 5))
-        yticks = ["{:.2f}".format(y) \
-                    for y in np.linspace(-self.meta.rgal, self.meta.rgal, num=5)]
-        ax.set_yticklabels(yticks)
+    ax.set_ylabel("[kpc]")
+    ax.set_yticks(np.linspace(0,npix, 5))
+    yticks = ["{:.2f}".format(y) \
+                for y in np.linspace(-self.meta.rgal, self.meta.rgal, num=5)]
+    ax.set_yticklabels(yticks)
 
 # Lambda_r plot
-        ll = self.meta.lambda_result_list[i_lambda]
-        if ll is not None:
-            ax = axs[0,1]
-            ax.plot(ll) # ~ 1 * Reff
-            ax.set_title(r"$\lambda _{R}$")
-            ax.text(0.5 * len(ll), 0.8, "{:.2e}".format(self.meta.mstar) + r"$M_{\odot}$")
-            ax.set_ylim(bottom=0, top=1)
-            ax.set_xlabel("["+ r'$R/R_{eff}$'+"]")
+    ll = self.meta.lambda_result_list[i_lambda]
+    if ll is not None:
+        ax = axs[0,1]
+        ax.plot(ll) # ~ 1 * Reff
+        ax.set_title(r"$\lambda _{R}$")
+        ax.text(0.5 * len(ll), 0.8, "{:.2e}".format(self.meta.mstar) + r"$M_{\odot}$")
+        ax.set_ylim(bottom=0, top=1)
+        ax.set_xlabel("["+ r'$R/R_{eff}$'+"]")
 
-            unit = len(ll)/self.meta.rscale_lambda # number of points per 1Reff
-            xticks = [0, 0.5*unit]
-            reffs=[0, 0.5]
-            for i in range(int(self.meta.rscale_lambda)): # If lambda_r is calculated furthrer -
-                xticks.append(unit * (i+1))
-                reffs.append((i+1))
-            ax.set_xticks(xticks)
-            xticks_label = ["{:.1f}".format(rf) for rf in reffs]
-            ax.set_xticklabels(xticks_label)
+        unit = len(ll)/self.meta.rscale_lambda # number of points per 1Reff
+        xticks = [0, 0.5*unit]
+        reffs=[0, 0.5]
+        for i in range(int(self.meta.rscale_lambda)): # If lambda_r is calculated furthrer -
+            xticks.append(unit * (i+1))
+            reffs.append((i+1))
+        ax.set_xticks(xticks)
+        xticks_label = ["{:.1f}".format(rf) for rf in reffs]
+        ax.set_xticklabels(xticks_label)
 
 # sigma map
-        if hasattr(self, "sigmap"):
-            l_range = self.meta.reff * self.meta.rscale_lambda
-            ax = axs[1,0]
-            im = ax.imshow(self.sigmap, vmin=0, vmax = 200, cmap=plt.get_cmap('brg'))
-            cb = plt.colorbar(im, ax=ax, label=r'$km s^{-1}$') # needs a mappable object.
-            tick_locator = ticker.MaxNLocator(nbins=3)
-            cb.locator = tick_locator
-            cb.update_ticks()
-            ax.set_title(r"$\sigma$ map")
-            ax.set_xlabel("["+ r'$R/R_{eff}$'+"]")
-            ax.set_xticks(np.linspace(0, len(self.mmap), num=3))
-            ax.set_xticklabels([str(-1*self.meta.rscale_lambda),"0", str(self.meta.rscale_lambda)])
-            ax.set_ylabel("[kpc]")
-            ax.set_yticks(np.linspace(0, len(self.mmap), num=5))
-            yticks = ["{:.2f}".format(y) \
-                        for y in np.linspace(-l_range, l_range, num=5)]
-            ax.set_yticklabels(yticks)
+    if hasattr(self, "sigmap"):
+        l_range = self.meta.reff * self.meta.rscale_lambda
+        ax = axs[1,0]
+        im = ax.imshow(self.sigmap, vmin=0, vmax = 200, cmap=plt.get_cmap('brg'))
+        cb = plt.colorbar(im, ax=ax, label=r'$km s^{-1}$') # needs a mappable object.
+        tick_locator = ticker.MaxNLocator(nbins=3)
+        cb.locator = tick_locator
+        cb.update_ticks()
+        ax.set_title(r"$\sigma$ map")
+        ax.set_xlabel("["+ r'$R/R_{eff}$'+"]")
+        ax.set_xticks(np.linspace(0, len(self.mmap), num=3))
+        ax.set_xticklabels([str(-1*self.meta.rscale_lambda),"0", str(self.meta.rscale_lambda)])
+        ax.set_ylabel("[kpc]")
+        ax.set_yticks(np.linspace(0, len(self.mmap), num=5))
+        yticks = ["{:.2f}".format(y) \
+                    for y in np.linspace(-l_range, l_range, num=5)]
+        ax.set_yticklabels(yticks)
 #        ax.locator_params(tight=True, nbins=5)
 
 # velocity map
-        if self.vmap is not None:
-            l_range = self.meta.reff * self.meta.rscale_lambda
-            ax = axs[1,1]
-            im = ax.imshow(self.vmap, vmin=-100, vmax = 100, cmap='RdBu')
-    #        ax.tick_params(
-    #            which='both',      # both major and minor ticks are affected
-    #            bottom='off',      # ticks along the bottom edge are off
-    #            top='off',         # ticks along the top edge are off
-    #            labelbottom='off')
-            cb = plt.colorbar(im, ax=ax, label=r'$km s^{-1}$') # needs a mappable object.
-            tick_locator = ticker.MaxNLocator(nbins=3)
-            cb.locator = tick_locator
-            cb.update_ticks()
-            im.set_cmap('RdYlBu')
-            ax.set_title("velocity map")
-            ax.set_xlabel("["+ r'$R/R_{eff}$'+"]")
-            ax.set_xticks(np.linspace(0, len(self.mmap), num=3))
-            ax.set_xticklabels([str(-1*self.meta.rscale_lambda),"0", str(self.meta.rscale_lambda)])
-            ax.set_ylabel("[kpc]")
-            ax.set_yticks(np.linspace(0, len(self.mmap), num=5))
-            yticks = ["{:.2f}".format(y) \
-                        for y in np.linspace(-self.meta.reff*self.meta.rscale_lambda,
-                                             self.meta.reff*self.meta.rscale_lambda, num=5)]
-            ax.set_yticklabels(yticks)
+    if self.vmap is not None:
+        l_range = self.meta.reff * self.meta.rscale_lambda
+        ax = axs[1,1]
+        im = ax.imshow(self.vmap, vmin=-100, vmax = 100, cmap='RdBu')
+#        ax.tick_params(
+#            which='both',      # both major and minor ticks are affected
+#            bottom='off',      # ticks along the bottom edge are off
+#            top='off',         # ticks along the top edge are off
+#            labelbottom='off')
+        cb = plt.colorbar(im, ax=ax, label=r'$km s^{-1}$') # needs a mappable object.
+        tick_locator = ticker.MaxNLocator(nbins=3)
+        cb.locator = tick_locator
+        cb.update_ticks()
+        im.set_cmap('RdYlBu')
+        ax.set_title("velocity map")
+        ax.set_xlabel("["+ r'$R/R_{eff}$'+"]")
+        ax.set_xticks(np.linspace(0, len(self.mmap), num=3))
+        ax.set_xticklabels([str(-1*self.meta.rscale_lambda),"0", str(self.meta.rscale_lambda)])
+        ax.set_ylabel("[kpc]")
+        ax.set_yticks(np.linspace(0, len(self.mmap), num=5))
+        yticks = ["{:.2f}".format(y) \
+                    for y in np.linspace(-self.meta.reff*self.meta.rscale_lambda,
+                                         self.meta.reff*self.meta.rscale_lambda, num=5)]
+        ax.set_yticklabels(yticks)
 
 #        ax.locator_params(tight=True, nbins=5)
 
-        if do9plots:
-    # position and velocity histograms
-            ax = axs[0,2]
-            ax.hist(self.star['x'])
-            ax.set_title("X pos")
-            ax.locator_params(tight=True, nbins=5)
+    if do9plots:
+# position and velocity histograms
+        ax = axs[0,2]
+        ax.hist(self.star['x'])
+        ax.set_title("X pos")
+        ax.locator_params(tight=True, nbins=5)
 
-            ax = axs[1,2]
-            ax.hist(self.star['y'])
-            ax.set_title("Y pos")
-            ax.locator_params(tight=True, nbins=5)
+        ax = axs[1,2]
+        ax.hist(self.star['y'])
+        ax.set_title("Y pos")
+        ax.locator_params(tight=True, nbins=5)
 
-            ax = axs[2,0]
-            ax.hist(self.star['vx'])
-            ax.set_title("X vel")
-            ax.locator_params(tight=True, nbins=5)
+        ax = axs[2,0]
+        ax.hist(self.star['vx'])
+        ax.set_title("X vel")
+        ax.locator_params(tight=True, nbins=5)
 
-            ax = axs[2,1]
-            ax.hist(self.star['vy'])
-            ax.set_title("Y vel")
-            ax.locator_params(tight=True, nbins=5)
+        ax = axs[2,1]
+        ax.hist(self.star['vy'])
+        ax.set_title("Y vel")
+        ax.locator_params(tight=True, nbins=5)
 
-        plt.tight_layout()
-        if fn_save is None:
-            fn_save = "galaxy_plot" + str(self.meta.id).zfill(5) + ".png"
+    plt.tight_layout()
+    if fn_save is None:
+        fn_save = "galaxy_plot" + str(self.meta.id).zfill(5) + ".png"
 
-        plt.savefig(fn_save, dpi=100)
-        plt.close()
+    plt.savefig(fn_save, dpi=100)
+    plt.close()
 
-    def save_gal(self, base='./'):
+def save_gal(self, base='./'):
 
-        def get_metadata(clazz):
-            """
-                Out of all attributes of a galaxy instance, leave only data.
-            """
-            return {name: attr for name, attr in clazz.__dict__.items()
-                    if not name.startswith("__")
-                    and not callable(attr)
-                    and not type(attr) is staticmethod}
+    def get_metadata(clazz):
+        """
+            Out of all attributes of a galaxy instance, leave only data.
+        """
+        return {name: attr for name, attr in clazz.__dict__.items()
+                if not name.startswith("__")
+                and not callable(attr)
+                and not type(attr) is staticmethod}
 
-        def get_metadata2(adict):
-            return {name: attr for name, attr in adict.items()
-                    if not isinstance(attr, (np.ndarray, np.recarray, dict, list))}
+    def get_metadata2(adict):
+        return {name: attr for name, attr in adict.items()
+                if not isinstance(attr, (np.ndarray, np.recarray, dict, list))}
 
 
-        import h5py as hdf
-        # Save data into a hdf5 file
-        outfile = hdf.File(base + str(self.meta.id).zfill(6) + '_gal.hdf5',
-                           'w', libver='latest')
+    import h5py as hdf
+    # Save data into a hdf5 file
+    outfile = hdf.File(base + str(self.meta.id).zfill(6) + '_gal.hdf5',
+                       'w', libver='latest')
 
-        # Store metadata in HDF5 attributes
-        attrs = get_metadata(self)
-        attrs = get_metadata2(attrs)
-        for name, atr in attrs.items():
-            if atr != None:
-                outfile.attrs.create(name, atr)
-            #outfile.attrs[name] = atr
+    # Store metadata in HDF5 attributes
+    attrs = get_metadata(self)
+    attrs = get_metadata2(attrs)
+    for name, atr in attrs.items():
+        if atr != None:
+            outfile.attrs.create(name, atr)
+        #outfile.attrs[name] = atr
 
-        # Store data under /selfaxy with direct assignment
-        if hasattr(self, 'star'):
-            #print("Saving star")
-            star = outfile.create_group("star")
-            for field in self.star.dtype.names:
-                star.create_dataset(field, data=self.star[field])
+    # Store data under /selfaxy with direct assignment
+    if hasattr(self, 'star'):
+        #print("Saving star")
+        star = outfile.create_group("star")
+        for field in self.star.dtype.names:
+            star.create_dataset(field, data=self.star[field])
 
-        if hasattr(self, 'dm'):
-            #print("Saving DM")
-            dm = outfile.create_group("dm")
-            for field in self.dm.dtype.names:
-                dm.create_dataset(field, data=self.dm[field])
+    if hasattr(self, 'dm'):
+        #print("Saving DM")
+        dm = outfile.create_group("dm")
+        for field in self.dm.dtype.names:
+            dm.create_dataset(field, data=self.dm[field])
 
-        if hasattr(self, 'cell'):
-            #print("Saving gas")
-            gas = outfile.create_group("gas")
-            for field in self.cell.dtype.names:
-                gas.create_dataset(field, data=self.cell[field])
+    if hasattr(self, 'cell'):
+        #print("Saving gas")
+        gas = outfile.create_group("gas")
+        for field in self.cell.dtype.names:
+            gas.create_dataset(field, data=self.cell[field])
 
-        outfile.close()
+    outfile.close()

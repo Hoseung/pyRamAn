@@ -342,7 +342,7 @@ def density_map(x, y, sort=True):
     #im = ax.scatter(xx, yy, c=z, s=50, edgecolor='')
     return xx,yy,z
 
-def do_plot(x,y, atlas,
+def do_plot(x,y, obsdata,
             do_scatter=True,
             contour_label=False,
             surf = False,
@@ -353,7 +353,8 @@ def do_plot(x,y, atlas,
             fname_vs_e = "./figs/lambda_vs_e_z0",
             d_alpha=1.0,
             sizeOfFont=12,
-            label="This work"
+            label="This work",
+            label2="",
             ):
     import scipy.stats as st
 
@@ -446,15 +447,15 @@ def do_plot(x,y, atlas,
     if contour_label:
         axmain.clabel(cfset, inline=1, fontsize=7)
 
-    #ATLAS3D
-    axmain.scatter(atlas[:,0], atlas[:,1],
+    #Observation data
+    axmain.scatter(obsdata[:,0], obsdata[:,1],
                    s=40,
                    color=twocolors[1],
                    marker=".",
                    lw=1,
                    alpha=0.8,
                    edgecolor='none',
-                   label="ATLAS" + r"$^{3D}$")
+                   label=label2)
 
     # Legend
     if 1 == 2:
