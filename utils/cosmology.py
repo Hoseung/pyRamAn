@@ -9,6 +9,7 @@ Created on Sun Jun 28 18:31:23 2015
 @author: hoseung
 """
 
+import numpy as np
 def nout2lbt(nout, nout_fi=187):
     """
       A very simple function assuming delta a = 0.005,
@@ -20,10 +21,8 @@ def nout2lbt(nout, nout_fi=187):
     return ac.WMAP7.lookback_time(1/aexp -1).value
 
 
-
 class Timeconvert():
     def __init__(self, info):
-        import numpy as np
         from general import defaults
         from astropy.io import fits
         dfl = defaults.Default()
@@ -39,24 +38,28 @@ class Timeconvert():
         hdu = fits.open(tablefile)
         ttable = hdu[1].data
 
-        isort=np.argsort(ttable['z'][0])
+        # Sort so that self.tu is in increasing order
+        # Because converting stellar conformal times to lookback time 
+        # is the main use case.
+        # However, this sorting makes zred be a decreasing function.
+        # So is needed the [::-1] indexing.
+        isort=np.argsort(ttable['t_unit'][0])
         self.zred     = ttable['z'][0][isort]
         self.tu       = ttable['t_unit'][0][isort]
         self.tlb      = ttable['t_lback'][0][isort]
         self.aexp     = ttable['aexp'][0][isort]
+        self.t_lback_now = np.interp(info.zred, self.zred[::-1], self.tlb[::-1])  # interpolation
 
     def time2gyr(self, times, z_now=None):
         """
         returns the age of "universe" at the given time.
         """
-        import numpy as np
-        if z_now is None:
-            z_now = 1/self.info.aexp-1
+        if z_now is not None:
+            z_now = max([z_now,1e-10])
+            t_lback_now = np.interp(z_now, self.zred[::-1], self.tlb[::-1])
+        else:
+            t_lback_now = self.t_lback_now
 
-        z_now = max([z_now,1e-10])
-
-        t_lback_now = np.interp(z_now, self.zred, self.tlb)  # interpolation
-      
         fd = np.where(times < min(self.tu))[0]
         if len(fd) > 0:
             ctime2 = times
@@ -66,5 +69,23 @@ class Timeconvert():
             t_lback_in  = np.interp(times, self.tu, self.tlb)
 
         return t_lback_in - t_lback_now
+
+    def zred2gyr(self, zreds, z_now=None):
+        if z_now is not None:
+            z_now = max([z_now,1e-10])
+            t_lback_now = np.interp(z_now, self.zred[::-1], self.tlb[::-1])
+        else:
+            t_lback_now = self.t_lback_now
+
+        # zreds[zreds < 0] = 0 
+        # 
+        t_lback_in  = np.interp(zreds, self.zred[::-1], self.tlb[::-1])
+        return t_lback_in - t_lback_now
+        
+        
+
+
+
+
 
 
