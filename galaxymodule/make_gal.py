@@ -256,8 +256,82 @@ def mk_gal(gal,
         # Save sink particle as a BH, not cloud particles.
 
     """
-
     return True
+
+
+def extract_cold_gas(gg, rmax = 180, dr = 5):
+    """
+        Measure radial profile and returns indices of cells inside r_min,
+        where r_min is the local minima of radial MASS profile.
+        -> should I use density profile instead?
+    """
+    from scipy.signal import argrelmin
+    # radial profile.
+    if not hasattr(gg,"cell"):
+        print("No cell found")
+        return
+
+    cold_cell = gg.cell[rho_t_cut(gg.cell, gg.info)]
+
+
+    rr = np.sqrt(np.square(cold_cell["x"])+\
+                 np.square(cold_cell["y"])+\
+                 np.square(cold_cell["z"]))
+
+    i_sort = np.argsort(rr)
+    r_sorted = rr[i_sort]
+    mm = cold_cell["dx"]**3 * cold_cell["var0"]
+    m_sorted = mm[i_sort]
+
+    rmax = min([np.max(rr), rmax])
+    
+    # Note 1.
+    # Depends on the cell resolution. How about 8 * dx_min? 
+    # Larger dx will count in small satellites,
+    # while smaller dx will make the measurement sensitive to density fluctuations.
+    nbins= int(rmax/dr)
+
+    frequency, bins = np.histogram(r_sorted, bins = nbins, range=[0, rmax])
+    bin_centers = bins[:-1] + 0.5 * dr # remove the rightmost boundary.
+
+    m_radial = np.zeros(nbins)
+    ibins = np.concatenate((np.zeros(1,dtype=int), np.cumsum(frequency)))
+
+    for i in range(nbins):
+        m_radial[i] = np.sum(m_sorted[ibins[i]:ibins[i+1]])
+        # Check stellar surface density
+        sig_at_r = m_radial[i]/(2 * np.pi * bin_centers[i] * dr)
+
+    # Find local minimum
+    # If there is flat zeros, take the first zero.
+    # If not, use scipy.argrelmin
+    i_zero = np.argmax(m_radial==0)
+    if i_zero > 0:
+        ind_min = i_zero -1
+    else:
+        ind_min= argrelmin(m_radial)[0] -1 # 1D array for 1D input. 
+        ind_min = ind_min[np.argmax(ind_min * dr > rmin)]* dr
+    
+    # Note 2.
+    # If the minimum is farther than rmin=10kpc, 
+    # I assume that is correct. 
+    gg.cell = cold_cell[rr < bin_centers[ind_min]]
+    gg.mgas_cold = np.sum(gg.cell["var0"]*gg.cell["dx"]**3)
+    gg.cold_gas_profile = dict(profile=m_radial[:ind_min],dr=dr)
+
+def rho_t_cut(cell, info, clip_sigma=0):
+    """
+        Extract galactic cold gas following Torrey+12 criterion.
+        Assume cells in the original (code) unit. 
+    """
+    # Var0 in Msun h^2 kpc^-3 unit.
+    kpc_in_cm = 3.08567758e21
+    msun_in_g = 1.99e33
+    gcc2this_unit = kpc_in_cm**3/msun_in_g 
+    if clip_sigma > 0:
+        pass
+        #Do sigma clipping.. 
+    return np.log10(cell["var4"]/cell["var0"]*info.unit_T2) < 6 + 0.25*np.log10((cell["var0"]*info.unit_d)*gcc2this_unit*1e-10) # 
 
 
 def radial_profile_cut(gal, xx, yy, mm,

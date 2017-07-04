@@ -1,6 +1,6 @@
 import numpy as np
 
-def get_cell(allcell, region):
+def ind_cell(allcell, region):
     x=allcell["x"]
     y=allcell["y"]
     z=allcell["z"]
@@ -31,7 +31,7 @@ def ind_cell_kd(kdtree, gal, pboxsize, rscale=25.0):
 
 def get_cell(allcell, kdtree, gg, info):
     # Simple spherical cut.
-    gg.cell=allcell[ind_cell_kd(kdtree, gg, info.pboxsiz)]
+    gg.cell=allcell[ind_cell_kd(kdtree, gg, info.pboxsize)]
 
     if len(gg.cell) > 1:
         #print(s.hydro.cell["x"].ptp())
@@ -43,16 +43,11 @@ def get_cell(allcell, kdtree, gg, info):
         gg.cell["dx"] *= info.boxtokpc
 
 
-class Containers():
-    def __init__(self):
-        from collections import namedtuple
-        results_sfr=namedtuple("sfr_results",
-                ["dt", "hist_tmin", "hist_tmax", "h", "sfr_dts", "sfrs", "area"])
-        results_lambda=namedtuple("lambda_results", [])
-        results_mge=namedtuple("mge_results", [])
-        results_gas=namedtupe("gas_results",
-             ["mgas_tot", "mgas_cold", "Ln_gas"])
-
+def add_output_containers(gg):
+    gg.sfr_results={"hist_dt":None, "hist_tmin":None, "hist_tmax":None, "hist":None, "sfr_dts":None, "sfrs":None, "area":None}
+    gg.lambda_results={"lambda_results", }
+    gg.mge_results={"mge_results":None}
+    gg.gas_results={"gas_results":None, "mgas_tot":None, "mgas_cold":None, "Ln_gas":None}
 
 
 def do_work(sub_sample, nout,
@@ -70,7 +65,7 @@ def do_work(sub_sample, nout,
     from galaxymodule import vmax_sig
     import pickle
     from galaxymodule.quick_mock import Simplemock
-
+    from galaxymodule import gal_properties
     gen_vmap_sigmap_params = dict(npix_per_reff=5,
                                   rscale=3.0,
                                   n_pseudo=60,
@@ -89,8 +84,11 @@ def do_work(sub_sample, nout,
     sfr_params = dict(hist_dt=0.1,
                       hist_tmin=0,
                       hist_tmax=None,
-                      sfr_dt = [0.1, 0.5, 1.0],
-                      sfr_has_hist=True)
+                      sfr_dts = [0.1, 0.5, 1.0])
+
+    gas_params = dict(dr=5, rmax=200, density_ratio=1e-3)
+
+
 
     mgp.HAGN["verbose"] = False
     mgp.HAGN["mstar_min"] = 1e7
@@ -129,10 +127,6 @@ def do_work(sub_sample, nout,
     # Mock image generator
     MockSED = Simplemock()#repo=dfl.dir_repo+'sed/')
 
-    # Common 6
-    # Output containers
-    CT = Containers() # CT can be imported directly like astropy.cosmology.WMAP.
-
     result_sub_sample=[]
 
     for gcat_this in sub_sample:
@@ -152,13 +146,18 @@ def do_work(sub_sample, nout,
         gg.star['time'] = tc.time2gyr(gg.star['time'],
                                         z_now = gg.info.zred)
 
+        # Add output dicts
+        add_output_containers(gg)
+
         # gas properties
-        get_cell_kd(s.hydro.cell, kdtree, gg, s.info)
+        get_cell(s.hydro.cell, kdtree, gg, s.info)
+        #gg.cell = s.hydro.cell[ind_cell_kd(s.hydro.cell, kdtree, gg, s.info)]
         if len(gg.cell) > 1:
             if save_cell:
                 pickle.dump(gg.cell, open("CELL_"+str(nout) + "_" + str(gg.meta.id) + ".pickle", "wb"))
 
-            gas.get_gas_all(gg, CT, **gas_params) # CT = output container.
+            gal_properties.get_cold_cell(gg, s.info, **gas_params)
+            gal_properties.get_gas_properties(gg, s.info)
 
         # Now star and cell memberships are determined.
 
@@ -185,7 +184,7 @@ def do_work(sub_sample, nout,
         # send the parameters to the begining.
         # Each function assumes various attributes from the gal object.
         # you may want to check them exist before/in each function.
-        gal_properties.get_sfr_all(gg, CT, **sfr_params)
+        gal_properties.get_sfr_all(gg, **sfr_params)
 
         # Misc
         gg.meta.nout = nout
@@ -201,7 +200,7 @@ def do_work(sub_sample, nout,
 
 def domain_decompose_cat(gcat, nbins=5):
     """
-        divide catalog into nbins**3 cubics and return...
+        divide catalog into nbins**3 cubics.
         yield each chunk of cat.data.
 
         gcat is a partial catalog: ind != id -1
@@ -217,9 +216,6 @@ def domain_decompose_cat(gcat, nbins=5):
     sorted_ind_all = ind_all[ind_sort]
 
     for i in range(nbins**3):
-        #i_now = np.where(sorted_ind_all == i)[0]
-        #sub_sample_ind = sd[i_now]["id"] -1
-        #inds =  mtc.match_list_ind(gcat.data["id"], sd[i_now]["id"])
         yield gcat.data[mtc.match_list_ind(gcat.data["id"], sd[np.where(sorted_ind_all == i)[0]]["id"])]
 
 
@@ -228,72 +224,3 @@ def cat_only_relevant_gals(gcat, all_sample_ids, nout):
     allgal_now = np.array(all_sample_ids[str(nout)])
     gcat.data = gcat.data[mtc.match_list_ind(gcat.data["id"], allgal_now)]
 
-#def do_my_jobs(gg):
-
-def ind_dense(cell, rmax = 200, dr = 5, rmin=1):
-    """
-        Measure radial profile and returns indices of cells inside r_min,
-        where r_min is the local minima of radial MASS profile.
-        -> should I use density profile instead?
-    """
-    from scipy.signal import argrelmin
-    # radial profile.
-    rr = np.sqrt(np.square(cell["x"])+\
-                 np.square(cell["y"])+\
-                 np.square(cell["z"]))
-
-    i_sort = np.argsort(rr)
-    r_sorted = rr[i_sort]
-    mm = cell["dx"]**3 * cell["var0"]
-    m_sorted = mm[i_sort]
-    rmax = max([10, min([np.max(rr), rmax])])
-    #print(rmax)
-
-    #print("rmax now", rmax)
-    # Note 1.
-    # Depends on the cell resolution. How about 8 * dx_min?
-    # Larger dx will count in small satellites,
-    # while smaller dx will make the measurement sensitive to density fluctuations.
-    nbins= int(rmax/dr)
-
-    frequency, bins = np.histogram(r_sorted, bins = nbins, range=[0, rmax])
-    bin_centers = bins[:-1] + 0.5 * dr # remove the rightmost boundary.
-
-    m_radial = np.zeros(nbins)
-    ibins = np.concatenate((np.zeros(1,dtype=int), np.cumsum(frequency)))
-
-    for i in range(nbins):
-        m_radial[i] = np.sum(m_sorted[ibins[i]:ibins[i+1]])
-        # Check stellar surface density
-        sig_at_r = m_radial[i]/(2 * np.pi * bin_centers[i] * dr)
-
-    # Find local minimum
-    # 1. If there is flat zeros, take the first zero.
-    # If not, use scipy.argrelmin
-    i_zero = np.argmax(m_radial==0)
-    if i_zero > 0:
-        ind_min = i_zero -1
-    else:
-        try:
-            ind_min= min(argrelmin(m_radial)[0]) -1 # 1D array for 1D input.
-        except:
-            ind_min = -1
-        #ind_min = ind_min[np.argmax(ind_min * dr > rmin)]* dr
-
-    # Note 2.
-    # If the minimum is farther than rmin=10kpc,
-    # I assume that is correct.
-    return rr < bin_centers[ind_min]
-
-
-def rho_t_cut(cell, info, lose_cut=False):
-    """
-        Extract galactic cold gas following Torrey+12 criterion.
-        Assume cells in the original (code) unit.
-    """
-    # Var0 in Msun h^2 kpc^-3 unit.
-    kpc_in_cm = 3.08567758e21
-    msun_in_g = 1.99e33
-    gcc2this_unit = kpc_in_cm**3/msun_in_g
-
-    return np.log10(cell["var4"]/cell["var0"]*info.unit_T2) < 6 + 0.25*np.log10((cell["var0"]*info.unit_d)*gcc2this_unit*1e-10)#

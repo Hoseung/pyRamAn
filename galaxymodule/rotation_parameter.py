@@ -348,6 +348,7 @@ def cal_lambda_r_eps(self,
     xNode = self.xNode
     yNode = self.yNode
     reff = self.meta.reff
+    self.npix_per_reff = npix_per_reff
 
     nx = round(npix_per_reff * 2 * (rscale + 1))
     ny = nx
