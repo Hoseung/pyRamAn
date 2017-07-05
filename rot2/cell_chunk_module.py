@@ -89,10 +89,9 @@ def do_work(sub_sample, nout,
     gas_params = dict(dr=5, rmax=200, density_ratio=1e-3)
 
 
-
     mgp.HAGN["verbose"] = False
     mgp.HAGN["mstar_min"] = 1e7
-    out_dir = "./lambda_results/"
+    out_dir = "./lambda_results/" + str(nout) +'/'
 
     # Common 1
     # simulation information
@@ -130,10 +129,9 @@ def do_work(sub_sample, nout,
     result_sub_sample=[]
 
     for gcat_this in sub_sample:
-        #print("cat ", sub_sample["x"].ptp())
         gg = rd_GM.Gal(nout=nout,
-                            catalog=gcat_this.copy(),
-                            info=s.info)
+                       catalog=gcat_this.copy(),
+                       info=s.info)
         #print("s.info.pboxsize", s.info.pboxsize)
         print("loading galaxy ")
         gg.debug=False

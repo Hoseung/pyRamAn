@@ -3,6 +3,7 @@ import numpy as np
 from utils import hagn
 from general import defaults
 import tree.halomodule as hmo
+import utils.match as mtc
 
 
 def load_idx_list(wdir="./", test=False):
@@ -35,3 +36,7 @@ def all_id_to_dict(all_idxs, nnza, dir_ids = "pidxs/"):
     
     return all_ids, all_idxs
 
+
+def subsample_catalog(gcat, all_sample_ids, nout):
+    allgal_now = np.array(all_sample_ids[str(nout)])
+    gcat.data = gcat.data[mtc.match_list_ind(gcat.data["id"], allgal_now)]
