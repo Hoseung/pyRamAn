@@ -4,7 +4,7 @@ import numpy as np
 def get_gas_all(gg, info, dr=5, rmax=200, density_ratio=1e-3):
     get_cold_cell(gg, info, dr, rmax, density_ratio)
     #mgas_tot, mgas_cold, Ln_gas = get_gas_properties(gg, info)
-    gg.gas_results = get_gas_properties(gg, info)
+    gg.meta.gas_results = get_gas_properties(gg, info)
 
 def get_cold_cell(gg, info, dr=5, rmax=200, density_ratio=1e-3):
     """
@@ -108,21 +108,21 @@ def get_gas_properties(gg, info):
     vvz = "var3"
     
     # total gas mass before extracting cold gas.
-    gg.gas_results["mgas_tot"] = np.sum(gg.cell[vrho]*gg.cell[vdx]**3)
+    gg.meta.gas_results["mgas_tot"] = np.sum(gg.cell[vrho]*gg.cell[vdx]**3)
 
     # Leave only cold gas and measure properties.
     has_cold_gas = get_cold_cell(gg, info)
     if has_cold_gas:
-        gg.gas_results["mgas_cold"] = np.sum(gg.cell[vrho]*gg.cell[vdx]**3)
+        gg.meta.gas_results["mgas_cold"] = np.sum(gg.cell[vrho]*gg.cell[vdx]**3)
         vec_rot = np.cross(np.stack((gg.cell["x"],gg.cell["y"],gg.cell["z"])).T,
                            np.stack((gg.cell[vvx],
                                      gg.cell[vvy],
                                      gg.cell[vvz])).T)
 
-        gg.gas_results["Ln_gas"]=(vec_rot.T * (gg.cell[vdx]**3 *gg.cell[vrho])).sum(axis=1)
+        gg.meta.gas_results["Ln_gas"]=(vec_rot.T * (gg.cell[vdx]**3 *gg.cell[vrho])).sum(axis=1)
     else:
-        gg.gas_results["mgas_cold"]= 0
-        gg.gas_results["Ln_gas"] = (-1,-1,-1)
+        gg.meta.gas_results["mgas_cold"]= 0
+        gg.meta.gas_results["Ln_gas"] = (-1,-1,-1)
 
 
 # 2. SFR
@@ -132,13 +132,13 @@ def get_sfr_all(gg, sfr_dts=0.1,
     sfrs = get_sfr(gg, sfr_dts, age_hist=h, dt_age_hist=hist_dt)
     area = get_galaxy_area(gg)
 
-    gg.sfr_results["sfr_dts"]=sfr_dts
-    gg.sfr_results["sfrs"]=sfrs/area
-    gg.sfr_results["area"]=area
-    gg.sfr_results["hist"]=h/area
-    gg.sfr_results["hist_dt"]=hist_dt
-    gg.sfr_results["hist_tmin"]=hist_tmin
-    gg.sfr_results["hist_tmax"]=hist_tmax
+    gg.meta.sfr_results["sfr_dts"]=sfr_dts
+    gg.meta.sfr_results["sfrs"]=sfrs/area
+    gg.meta.sfr_results["area"]=area
+    gg.meta.sfr_results["hist"]=h/area
+    gg.meta.sfr_results["hist_dt"]=hist_dt
+    gg.meta.sfr_results["hist_tmin"]=hist_tmin
+    gg.meta.sfr_results["hist_tmax"]=hist_tmax
 
 
 
@@ -206,9 +206,3 @@ def get_galaxy_area(gg):
     dx = gg.rgal / gg.npix_per_reff # right?
     return dx*dx*sum(gg.mmap.ravel() > 0)
 
-
-##################
-
-def get_vmax(gal):
-    if gal.vmap is None:
-        get_vmap(gal)

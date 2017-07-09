@@ -87,6 +87,6 @@ def get_vmax_sig(gal,
         ax[1].set_aspect('auto')
         plt.savefig(str(gal.meta.id) + "_vel_curve" + str(n_pseudo) + ".png")
 
-    gal.meta.vmax = vmax
-    gal.meta.sig = sig
-    gal.meta.v_sig = vmax/sig
+    gal.meta.vsig_results["Vmax"]= vmax
+    gal.meta.vsig_results["sigma"] = sig
+    gal.meta.vsig_results["V_sig"] = vmax/sig

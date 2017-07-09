@@ -44,13 +44,13 @@ def get_cell(allcell, kdtree, gg, info):
 
 
 def add_output_containers(gg):
-    gg.sfr_results={"hist_dt":None, "hist_tmin":None, "hist_tmax":None, "hist":None, "sfr_dts":None, "sfrs":None, "area":None}
-    gg.lambda_results={"lambda_results", }
-    gg.mge_results={"mge_results":None}
-    gg.gas_results={"gas_results":None, "mgas_tot":None, "mgas_cold":None, "Ln_gas":None}
+    gg.meta.sfr_results={"hist_dt":None, "hist_tmin":None, "hist_tmax":None, "hist":None, "sfr_dts":None, "sfrs":None, "area":None}
+    #gg.meta.lambda_results={"lambda_results", }
+    #gg.meta.mge_results={"mge_results":None}
+    gg.meta.gas_results={"gas_results":None, "mgas_tot":None, "mgas_cold":None, "Ln_gas":None}
+    gg.meta.vsig_results={"Vmax":None, "sigma":None, "V_sig":None}
 
-
-def do_work(sub_sample, nout,
+def do_work(sub_sample, nout, i_subsample,
             rscale=2.0, save_cell=False):
     """
     Per process.
@@ -66,6 +66,7 @@ def do_work(sub_sample, nout,
     import pickle
     from galaxymodule.quick_mock import Simplemock
     from galaxymodule import gal_properties
+    import time
     gen_vmap_sigmap_params = dict(npix_per_reff=5,
                                   rscale=3.0,
                                   n_pseudo=60,
@@ -105,13 +106,14 @@ def do_work(sub_sample, nout,
     #print(xrange, yrange, zrange)
     region = smp.set_region(ranges=[xrange, yrange, zrange])
 
-
+    t0 = time.time()
     s.set_ranges(region["ranges"])
-    print(s.ranges)
+    #print(s.ranges)
     # Common2
     # Hydro cell data
     s.add_hydro(nvarh=5)
-
+    t1 = time.time()
+    print("Loading hydro took", t1 - t0)
     # Common 3
     # Cell KDTree
     kdtree = cKDTree(np.stack((s.hydro.cell["x"],
@@ -127,15 +129,16 @@ def do_work(sub_sample, nout,
     MockSED = Simplemock()#repo=dfl.dir_repo+'sed/')
 
     result_sub_sample=[]
-
-    for gcat_this in sub_sample:
+    print("{} galaxies in this sub ample".format(len(sub_sample)))
+    for i, gcat_this in enumerate(sub_sample):
         gg = rd_GM.Gal(nout=nout,
                        catalog=gcat_this.copy(),
                        info=s.info)
         #print("s.info.pboxsize", s.info.pboxsize)
-        print("loading galaxy ")
         gg.debug=False
         make_gal.mk_gal(gg,**mgp.HAGN)
+        gg.meta.idx = gcat_this["idx"]
+        #print(i,"-th, idx=", gg.meta.idx)
         if gg.meta.nstar < 60:
             gg.meta.mgas_cold = -1
             result_sub_sample.append(gg.meta)
@@ -190,8 +193,9 @@ def do_work(sub_sample, nout,
 
         result_sub_sample.append(gg.meta)
 
-    fout = out_dir + "result_sub_sample_" + str(nout) + "_from" + str(sub_sample[0]["id"]) + ".pickle"
+    fout = out_dir + "result_sub_sample_{}_{}.pickle".format(nout, i_subsample)
     pickle.dump(result_sub_sample, open(fout, "wb"))
+    print("Galaxy properties took", time.time() - t1 )
 
 
 #########################################################
