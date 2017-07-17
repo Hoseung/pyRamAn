@@ -1,4 +1,5 @@
 module part_load
+  implicit none
   real,allocatable,dimension(:,:)::b
   real(KIND=8),allocatable,dimension(:,:)::star_arr
   real(KIND=8),allocatable,dimension(:,:)::dm_arr

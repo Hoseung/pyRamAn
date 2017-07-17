@@ -1,0 +1,19 @@
+Metadata-Version: 1.2
+Name: pygalevol
+Version: 0.1.0
+Summary: Analysis tool for RAMSES simulated galaxies
+Home-page: https://bitbucket.org/py_gem/pyclusterevol/
+Author: Hoseung Choi
+Author-email: choi.h@yonsei.ac.kr
+License: MIT
+Description: "READ ME!"
+        
+Keywords: scientific analysis tool
+Platform: UNKNOWN
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Classifier: Topic :: Software Development :: Build Tools
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.5
+Requires-Python: >=3.5
