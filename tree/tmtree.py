@@ -18,14 +18,13 @@ class Tree():
                      nout_now=None,
                      BIG_RUN=True,
                      is_gal=False):
-        import numpy as np
 
         self.set_fn(fn)
         self.tree = None
         self.fatherID = None
         self.fatherIDx = None
         self.fatherMass = None
-        self.sonID = None
+        self.sonIDx = None
         self.n_all_halos = 0
         self.n_all_fathers = 0
         self.n_all_sons = 0
@@ -57,7 +56,7 @@ class Tree():
         self.dump_files={}
         dump_temp=[]
         # Check if all set.
-        for attr_name in ["tree", "fatherID", "fatherIDx", "fatherMass", "sonID"]:
+        for attr_name in ["tree", "fatherID", "fatherIDx", "fatherMass", "sonIDx"]:
             attr = getattr(self, attr_name)
             if attr is None:
                 print("Nothing to save ", attr_name)
@@ -82,14 +81,14 @@ class Tree():
         self.fatherID = None
         self.fatherIDx = None
         self.fatherMass = None
-        self.sonID = None
+        self.sonIDx = None
         fn = self.wdir + suffix + "tree_meta_" + ["hal","gal"][self.is_gal]
         if not fn.endswith(".pickle"):
             fn += ".pickle"
         self.dump_files.update({"meta":fn})
         pickle.dump(self, open(fn, "wb"), protocol=protocol)
         # restore data
-        self.tree, self.fatherID, self.fatherIDx, self.fatherMass, self.sonID = dump_temp
+        self.tree, self.fatherID, self.fatherIDx, self.fatherMass, self.sonIDx = dump_temp
 
     def load_np(self, suffix="", protocol=-1):
         """
@@ -102,7 +101,7 @@ class Tree():
                 if input("Overwrite all data? [y/n]\n".format(attr_name)) != "y":
                     Overwrite_ok=True
         #            return
-        self.tree, self.fatherID, self.fatherIDx, self.fatherMass, self.sonID = np.load(self.dump_files["data"])
+        self.tree, self.fatherID, self.fatherIDx, self.fatherMass, self.sonIDx = np.load(self.dump_files["data"])
 
 
         #fn = self.wdir + suffix + "tree_meta_" + ["hal","gal"][self.is_gal]
@@ -149,11 +148,13 @@ class Tree():
         from tree import cnt_tree
 
         self.n_all_halos, self.n_all_fathers, self.n_all_sons, self.nsteps = cnt_tree.count_tree(self.fn, int(BIG_RUN))
-        self.fatherID, self.fatherIDx, self.sonID, \
+        self.fatherID, self.fatherIDx, self.sonIDx, \
         self.fatherMass, i_arr, f_arr, \
         self.aexps, self.omega_ts, self.age_univs = \
                 cnt_tree.load_tree(self.fn, self.n_all_halos, \
                 self.n_all_fathers, self.n_all_sons, int(BIG_RUN), self.nsteps)
+
+        self.fatherIDx -=1
 
         dtype_tree = [('zred', '<f8'),
                       ('nstep', '<i4'), ('id', '<i4'), ('m', '<f8'),
@@ -176,12 +177,14 @@ class Tree():
                       ('hosthalo', '<i4'), ('hostsub', '<i4'),
                       ('nextsub', '<i4'), ('idx', '<i4'),
                       ('nprgs', '<i4'),
-                      ('f_ind', '<i4'), ('s_ind', '<i4')]
+                      ('f_ind', '<i4'),
+                      ('nsons', '<i4'),
+                      ('s_ind', '<i4')]
 
         tt = np.recarray(self.n_all_halos +1, dtype = dtype_tree)
         self.tree = tt
 
-        tt["m"][1:] = f_arr[:,0]
+        tt["m"][1:] = f_arr[:,0] * 1e11
         tt["macc"][1:] = f_arr[:,1]
         tt["xp"][1:] = f_arr[:,2:5]
         tt["vp"][1:] = f_arr[:,5:8]
@@ -215,8 +218,9 @@ class Tree():
             tt["nstep"][1:] = i_arr[:,10]
         if not BIG_RUN:
             tt["np"][1:] = i_arr[:,11]
-        tt["f_ind"][1:] = i_arr[:,12] -1
-        tt["s_ind"][1:] = i_arr[:,13] -1
+        tt["f_ind"][1:] = i_arr[:,12] -1 #
+        tt["nsons"][1:] = i_arr[:,13] #
+        tt["s_ind"][1:] = i_arr[:,14] -1 #
 
         #return
 
@@ -258,7 +262,7 @@ class Tree():
             for i in range(1, nstep + 1):
                 id_father  =  fatherID[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]]# -1
                 try:
-                    idx_father = fatherIDx[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]] -1
+                    idx_father = fatherIDx[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]]# -1
                     if len(idx_father) > 0:
                         idx_prgs_alltime.append(list(idx_father[idx_father>0]))
                         id_prgs_alltime.append(list(id_father[id_father>0]))
@@ -277,7 +281,7 @@ class Tree():
         else:
             for i in range(1, nstep + 1):
                 try:
-                    idx_father = fatherIDx[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]] -1
+                    idx_father = fatherIDx[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]]# -1
                     if len(idx_father) > 0:
                         idx_prgs_alltime.append(list(idx_father[idx_father>0]))
                         mass_father = fatherMass[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]]
@@ -386,7 +390,7 @@ class Tree():
                 idx_father = fatherIDx[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]]
                 if len(idx_father) > 0:
                     mass_father = fatherMass[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]]
-                    idx = idx_father[np.argmax(mass_father)] -1
+                    idx = idx_father[np.argmax(mass_father)]# -1
                     if idx < 1:
                         break
                     t_father=t[idx]

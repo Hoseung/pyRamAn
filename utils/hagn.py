@@ -30,15 +30,18 @@ class Nnza():
                             ("zred", float),
                             ("aexp", float)])
     def step2out(self, nstep):
-        if isinstance(nstep, int):
+        if isinstance(nstep, np.integer):
             return int(self.nnza["nout"][np.where(self.nnza["nstep"] == nstep)[0]])
         elif not isinstance(nstep, str) and isinstance(nstep, Iterable):
             return self.nnza["nout"][mtc.match_list_ind(self.nnza["nstep"], nstep)]
-            
+        else:
+            NotImplementedError()
+
 
     def out2step(self, nout):
-        if isinstance(nout, int):
+        if isinstance(nout, np.integer):
             return int(self.nnza["nstep"][np.where(self.nnza["nout"] == nout)[0]])
         elif not isinstance(nout, str) and isinstance(nout, Iterable):
             return self.nnza["nstep"][mtc.match_list_ind(self.nnza["nout"], nout)]
-
+        else:
+            NotImplementedError()

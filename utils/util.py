@@ -4,35 +4,40 @@ Created on Thu Jan 29 00:26:50 2015
 
 @author: hoseung
 """
+import os
+def mkdir(dirpath):
+    if not os.path.isdir(dirpath):
+        os.mkdir(dirpath)
+
 def point2range(cx,r):
     return [[cx[0]-r,cx[0]+r],[cx[1]-r,cx[1]+r],[cx[2]-r,cx[2]+r]]
 
 def reimport(name):
     from importlib import reload
     reload(name)
-    
+
 def normalize(s):
     import string
     # 1. lowercase
     # 2. trim whitespaces
     for p in string.punctuation:
         s = s.replace(p, '')
-    
+
     return s.lower().strip()
 
 def fuzzymatch(s, answer_list, threshold=2):
     import string
     """
     Returns an answer among a list of answers that best matches given string.
-    Maximum levenshtein distance is 2 by default. 
-    
+    Maximum levenshtein distance is 2 by default.
+
     Refer to http://streamhacker.com/2011/10/31/fuzzy-string-matching-python/
     """
     for answer in answer_list:
         if normalize(answer) == normalize(s):
             return answer
     # no answer so far?
-   
+
     edit_distance=[]
     for answer in answer_list:
         edit_distance.append(levenshtein(s, answer))
@@ -50,16 +55,16 @@ def levenshtein(s1, s2):
     Returns Levenshtein distance of two strings.
 
     levenshtein(s1, s2)
-    
+
     Source: http://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/Levenshtein_distance
     """
     if len(s1) < len(s2):
         return levenshtein(s2, s1)
- 
+
     # len(s1) >= len(s2)
     if len(s2) == 0:
         return len(s1)
- 
+
     previous_row = range(len(s2) + 1)
     for i, c1 in enumerate(s1):
         current_row = [i + 1]
@@ -69,7 +74,7 @@ def levenshtein(s1, s2):
             substitutions = previous_row[j] + (c1 != c2)
             current_row.append(min(insertions, deletions, substitutions))
         previous_row = current_row
- 
+
     return previous_row[-1]
 
 
@@ -77,7 +82,7 @@ def levenshtein(s1, s2):
 def dgyr2dnout(dt, nout_now):
     """
        returns nout closest to look back time at (nout) + dt.
-       dt can be either positive or negative. 
+       dt can be either positive or negative.
 
        example
        -------
@@ -92,11 +97,10 @@ def dgyr2dnout(dt, nout_now):
     import numpy as np
     df = general.defaults.Default()
     df.load_time()
-    
+
     lbt = df.times["lbt"]
     lbt_now = df.times["lbt"][df.times["nout"] == nout_now]
     #print(np.abs(lbt - lbt_now - dt))
     i_dt= np.argmin(np.abs(lbt - lbt_now + dt))
-    
-    return df.times["nout"][i_dt]
 
+    return df.times["nout"][i_dt]
