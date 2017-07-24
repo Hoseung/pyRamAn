@@ -151,15 +151,16 @@ subroutine load_tree(fn, fatherID, fatherIDx, sonID, fatherMass, &
             read(1)nsons
             i_arr(idx,14) = nsons
             if (nsons .gt. 0) then
+                !read(1)sonID(slist_index:slist_index+nsons-1)!sonID_tmp(1:nsons-1)
                 read(1)sonID_tmp(1:nsons-1)
                 ! id into idx.
                 if (i .lt. nsteps) then
                     sonID(slist_index:slist_index+nsons-1)=sonID_tmp(1:nsons-1)+idx_old+nhals_now+nhals_old-1
-                    slist_index = slist_index+nsons
                     i_arr(idx,15) = slist_index
+                    !slist_index = slist_index+nsons
                 endif
             endif
-            !slist_index = slist_index + nsons
+            slist_index = slist_index + nsons
             read(1)f_arr(idx,20:23) ! virial
             read(1)f_arr(idx,24:25) ! rho
             if (.not. big_run) then
