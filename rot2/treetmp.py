@@ -318,46 +318,51 @@ def plot_tree(axs, tree, i,j, alpha=0.5, sscale=1e-8):
     axs[1][1].plot(tree["nstep"], np.log10(tree["m"]), label="{}-{}".format(i,j))
     axs[1][1].scatter(tree["nstep"], np.log10(tree["m"]), s=5)
 
+def line_scatter(ax, x,y, s=5):
+    ax.plot(x,y)
+    ax.scatter(x,y,s=s)
 
 def plot_tree_detail(axs, tree, i,j, alpha=0.5, sscale=1e-8):
     axs[0][0].scatter(tree["xp"][:,0],tree["xp"][:,1],
                       alpha=alpha,
                       s=tree["m"]*sscale,
                       label="{}-{}".format(i,j))
-    axs[0][1].scatter(tree["xp"][:,1],tree["xp"][:,2],
+    axs[1][0].scatter(tree["xp"][:,1],tree["xp"][:,2],
                       s=tree["m"]*sscale,
                       alpha=alpha)
-    axs[0][2].scatter(tree["xp"][:,2],tree["xp"][:,0],
+    axs[2][0].scatter(tree["xp"][:,2],tree["xp"][:,0],
                       s=tree["m"]*sscale,
                       alpha=alpha)
-    axs[1][0].plot(tree["nstep"],tree["vp"][:,1])
-    axs[1][0].scatter(tree["nstep"],tree["vp"][:,1],s=5)
-    axs[1][1].plot(tree["nstep"],tree["vp"][:,2])
-    axs[1][1].scatter(tree["nstep"],tree["vp"][:,2],s=5)
-    axs[1][2].plot(tree["nstep"],tree["vp"][:,0])
-    axs[1][2].scatter(tree["nstep"],tree["vp"][:,0],s=5)
-    axs[2][0].plot(tree["nstep"], np.log10(tree["spin"]))
-    axs[2][1].plot(tree["nstep"], np.log10(tree["ek"]))
-    axs[2][2].plot(tree["nstep"], np.log10(tree["m"]), label="{}-{}".format(i,j))
-    axs[2][2].scatter(tree["nstep"], np.log10(tree["m"]), s=5)
+    line_scatter(axs[0][1],tree["nstep"],tree["vp"][:,0])
+    line_scatter(axs[1][1],tree["nstep"],tree["vp"][:,1])
+    line_scatter(axs[2][1],tree["nstep"],tree["vp"][:,2])
+    line_scatter(axs[0][2],tree["nstep"],np.log10(np.abs(tree["ep"])))
+    line_scatter(axs[1][2],tree["nstep"],np.log10(tree["ek"]))
+    line_scatter(axs[2][2],tree["nstep"],np.log10(tree["et"]))
+    line_scatter(axs[0][3],tree["nstep"],tree["spin"])
+    line_scatter(axs[1][3],tree["nstep"],tree["cvel"])
+    line_scatter(axs[2][3],tree["nstep"],np.log10(tree["m"]))
 
 
 def check_tree(adp, save=True, nstep_min=0, detail=False):
     main = adp[0].pop(0)
     sats = adp
     if detail:
-        fig, axs = plt.subplots(3,3)
+        fig, axs = plt.subplots(3,4)
         fig.set_size_inches(12,8)
         plot_tree_detail(axs, main, 0,0)
         axs[0][0].set_xlabel(" X - Y ")
-        axs[0][1].set_xlabel(" Y - Z ")
-        axs[0][2].set_xlabel(" Z - X ")
-        axs[1][0].set_xlabel(" vx ")
+        axs[1][0].set_xlabel(" Y - Z ")
+        axs[2][0].set_xlabel(" Z - X ")
+        axs[0][1].set_xlabel(" vx ")
         axs[1][1].set_xlabel(" vy ")
-        axs[1][2].set_xlabel(" vz ")
-        axs[2][0].set_xlabel(" spin ")
-        axs[2][1].set_xlabel(" ek ")
-        axs[2][2].set_xlabel(" m ")
+        axs[2][1].set_xlabel(" vz ")
+        axs[0][2].set_xlabel(" ep ")
+        axs[1][2].set_xlabel(" ek ")
+        axs[2][2].set_xlabel(" et ")
+        axs[0][3].set_xlabel(" spin ")
+        axs[1][3].set_xlabel(" cvel ")
+        axs[2][3].set_xlabel(" m ")
     else:
         fig, axs = plt.subplots(2,2)
         fig.set_size_inches(8,6)
@@ -377,4 +382,3 @@ def check_tree(adp, save=True, nstep_min=0, detail=False):
         plt.savefig("tree_check_{}.png".format(main["idx"][0]), dpi=300)
     else:
         plt.show()
-

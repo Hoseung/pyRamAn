@@ -16,3 +16,4 @@ load/compile*.sh
 wheels/
 docs/_build/
 .ipynb_checkpoints
+src.linux*
