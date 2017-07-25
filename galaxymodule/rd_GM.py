@@ -470,6 +470,11 @@ def time2gyr(self, info=None):
 def _rd_gal(nout, idgal, wdir="./", metal=True,
           nchem=0, long=True, fname=None):
     """
+    Just read a GM file.
+    All this function does is to generate a file name
+    from nout and idgal.
+
+
     Parameters
     ----------
     nout : int

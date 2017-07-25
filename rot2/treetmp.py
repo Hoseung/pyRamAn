@@ -396,6 +396,7 @@ def check_tree(adp,
         plt.savefig("tree_check_{}.png".format(main["idx"][0]), dpi=300)
     else:
         plt.show()
+    adp[0].append(main) # put it back.
 
 def get_son(tt, idx):
     return tt.sonIDx[tt.tree[idx]["s_ind"]:tt.tree[idx]["s_ind"]+tt.tree[idx]["nsons"]]
@@ -430,7 +431,7 @@ def macc_this_son(tt, idx_son, idx_father):
     if len(i_father)>0:
         return tt.fatherMass[tt.tree["f_ind"][idx_son]+i_father][0], tt.tree[idx_son]["m"]
 
-def filter_false_prg(tt, idx_prgs_alltime, mfrac_limit=50):
+def filter_false_prg(tt,maintree, idx_prgs_alltime, mfrac_limit=50):
     for i, idx_prgs_now in enumerate(idx_prgs_alltime):
         if i==0:
             # i==0 = mainroot
