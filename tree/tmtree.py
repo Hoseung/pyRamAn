@@ -9,7 +9,7 @@ Created on Wed Jan 21 11:45:42 2015
 """
 import numpy as np
 from utils.io_module import read_fortran, skip_fortran
-
+from utils.hagn import Nnza
 
 class Tree():
     def __init__(self, fn=None,
@@ -39,6 +39,12 @@ class Tree():
             self.get_fn()
         if load:
             self.load(nout_now=nout_now)
+        # Load nnza()
+        try:
+            self.nnza = Nnza(file=self.fn.split("tree.dat")[0]+"nout_nstep_zred_aexp.txt")
+        except:
+            self.cal_nnza()
+            self.nnza = Nnza(file=self.fn.split("tree.dat")[0]+"nout_nstep_zred_aexp.txt")
 
     def dump(self, suffix="", force=False, protocol=-1):
         """
@@ -403,6 +409,29 @@ class Tree():
                 break
 
         return np.copy(atree[:i])
+
+    def cal_nnza(self):
+        fdir = self.fn.split("tree.dat")[0]
+        import os 
+        fsave = fdir+"nout_nstep_zred_aexp.txt"
+        if os.path.isfile(fsave):
+            print("File {} exists".format(fsave))
+            return
+        f_tree_input = fdir + "input_TreeMaker.dat"
+        if not os.path.isfile(f_tree_input):
+            print("{} doest not exsit".format(f_tree_input))
+            return
+
+        with open(f_tree_input, "r") as f:
+            nsteps = int(f.readline().split()[0])
+            nouts = []
+            for i,line in enumerate(f.readlines()):
+                nouts.append(int(line.split("tree_bricks")[1].split("'")[0]))
+        nouts=np.array(nouts)[::-1] # decending order
+        nsteps = np.unique(self.tree["nstep"])[::-1] # decending order
+        aexps = tt.aexps[::-1] # decending order
+        zreds = 1./aexps - 1
+        np.savetxt((nouts, nsteps, zreds, aexps), fsave)
 
 
 def load_fits(base=None, work_dir=None, filename="halo/TMtree.fits"):
