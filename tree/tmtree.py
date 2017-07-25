@@ -10,6 +10,7 @@ Created on Wed Jan 21 11:45:42 2015
 import numpy as np
 from utils.io_module import read_fortran, skip_fortran
 from utils.hagn import Nnza
+import os
 
 class Tree():
     def __init__(self, fn=None,
@@ -41,10 +42,14 @@ class Tree():
             self.load(nout_now=nout_now)
         # Load nnza()
         try:
-            self.nnza = Nnza(file=self.fn.split("tree.dat")[0]+"nout_nstep_zred_aexp.txt")
+            self.nnza = Nnza(fname=self.fn.split("tree.dat")[0]+"nout_nstep_zred_aexp.txt")
         except:
-            self.cal_nnza()
-            self.nnza = Nnza(file=self.fn.split("tree.dat")[0]+"nout_nstep_zred_aexp.txt")
+            try:
+                self.cal_nnza()
+                self.nnza = Nnza(fname=self.fn.split("tree.dat")[0]+"nout_nstep_zred_aexp.txt")
+            except:
+                print("Can not load nnza")
+
 
     def dump(self, suffix="", force=False, protocol=-1):
         """
@@ -68,14 +73,6 @@ class Tree():
                 print("Nothing to save ", attr_name)
                 return
             dump_temp.append(attr)
-
-# No need to check individual data.
-# They should go altogether always.
-#
-#                fn = self.wdir + suffix + attr_name + ".npz"
-                #np.save(fn, self.tree)
-#            else:
-#                print("Nothing to save ", attr_name)
 
         fn = self.wdir + suffix + "data.npy"
         np.save(fn, dump_temp)
@@ -161,9 +158,8 @@ class Tree():
                 self.n_all_fathers, self.n_all_sons, int(BIG_RUN), self.nsteps)
 
         self.fatherIDx -=1
-
-        dtype_tree = [('zred', '<f8'),
-                      ('nstep', '<i4'), ('id', '<i4'), ('m', '<f8'),
+        # zred is omitted to reduce memory usage
+        dtype_tree = [('nstep', '<i4'), ('id', '<i4'), ('m', '<f8'),
                       ('macc', '<f8'), ('nsub', '<i4'),
                       ('xp', '<f8', (3,)),
                       ('vp', '<f8', (3,)),
@@ -412,27 +408,32 @@ class Tree():
 
     def cal_nnza(self):
         fdir = self.fn.split("tree.dat")[0]
-        import os 
+
         fsave = fdir+"nout_nstep_zred_aexp.txt"
         if os.path.isfile(fsave):
             print("File {} exists".format(fsave))
-            return
+            #return
         f_tree_input = fdir + "input_TreeMaker.dat"
         if not os.path.isfile(f_tree_input):
             print("{} doest not exsit".format(f_tree_input))
-            return
+            #return
 
         with open(f_tree_input, "r") as f:
             nsteps = int(f.readline().split()[0])
             nouts = []
             for i,line in enumerate(f.readlines()):
-                nouts.append(int(line.split("tree_bricks")[1].split("'")[0]))
-        nouts=np.array(nouts)[::-1] # decending order
-        nsteps = np.unique(self.tree["nstep"])[::-1] # decending order
-        aexps = tt.aexps[::-1] # decending order
-        zreds = 1./aexps - 1
-        np.savetxt((nouts, nsteps, zreds, aexps), fsave)
+                if "tree_bricks" in line:
+                    nouts.append(int(line.split("tree_bricks")[1].split("'")[0]))
 
+        nsteps = np.unique(self.tree["nstep"])[::-1] # decending order
+        # remove nstep = 0 in an empty tree
+        nsteps = nsteps[nsteps > 0]
+        # Early snapshots in input_TreeMkaer.dat can be ignored.
+        nnsteps = len(nsteps)
+        nouts=np.array(nouts)[nnsteps::-1] # decending order
+        aexps = tt.aexps[nnsteps::-1] # decending order
+        zreds = 1./aexps - 1
+        np.savetxt(fsave, np.c_[nouts, nsteps, zreds, aexps], fmt=['%d', '%d', '%.9f', '%.9f'])
 
 def load_fits(base=None, work_dir=None, filename="halo/TMtree.fits"):
     """
@@ -465,7 +466,6 @@ def fix_nout(tt, nout_ini, nout_fi):
 
     # OK. It's safe.
     tt["NOUT"] = nout_fi - tt["NOUT"]
-
 
 
 def check_tree_complete(tree, nout_fi, nout_ini, halo_list):
