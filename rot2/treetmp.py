@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from copy import copy
 
 def showtree(gal):
     fig, axs = plt.subplots(2)
@@ -122,7 +123,7 @@ def get_all_trees(self, idx_prgs_alltime,
 
 def extract_main_tree(self, idx,
                       mmin=3.3e8,
-                      max_dM_frac=5.0,
+                      max_dM_frac=50.0,
                       merger_mass_frac_min=0.5,
                       verbose=False):
     """
@@ -177,7 +178,7 @@ def extract_main_tree(self, idx,
             idx_father = idx_father[i_ok]
             macc_father = fatherMass[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]][i_ok]
             # In decending order of macc
-            mass_father = np.array([t[idx]["m"] for idx in idx_father])
+            mass_father = np.array([t[fidx]["m"] for fidx in idx_father])
             m_frac_prg = atree[i-1]["m"] * (0.01*macc_father) / mass_father
 
             good_father = (m_frac_prg > merger_mass_frac_min) * (idx_father>0)
@@ -185,6 +186,7 @@ def extract_main_tree(self, idx,
                 break
             macc_father = macc_father[good_father]
             idx_father = idx_father[good_father]
+
             #idx = idx_father(np.argsort(macc_father)[::-1])
             idx = idx_father[np.argmax(macc_father)]# -1
             # Criterion 3
@@ -301,7 +303,7 @@ def extract_direct_full_tree(self, idx,
             return atree, idx_prgs_alltime
 
 
-def plot_tree(axs, tree, i,j, alpha=0.5, sscale=1e-8):
+def plot_tree(axs, tree, i,j, alpha=0.3, sscale=1e-8):
     axs[0][0].scatter(tree["xp"][:,0],tree["xp"][:,1],
                       marker='o',
                       #facecolors="none",
@@ -322,7 +324,7 @@ def line_scatter(ax, x,y, s=5):
     ax.plot(x,y)
     ax.scatter(x,y,s=s)
 
-def plot_tree_detail(axs, tree, i,j, alpha=0.5, sscale=1e-8):
+def plot_tree_detail(axs, tree, i,j, alpha=0.5):
     axs[0][0].scatter(tree["xp"][:,0],tree["xp"][:,1],
                       alpha=alpha,
                       s=tree["m"]*sscale,
@@ -344,13 +346,25 @@ def plot_tree_detail(axs, tree, i,j, alpha=0.5, sscale=1e-8):
     line_scatter(axs[2][3],tree["nstep"],np.log10(tree["m"]))
 
 
-def check_tree(adp, save=True, nstep_min=0, detail=False):
+def check_tree(adp,
+               save=True,
+               nstep_min=0,
+               detail=False,
+               pos_diff=False,
+               sscale=1e-8):
+    """
+        pos_diff is not working yet.
+    """
     main = adp[0].pop(0)
-    sats = adp
+    if pos_diff:
+        sats = copy(adp)
+        sats["x"]-=main["x"]
+    else:
+        sats = adp
     if detail:
         fig, axs = plt.subplots(3,4)
         fig.set_size_inches(12,8)
-        plot_tree_detail(axs, main, 0,0)
+        plot_tree_detail(axs, main, 0,0,sscale=sscale)
         axs[0][0].set_xlabel(" X - Y ")
         axs[1][0].set_xlabel(" Y - Z ")
         axs[2][0].set_xlabel(" Z - X ")
@@ -366,15 +380,15 @@ def check_tree(adp, save=True, nstep_min=0, detail=False):
     else:
         fig, axs = plt.subplots(2,2)
         fig.set_size_inches(8,6)
-        plot_tree(axs, main, 0,0)
+        plot_tree(axs, main, 0,0,sscale=sscale)
     for i, sats_this in enumerate(sats):
         for j, sat in enumerate(sats_this):
             if sat["nstep"][0] < nstep_min:
                 break
             if detail:
-                plot_tree_detail(axs,sat,i,j, sscale=1e-8)
+                plot_tree_detail(axs,sat,i,j, sscale=sscale)
             else:
-                plot_tree(axs,sat,i,j, sscale=1e-8)
+                plot_tree(axs,sat,i,j, sscale=sscale)
     axs[0][0].legend(markerscale=2.)
     plt.tight_layout()
     plt.suptitle("{}".format(main["idx"][0]))
@@ -382,3 +396,49 @@ def check_tree(adp, save=True, nstep_min=0, detail=False):
         plt.savefig("tree_check_{}.png".format(main["idx"][0]), dpi=300)
     else:
         plt.show()
+
+def get_son(tt, idx):
+    return tt.sonIDx[tt.tree[idx]["s_ind"]:tt.tree[idx]["s_ind"]+tt.tree[idx]["nsons"]]
+
+def get_macc_father(tt, idx_org, merger_mass_frac_min=0.3, max_dM_frac=1e2):
+    """
+
+    """
+    t = tt.tree
+    fatherIDx = tt.fatherIDx
+    fatherMass = tt.fatherMass
+    if t[idx_org]["nprgs"] > 0:
+        idx_father = fatherIDx[t["f_ind"][idx_org]:t["f_ind"][idx_org]+t["nprgs"][idx_org]]
+        i_ok = idx_father > 0
+        if sum(i_ok) > 0:
+            idx_father = idx_father[i_ok]
+            macc_father = fatherMass[t["f_ind"][idx_org]:t["f_ind"][idx_org]+t["nprgs"][idx_org]][i_ok]
+            # In decending order of macc
+            mass_father = np.array([t[fidx]["m"] for fidx in idx_father])
+            m_frac_prg = t[idx_org]["m"] * (0.01*macc_father) / mass_father
+            good_father = (m_frac_prg > merger_mass_frac_min) * (idx_father>0)
+            if sum(good_father) == 0:
+                return -1
+            macc_father = macc_father[good_father]
+            idx_father = idx_father[good_father]
+            idx = idx_father[np.argmax(macc_father)]
+            return idx
+
+def macc_this_son(tt, idx_son, idx_father):
+    i_father = np.where(idx_father == tt.fatherIDx[tt.tree["f_ind"][idx_son]:tt.tree["f_ind"][idx_son]+tt.tree["nprgs"][idx_son]])[0]
+    # should be one.
+    if len(i_father)>0:
+        return tt.fatherMass[tt.tree["f_ind"][idx_son]+i_father][0], tt.tree[idx_son]["m"]
+
+def filter_false_prg(tt, idx_prgs_alltime, mfrac_limit=50):
+    for i, idx_prgs_now in enumerate(idx_prgs_alltime):
+        if i==0:
+            # i==0 = mainroot
+            continue
+        idx_son=maintree[i-1]["idx"]
+        for idx in idx_prgs_now:
+            son_macc, son_mass = macc_this_son(tt,idx_son, idx)
+            # Fraction of father mass transferred to the son.
+            if son_macc*son_mass/tt.tree[idx]["m"] < mfrac_limit:
+                idx_prgs_now.remove(idx)
+    
