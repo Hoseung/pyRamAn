@@ -51,7 +51,7 @@ def add_output_containers(gg):
     gg.meta.vsig_results={"Vmax":None, "sigma":None, "V_sig":None}
 
 def do_work(sub_sample, nout, i_subsample,
-            rscale=2.0, save_cell=False):
+            rscale=1.5, save_cell=False):
     """
     Per process.
     """

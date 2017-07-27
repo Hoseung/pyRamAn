@@ -14,6 +14,8 @@ if __name__ == "__main__":
                             ("zred", float),
                             ("aexp", float)])
 
+
+    nbins=10
     nouts = nnza["nout"]
     if test:
         prg_dir = "./test_direct_prgs_gal/"
@@ -21,12 +23,14 @@ if __name__ == "__main__":
         prg_dir = "./all_direct_prgs_gal/"
  
     outdir = "./lambda_results/"
+    if not os.path.isdir(outdir):
+        os.mkdir(outdir)
  
     all_sample_ids=pickle.load(open(prg_dir + "all_sample_ids.pickle", "rb"))
     all_sample_idxs=pickle.load(open(prg_dir + "all_sample_idxs.pickle", "rb"))
     #all_sample_ids = np.intersect1d(small_sample_id, all_sample_ids[str(nout)])
 
-    for nout in nouts[16:20]:
+    for nout in nouts:
         gcat = hmo.Halo(nout=nout, is_gal=True)
         if not os.path.isdir(outdir + str(nout)):
             os.mkdir(outdir + str(nout))
@@ -41,7 +45,7 @@ if __name__ == "__main__":
         # Smaller test sample
  
         args =[]
-        for i, cat_chunk in enumerate(ccm.domain_decompose_cat(gcat, nbins=5)):
+        for i, cat_chunk in enumerate(ccm.domain_decompose_cat(gcat, nbins=nbins)):
             if i < 0:
                 continue
             if len(cat_chunk) == 0:

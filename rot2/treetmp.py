@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from  matplotlib import cm
 from copy import copy
 
 def showtree(gal):
@@ -241,6 +242,7 @@ def extract_direct_full_tree(self, idx,
 
     t_now = t[idx]
     nstep = t_now["nstep"]
+    print(nstep)
     nouts = [nstep]
     atree = np.zeros(nstep + 1, dtype=t.dtype)
     atree[0] = t_now
@@ -303,28 +305,45 @@ def extract_direct_full_tree(self, idx,
             return atree, idx_prgs_alltime
 
 
-def plot_tree(axs, tree, i,j, alpha=0.3, sscale=1e-8):
+def plot_tree(axs, tree, i,j, alpha=0.3, sscale=1e-8, nnza=None, cmap="hsv"):
+    colormap = cm.get_cmap(cmap)
     axs[0][0].scatter(tree["xp"][:,0],tree["xp"][:,1],
-                      marker='o',
-                      #facecolors="none",
-                      #edgecolors=np.random.random(),
                       alpha=alpha,
                       s=tree["m"]*sscale,
+                      #c=tree["idx"][0]%256,
+                      #cmap=cmap,vmin=0, vmax=255,
                       label="{}-{}".format(i,j))
     axs[0][1].scatter(tree["xp"][:,1],tree["xp"][:,2],
                       s=tree["m"]*sscale,
+                      #c=tree["idx"][0]%256, 
+                      #cmap=cmap,vmin=0, vmax=255,
                       alpha=alpha)
     axs[1][0].scatter(tree["xp"][:,2],tree["xp"][:,0],
                       s=tree["m"]*sscale,
+                      #c=tree["idx"][0]%256, 
+                      #cmap=cmap,vmin=0, vmax=255,
                       alpha=alpha)
-    axs[1][1].plot(tree["nstep"], np.log10(tree["m"]), label="{}-{}".format(i,j))
-    axs[1][1].scatter(tree["nstep"], np.log10(tree["m"]), s=5)
+    if nnza is not None:
+        xtime =nnza.step2nout(tree["nstep"])
+    else:
+        xtime = tree["nstep"]
+    axs[1][1].plot(xtime, np.log10(tree["m"]), label="{}-{}".format(i,j),
+                      color=colormap((tree["idx"][0]%256)/256.))
+                      #vmin=0, vmax=255)
+    #axs[1][1].scatter(xtime, np.log10(tree["m"]), s=5,
+    #                  c=tree["idx"][0]%256,
+    #                  cmap=cmap, 
+    #                  vmin=0, vmax=255)
 
-def line_scatter(ax, x,y, s=5):
-    ax.plot(x,y)
-    ax.scatter(x,y,s=s)
+def line_scatter(ax, x,y, c=None, cmap="hsv", s=5):
+    ax.plot(x,y, c=c, vmin=0, vmax=255, cmap=cmap)
+    ax.scatter(x,y,s=s, c=c, vmin=0, vmax=255, cmap=cmap)
 
-def plot_tree_detail(axs, tree, i,j, alpha=0.5):
+def plot_tree_detail(axs, tree, i,j, alpha=0.5, nnza=None):
+    if nnza is not None:
+        xtime =nnza.step2nout(tree["nstep"])
+    else:
+        xtime = tree["nstep"]
     axs[0][0].scatter(tree["xp"][:,0],tree["xp"][:,1],
                       alpha=alpha,
                       s=tree["m"]*sscale,
@@ -335,15 +354,15 @@ def plot_tree_detail(axs, tree, i,j, alpha=0.5):
     axs[2][0].scatter(tree["xp"][:,2],tree["xp"][:,0],
                       s=tree["m"]*sscale,
                       alpha=alpha)
-    line_scatter(axs[0][1],tree["nstep"],tree["vp"][:,0])
-    line_scatter(axs[1][1],tree["nstep"],tree["vp"][:,1])
-    line_scatter(axs[2][1],tree["nstep"],tree["vp"][:,2])
-    line_scatter(axs[0][2],tree["nstep"],np.log10(np.abs(tree["ep"])))
-    line_scatter(axs[1][2],tree["nstep"],np.log10(tree["ek"]))
-    line_scatter(axs[2][2],tree["nstep"],np.log10(tree["et"]))
-    line_scatter(axs[0][3],tree["nstep"],tree["spin"])
-    line_scatter(axs[1][3],tree["nstep"],tree["cvel"])
-    line_scatter(axs[2][3],tree["nstep"],np.log10(tree["m"]))
+    line_scatter(axs[0][1],xtime,tree["vp"][:,0])
+    line_scatter(axs[1][1],xtime,tree["vp"][:,1])
+    line_scatter(axs[2][1],xtime,tree["vp"][:,2])
+    line_scatter(axs[0][2],xtime,np.log10(np.abs(tree["ep"])))
+    line_scatter(axs[1][2],xtime,np.log10(tree["ek"]))
+    line_scatter(axs[2][2],xtime,np.log10(tree["et"]))
+    line_scatter(axs[0][3],xtime,tree["spin"])
+    line_scatter(axs[1][3],xtime,tree["cvel"])
+    line_scatter(axs[2][3],xtime,np.log10(tree["m"]))
 
 
 def check_tree(adp,
@@ -351,7 +370,8 @@ def check_tree(adp,
                nstep_min=0,
                detail=False,
                pos_diff=False,
-               sscale=1e-8):
+               sscale=1e-8,
+               nnza=None):
     """
         pos_diff is not working yet.
     """
@@ -364,7 +384,7 @@ def check_tree(adp,
     if detail:
         fig, axs = plt.subplots(3,4)
         fig.set_size_inches(12,8)
-        plot_tree_detail(axs, main, 0,0,sscale=sscale)
+        plot_tree_detail(axs, main, 0,0,sscale=sscale, nnza=nnza)
         axs[0][0].set_xlabel(" X - Y ")
         axs[1][0].set_xlabel(" Y - Z ")
         axs[2][0].set_xlabel(" Z - X ")
@@ -380,15 +400,15 @@ def check_tree(adp,
     else:
         fig, axs = plt.subplots(2,2)
         fig.set_size_inches(8,6)
-        plot_tree(axs, main, 0,0,sscale=sscale)
+        plot_tree(axs, main, 0,0,sscale=sscale, nnza=nnza)
     for i, sats_this in enumerate(sats):
         for j, sat in enumerate(sats_this):
             if sat["nstep"][0] < nstep_min:
                 break
             if detail:
-                plot_tree_detail(axs,sat,i,j, sscale=sscale)
+                plot_tree_detail(axs,sat,i,j, sscale=sscale, nnza=nnza)
             else:
-                plot_tree(axs,sat,i,j, sscale=sscale)
+                plot_tree(axs,sat,i,j, sscale=sscale, nnza=nnza)
     axs[0][0].legend(markerscale=2.)
     plt.tight_layout()
     plt.suptitle("{}".format(main["idx"][0]))

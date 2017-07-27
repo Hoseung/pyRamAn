@@ -431,7 +431,7 @@ class Tree():
         # Early snapshots in input_TreeMkaer.dat can be ignored.
         nnsteps = len(nsteps)
         nouts=np.array(nouts)[nnsteps::-1] # decending order
-        aexps = tt.aexps[nnsteps::-1] # decending order
+        aexps = self.aexps[nnsteps::-1] # decending order
         zreds = 1./aexps - 1
         np.savetxt(fsave, np.c_[nouts, nsteps, zreds, aexps], fmt=['%d', '%d', '%.9f', '%.9f'])
 
