@@ -3,6 +3,17 @@ import matplotlib.pyplot as plt
 from  matplotlib import cm
 from copy import copy
 
+def build_kdtree(tt, H0):
+    from scipy.spatial import cKDTree
+    tt.kdts = []
+    tt.ngals =[]
+    for i in range(tt.nsteps):
+        td = tt.tree[tt.tree["nstep"]==i+1]
+        tt.kdts.append(cKDTree(td["xp"]/tt.aexps[i]*(0.01*H0)))
+        tt.ngals.append(len(td))
+    tt.ngals = np.array(tt.ngals)
+
+
 def showtree(gal):
     fig, axs = plt.subplots(2)
     axs[0].plot(gal["m"])
@@ -125,8 +136,9 @@ def get_all_trees(self, idx_prgs_alltime,
 def extract_main_tree(self, idx,
                       mmin=3.3e8,
                       max_dM_frac=50.0,
-                      merger_mass_frac_min=0.5,
-                      verbose=False):
+                      m_frac_min=0.5,
+                      verbose=False,
+                      kdt_dist_upper = 0.1):
     """
     Extracts main progenitors from a TreeMaker tree.
 
@@ -151,6 +163,13 @@ def extract_main_tree(self, idx,
     Explicitly check the end of progenitor tree and make the function more predictable.
 
     """
+    # Tree reconstruction parameters
+    nstep_back_max = 5 # At most 5 steps backwards.
+    nstep_early = 10
+    m_small = 5e8
+     # in comoving Mpc.
+
+
     t = self.tree
     t_now = t[idx]
 
@@ -159,7 +178,6 @@ def extract_main_tree(self, idx,
         if verbose:
             print("Unreliable, m < {:.2e}".format(mmin))
         return
-
 
     fatherIDx = self.fatherIDx
     fatherMass = self.fatherMass
@@ -171,8 +189,13 @@ def extract_main_tree(self, idx,
     atree = np.zeros(nstep + 1, dtype=t.dtype)
     atree[0] = t_now
 
+    istep_back = 0
     for i in range(1, nstep + 1):
-        #print(i)
+        if istep_back > 0:
+            istep_back -=1
+            # skip as many as istep_back
+            continue
+        nstep_now = atree[i-1]["nstep"]
         idx_father = fatherIDx[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]]
         i_ok = idx_father > 0
         if sum(i_ok) > 0:
@@ -181,30 +204,105 @@ def extract_main_tree(self, idx,
             # In decending order of macc
             mass_father = np.array([t[fidx]["m"] for fidx in idx_father])
             m_frac_prg = atree[i-1]["m"] * (0.01*macc_father) / mass_father
+            print("\n Father candidates before")
+            [print("M_father_frac{:.2f}%  M_son_frac {:.2f}".format(100*mfrc, mac)) for mfrc, mac in zip(m_frac_prg, macc_father)]
 
-            good_father = (m_frac_prg > merger_mass_frac_min) * (idx_father>0)
-            if sum(good_father) == 0:
-                break
-            macc_father = macc_father[good_father]
-            idx_father = idx_father[good_father]
+            good_father = (m_frac_prg > m_frac_min)# * (idx_father>0)
+            if len(good_father) == 0:
+                idx=-2
+            else:
+                try:
+                    macc_father = macc_father[good_father]
+                    idx_father = idx_father[good_father]
 
-            #idx = idx_father(np.argsort(macc_father)[::-1])
-            idx = idx_father[np.argmax(macc_father)]# -1
-            # Criterion 3
-            if verbose:
-                print(atree[i-1]["m"], t[idx]["m"])
-            if abs(np.log10(atree[i-1]["m"]/t[idx]["m"])) > np.log10(max_dM_frac):
-                print("{}, M_son {:.2e}, M_now {:.2e}".format(idx, atree[i-1]["m"],t[idx]["m"]))
-                print("Sudden change in mass!")
-                break
+                    if verbose:
+                        print("\n Father candidates")
+                        [print("{} {:.2f}%".format(idx, 100*mfrc)) for idx, mfrc in zip(idx_father[good_father],
+                              m_frac_prg[good_father])]
 
-            if verbose:
-                print("\n", t[idx]["m"],"step",i, "macc",mass_father)
-                print("% sat", m_frac_prg)
-                print("idx, m", [t[idx]["idx"] for idx in idx_father],[t[idx]["m"] for idx in idx_father])
+                    idx = idx_father[np.argmax(macc_father)]
+                    # Criterion 3
+                    if abs(np.log10(atree[i-1]["m"]/t[idx]["m"])) > np.log10(max_dM_frac):
+                        print("Sudden change in mass!")
+                        idx=-2
+                except:
+                    idx=-2
+
+
+            if idx == -2:
+                # is it really a new galaxy??
+                early_enough = nstep < nstep_early
+                small_enough = atree[i-1]["m"] < m_small
+                if early_enough or small_enough:
+                    break
+                else:
+                    # No, it is a broken tree.
+                    for istep_back in range(nstep_back_max):
+                        # vicinity?
+                        #xyz_guessed=[[]]*3
+                        # i should NOT change
+                        #for pind in range(3):
+                        #    z = np.polyfit(atree["nstep"][max([0,i-6]):i-1],
+                        #                atree["xp"][max([0,i-6]):i-1,pind], deg=2)
+                        #    p = np.poly1d(z)
+                        #    print(nstep_now)
+                        #    xyz_guessed[pind] = p(nstep_now-istep_back)
+                        xyz_guessed = atree["xp"][i-1,:]/self.aexps[nstep_now-1]*0.704
+                        print("xyz guess", xyz_guessed)
+
+                        # Use KDTree. -> Memory use?
+                        # kdt_dist_upper could be calculated as v*dt.
+
+                        #print(nstep_now-istep_back-2, kdt_dist_upper)
+                        # kdt and ngals starts from 0.
+                        neighbor_dist, neighbor_ind = self.kdts[nstep_now-istep_back-2].query(xyz_guessed,
+                                                                       k=10,
+                                                                       distance_upper_bound=kdt_dist_upper)
+                        #print(neighbor_dist)
+                        #print(np.isfinite(neighbor_dist))
+                        neighbor_dist = neighbor_dist[np.isfinite(neighbor_dist)]
+                        neighbor_ind = neighbor_ind[np.isfinite(neighbor_dist)]
+                        #print(neighbor_dist, neighbor_ind)
+                        if len(neighbor_dist) == 0:
+                            # There is no hope..
+                            continue
+                        else:
+                            print(np.sum(self.ngals[:nstep-istep_back])+neighbor_ind)
+                            kdt_candidates = self.tree[np.sum(self.ngals[:nstep-istep_back])+neighbor_ind]
+                            m_ratio = kdt_candidates["m"]/atree[i-1]["m"]
+                            cvel_ratio = kdt_candidates["cvel"]/atree[i-1]["cvel"]
+                        if len(neighbor_dist) == 1:
+                            # final check
+                            if (m_ratio) and ():
+                                idx = kdt_candidates["idx"]
+                            else:
+                                # No hope
+                                continue
+                        elif len(neighbor_dist) > 1:
+                            dist_norm = neighbor_dist/np.median(neighbor_dist)
+                            # mass
+                            # If it is missing, probably the mass is too small, not too large.
+                            m_ratio_norm = m_ratio/np.median(m_ratio)
+                            cvel_ratio_norm = cvel_ratio/np.median(cvel_ratio)
+                            print("Scores:")
+                            print(m_ratio, m_ratio_norm)
+                            print(cvel_ratio, cvel_ratio_norm, dist_norm)
+                            #ibest = np.argmin(m_ratio_norm+cvel_ratio_norm+dist_norm)
+                            # Or,
+                            #ibest = np.argmax(1./m_ratio_norm+1/.cvel_ratio_norm+1./dist_norm)
+                            # Which is better?
+
+                            idx = kdt_candidates["idx"][np.argmin(m_ratio_norm+cvel_ratio_norm+dist_norm)]
+                            print("idx", idx)
+                            break # get out of iteration.
 
             if idx < 1:
+                # No prg FOR SURE!
                 break
+
+            if verbose:
+                print("{}, M_son {:.2e}, M_now {:.2e}".format(idx, atree[i-1]["m"],t[idx]["m"]))
+
             atree[i]=t[idx]
             nouts.append(nstep)
         else:
@@ -217,7 +315,7 @@ def extract_direct_full_tree(self, idx,
                              return_id=False,
                              return_macc=False,
                              max_dM_frac=5.0,
-                             merger_mass_frac_min = 0.5,
+                             m_frac_min = 0.5,
                              verbose=False):
     """
     Extracts main progenitors from a TreeMaker tree.
@@ -268,7 +366,7 @@ def extract_direct_full_tree(self, idx,
                 mass_father = np.array([t[idx]["m"] for idx in idx_father])
                 m_frac_prg = atree[i-1]["m"] * (0.01*macc_father) / mass_father
 
-                good_father = (m_frac_prg > merger_mass_frac_min) * (idx_father>0)
+                good_father = (m_frac_prg > m_frac_min) * (idx_father>0)
 
                 idx_prgs_alltime.append(list(idx_father[good_father]))
                 # list so to make it easy to remove later
@@ -315,12 +413,12 @@ def plot_tree(axs, tree, i,j, alpha=0.3, sscale=1e-8, nnza=None, cmap="hsv"):
                       label="{}-{}".format(i,j))
     axs[0][1].scatter(tree["xp"][:,1],tree["xp"][:,2],
                       s=tree["m"]*sscale,
-                      #c=tree["idx"][0]%256, 
+                      #c=tree["idx"][0]%256,
                       #cmap=cmap,vmin=0, vmax=255,
                       alpha=alpha)
     axs[1][0].scatter(tree["xp"][:,2],tree["xp"][:,0],
                       s=tree["m"]*sscale,
-                      #c=tree["idx"][0]%256, 
+                      #c=tree["idx"][0]%256,
                       #cmap=cmap,vmin=0, vmax=255,
                       alpha=alpha)
     if nnza is not None:
@@ -332,7 +430,7 @@ def plot_tree(axs, tree, i,j, alpha=0.3, sscale=1e-8, nnza=None, cmap="hsv"):
                       #vmin=0, vmax=255)
     #axs[1][1].scatter(xtime, np.log10(tree["m"]), s=5,
     #                  c=tree["idx"][0]%256,
-    #                  cmap=cmap, 
+    #                  cmap=cmap,
     #                  vmin=0, vmax=255)
 
 def line_scatter(ax, x,y, c=None, cmap="hsv", s=5):
@@ -462,4 +560,3 @@ def filter_false_prg(tt,maintree, idx_prgs_alltime, mfrac_limit=50):
             # Fraction of father mass transferred to the son.
             if son_macc*son_mass/tt.tree[idx]["m"] < mfrac_limit:
                 idx_prgs_now.remove(idx)
-    
