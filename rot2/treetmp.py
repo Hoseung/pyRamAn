@@ -11,6 +11,8 @@ def build_kdtree(tt, H0):
         td = tt.tree[tt.tree["nstep"]==i+1]
         tt.kdts.append(cKDTree(td["xp"]/tt.aexps[i]*(0.01*H0)))
         tt.ngals.append(len(td))
+        print(td[0]["idx"], td[-1]["idx"])
+        print(td[0]["id "], td[-1]["id"])
     tt.ngals = np.array(tt.ngals)
 
 
@@ -137,8 +139,8 @@ def extract_main_tree(self, idx,
                       mmin=3.3e8,
                       max_dM_frac=50.0,
                       m_frac_min=0.5,
-                      verbose=False,
-                      kdt_dist_upper = 0.1):
+                      verbose=True,
+                      kdt_dist_upper = 0.4):
     """
     Extracts main progenitors from a TreeMaker tree.
 
@@ -164,7 +166,7 @@ def extract_main_tree(self, idx,
 
     """
     # Tree reconstruction parameters
-    nstep_back_max = 5 # At most 5 steps backwards.
+    nstep_back_max = 3 # At most 5 steps backwards.
     nstep_early = 10
     m_small = 5e8
      # in comoving Mpc.
@@ -190,9 +192,12 @@ def extract_main_tree(self, idx,
     atree[0] = t_now
 
     istep_back = 0
+    if verbose:
+        print("e----xtract_main_tree started at", atree[0]["nstep"])
     for i in range(1, nstep + 1):
         if istep_back > 0:
             istep_back -=1
+            print("skipping ", i)
             # skip as many as istep_back
             continue
         nstep_now = atree[i-1]["nstep"]
@@ -204,95 +209,138 @@ def extract_main_tree(self, idx,
             # In decending order of macc
             mass_father = np.array([t[fidx]["m"] for fidx in idx_father])
             m_frac_prg = atree[i-1]["m"] * (0.01*macc_father) / mass_father
-            print("\n Father candidates before")
-            [print("M_father_frac{:.2f}%  M_son_frac {:.2f}".format(100*mfrc, mac)) for mfrc, mac in zip(m_frac_prg, macc_father)]
 
             good_father = (m_frac_prg > m_frac_min)# * (idx_father>0)
-            if len(good_father) == 0:
+            if sum(good_father) > 1:
+                print("\n Father candidates before")
+                [print("M_father_frac{:.2f}%  M_son_frac {:.2f}".format(100*mfrc, mac)) for mfrc, mac in zip(m_frac_prg, macc_father)]
+
+            if sum(good_father) == 0:
                 idx=-2
             else:
-                try:
-                    macc_father = macc_father[good_father]
-                    idx_father = idx_father[good_father]
+                #print("1  ", macc_father)
+                macc_father = macc_father[good_father]
+                #print("2   ",macc_father)
+                idx_father = idx_father[good_father]
 
-                    if verbose:
-                        print("\n Father candidates")
-                        [print("{} {:.2f}%".format(idx, 100*mfrc)) for idx, mfrc in zip(idx_father[good_father],
-                              m_frac_prg[good_father])]
+                if verbose:
+                    print("\n Father candidates")
+                    [print("{} {:.2f}%".format(idx, 100*mfrc)) for idx, mfrc in zip(idx_father,
+                          m_frac_prg[good_father])]
 
-                    idx = idx_father[np.argmax(macc_father)]
-                    # Criterion 3
-                    if abs(np.log10(atree[i-1]["m"]/t[idx]["m"])) > np.log10(max_dM_frac):
-                        print("Sudden change in mass!")
-                        idx=-2
-                except:
+                idx = idx_father[np.argmax(macc_father)]
+                #print("iDX = ", idx)
+                # Criterion 3
+                if abs(np.log10(atree[i-1]["m"]/t[idx]["m"])) > np.log10(max_dM_frac):
+                    print("Sudden change in mass!")
                     idx=-2
+                #except:
+                #    print("Except")
+                #    idx=-2
 
 
             if idx == -2:
+                print("IDX = -2  at nstep = ", nstep_now)
                 # is it really a new galaxy??
-                early_enough = nstep < nstep_early
+                early_enough = nstep_now < nstep_early
                 small_enough = atree[i-1]["m"] < m_small
                 if early_enough or small_enough:
+                    print("early or small", early_enough, small_enough)
                     break
                 else:
                     # No, it is a broken tree.
-                    for istep_back in range(nstep_back_max):
+                    # Do not attemp to find in the previous snapshot.
+                    # TreeMaker confirmed that there is no hope.
+                    if i < 2:
+                        break
+
+                    ipoly=max([i-2,5])
+                    print("ipoly", ipoly)
+                    z = np.polyfit(atree["nstep"][i-ipoly:i-1],
+                        atree["xp"][i-ipoly:i-1,0]/self.aexps[nstep_now+(i-1-ipoly):nstep_now:-1]*0.704,
+                        deg=2)
+                    pxx = np.poly1d(z)
+                    z = np.polyfit(atree["nstep"][i-ipoly:i-1],
+                        atree["xp"][i-ipoly:i-1,1]/self.aexps[nstep_now+(i-1-ipoly):nstep_now:-1]*0.704,
+                        deg=2)
+                    pyy = np.poly1d(z)
+                    z = np.polyfit(atree["nstep"][i-ipoly:i-1],
+                        atree["xp"][i-ipoly:i-1,2]/self.aexps[nstep_now+(i-1-ipoly):nstep_now:-1]*0.704,
+                        deg=2)
+                    pzz = np.poly1d(z)
+
+
+
+                    for istep_back in range(1,nstep_back_max+1):
                         # vicinity?
-                        #xyz_guessed=[[]]*3
-                        # i should NOT change
-                        #for pind in range(3):
-                        #    z = np.polyfit(atree["nstep"][max([0,i-6]):i-1],
-                        #                atree["xp"][max([0,i-6]):i-1,pind], deg=2)
-                        #    p = np.poly1d(z)
-                        #    print(nstep_now)
-                        #    xyz_guessed[pind] = p(nstep_now-istep_back)
-                        xyz_guessed = atree["xp"][i-1,:]/self.aexps[nstep_now-1]*0.704
+                        xyz_guessed = [pxx(nstep_now-istep_back),
+                                       pyy(nstep_now-istep_back),
+                                       pzz(nstep_now-istep_back)]
+                        #xyz_guessed = atree["xp"][i-1,:]/self.aexps[nstep_now-1]*0.704
+                        xyz_guessed = [ -2.47599665, -48.05697326,  46.40619693]
                         print("xyz guess", xyz_guessed)
 
-                        # Use KDTree. -> Memory use?
                         # kdt_dist_upper could be calculated as v*dt.
 
                         #print(nstep_now-istep_back-2, kdt_dist_upper)
                         # kdt and ngals starts from 0.
-                        neighbor_dist, neighbor_ind = self.kdts[nstep_now-istep_back-2].query(xyz_guessed,
-                                                                       k=10,
-                                                                       distance_upper_bound=kdt_dist_upper)
+                        neighbor_dist, neighbor_ind = self.kdts[nstep_now-istep_back-3].query(xyz_guessed,
+                                                                       k=10*(1+istep_back),
+                                                                       distance_upper_bound=kdt_dist_upper*(1+0.5*istep_back))
+                        answer = self.tree[np.sum(self.ngals[:nstep_now-istep_back-1])+147266]
+                        print(answer["idx"], answer["xp"]/self.aexps[nstep_now-istep_back]*0.704)
                         #print(neighbor_dist)
                         #print(np.isfinite(neighbor_dist))
-                        neighbor_dist = neighbor_dist[np.isfinite(neighbor_dist)]
-                        neighbor_ind = neighbor_ind[np.isfinite(neighbor_dist)]
+                        good = np.isfinite(neighbor_dist)
+                        neighbor_dist = neighbor_dist[good]
+                        neighbor_ind = neighbor_ind[good]
                         #print(neighbor_dist, neighbor_ind)
                         if len(neighbor_dist) == 0:
+                            print("No neighbor found...")
                             # There is no hope..
                             continue
                         else:
-                            print(np.sum(self.ngals[:nstep-istep_back])+neighbor_ind)
-                            kdt_candidates = self.tree[np.sum(self.ngals[:nstep-istep_back])+neighbor_ind]
+                            print(neighbor_ind)
+                            #print(np.sum(self.ngals[:nstep_now-istep_back])+neighbor_ind)
+                            kdt_candidates = self.tree[np.sum(self.ngals[:nstep_now-istep_back-1])+neighbor_ind]
+                            print(kdt_candidates["nstep"][0])
+                            print(kdt_candidates["idx"])
+                            print(kdt_candidates["xp"])
                             m_ratio = kdt_candidates["m"]/atree[i-1]["m"]
-                            cvel_ratio = kdt_candidates["cvel"]/atree[i-1]["cvel"]
-                        if len(neighbor_dist) == 1:
+                            cvel_ratio = np.abs(np.log2(kdt_candidates["cvel"]/atree[i-1]["cvel"]))
+                            i_fine = np.where((m_ratio > 1/3) * (m_ratio < 5) * (cvel_ratio < 1))[0]
+                        if len(i_fine) == 1:
                             # final check
-                            if (m_ratio) and ():
-                                idx = kdt_candidates["idx"]
-                            else:
+                            #if (m_ratio) and ():
+                            idx = kdt_candidates["idx"]
+                            #else:
                                 # No hope
-                                continue
-                        elif len(neighbor_dist) > 1:
-                            dist_norm = neighbor_dist/np.median(neighbor_dist)
+                            #    continue
+                        elif len(i_fine) > 1:
+                            #dist_norm = neighbor_dist[i_fine]/np.mean(neighbor_dist[i_fine])
                             # mass
                             # If it is missing, probably the mass is too small, not too large.
-                            m_ratio_norm = m_ratio/np.median(m_ratio)
-                            cvel_ratio_norm = cvel_ratio/np.median(cvel_ratio)
+                            m_ratio_norm = m_ratio[i_fine]/np.mean(m_ratio[i_fine])
+                            cvel_ratio_norm = cvel_ratio[i_fine]/np.mean(cvel_ratio[i_fine])
                             print("Scores:")
-                            print(m_ratio, m_ratio_norm)
-                            print(cvel_ratio, cvel_ratio_norm, dist_norm)
-                            #ibest = np.argmin(m_ratio_norm+cvel_ratio_norm+dist_norm)
+                            print(m_ratio)
+                            print(m_ratio_norm)
+                            print(cvel_ratio)
+                            print(cvel_ratio_norm)
+                            scores = np.abs(np.log2(m_ratio_norm))+cvel_ratio_norm
+                            ibest = np.argmin(scores)
+                            #scores = 1./np.abs(np.log2(m_ratio_norm))+1./cvel_ratio_norm#+1./dist_norm
+                            #ibest = np.argmax(scores)
+                            print("final scores", scores)
+                            #if scores[ibest] < 3.0 * np.max(scores[scores < scores[ibest]]):
+                            if scores[ibest] > 1./2. * np.min(scores[scores > scores[ibest]]):
+                                print("Not sure..")
+                                continue
                             # Or,
                             #ibest = np.argmax(1./m_ratio_norm+1/.cvel_ratio_norm+1./dist_norm)
                             # Which is better?
-
-                            idx = kdt_candidates["idx"][np.argmin(m_ratio_norm+cvel_ratio_norm+dist_norm)]
+                            print(m_ratio[ibest], cvel_ratio[ibest], neighbor_dist[ibest])
+                            idx = kdt_candidates["idx"][ibest]
                             print("idx", idx)
                             break # get out of iteration.
 
@@ -307,6 +355,7 @@ def extract_main_tree(self, idx,
             nouts.append(nstep)
         else:
             break
+    print("This tree is DONE at {}\n\n".format(nstep_now))
 
     return np.copy(atree[:i])
 
