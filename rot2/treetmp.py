@@ -6,14 +6,14 @@ from copy import copy
 def build_kdtree(tt, H0):
     from scipy.spatial import cKDTree
     tt.kdts = []
-    tt.ngals =[]
+    tt.idx_last =[]
     for i in range(tt.nsteps):
         td = tt.tree[tt.tree["nstep"]==i+1]
         tt.kdts.append(cKDTree(td["xp"]/tt.aexps[i]*(0.01*H0)))
-        tt.ngals.append(len(td))
-        print(td[0]["idx"], td[-1]["idx"])
-        print(td[0]["id "], td[-1]["id"])
-    tt.ngals = np.array(tt.ngals)
+        tt.idx_last.append(td[0]["idx"])
+        #print(td[0]["idx"], td[-1]["idx"])
+        #print(td[0]["id"], td[-1]["id"])
+    tt.idx_last = np.array(tt.idx_last)
 
 
 def showtree(gal):
@@ -102,6 +102,7 @@ def get_all_trees(self, idx_prgs_alltime,
                     if verbose:
                         print("dup, remove", sat)
                 else:
+                    print("get_all_trees", j, sat)
                     mt = extract_main_tree(self, sat, **kwargs)
                     if mt is None:
                         if verbose:
@@ -139,7 +140,7 @@ def extract_main_tree(self, idx,
                       mmin=3.3e8,
                       max_dM_frac=50.0,
                       m_frac_min=0.5,
-                      verbose=True,
+                      verbose=False,
                       kdt_dist_upper = 0.4):
     """
     Extracts main progenitors from a TreeMaker tree.
@@ -195,11 +196,12 @@ def extract_main_tree(self, idx,
     if verbose:
         print("e----xtract_main_tree started at", atree[0]["nstep"])
     for i in range(1, nstep + 1):
-        if istep_back > 0:
+        if istep_back > 1:
             istep_back -=1
             print("skipping ", i)
             # skip as many as istep_back
             continue
+        connect = 0
         nstep_now = atree[i-1]["nstep"]
         idx_father = fatherIDx[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]]
         i_ok = idx_father > 0
@@ -251,21 +253,21 @@ def extract_main_tree(self, idx,
                     # No, it is a broken tree.
                     # Do not attemp to find in the previous snapshot.
                     # TreeMaker confirmed that there is no hope.
-                    if i < 2:
+                    if i < 3:
                         break
-
-                    ipoly=max([i-2,5])
+                    print("!!!!!!!!!", i)
+                    ipoly=min([i,5])
                     print("ipoly", ipoly)
                     z = np.polyfit(atree["nstep"][i-ipoly:i-1],
-                        atree["xp"][i-ipoly:i-1,0]/self.aexps[nstep_now+(i-1-ipoly):nstep_now:-1]*0.704,
+                        atree["xp"][i-ipoly:i-1,0]/self.aexps[nstep_now-1:nstep_now-ipoly:-1]*0.704,
                         deg=2)
                     pxx = np.poly1d(z)
                     z = np.polyfit(atree["nstep"][i-ipoly:i-1],
-                        atree["xp"][i-ipoly:i-1,1]/self.aexps[nstep_now+(i-1-ipoly):nstep_now:-1]*0.704,
+                        atree["xp"][i-ipoly:i-1,1]/self.aexps[nstep_now-1:nstep_now-ipoly:-1]*0.704,
                         deg=2)
                     pyy = np.poly1d(z)
                     z = np.polyfit(atree["nstep"][i-ipoly:i-1],
-                        atree["xp"][i-ipoly:i-1,2]/self.aexps[nstep_now+(i-1-ipoly):nstep_now:-1]*0.704,
+                        atree["xp"][i-ipoly:i-1,2]/self.aexps[nstep_now-1:nstep_now-ipoly:-1]*0.704,
                         deg=2)
                     pzz = np.poly1d(z)
 
@@ -277,18 +279,20 @@ def extract_main_tree(self, idx,
                                        pyy(nstep_now-istep_back),
                                        pzz(nstep_now-istep_back)]
                         #xyz_guessed = atree["xp"][i-1,:]/self.aexps[nstep_now-1]*0.704
-                        xyz_guessed = [ -2.47599665, -48.05697326,  46.40619693]
-                        print("xyz guess", xyz_guessed)
+                        #xyz_guessed = [ -2.47599665, -48.05697326,  46.40619693]
+                        #
 
                         # kdt_dist_upper could be calculated as v*dt.
 
                         #print(nstep_now-istep_back-2, kdt_dist_upper)
                         # kdt and ngals starts from 0.
-                        neighbor_dist, neighbor_ind = self.kdts[nstep_now-istep_back-3].query(xyz_guessed,
+                        neighbor_dist, neighbor_ind = self.kdts[nstep_now-istep_back-1].query(xyz_guessed,
                                                                        k=10*(1+istep_back),
                                                                        distance_upper_bound=kdt_dist_upper*(1+0.5*istep_back))
-                        answer = self.tree[np.sum(self.ngals[:nstep_now-istep_back-1])+147266]
-                        print(answer["idx"], answer["xp"]/self.aexps[nstep_now-istep_back]*0.704)
+                        #answer = self.tree[self.idx_last[nstep_now-istep_back-1]-1+147266]
+                        #print(answer["nstep"],
+                        #      answer["idx"],
+                        #      answer["xp"]/self.aexps[nstep_now-istep_back]*0.704)
                         #print(neighbor_dist)
                         #print(np.isfinite(neighbor_dist))
                         good = np.isfinite(neighbor_dist)
@@ -300,58 +304,66 @@ def extract_main_tree(self, idx,
                             # There is no hope..
                             continue
                         else:
-                            print(neighbor_ind)
+                            #print(neighbor_ind)
                             #print(np.sum(self.ngals[:nstep_now-istep_back])+neighbor_ind)
-                            kdt_candidates = self.tree[np.sum(self.ngals[:nstep_now-istep_back-1])+neighbor_ind]
+                            kdt_candidates = self.tree[self.idx_last[nstep_now-istep_back-1]+neighbor_ind]
                             print(kdt_candidates["nstep"][0])
                             print(kdt_candidates["idx"])
                             print(kdt_candidates["xp"])
                             m_ratio = kdt_candidates["m"]/atree[i-1]["m"]
                             cvel_ratio = np.abs(np.log2(kdt_candidates["cvel"]/atree[i-1]["cvel"]))
                             i_fine = np.where((m_ratio > 1/3) * (m_ratio < 5) * (cvel_ratio < 1))[0]
+                            #kdt_candidates=kdt_candidates[i_fin]
                         if len(i_fine) == 1:
                             # final check
                             #if (m_ratio) and ():
-                            idx = kdt_candidates["idx"]
+                            idx = kdt_candidates["idx"][0]
                             #else:
                                 # No hope
-                            #    continue
+                            break
                         elif len(i_fine) > 1:
                             #dist_norm = neighbor_dist[i_fine]/np.mean(neighbor_dist[i_fine])
                             # mass
                             # If it is missing, probably the mass is too small, not too large.
-                            m_ratio_norm = m_ratio[i_fine]/np.mean(m_ratio[i_fine])
+                            m_ratio_std = (m_ratio[i_fine]-np.mean(m_ratio[i_fine]))/std(np.mean(m_ratio[i_fine]))
                             cvel_ratio_norm = cvel_ratio[i_fine]/np.mean(cvel_ratio[i_fine])
                             print("Scores:")
-                            print(m_ratio)
-                            print(m_ratio_norm)
-                            print(cvel_ratio)
+                            #print(m_ratio[i_fine])
+                            print(m_ratio_std)
+                            print(cvel_ratio[i_fine])
                             print(cvel_ratio_norm)
+                            print(kdt_candidates[i_fine]["idx"])
                             scores = np.abs(np.log2(m_ratio_norm))+cvel_ratio_norm
                             ibest = np.argmin(scores)
                             #scores = 1./np.abs(np.log2(m_ratio_norm))+1./cvel_ratio_norm#+1./dist_norm
                             #ibest = np.argmax(scores)
                             print("final scores", scores)
                             #if scores[ibest] < 3.0 * np.max(scores[scores < scores[ibest]]):
+                            print(m_ratio[ibest], cvel_ratio[ibest], neighbor_dist[ibest])
+                            idx = kdt_candidates["idx"][i_fine[ibest]]
+                            print("idx", idx)
                             if scores[ibest] > 1./2. * np.min(scores[scores > scores[ibest]]):
                                 print("Not sure..")
                                 continue
                             # Or,
                             #ibest = np.argmax(1./m_ratio_norm+1/.cvel_ratio_norm+1./dist_norm)
                             # Which is better?
-                            print(m_ratio[ibest], cvel_ratio[ibest], neighbor_dist[ibest])
-                            idx = kdt_candidates["idx"][ibest]
-                            print("idx", idx)
+                            connect=istep_back
                             break # get out of iteration.
-
             if idx < 1:
                 # No prg FOR SURE!
                 break
 
             if verbose:
                 print("{}, M_son {:.2e}, M_now {:.2e}".format(idx, atree[i-1]["m"],t[idx]["m"]))
-
-            atree[i]=t[idx]
+            if nstep_now == 179:
+                print("idx", idx)
+                print("istep_back", istep_back)
+                print("i",i)
+            if connect > 0:
+                atree[i+connect-1]=t[idx]
+            else:
+                atree[i]=t[idx]
             nouts.append(nstep)
         else:
             break
