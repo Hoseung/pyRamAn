@@ -174,7 +174,7 @@ class Tree():
                       ('tvir', '<f8'),
                       ('cvel', '<f8'),
                       ('rho_0', '<f8'),
-                      ('rho_c', '<f8'),
+                      ('r_c', '<f8'),
                       ('level', '<i4'),
                       ('hosthalo', '<i4'), ('hostsub', '<i4'),
                       ('nextsub', '<i4'), ('idx', '<i4'),
@@ -202,7 +202,7 @@ class Tree():
         tt["tvir"][1:] = f_arr[:,21]
         tt["cvel"][1:] = f_arr[:,22]
         tt["rho_0"][1:] = f_arr[:,23]
-        tt["rho_c"][1:] = f_arr[:,24]
+        tt["r_c"][1:] = f_arr[:,24]
 
         tt["idx"][1:] = i_arr[:,0]
         tt["id"][1:] = i_arr[:,1]

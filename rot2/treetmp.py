@@ -494,11 +494,11 @@ def plot_tree(axs, tree, i,j, alpha=0.3, sscale=1e-8, nnza=None, cmap="hsv"):
     #                  cmap=cmap,
     #                  vmin=0, vmax=255)
 
-def line_scatter(ax, x,y, c=None, cmap="hsv", s=5):
-    ax.plot(x,y, c=c, vmin=0, vmax=255, cmap=cmap)
+def line_scatter(ax, x,y, c=None, cmap="hsv", color=None, s=5):
+    ax.plot(x,y, c=c)
     ax.scatter(x,y,s=s, c=c, vmin=0, vmax=255, cmap=cmap)
 
-def plot_tree_detail(axs, tree, i,j, alpha=0.5, nnza=None):
+def plot_tree_detail(axs, tree, i,j, alpha=0.5, nnza=None, sscale=1e-8):
     if nnza is not None:
         xtime =nnza.step2nout(tree["nstep"])
     else:
@@ -516,9 +516,9 @@ def plot_tree_detail(axs, tree, i,j, alpha=0.5, nnza=None):
     line_scatter(axs[0][1],xtime,tree["vp"][:,0])
     line_scatter(axs[1][1],xtime,tree["vp"][:,1])
     line_scatter(axs[2][1],xtime,tree["vp"][:,2])
-    line_scatter(axs[0][2],xtime,np.log10(np.abs(tree["ep"])))
-    line_scatter(axs[1][2],xtime,np.log10(tree["ek"]))
-    line_scatter(axs[2][2],xtime,np.log10(tree["et"]))
+    line_scatter(axs[0][2],xtime,np.abs(tree["rho_0"]))
+    line_scatter(axs[1][2],xtime,tree["rho_c"]) # = Rs
+    line_scatter(axs[2][2],xtime,np.log10(tree["ek"]/tree["m"]))
     line_scatter(axs[0][3],xtime,tree["spin"])
     line_scatter(axs[1][3],xtime,tree["cvel"])
     line_scatter(axs[2][3],xtime,np.log10(tree["m"]))
@@ -550,9 +550,9 @@ def check_tree(adp,
         axs[0][1].set_xlabel(" vx ")
         axs[1][1].set_xlabel(" vy ")
         axs[2][1].set_xlabel(" vz ")
-        axs[0][2].set_xlabel(" ep ")
-        axs[1][2].set_xlabel(" ek ")
-        axs[2][2].set_xlabel(" et ")
+        axs[0][2].set_xlabel(" rho_0 ")
+        axs[1][2].set_xlabel(" Rs ")
+        axs[2][2].set_xlabel(" ek ")
         axs[0][3].set_xlabel(" spin ")
         axs[1][3].set_xlabel(" cvel ")
         axs[2][3].set_xlabel(" m ")
