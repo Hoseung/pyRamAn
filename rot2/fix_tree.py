@@ -1,7 +1,5 @@
 import numpy as np
 
-
-
 def get_diff(sat1,sat2,field):
     return np.abs((sat1[field]-sat2[field])/sat1[field])+ np.abs((sat1[field]-sat2[field])/sat1[field])
 
@@ -14,22 +12,23 @@ def test_similar(sat1, sat2, fields):
     metrics= [get_diff(sat1,sat2,ff) for ff in fields]
     return np.sum(metrics) / len(metrics)
 
-
 def interpol_treelets(ref, missing_tree,
                       ref_post,
                       fields_interpol,
-                      dnstep=7, poly_deg=5):
+                      dnstep=7, poly_deg=3):
 
-    incomplete_data = np.concatenate((this_branch, candidate_branches[0]))
-    nstep_fit_first = ref[-1]["nstep"] - dnstep
-    nstep_fit_last = ref_post[0]["nstep"] + dnstep
+    incomplete_data = np.concatenate((ref, ref_post))
+    nstep_fit_first = max([ref_post[-1]["nstep"],ref[-1]["nstep"] - dnstep])
+    nstep_fit_last = min([ref[0]["nstep"],ref_post[0]["nstep"] + dnstep])
     i_start = np.where(incomplete_data["nstep"] == nstep_fit_first)[0][0]
+    #print(np.where(incomplete_data["nstep"] == nstep_fit_last)[0])
+    #print(incomplete_data["nstep"])
     i_end = np.where(incomplete_data["nstep"] == nstep_fit_last)[0][0]
 
     X=incomplete_data["nstep"][i_end:i_start]
-    print(nstep_fit_first, nstep_fit_last)
-    print(i_start, i_end)
-    print(X)
+    #print(nstep_fit_first, nstep_fit_last)
+    #print(i_start, i_end)
+    #print(X)
     x_pred = missing_tree["nstep"]
 
     for this_field in fields_interpol:
@@ -47,13 +46,12 @@ def interpol_treelets(ref, missing_tree,
 
 def fix_broken_tree(adp,
                     istep_pre,isat_pre,
-                    fields=["m", "rho_0", "cvel", "spin", "ek", "rho_c"],
-                    score_good=1.0):
+                    fields=["m", "rho_0", "cvel", "spin", "ek", "rs"],
+                    threshold_score=1.2):
     """
 
     score = 1.0 : 50% difference in all fields.
     """
-
     nstep_max = 388
     dnstep_max_connect=3 # trees at maximum 5 snapshot apart can be connected.
 
@@ -64,15 +62,18 @@ def fix_broken_tree(adp,
 
     # All branches ends between nstep_ini+dnstep_max_connect+1 ~ nstep_ini+1  or, 374 ~ 371
     candidate_branches=[]
-    for sats_now in adp[-nstep_ini+1:-nstep_ini+1+dnstep_max_connect]:
+    for sats_now in adp[nstep_max-nstep_ini:nstep_max-nstep_ini+dnstep_max_connect]:
         if len(sats_now) > 0:
             for this_sat in sats_now:
-                candidate_branches.append(this_sat)
+                if len(this_sat) > dnstep_max_connect:
+                    candidate_branches.append(this_sat)
+    if len(candidate_branches) == 0:
+        return "no candidates"
     # print(len(candidate_branches), "candidates")
     # Per step / per galaxy
     scores = []
     for cb in candidate_branches:
-        scores.append(test_similiar(this_branch[-1], cb[0], fields))
+        scores.append(test_similar(ref[-1], cb[0], fields))
             # Or, may be this_branch[-2] and cb[1] show better correlation??s
 
     # best match
@@ -81,11 +82,13 @@ def fix_broken_tree(adp,
         ref_post=candidate_branches[ibest]
     else:
         # No good enough match.
-        return
+        print("No good match", scores)
+        return "no good matches"
 
     # Merge
+    print(min(ref["nstep"]), max(ref_post["nstep"]))
     n_steps_missing = min(ref["nstep"][ref["nstep"]>0]) - max(ref_post["nstep"])-1
-    print(n_steps_missing, min(ref["nstep"][ref["nstep"]>0]), max(ref_post["nstep"]))
+    #print(n_steps_missing, min(ref["nstep"][ref["nstep"]>0]), max(ref_post["nstep"]))
     missing_tree = np.zeros(n_steps_missing, dtype=ref.dtype)
     # Fill in trivial values
     for i, tm in enumerate(missing_tree):
@@ -97,16 +100,35 @@ def fix_broken_tree(adp,
         tm["nsons"]=1
         tm["nprgs"]=1
     # Interpolate Missing steps
-    fields_interpol = ["m", "xp", "vp", "lp", "ek", "ep", "et", "rho_c", "rho_0"]
+    fields_interpol = ["m", "xp", "vp", "lp", "ek", "ep", "et", "rs", "rho_0"]
     interpol_treelets(ref, missing_tree, ref_post, fields_interpol, dnstep=7, poly_deg=5)
     New_tree = np.concatenate((ref, missing_tree, ref_post))
     # Finally, replace the original tree
     adp[istep_pre][isat_pre] = New_tree
 
-    print(-ref_post[0]["nstep"]-1)
-    adp[-ref_post[0]["nstep"]-1].remove(ref_post)
-    #ref_post = None
-    return ref_post
+    #ll = len(adp[nstep_max-ref_post[0]["nstep"]])
+    #i=0
+    #while i < ll:
+    #    if arr[0]["idx"] == ref_post[0]["idx"]:
+    #        adp[nstep_max-ref_post[0]["nstep"]].pop(i)
+    #        break
+    #    else:
+    #        i+=1
+    removearray(adp[nstep_max-ref_post[0]["nstep"]], ref_post)
+    print("GOOD")
+    return "good"
+    #adp[nstep_max-ref_post[0]["nstep"]].remove(ref_post)
+
+def removearray(L,arr):
+    ind = 0
+    size = len(L)
+    while ind != size and not L[ind][0]["idx"] == arr[0]["idx"]:
+        ind += 1
+    if ind != size:
+        L.pop(ind)
+    else:
+        raise ValueError('array not found in list.')
+
 
 
 def main_sat_dist(main, sat, ratio=True):
@@ -131,26 +153,3 @@ def ind_pericentric_dist_ok(main, sat, threshold_ratio=2.0):
     # find local minima
     #d_min = argrelmax(all_dist, mode="clip")[-1]
     return all_dist[-1]>threshold_ratio
-# Automatically  detect broken trees and attempt to fix them.
-
-# It is sufficient that a tree is complete up to the point
-# when the "pericentric" distance of the sat and main becomes smaller than
-# n times the sum of the radii of the two.
-
-f_dist_sum = 2.5
-step_early_enough = 30
-m_small_enough = 3.3e8
-
-for i, sats_now in enumerate(adp):
-    if i ==0:
-        continue
-    if len(sats_now) > 0:
-        print("This step", sats_now[0][0]["nstep"])
-        for j, sat in enumerate(sats_now):
-            dist_ok=ind_pericentric_dist_ok(main, sat, threshold_ratio=f_dist_sum)
-            if (sat["nstep"][-1] > step_early_enough) and (sat["m"][-1] > m_small_enough):
-                dist_ok=ind_pericentric_dist_ok(main, sat, threshold_ratio=f_dist_sum)
-                if not(dist_ok):
-                    # broken tree!
-                    print("Broken", sat["nstep"][0],sat["idx"][0], sat["idx"][-1])
-                    fix_broken_tree(adp,i,j,fields=["m", "rho_0", "cvel", "spin", "ek", "rho_c"])

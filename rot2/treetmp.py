@@ -102,7 +102,7 @@ def get_all_trees(self, idx_prgs_alltime,
                     if verbose:
                         print("dup, remove", sat)
                 else:
-                    print("get_all_trees", j, sat)
+                    #print("get_all_trees", j, sat)
                     mt = extract_main_tree(self, sat, **kwargs)
                     if mt is None:
                         if verbose:
@@ -307,9 +307,9 @@ def extract_main_tree_try_fix(self, idx,
                             #print(neighbor_ind)
                             #print(np.sum(self.ngals[:nstep_now-istep_back])+neighbor_ind)
                             kdt_candidates = self.tree[self.idx_last[nstep_now-istep_back-1]+neighbor_ind]
-                            print(kdt_candidates["nstep"][0])
-                            print(kdt_candidates["idx"])
-                            print(kdt_candidates["xp"])
+                            #print(kdt_candidates["nstep"][0])
+                            #print(kdt_candidates["idx"])
+                            #print(kdt_candidates["xp"])
                             m_ratio = kdt_candidates["m"]/atree[i-1]["m"]
                             cvel_ratio = np.abs(np.log2(kdt_candidates["cvel"]/atree[i-1]["cvel"]))
                             i_fine = np.where((m_ratio > 1/3) * (m_ratio < 5) * (cvel_ratio < 1))[0]
@@ -438,9 +438,9 @@ def extract_main_tree(self, idx,
             m_frac_prg = atree[i-1]["m"] * (0.01*macc_father) / mass_father
 
             good_father = (m_frac_prg > m_frac_min)# * (idx_father>0)
-            if sum(good_father) > 1:
-                print("\n Father candidates before")
-                [print("M_father_frac{:.2f}%  M_son_frac {:.2f}".format(100*mfrc, mac)) for mfrc, mac in zip(m_frac_prg, macc_father)]
+            #if sum(good_father) > 1:
+            #    print("\n Father candidates before")
+            #    [print("M_father_frac{:.2f}%  M_son_frac {:.2f}".format(100*mfrc, mac)) for mfrc, mac in zip(m_frac_prg, macc_father)]
 
             if sum(good_father) == 0:
                 idx=-2
@@ -473,7 +473,7 @@ def extract_main_tree(self, idx,
             nouts.append(nstep)
         else:
             break
-    print("This tree is DONE at {}\n\n".format(nstep_now))
+    #print("This tree is DONE at {}\n\n".format(nstep_now))
 
     return np.copy(atree[:i])
 
@@ -635,10 +635,11 @@ def check_tree(adp,
                save=True,
                suffix="org",
                nstep_min=0,
-               detail=False,
+               figure_type="regular",
                pos_diff=False,
                sscale=1e-8,
-               nnza=None):
+               nnza=None,
+               cmap="hsv"):
     """
         pos_diff is not working yet.
     """
@@ -648,7 +649,7 @@ def check_tree(adp,
         sats["x"]-=main["x"]
     else:
         sats = adp
-    if detail:
+    if figure_type=="detailed":
         fig, axs = plt.subplots(3,4)
         fig.set_size_inches(12,8)
         plot_tree_detail(axs, main, 0,0,sscale=sscale, nnza=nnza)
@@ -664,23 +665,36 @@ def check_tree(adp,
         axs[0][3].set_xlabel(" spin ")
         axs[1][3].set_xlabel(" cvel ")
         axs[2][3].set_xlabel(" m ")
-    else:
+    elif figure_type=="regular":
         fig, axs = plt.subplots(2,2)
         fig.set_size_inches(8,6)
-        plot_tree(axs, main, 0,0,sscale=sscale, nnza=nnza)
+        plot_tree(axs, main, 0,0, sscale=sscale, nnza=nnza)
+    elif figure_type=="simple":
+        colormap = cm.get_cmap(cmap)
+        fig, axs = plt.subplots()
+        fig.set_size_inches(8,6)
+        xtime = main["nstep"]
+        axs.plot(xtime, np.log10(main["m"]), label="{}-{}".format(0,0),
+                      color=colormap((main["idx"][0]%256)/256.))
+
     for i, sats_this in enumerate(sats):
         for j, sat in enumerate(sats_this):
             if sat["nstep"][0] < nstep_min:
                 break
-            if detail:
+            if figure_type=="detailed":
                 plot_tree_detail(axs,sat,i,j, sscale=sscale, nnza=nnza)
-            else:
+            elif figure_type=="regular":
                 plot_tree(axs,sat,i,j, sscale=sscale, nnza=nnza)
-    axs[0][0].legend(markerscale=2.)
+            elif figure_type=="simple":
+                xtime = sat["nstep"]
+                axs.plot(xtime, np.log10(sat["m"]), label="{}-{}".format(i,j),
+                              color=colormap((sat["idx"][0]%256)/256.))
+
+    if figure_type!="simple": axs[0][0].legend(markerscale=2.)
     plt.tight_layout()
     plt.suptitle("{}".format(main["idx"][0]))
     if save:
-        plt.savefig("tree_check_{}_{}.png".format(main["idx"][0]), suffix, dpi=300)
+        plt.savefig("tree_check_{}_{}.png".format(main["idx"][0], suffix), dpi=300)
     else:
         plt.show()
     adp[0].append(main) # put it back.
