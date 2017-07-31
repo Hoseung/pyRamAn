@@ -136,7 +136,7 @@ def get_all_trees(self, idx_prgs_alltime,
     return all_main_prgs
 
 
-def extract_main_tree(self, idx,
+def extract_main_tree_try_fix(self, idx,
                       mmin=3.3e8,
                       max_dM_frac=50.0,
                       m_frac_min=0.5,
@@ -371,6 +371,113 @@ def extract_main_tree(self, idx,
 
     return np.copy(atree[:i])
 
+def extract_main_tree(self, idx,
+                      mmin=3.3e8,
+                      max_dM_frac=50.0,
+                      m_frac_min=0.5,
+                      verbose=False,
+                      kdt_dist_upper = 0.4):
+    """
+    Extracts main progenitors from a TreeMaker tree.
+
+    Criterion 1)
+    A galaxy whose PEAK stellar mass is below mmin is considered to be unreliable.
+    They can be a satellites, but not the trunk.
+    Criterion 2)
+    A galaxy can't grow by more than max_dm_frac times.
+    Criterion 3)
+    Likewise, a galaxy can't shrink by more than factor of ___ and remain.
+    for example, 11, 11, 11, 11, 10.5, 10.2, 10.0 is possible. (log mass)
+                 11, 11, 11, 11, 9.5, 9.4, 9.4 is NOT possible.
+
+    example
+    -------
+    >>> tt = tmtree.Tree("tree.dat")
+    >>> atree = tt.extract_main_tree(12345)
+
+    TODO
+    ----
+    It works, but the try - except clause is error-prone.
+    Explicitly check the end of progenitor tree and make the function more predictable.
+
+    """
+    # Tree reconstruction parameters
+    nstep_back_max = 3 # At most 5 steps backwards.
+    nstep_early = 10
+    m_small = 5e8
+    # in comoving Mpc.
+
+    t = self.tree
+    t_now = t[idx]
+
+    # Criterion 1
+    if t_now["m"] < mmin:
+        if verbose:
+            print("Unreliable, m < {:.2e}".format(mmin))
+        return
+
+    fatherIDx = self.fatherIDx
+    fatherMass = self.fatherMass
+
+    nstep = t_now["nstep"]
+    if nstep <= 1:
+        return
+    nouts = [nstep]
+    atree = np.zeros(nstep + 1, dtype=t.dtype)
+    atree[0] = t_now
+
+    for i in range(1, nstep + 1):
+        nstep_now = atree[i-1]["nstep"]
+        idx_father = fatherIDx[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]]
+        i_ok = idx_father > 0
+        if sum(i_ok) > 0:
+            idx_father = idx_father[i_ok]
+            macc_father = fatherMass[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]][i_ok]
+            # In decending order of macc
+            mass_father = np.array([t[fidx]["m"] for fidx in idx_father])
+            m_frac_prg = atree[i-1]["m"] * (0.01*macc_father) / mass_father
+
+            good_father = (m_frac_prg > m_frac_min)# * (idx_father>0)
+            if sum(good_father) > 1:
+                print("\n Father candidates before")
+                [print("M_father_frac{:.2f}%  M_son_frac {:.2f}".format(100*mfrc, mac)) for mfrc, mac in zip(m_frac_prg, macc_father)]
+
+            if sum(good_father) == 0:
+                idx=-2
+            else:
+                #print("1  ", macc_father)
+                macc_father = macc_father[good_father]
+                #print("2   ",macc_father)
+                idx_father = idx_father[good_father]
+
+                if verbose:
+                    print("\n Father candidates")
+                    [print("{} {:.2f}%".format(idx, 100*mfrc)) for idx, mfrc in zip(idx_father,
+                          m_frac_prg[good_father])]
+
+                idx = idx_father[np.argmax(macc_father)]
+                #print("iDX = ", idx)
+                # Criterion 3
+                if abs(np.log10(atree[i-1]["m"]/t[idx]["m"])) > np.log10(max_dM_frac):
+                    print("Sudden change in mass!")
+                    idx=-2
+
+            if idx < 1:
+                # No prg FOR SURE!
+                break
+
+            if verbose:
+                print("{}, M_son {:.2e}, M_now {:.2e}".format(idx, atree[i-1]["m"],t[idx]["m"]))
+
+            atree[i]=t[idx]
+            nouts.append(nstep)
+        else:
+            break
+    print("This tree is DONE at {}\n\n".format(nstep_now))
+
+    return np.copy(atree[:i])
+
+
 
 def extract_direct_full_tree(self, idx,
                              return_id=False,
@@ -517,7 +624,7 @@ def plot_tree_detail(axs, tree, i,j, alpha=0.5, nnza=None, sscale=1e-8):
     line_scatter(axs[1][1],xtime,tree["vp"][:,1])
     line_scatter(axs[2][1],xtime,tree["vp"][:,2])
     line_scatter(axs[0][2],xtime,np.abs(tree["rho_0"]))
-    line_scatter(axs[1][2],xtime,tree["rho_c"]) # = Rs
+    line_scatter(axs[1][2],xtime,tree["rs"]) # = Rs
     line_scatter(axs[2][2],xtime,np.log10(tree["ek"]/tree["m"]))
     line_scatter(axs[0][3],xtime,tree["spin"])
     line_scatter(axs[1][3],xtime,tree["cvel"])
@@ -526,6 +633,7 @@ def plot_tree_detail(axs, tree, i,j, alpha=0.5, nnza=None, sscale=1e-8):
 
 def check_tree(adp,
                save=True,
+               suffix="org",
                nstep_min=0,
                detail=False,
                pos_diff=False,
@@ -572,7 +680,7 @@ def check_tree(adp,
     plt.tight_layout()
     plt.suptitle("{}".format(main["idx"][0]))
     if save:
-        plt.savefig("tree_check_{}.png".format(main["idx"][0]), dpi=300)
+        plt.savefig("tree_check_{}_{}.png".format(main["idx"][0]), suffix, dpi=300)
     else:
         plt.show()
     adp[0].append(main) # put it back.
