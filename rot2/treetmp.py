@@ -601,40 +601,53 @@ def plot_tree(axs, tree, i,j, alpha=0.3, sscale=1e-8, nnza=None, cmap="hsv"):
     #                  cmap=cmap,
     #                  vmin=0, vmax=255)
 
-def line_scatter(ax, x,y, c=None, cmap="hsv", color=None, s=5):
+def line_scatter(ax, x,y, c=None, cmap="hsv", color=None, s=2):
     ax.plot(x,y, c=c)
     ax.scatter(x,y,s=s, c=c, vmin=0, vmax=255, cmap=cmap)
 
-def plot_tree_detail(axs, tree, i,j, alpha=0.5, nnza=None, sscale=1e-8):
+def plot_tree_detail(axs, tree, main=None,
+                     i=0, j=0,
+                     alpha=0.5, nnza=None, sscale=1e-8):
     if nnza is not None:
         xtime =nnza.step2nout(tree["nstep"])
     else:
         xtime = tree["nstep"]
-    axs[0][0].scatter(tree["xp"][:,0],tree["xp"][:,1],
+
+    if main is not None:
+        main_part = main[np.in1d(main["nstep"], tree["nstep"])]
+        pos=main_part["xp"]-tree["xp"]
+    else:
+        pos = tree["xp"]
+
+    axs[0][0].scatter(pos[:,0],pos[:,1],
                       alpha=alpha,
                       s=tree["m"]*sscale,
                       label="{}-{}".format(i,j))
-    axs[1][0].scatter(tree["xp"][:,1],tree["xp"][:,2],
+    axs[1][0].scatter(pos[:,1],pos[:,2],
                       s=tree["m"]*sscale,
                       alpha=alpha)
-    axs[2][0].scatter(tree["xp"][:,2],tree["xp"][:,0],
+    axs[2][0].scatter(pos[:,2],pos[:,0],
                       s=tree["m"]*sscale,
                       alpha=alpha)
     line_scatter(axs[0][1],xtime,tree["vp"][:,0])
     line_scatter(axs[1][1],xtime,tree["vp"][:,1])
     line_scatter(axs[2][1],xtime,tree["vp"][:,2])
-    line_scatter(axs[0][2],xtime,np.abs(tree["rho_0"]))
-    line_scatter(axs[1][2],xtime,tree["rs"]) # = Rs
-    line_scatter(axs[2][2],xtime,np.log10(tree["ek"]/tree["m"]))
-    line_scatter(axs[0][3],xtime,tree["spin"])
-    line_scatter(axs[1][3],xtime,tree["cvel"])
-    line_scatter(axs[2][3],xtime,np.log10(tree["m"]))
+    line_scatter(axs[0][2],xtime,tree["lp"][:,0])
+    line_scatter(axs[1][2],xtime,tree["lp"][:,1])
+    line_scatter(axs[2][2],xtime,tree["lp"][:,2])
+    line_scatter(axs[0][3],xtime,np.abs(tree["rho_0"]))
+    line_scatter(axs[1][3],xtime,tree["rs"]) # = Rs
+    line_scatter(axs[2][3],xtime,np.log10(tree["ek"]/tree["m"]))
+    line_scatter(axs[0][4],xtime,tree["spin"])
+    line_scatter(axs[1][4],xtime,tree["cvel"])
+    line_scatter(axs[2][4],xtime,np.log10(tree["m"]))
 
 
 def check_tree(adp,
                save=True,
                suffix="org",
                nstep_min=0,
+               nstep_max=1e5,
                figure_type="regular",
                pos_diff=False,
                sscale=1e-8,
@@ -650,25 +663,30 @@ def check_tree(adp,
     else:
         sats = adp
     if figure_type=="detailed":
-        fig, axs = plt.subplots(3,4)
-        fig.set_size_inches(12,8)
-        plot_tree_detail(axs, main, 0,0,sscale=sscale, nnza=nnza)
+        fig, axs = plt.subplots(3,5)
+        fig.set_size_inches(20,12)
+        if nstep_max > main["nstep"][0]:
+            plot_tree_detail(axs, main, i=0,j=0,sscale=sscale, nnza=nnza)
+
         axs[0][0].set_xlabel(" X - Y ")
         axs[1][0].set_xlabel(" Y - Z ")
         axs[2][0].set_xlabel(" Z - X ")
         axs[0][1].set_xlabel(" vx ")
         axs[1][1].set_xlabel(" vy ")
         axs[2][1].set_xlabel(" vz ")
-        axs[0][2].set_xlabel(" rho_0 ")
-        axs[1][2].set_xlabel(" Rs ")
-        axs[2][2].set_xlabel(" ek ")
-        axs[0][3].set_xlabel(" spin ")
-        axs[1][3].set_xlabel(" cvel ")
-        axs[2][3].set_xlabel(" m ")
+        axs[0][2].set_xlabel(" lx ")
+        axs[1][2].set_xlabel(" ly ")
+        axs[2][2].set_xlabel(" lz ")
+        axs[0][3].set_xlabel(" rho_0 ")
+        axs[1][3].set_xlabel(" Rs ")
+        axs[2][3].set_xlabel(" ek ")
+        axs[0][4].set_xlabel(" spin ")
+        axs[1][4].set_xlabel(" cvel ")
+        axs[2][4].set_xlabel(" m ")
     elif figure_type=="regular":
         fig, axs = plt.subplots(2,2)
         fig.set_size_inches(8,6)
-        plot_tree(axs, main, 0,0, sscale=sscale, nnza=nnza)
+        plot_tree(axs, main, i=0,j=0, sscale=sscale, nnza=nnza)
     elif figure_type=="simple":
         colormap = cm.get_cmap(cmap)
         fig, axs = plt.subplots()
@@ -679,10 +697,10 @@ def check_tree(adp,
 
     for i, sats_this in enumerate(sats):
         for j, sat in enumerate(sats_this):
-            if sat["nstep"][0] < nstep_min:
+            if sat["nstep"][0] < nstep_min or sat["nstep"][0] > nstep_max:
                 break
             if figure_type=="detailed":
-                plot_tree_detail(axs,sat,i,j, sscale=sscale, nnza=nnza)
+                plot_tree_detail(axs,sat,main=main,i=i,j=j, sscale=sscale, nnza=nnza)
             elif figure_type=="regular":
                 plot_tree(axs,sat,i,j, sscale=sscale, nnza=nnza)
             elif figure_type=="simple":
@@ -694,9 +712,10 @@ def check_tree(adp,
     plt.tight_layout()
     plt.suptitle("{}".format(main["idx"][0]))
     if save:
-        plt.savefig("tree_check_{}_{}.png".format(main["idx"][0], suffix), dpi=300)
+        plt.savefig("tree_check_{}_{}_{}.png".format(main["idx"][0], suffix, figure_type), dpi=300)
     else:
         plt.show()
+    plt.close()
     adp[0].append(main) # put it back.
 
 def get_son(tt, idx):
