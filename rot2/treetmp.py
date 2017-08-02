@@ -779,10 +779,12 @@ def singletree2txt(f, tree,fields_save,fields_fmt):
     np.savetxt(f, np.column_stack(data), fmt=fmts, footer="\n")
 
 
-def save_adp(adp):
+def save_adp(adp, out_dir="./", suffix=""):
+    import os
+    if not os.path.isdir(out_dir):os.mkdir(out_dir)
     fields_save=["nstep", "id","idx","m","xp","vp","lp","mvir","rvir","tvir","cvel","rho_0","rs","ek","ep","et"]
     fields_fmt =["%d", "%d", "%d","%.4e","%.5f","%.5f","%.5f","%.4e","%.5f","%.5f","%.5f","%.5f","%.5f","%.5f","%.5f","%.5f"]
-    f = open("{}.txt".format(adp[0][0]["idx"][0]), "ab")
+    f = open(out_dir+"{}{}.txt".format(adp[0][0]["idx"][0],suffix), "ab")
     header='      '.join(fields_save) + "\n"
     #np.savetxt(f, np.array([1]), header=header.encode('utf-8'))
     f.write(header.encode('utf-8'))
