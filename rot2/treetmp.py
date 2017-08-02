@@ -762,3 +762,33 @@ def filter_false_prg(tt,maintree, idx_prgs_alltime, mfrac_limit=50):
             # Fraction of father mass transferred to the son.
             if son_macc*son_mass/tt.tree[idx]["m"] < mfrac_limit:
                 idx_prgs_now.remove(idx)
+
+
+def singletree2txt(f, tree,fields_save,fields_fmt):
+    data=[]
+    fmts=[]
+    for field, fmt in zip(fields_save, fields_fmt):
+        if tree[field].ndim == 2:
+            for i in range(3):
+                data.append(tree[field][:,i])
+                fmts.append(fmt)
+        else:
+            data.append(tree[field])
+            fmts.append(fmt)
+    #print(np.c_[data].shape)
+    np.savetxt(f, np.column_stack(data), fmt=fmts, footer="\n")
+
+
+def save_adp(adp):
+    fields_save=["nstep", "id","idx","m","xp","vp","lp","mvir","rvir","tvir","cvel","rho_0","rs","ek","ep","et"]
+    fields_fmt =["%d", "%d", "%d","%.4e","%.5f","%.5f","%.5f","%.4e","%.5f","%.5f","%.5f","%.5f","%.5f","%.5f","%.5f","%.5f"]
+    f = open("{}.txt".format(adp[0][0]["idx"][0]), "ab")
+    header='      '.join(fields_save) + "\n"
+    #np.savetxt(f, np.array([1]), header=header.encode('utf-8'))
+    f.write(header.encode('utf-8'))
+    for this_sats in adp:
+        for sat in this_sats:
+            singletree2txt(f, sat, fields_save, fields_fmt)
+            f.write("\n".encode('utf-8'))
+        f.write("\n".encode('utf-8'))
+    f.close()
