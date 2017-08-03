@@ -17,21 +17,48 @@ from rot2 import fix_tree
 # Fix tree parameters
 
 def refined_tree(tt, idx, f_dist_sum = 0.66
-                            r_fi = 0.5
-                            step_early_enough = 30
-                            m_small_enough = 3.3e8
-                            too_short_ref = 2
-                            threshold_score=2.0
-                            fix_result = []
-                            l_tree_max=50
-                            l_too_short_close=15,
-                            do_plot=False):
+                          r_fi = 0.5
+                          step_early_enough = 30
+                          m_small_enough = 3.3e8
+                          too_short_ref = 2
+                          threshold_score=2.0
+                          l_tree_max=50
+                          l_too_short_close=15,
+                          do_plot=False,
+                          out_dir="./"):
+    """
+    Parameters
+    ----------
+        f_dist_sum :
+            a satellite inside the f_dist_sum*(r1+r2) is considered to have merged.
+        r_fi :
+            dd
+        step_early_enough : 
+            A tree starting earlier than this is thought to be complete.
+        m_small_enough : 
+            smaller than this mass is too small that I can ignore.
+        too_short_ref : 
+            A tree let shorter than this is not viable for fitting. Ignored.
+        threshold_score : 
+            Threshold for test_similar.
+        l_tree_max : 
+            pre-merger state of the satellite is assumed to be < l_tree_max steps back. 
+        l_too_short_close :
+            If a tree is shorter than this and always within f_dist_sum, 
+            this is a remnant of previous merger (which is disconnected from 
+            this sat tree, and likely exists separately.) Because the main body of the sat
+            ,including pre-merger state, presumably presents, this remnant is of no use. remove.
+        do_plot :
+            plot trees before and after fixing. 
+        
+    """
 
     ma_dM_frac1=100.0
     m_frac_min1=0.3
     ma_dM_frac2=10.0
     m_frac_min2=0.3
 
+    fix_result = []
     print("This FIDX", fidx)
     
     # gather idxs of all sat roots(final IDX).
@@ -125,7 +152,7 @@ def refined_tree(tt, idx, f_dist_sum = 0.66
                 else:
                     all_dist = fix_tree.main_sat_dist(maintree, sat, ratio=True)
                     merger_fi = np.argmax(all_dist > r_fi)
-                    print("\n merger_fi", merger_fi)
+                    #print("\n merger_fi", merger_fi)
  
                     l_org = len(sat)
                     if all_dist[0] < f_dist_sum and merger_fi==0:
@@ -158,7 +185,8 @@ def refined_tree(tt, idx, f_dist_sum = 0.66
     #                   nstep_min = 50,
     #                    figure_type="simple",
     #                    suffix="middle")
-    # remove small treeletsfor k, sats_now in enumerate(adp):
+
+    # remove small treelets 
     for k, sats_now in enumerate(adp):
         if k ==0:
             continue
@@ -181,7 +209,7 @@ def refined_tree(tt, idx, f_dist_sum = 0.66
                 else:
                     all_dist = fix_tree.main_sat_dist(maintree, sat, ratio=True)
                     merger_fi = np.argmax(all_dist > r_fi)
-                    print("merger_fi", merger_fi)
+                    #print("merger_fi", merger_fi)
  
                     l_org = len(sat)
                     if all_dist[0] < f_dist_sum and merger_fi==0 and len(sat) < l_too_short_close:
@@ -195,7 +223,6 @@ def refined_tree(tt, idx, f_dist_sum = 0.66
                     else:
                         j+=1
  
- 
     if do_plot:
         treetmp.check_tree(adp,
                        save=True,
@@ -204,7 +231,7 @@ def refined_tree(tt, idx, f_dist_sum = 0.66
                         figure_type="simple")
         plt.close()
  
-    pickle.dump((maintree, idx_prgs_alltime, id_prgs_alltime, adp),open("./{}_test.pickle".format(maintree[0]["idx"]), "wb"))
+    pickle.dump(adp),open(out_dir+"{}_adp.pickle".format(maintree[0]["idx"]), "wb"))
 
 
     # How many are "no candidates", "no good matches", or "good"?

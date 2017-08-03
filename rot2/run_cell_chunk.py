@@ -14,7 +14,6 @@ if __name__ == "__main__":
                             ("zred", float),
                             ("aexp", float)])
 
-
     nbins=10
     nouts = nnza["nout"]
     if test:
@@ -43,7 +42,6 @@ if __name__ == "__main__":
         gcat.data["idx"] = allgal_now_idxs[mtc.match_list_ind(gcat.data["id"], allgal_now)]
 
         # Smaller test sample
- 
         args =[]
         for i, cat_chunk in enumerate(ccm.domain_decompose_cat(gcat, nbins=nbins)):
             if i < 0:

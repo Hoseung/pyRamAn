@@ -22,7 +22,7 @@ def all_id_to_dict(all_idxs, nnza, dir_ids = "pidxs/"):
         for i, pt in enumerate(pidxs_this):
             if len(pt) > 0:
                 all_pidxs[i].extend(pt)
-        pids_this = pickle.load(open(dir_ids+"./ID/IDall_direct_prgs_" + str(final_idx) +"_gal.pickle", "rb"))
+        pids_this = pickle.load(open(dir_ids+"ID/IDall_direct_prgs_" + str(final_idx) +"_gal.pickle", "rb"))
         for i, pt in enumerate(pids_this):
             if len(pt) > 0:
                 all_pids[i].extend(pt)

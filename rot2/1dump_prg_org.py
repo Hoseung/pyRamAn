@@ -15,12 +15,11 @@ def fname(fidx, is_gal=False):
 
 if __name__ == "__main__":
 
-    nout=782
-    nout_first = 100
     test = True
 
     wdir = './'
     is_gal = True
+    # Do I ever care halos?
 
     if is_gal:
         Mcut = 1e10
@@ -47,7 +46,7 @@ if __name__ == "__main__":
     print("Loading tree done")
 
     tnow = tt.tree[tt.tree["nstep"]==max(tt.tree["nstep"])]
-    large_last = tnow[(tnow["m"] > Mcut / 1e11)]# * (tnow["m"] < 2)]  above 1e10
+    large_last = tnow[tnow["m"] > Mcut]# * (tnow["m"] < 2)]  above 1e10
 
     # TEST
     if test:
@@ -61,7 +60,6 @@ if __name__ == "__main__":
     final_ids = large_last["id"]
 
     np.savetxt(basedir + "final_idxs_allmassive_gal.txt", np.c_[final_idxs,final_ids], fmt='%d  %d')
-    #np.savetxt(basedir + "final_ids_allmassive_gal.txt", final_ids, fmt='%d')
 
     num_gal = len(final_ids)
 
