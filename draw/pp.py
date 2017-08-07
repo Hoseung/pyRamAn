@@ -426,7 +426,6 @@ def pp_halo(h, npix, rscale=1.0, region=None, ind=None, ax=None,
             yspan = np.ptp(region[yrn])
             zspan = np.ptp(region[zrn])
 
-
     else:
         # if ind is a boolean array, convert it to an index array.
         if ind.dtype == 'bool':
