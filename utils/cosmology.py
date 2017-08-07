@@ -2,7 +2,7 @@
 """
 cosmology utils.
 
-... use astropy.cosmology. that is a full furnished util. 
+... use astropy.cosmology. that is a full furnished util.
 
 Created on Sun Jun 28 18:31:23 2015
 
@@ -10,28 +10,23 @@ Created on Sun Jun 28 18:31:23 2015
 """
 
 import numpy as np
-def nout2lbt(nout, nout_fi=187):
-    """
-      A very simple function assuming delta a = 0.005,
-      and nout_fi = 187 by default.
-    """
-    import astropy.cosmology as ac
-    aexp = 1 - (nout_fi - nout)*0.005
-    
-    return ac.WMAP7.lookback_time(1/aexp -1).value
-
-
 class Timeconvert():
-    def __init__(self, info):
+    def __init__(self, info=None, H0=None, om=None, ol=None, zred_now=None):
         from general import defaults
         from astropy.io import fits
         dfl = defaults.Default()
         self.repodir = dfl.dir_repo
         self.info = info
-
-        sh0       = str(round(info.H0))
-        som       = str(round(info.om*100))
-        sol       = str(round(info.ol*100))
+        if info is not None:
+            sh0       = str(round(info.H0))
+            som       = str(round(info.om*100))
+            sol       = str(round(info.ol*100))
+            zred_now = info.zred
+        else:
+            sh0       = str(round(H0))
+            som       = str(round(om*100))
+            sol       = str(round(ol*100))
+            zred_now  = zred_now
 
         tablefile  = self.repodir+'Table_taz_H'+sh0+'_Om'+som+'_Ol'+sol+'.fits'
 
@@ -39,7 +34,7 @@ class Timeconvert():
         ttable = hdu[1].data
 
         # Sort so that self.tu is in increasing order
-        # Because converting stellar conformal times to lookback time 
+        # Because converting stellar conformal times to lookback time
         # is the main use case.
         # However, this sorting makes zred be a decreasing function.
         # So is needed the [::-1] indexing.
@@ -48,7 +43,7 @@ class Timeconvert():
         self.tu       = ttable['t_unit'][0][isort]
         self.tlb      = ttable['t_lback'][0][isort]
         self.aexp     = ttable['aexp'][0][isort]
-        self.t_lback_now = np.interp(info.zred, self.zred[::-1], self.tlb[::-1])  # interpolation
+        self.t_lback_now = np.interp(zred_now, self.zred[::-1], self.tlb[::-1])  # interpolation
 
     def time2gyr(self, times, z_now=None):
         """
@@ -77,15 +72,7 @@ class Timeconvert():
         else:
             t_lback_now = self.t_lback_now
 
-        # zreds[zreds < 0] = 0 
-        # 
+        # zreds[zreds < 0] = 0
+        #
         t_lback_in  = np.interp(zreds, self.zred[::-1], self.tlb[::-1])
         return t_lback_in - t_lback_now
-        
-        
-
-
-
-
-
-

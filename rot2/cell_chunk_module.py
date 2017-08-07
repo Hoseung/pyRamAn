@@ -144,6 +144,7 @@ def do_work(sub_sample, nout, i_subsample,
             result_sub_sample.append(gg.meta)
             continue
 
+        gg.meta.nout = nout
         gg.star['time'] = tc.time2gyr(gg.star['time'],
                                         z_now = gg.info.zred)
 
@@ -169,9 +170,7 @@ def do_work(sub_sample, nout, i_subsample,
        	gg.meta.mean_age = np.average(gg.star["time"], weights=gg.star["m"])
         gg.cal_norm_vec()
 
-        # Can I put 'rscale_lambda' into a namedtuple??
         gg.meta.rscale_lambda = gen_vmap_sigmap_params["rscale"]
-        
         # Make pseudo particles. - memory usage!
         rotation_parameter.gen_vmap_sigmap(gg, **gen_vmap_sigmap_params)
         rotation_parameter.cal_lambda_r_eps(gg, **cal_lambda_params)
@@ -188,8 +187,7 @@ def do_work(sub_sample, nout, i_subsample,
         gal_properties.get_sfr_all(gg, **sfr_params)
 
         # Misc
-        gg.meta.nout = nout
-        #gg.meta.idx = this_sat["idx"]
+
 
         result_sub_sample.append(gg.meta)
 
@@ -225,4 +223,3 @@ def cat_only_relevant_gals(gcat, all_sample_ids, nout):
     import utils.match as mtc
     allgal_now = np.array(all_sample_ids[str(nout)])
     gcat.data = gcat.data[mtc.match_list_ind(gcat.data["id"], allgal_now)]
-
