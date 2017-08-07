@@ -51,7 +51,7 @@ def add_output_containers(gg):
     gg.meta.vsig_results={"Vmax":None, "sigma":None, "V_sig":None}
 
 def do_work(sub_sample, nout, i_subsample,
-            rscale=1.5, save_cell=False):
+            rscale=1.5, save_cell=True):
     """
     Per process.
     """
@@ -67,6 +67,7 @@ def do_work(sub_sample, nout, i_subsample,
     from galaxymodule.quick_mock import Simplemock
     from galaxymodule import gal_properties
     import time
+    import os
     gen_vmap_sigmap_params = dict(npix_per_reff=5,
                                   rscale=3.0,
                                   n_pseudo=60,
@@ -93,32 +94,44 @@ def do_work(sub_sample, nout, i_subsample,
     mgp.HAGN["verbose"] = False
     mgp.HAGN["mstar_min"] = 1e7
     out_dir = "./lambda_results/" + str(nout) +'/'
+    out_base='/scratch09/Hoseung/'
+
 
     # Common 1
     # simulation information
     s = Sim(nout=nout)
-    xrange = [min(sub_sample["x"] - sub_sample["r"] * rscale),
-          max(sub_sample["x"] + sub_sample["r"] * rscale)]
-    yrange = [min(sub_sample["y"] - sub_sample["r"] * rscale),
-          max(sub_sample["y"] + sub_sample["r"] * rscale)]
-    zrange = [min(sub_sample["z"] - sub_sample["r"] * rscale),
-          max(sub_sample["z"] + sub_sample["r"] * rscale)]
-    #print(xrange, yrange, zrange)
-    region = smp.set_region(ranges=[xrange, yrange, zrange])
 
-    t0 = time.time()
-    s.set_ranges(region["ranges"])
+    # If there are CELL_ files available, use them. 
+    for this_gal in sub_sample:
+        if os.path.isfile(out_base+"CELL_{:05d}/CELL_{:d}_{:d}.pickle".format(nout,nout,this_gal["id"])):
+            this_gal["level"] = 1234 # Overwrite level to mark CELL_ availability.
+        else:
+            this_gal["level"] = -9 # Overwrite level to mark CELL_ availability.
+
+    if sum(sub_sample["level"] < 0) > 0:
+        # has something to load
+        xrange = [min(sub_sample["x"][sub_sample["level"] < 0] - sub_sample["r"][sub_sample["level"] < 0] * rscale),
+              max(sub_sample["x"][sub_sample["level"] < 0] + sub_sample["r"][sub_sample["level"] < 0] * rscale)]
+        yrange = [min(sub_sample["y"][sub_sample["level"] < 0] - sub_sample["r"][sub_sample["level"] < 0] * rscale),
+              max(sub_sample["y"][sub_sample["level"] < 0] + sub_sample["r"][sub_sample["level"] < 0] * rscale)]
+        zrange = [min(sub_sample["z"][sub_sample["level"] < 0] - sub_sample["r"][sub_sample["level"] < 0] * rscale),
+              max(sub_sample["z"][sub_sample["level"] < 0] + sub_sample["r"][sub_sample["level"] < 0] * rscale)]
+    #print(xrange, yrange, zrange)
+        region = smp.set_region(ranges=[xrange, yrange, zrange])
+
+        s.set_ranges(region["ranges"])
     #print(s.ranges)
     # Common2
     # Hydro cell data
-    s.add_hydro(nvarh=5)
-    t1 = time.time()
-    print("Loading hydro took", t1 - t0)
-    # Common 3
-    # Cell KDTree
-    kdtree = cKDTree(np.stack((s.hydro.cell["x"],
-                               s.hydro.cell["y"],
-                               s.hydro.cell["z"])).T)
+        t0 = time.time()
+        s.add_hydro(nvarh=5)
+        t1 = time.time()
+        print("Loading hydro took", t1 - t0)
+        # Common 3
+        # Cell KDTree
+        kdtree = cKDTree(np.stack((s.hydro.cell["x"],
+                                   s.hydro.cell["y"],
+                                   s.hydro.cell["z"])).T)
 
     # Common 4
     # Stellar age converter
@@ -151,11 +164,15 @@ def do_work(sub_sample, nout, i_subsample,
         add_output_containers(gg)
 
         # gas properties
-        get_cell(s.hydro.cell, kdtree, gg, s.info)
+        fn_cell=out_base+"CELL_{:05d}/CELL_{:d}_{:d}.pickle".format(nout,nout,gg.meta.id)
+        if gcat_this["level"] ==1234:
+            gg.cell = pickle.load(open(fn_cell, "rb"))
+        else:
+            get_cell(s.hydro.cell, kdtree, gg, s.info)
         #gg.cell = s.hydro.cell[ind_cell_kd(s.hydro.cell, kdtree, gg, s.info)]
         if len(gg.cell) > 1:
             if save_cell:
-                pickle.dump(gg.cell, open("CELL_"+str(nout) + "_" + str(gg.meta.id) + ".pickle", "wb"))
+                pickle.dump(gg.cell, open(fn_cell,"wb"))
 
             gal_properties.get_cold_cell(gg, s.info, **gas_params)
             gal_properties.get_gas_properties(gg, s.info)
@@ -195,7 +212,7 @@ def do_work(sub_sample, nout, i_subsample,
 
     fout = out_dir + "result_sub_sample_{}_{}.pickle".format(nout, i_subsample)
     pickle.dump(result_sub_sample, open(fout, "wb"))
-    print("Galaxy properties took", time.time() - t1 )
+    #print("Galaxy properties took {:.2f}s with {} particles".format(time.time() - t1, gg.meta.nstar))
 
 
 #########################################################
