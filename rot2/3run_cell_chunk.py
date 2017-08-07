@@ -14,8 +14,20 @@ if __name__ == "__main__":
                             ("zred", float),
                             ("aexp", float)])
 
-    nbins=10
     nouts = nnza["nout"]
+    
+    # nouts with Hydro raw data.
+    nnza_cell = np.genfromtxt("./nout_nstep_zred_aexp_63.txt",
+                     dtype=[("nout", int),
+                            ("nstep", int),
+                            ("zred", float),
+                            ("aexp", float)])
+
+
+    nbins=10
+    save_cell=True
+    wdir = '/home/hoseung/data/Horizon-AGN/'
+    out_base='/scratch09/Hoseung/'
     if test:
         prg_dir = "./test_direct_prgs_gal/"
     else:
@@ -29,14 +41,20 @@ if __name__ == "__main__":
     all_sample_idxs=pickle.load(open(prg_dir + "all_sample_idxs.pickle", "rb"))
     #all_sample_ids = np.intersect1d(small_sample_id, all_sample_ids[str(nout)])
 
-    for nout in nouts:
+    #for nout in nouts:
+    for nout in nnza_cell["nout"][3:]:
         gcat = hmo.Halo(nout=nout, is_gal=True)
         if not os.path.isdir(outdir + str(nout)):
             os.mkdir(outdir + str(nout))
+        if save_cell:
+            save_cell_dir=out_base+"CELL_"+str(nout).zfill(5)
+            if not os.path.isdir(save_cell_dir):
+                print("mkdir", save_cell_dir)
+                os.mkdir(save_cell_dir)
          
         #ccm.cat_only_relevant_gals(gcat, all_sample_ids, all_sample_idxs, nout)
-        allgal_now = np.array(all_sample_ids[str(nout)])
-        allgal_now_idxs = np.array(all_sample_idxs[str(nout)])
+        allgal_now = np.unique(all_sample_ids[str(nout)])
+        allgal_now_idxs = np.unique(all_sample_idxs[str(nout)])
         #print(gcat.data.dtype)
         gcat.data = gcat.data[mtc.match_list_ind(gcat.data["id"], allgal_now)]
         gcat.data["idx"] = allgal_now_idxs[mtc.match_list_ind(gcat.data["id"], allgal_now)]

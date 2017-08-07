@@ -16,13 +16,13 @@ from rot2 import fix_tree
 
 # Fix tree parameters
 
-def refined_tree(tt, idx, f_dist_sum = 0.66
-                          r_fi = 0.5
-                          step_early_enough = 30
-                          m_small_enough = 3.3e8
-                          too_short_ref = 2
-                          threshold_score=2.0
-                          l_tree_max=50
+def refined_tree(tt, fidx, f_dist_sum = 0.66,
+                          r_fi = 0.5,
+                          step_early_enough = 30,
+                          m_small_enough = 3.3e8,
+                          too_short_ref = 2,
+                          threshold_score=2.0,
+                          l_tree_max=50,
                           l_too_short_close=15,
                           do_plot=False,
                           out_dir="./"):
@@ -53,9 +53,9 @@ def refined_tree(tt, idx, f_dist_sum = 0.66
         
     """
 
-    ma_dM_frac1=100.0
+    max_dM_frac1=100.0
     m_frac_min1=0.3
-    ma_dM_frac2=10.0
+    max_dM_frac2=10.0
     m_frac_min2=0.3
 
     fix_result = []
@@ -117,7 +117,7 @@ def refined_tree(tt, idx, f_dist_sum = 0.66
     adp = treetmp.get_all_trees(tt,
                                 idx_prgs_alltime,
                                 verbose=False,
-                                max_dM_frac=ma_dM_frac2,
+                                max_dM_frac=max_dM_frac2,
                                 m_frac_min =m_frac_min2)
     adp[0]=[maintree]
     if do_plot:
@@ -171,6 +171,7 @@ def refined_tree(tt, idx, f_dist_sum = 0.66
                                       fields=["m", "rho_0", "cvel", "spin", "ek", "rs"],
                                       dist_tol=0.5,
                                       dnstep_max_connect=7,
+                                      nstep_max=maintree[0]["nstep"],
                                       threshold_score=threshold_score))
  
                     #adp[k][j] = adp[k][j][:l_tree_max]
@@ -231,7 +232,7 @@ def refined_tree(tt, idx, f_dist_sum = 0.66
                         figure_type="simple")
         plt.close()
  
-    pickle.dump(adp),open(out_dir+"{}_adp.pickle".format(maintree[0]["idx"]), "wb"))
+    pickle.dump(adp,open(out_dir+"{}_adp.pickle".format(maintree[0]["idx"]), "wb"))
 
 
     # How many are "no candidates", "no good matches", or "good"?
