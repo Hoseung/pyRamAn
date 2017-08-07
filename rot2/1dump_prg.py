@@ -38,7 +38,8 @@ if __name__ == "__main__":
     mkdir(basedir)
     # Load data
 
-    tt = tree.tmtree.Tree(is_gal=is_gal)
+    #tt = tree.tmtree.Tree(is_gal=is_gal)
+    tt=pickle.load(open("tree.pickle", "rb"))
     print("Loading tree done")
 
     tnow = tt.tree[tt.tree["nstep"]==max(tt.tree["nstep"])]
@@ -59,9 +60,9 @@ if __name__ == "__main__":
     np.savetxt(basedir + "final_idxs_allmassive_gal.txt", np.c_[final_idxs,final_ids], fmt='%d  %d')
 
     num_gal = len(final_ids)
-
+    good_idxs=[]
     for i, (fid,fidx) in enumerate(zip(final_ids, final_idxs)):
-        refined_tree.refined_tree(tt, fidx,
+        good =refined_tree.refined_tree(tt, fidx,
                                   f_dist_sum = 0.66,
                                   r_fi = 0.5,
                                   step_early_enough = 30,
@@ -72,4 +73,8 @@ if __name__ == "__main__":
                                   l_too_short_close=15,
                                   do_plot=True,
                                   out_dir=basedir)
+        if good:
+            good_idxs.append(fidx)
         print("{}-th / {}".format(i, num_gal), end="\r")
+
+    pickle.dump(good_idxs, open("final_ids_good_massive.pickle", "wb"))

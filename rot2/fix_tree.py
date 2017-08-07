@@ -346,7 +346,7 @@ def removearray(L,arr):
 
 def main_sat_dist(main, sat, ratio=True):
     main_part = main[np.in1d(main["nstep"], sat["nstep"])]
-
+    #print(main["nstep"], main_part["nstep"], sat["nstep"])
     d_pos = sat["xp"]-main_part["xp"]
     if ratio:
         return np.sqrt(np.square(sat["xp"][:,0]-main_part["xp"][:,0])
