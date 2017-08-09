@@ -122,8 +122,6 @@ class Simplemock():
 
         i_lambda_min = np.argmax(self.sed_wavelength > lambda_min_this_band) -1
         i_lambda_max = np.argmax(self.sed_wavelength > lambda_max_this_band)
-        #print(i_lambda_min, wavelength[i_lambda_min], lambda_min_this_band)
-        #print(i_lambda_max, wavelength[i_lambda_max], lambda_max_this_band)
 
         # Only a small part of SED is needed.
         # To compute d_lambda, one additional lambda point is desired.
@@ -160,23 +158,21 @@ class Simplemock():
         Flux =  np.multiply( (dr_m * dr_a), seds[locate_metal, locate_age,:].T).T +\
                 np.multiply( (dl_m * dr_a), seds[locate_metal + 1, locate_age,:].T).T +\
                 np.multiply( (dr_m * dl_a), seds[locate_metal, locate_age + 1, :].T).T +\
-                np.multiply( (dl_m * dl_a), seds[locate_metal + 1, locate_age + 1,:].T).T
+                np.multiply( (dl_m * dl_a), seds[locate_metal + 1, locate_age + 1,:].T).T\
+
 
 
         # Convolve filter
         # Wavelengths at which filter function are defined are different from the SED wavelength points.
         # Interpolate filter function on SED points.
         filter_in_sed_wavelengths = np.interp(wavelength, filter_lambda_this_band, this_filter)
-        #d_lambda = filter_in_sed_wavelengths[1:] - filter_in_sed_wavelengths[:-1]
-        #Flux = np.multiply(filter_in_sed_wavelengths[:-1] * \
-        #                   (filter_in_sed_wavelengths[:-1] \
-        #                    - filter_in_sed_wavelengths[1:]), Flux)
         Flux = np.multiply(filter_in_sed_wavelengths[:-1] * wavelength[-1], Flux)#\
+        div = np.multiply(filter_in_sed_wavelengths[:-1], wavelength[-1])
 
         # Need to multiply stellar mass
 
         if not extinction:
-            return np.sum(Flux, axis=1) * star["m"] * Lum_sun
+            return np.sum(Flux, axis=1) / np.sum(div) * Lum_sun * star["m"]
 
         else:
             print("Extinction - Not yet implemented")

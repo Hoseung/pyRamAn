@@ -364,7 +364,7 @@ def smooth(x, beta=5, window_len=20, monotonic=False, clip_tail_zeros=True):
     This ensures to return valid length fo array, but with modified window size.
 
 
-    beta = 5 : Similar to a Hamming
+    beta = 5 : Similar to Hamming
 
 
     """

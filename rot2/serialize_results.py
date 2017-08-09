@@ -1,38 +1,11 @@
 import numpy as np
 import utils.match as mtc
 
-class Serial_result():
-    def __init__(self, adp):
-        self.maintree = adp[0][0]
-        #self.prg_ids = aprg[1]
-        self.alltree = adp
-        self.fidx = adp[0][0]["idx"][0]
-        self.mergers = []
-        self.data = []
-        self.sat_data = None
-
-
-merger_props = [("nstep", '<i8'),
-                ("nout", '<i8'),
-                ("id_p", '<i8'),
-                ("idx_p", '<i8'),
-                ("id_s", '<i8'),
-                ("idx_s", '<i8'),
-                ("m_s", '<f8'),
-                ("m_p", '<f8'),
-                ("dist", "<f8"),
-                ("reff_p","<f8"),
-                ("reff_s","<f8"),
-                ("spinang", '<f8'),
-                ("spinmag", '<f8'),
-                ("orbitang", '<f8'),
-                ("rel_pos", '<f8', (3,)),
-                ("rel_vel", '<f8', (3,)),
-                ("jorbit", '<f8', (3,))]
-
-
-
 def galresult2rec(sat):
+    """
+    Convert result of a tree (sat or main) into recarray.
+    Having them in array is useful for calculating merger properties.
+    """
     sat_data=np.recarray(len(sat), dtype=[("nstep", "<i4"),
                                           ("nout", "<i4"),
                                           ("id", "<i4"),
@@ -67,46 +40,100 @@ def galresult2rec(sat):
     return sat_data
 
 
-
-def get_merger_props(rec_main, rec_sat):
+class Serial_result():
     """
-        main, sat are recarrays.
-
-        Every gal has to have all the properties.
-        None-good galaxies must have been filtered out beforehand.
+    Only part of steps in AllDirectProgenitors(ADP) is calculated.
+    So both ADP and 'results' must be stored.
     """
-    merger_list = np.zeros(len(rec_sat), dtype=merger_props)
-    main_part = rec_main[mtc.match_list_ind(rec_main.nstep, rec_sat.nstep)]
+    def __init__(self, adp):
+        self.maintree = adp[0][0]
+        self.alltree = adp
+        self.fidx = adp[0][0]["idx"][0]
+        self.data = []
+        self.mergers = []
 
-    rel_pos = main_part.pos - rec_sat.pos
-    rel_vel = main_part.vel - rec_sat.vel
-    Js=np.cross(rel_pos, rel_vel)
-    j_orbital = Js[:]/np.sqrt(np.einsum('...i,...i', Js, Js))[:,None]
+    def add_merger(self, results, sattree):
+        self.mergers.append(Merger(self.main_arr, results, sattree))
 
-    # spin alignment
-    merger_list["nstep"]=main_part.nstep
-    #merger_list["nout"]=main_part.nout
-    merger_list["id_p"]=main_part.id
-    merger_list["idx_p"]=main_part.idx
-    merger_list["id_s"]=rec_sat.id
-    merger_list["idx_s"]=rec_sat.idx
-    merger_list["m_s"]=rec_sat.mstar
-    merger_list["m_p"]=main_part.mstar
-    merger_list["rel_pos"]=rel_pos
-    merger_list["rel_vel"]=rel_vel
-    merger_list["jorbit"]=j_orbital
-    merger_list["dist"]=np.sqrt(np.einsum('...i,...i', rel_pos,rel_pos)) * 1e3 # in Kpc
-    merger_list["reff_p"]=main_part.reff
-    merger_list["reff_s"]=rec_sat.reff
-    merger_list["spinmag"]=np.sqrt(np.einsum('...i,...i', rec_sat.lvec,rec_sat.lvec))
-    merger_list["orbitang"] = 180./np.pi*np.arccos(np.einsum('...i,...i',main_part.nvec, j_orbital))
-    merger_list["spinang"] = 180./np.pi*np.arccos(np.einsum('...i,...i',main_part.nvec, rec_sat.nvec))
+    def fill_bad_measure(self, sat):
+        """
+        Both main and satellites need this treatment.
+        No reason this should bound to the Merger class.
+        """
+        # fill bad measurements of main
+        # Note that I just throw away bad sat measurements.
+        # Have a look at the old (paper1) ipynb.
+        pass
 
-    return merger_list
+    def get_main_counterpart(self, main_arr, rec_sat):
+        return main_arr[mtc.match_list_ind(main_arr["nstep"], rec_sat["nstep"])]
 
-class Mergers():
+    #def get_orbit_from_tree(self, merger):
+
+    def get_merger_props(self, merger):
+        """
+            To be called after self.main_arr is assigned.
+            merger.sat is a recarrays.
+
+            Every gal has to have all the properties.
+            None-good galaxies must have been filtered out beforehand.
+        """
+        merger.merger_arr = np.zeros(len(merger.sat), dtype=merger_props)
+        main_part = self.get_main_counterpart(self.main_arr, merger.sat)
+
+        rel_pos = main_part.pos - merger.sat.pos
+        rel_vel = main_part.vel - merger.sat.vel
+        Js=np.cross(rel_pos, rel_vel)
+        j_orbital = Js[:]/np.sqrt(np.einsum('...i,...i', Js, Js))[:,None]
+
+        # spin alignment
+        merger.merger_arr["nstep"]=main_part.nstep
+        merger.merger_arr["id_p"]=main_part.id
+        merger.merger_arr["idx_p"]=main_part.idx
+        merger.merger_arr["id_s"]=merger.sat.id
+        merger.merger_arr["idx_s"]=merger.sat.idx
+        merger.merger_arr["m_s"]=merger.sat.mstar
+        merger.merger_arr["m_p"]=main_part.mstar
+        merger.merger_arr["rel_pos"]=rel_pos
+        merger.merger_arr["rel_vel"]=rel_vel
+        merger.merger_arr["jorbit"]=j_orbital
+        merger.merger_arr["dist"]=np.sqrt(np.einsum('...i,...i', rel_pos,rel_pos)) * 1e3 # in Kpc
+        merger.merger_arr["reff_p"]=main_part.reff
+        merger.merger_arr["reff_s"]=merger.sat.reff
+        merger.merger_arr["spinmag"]=np.sqrt(np.einsum('...i,...i', merger.sat.lvec,merger.sat.lvec))
+        merger.merger_arr["orbitang"] = 180./np.pi*np.arccos(np.einsum('...i,...i',main_part.nvec, j_orbital))
+        merger.merger_arr["spinang"] = 180./np.pi*np.arccos(np.einsum('...i,...i',main_part.nvec, merger.sat.nvec))
+
+    def cal_passages(self, p_min=0.5):
+        """
+        Identify orbits with minimum period of p_min.
+        If the period is shorter than that, assume the end of merger is near,
+        and everthing thereafter is the effect of merger / final coalescence.
+        """
+
+
+merger_props = [("nstep", '<i8'),
+                ("nout", '<i8'),
+                ("id_p", '<i8'),
+                ("idx_p", '<i8'),
+                ("id_s", '<i8'),
+                ("idx_s", '<i8'),
+                ("m_s", '<f8'),
+                ("m_p", '<f8'),
+                ("dist", "<f8"),
+                ("reff_p","<f8"),
+                ("reff_s","<f8"),
+                ("spinang", '<f8'),
+                ("spinmag", '<f8'),
+                ("orbitang", '<f8'),
+                ("rel_pos", '<f8', (3,)),
+                ("rel_vel", '<f8', (3,)),
+                ("jorbit", '<f8', (3,))]
+
+
+class Merger():
     """
-        A class to hold satellite properties of a main galaxy tree,
+        A class to hold satellite properties,
         and calculate merger related properties.
 
         1. Beginning and end of mergers
@@ -121,42 +148,12 @@ class Mergers():
         ----
 
     """
-    def __init__(self, main, sat, sattree):
-        self.main_idx=main[0].idx
+    def __init__(self, rec_main, sat, sattree):
+        self.main_idx=rec_main[0].idx
         # if main and sat are OK.
-        self.count_mergers(sat)
-        self.main = main
-        self.sat = sat
-        self.get_mergers(main, sat)
-
-    def count_mergers(self, sat):
-        cnt = 0
-        for ss in sat:
-            cnt += len(ss)
-        self.cnt=cnt
-
-    def fill_bad_measure_main(self, main):
-        """
-        Both main and satellites need this treatment.
-        No reason this should bound to the Mergers class. 
-        """
-        # fill bad measurements of main
-        # Note that I just throw away bad sat measurements.
-        # Have a look at the old (paper1) ipynb.
-        pass
-
-    def get_mergers(self, main, sat):
-        self.mergerlist = np.zeros(self.cnt, dtype=merger_props)
-        i_arr=0
-        for i, (this_main, this_sats) in enumerate(zip(main, sat)):
-            if this_sats is not None:
-                if len(this_sats) > 0:
-                    # There are mergers.
-                    for this_sat in this_sats:
-                        if this_sat == -1:
-                            self.mergerlist["sid"]=-1
-                        elif hasattr(this_main,"nout"):
-                            # The main galaxy may have poor measurement at a certain snapshot.
-                            # skip and fill the hole by smoothng later.
-                            get_merger_props(this_main, this_sat, self.mergerlist[i_arr])
-                        i_arr+=1
+        #merger.count_mergers(sat)
+        self.main = rec_main
+        self.sattree = sattree
+        self.sat = galresult2rec(sat)
+        #merger.merger_arr = merger.get_merger_props(rec_main, merger.sat)
+        #self.cal_passages()
