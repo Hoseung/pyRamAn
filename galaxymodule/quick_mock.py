@@ -89,7 +89,6 @@ class Simplemock():
         Lum_sun = 3.826e33
         # BC2003 is in unit of L_sun Ang-1, where L_sun = Lum_sun.
 
-
         starmetal = star["metal"] # Is the original array modified?
         if metal_lower_cut:
             # No star with metallicity lower than the lowest table.
@@ -160,8 +159,6 @@ class Simplemock():
                 np.multiply( (dr_m * dl_a), seds[locate_metal, locate_age + 1, :].T).T +\
                 np.multiply( (dl_m * dl_a), seds[locate_metal + 1, locate_age + 1,:].T).T\
 
-
-
         # Convolve filter
         # Wavelengths at which filter function are defined are different from the SED wavelength points.
         # Interpolate filter function on SED points.
@@ -173,7 +170,6 @@ class Simplemock():
 
         if not extinction:
             return np.sum(Flux, axis=1) / np.sum(div) * Lum_sun * star["m"]
-
         else:
             print("Extinction - Not yet implemented")
             return
@@ -206,7 +202,6 @@ def flux2mag(flux,
     # Additional factors to derive realistic flux values.
 
     print(npixx, npixy)
-
     Flux_map = np.histogram2d(gal.star[x1], gal.star[x2],
                weights=flux,
                bins=[npixx,npixy],
@@ -237,8 +232,6 @@ class BandSDSS():
         self.r = dict(pivot_lambda = 6175.0, name="r")
         self.i = dict(pivot_lambda = 7491.0, name="i")
         self.z = dict(pivot_lambda = 8946.0, name="z")
-
-#def magmap(x,y,flux):
 
 def composite_rgb(x,y, weight_r, weight_g, weight_b,
                   npix=100,
@@ -337,3 +330,21 @@ def draw(gal,
     ax.set_yticklabels(empty_string_labels)
 
     plt.savefig(str(gal.meta.id).zfill(5) + suffix + ".png", dpi=200)
+
+
+def get_absolute_mag(flux, band=None, bandname="r"):
+    """
+    Don't forget to pass band.
+    Initializing a new band class is expensive.
+
+    Todo
+    ----
+    Figure out, why 1e-2??
+    """
+    if band is None:
+        band = BandSDSS()
+
+    d_lum_10p = 3.0857e19 # lumminonsity distance of 10pc in cm
+    return - 2.5 * np.log10(np.sum(flux)/(4.*np.pi*d_lum_10p*d_lum_10p)*1e-2) \
+            - 5. * np.log10(getattr(band, bandname)["pivot_lambda"]) \
+           + 2.5 * np.log10(speed_of_light) - 48.6

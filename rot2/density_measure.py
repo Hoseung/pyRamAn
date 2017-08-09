@@ -2,7 +2,6 @@ import utils.match as mtc
 import numpy as np
 from scipy.spatial import cKDTree
 
-
 def find_top_host_halo(gdata, hkdt, n_match=50):
     """
     Todo

@@ -644,6 +644,7 @@ def plot_tree_detail(axs, tree, main=None,
 
 
 def check_tree(adp,
+               out_dir="./",
                save=True,
                suffix="org",
                nstep_min=0,
@@ -712,7 +713,7 @@ def check_tree(adp,
     plt.tight_layout()
     plt.suptitle("{}".format(main["idx"][0]))
     if save:
-        plt.savefig("tree_check_{}_{}_{}.png".format(main["idx"][0], suffix, figure_type), dpi=300)
+        plt.savefig(out_dir+"tree_check_{}_{}_{}.png".format(main["idx"][0], suffix, figure_type), dpi=300)
     else:
         plt.show()
     plt.close()

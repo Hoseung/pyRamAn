@@ -227,7 +227,7 @@ def refined_tree(tt, fidx, f_dist_sum = 0.66,
                         j+=1
 
     if do_plot:
-        treetmp.check_tree(adp,
+        treetmp.check_tree(adp,our_dir = our_dir,
                        save=True,
                         suffix="fixed",
                         nstep_min = 50,

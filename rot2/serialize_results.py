@@ -1,6 +1,27 @@
 import numpy as np
 import utils.match as mtc
 
+merger_props = [("nstep", '<i8'),
+                ("nout", '<i8'),
+                ("id_p", '<i8'),
+                ("idx_p", '<i8'),
+                ("id_s", '<i8'),
+                ("idx_s", '<i8'),
+                ("m_s", '<f8'),
+                ("m_p", '<f8'),
+                ("size_s", '<f8'),
+                ("size_p", '<f8'),
+                ("dist", "<f8"),
+                ("reff_p","<f8"),
+                ("reff_s","<f8"),
+                ("spinang", '<f8'),
+                ("spinmag", '<f8'),
+                ("orbitang", '<f8'),
+                ("rel_pos", '<f8', (3,)),
+                ("rel_vel", '<f8', (3,)),
+                ("jorbit", '<f8', (3,))]
+
+
 def galresult2rec(sat):
     """
     Convert result of a tree (sat or main) into recarray.
@@ -13,6 +34,7 @@ def galresult2rec(sat):
                                           ("mstar", "<f8"),
                                           ("mgas", "<f8"),
                                           ("mgas_cold", "<f8"),
+                                          ("rgal", "<f8"),
                                           ("reff", "<f8"),
                                           ("lgas", "<f8", (3)),
                                           ("pos", "<f8", (3)),
@@ -36,7 +58,8 @@ def galresult2rec(sat):
         if ss.lvec is not None:
             sat_data.lvec[i]= ss.lvec
             sat_data.nvec[i]= ss.nvec
-
+            # If there is Lvec, there is rgal.
+            sat_data.rgal[i]= ss.rgal
     return sat_data
 
 
@@ -53,7 +76,9 @@ class Serial_result():
         self.mergers = []
 
     def add_merger(self, results, sattree):
-        self.mergers.append(Merger(self.main_arr, results, sattree))
+        mm = Merger(self.main_arr, results, sattree, self)
+        mm.cal_merger_props()
+        self.mergers.append(mm)
 
     def fill_bad_measure(self, sat):
         """
@@ -65,44 +90,8 @@ class Serial_result():
         # Have a look at the old (paper1) ipynb.
         pass
 
-    def get_main_counterpart(self, main_arr, rec_sat):
-        return main_arr[mtc.match_list_ind(main_arr["nstep"], rec_sat["nstep"])]
-
     #def get_orbit_from_tree(self, merger):
 
-    def get_merger_props(self, merger):
-        """
-            To be called after self.main_arr is assigned.
-            merger.sat is a recarrays.
-
-            Every gal has to have all the properties.
-            None-good galaxies must have been filtered out beforehand.
-        """
-        merger.merger_arr = np.zeros(len(merger.sat), dtype=merger_props)
-        main_part = self.get_main_counterpart(self.main_arr, merger.sat)
-
-        rel_pos = main_part.pos - merger.sat.pos
-        rel_vel = main_part.vel - merger.sat.vel
-        Js=np.cross(rel_pos, rel_vel)
-        j_orbital = Js[:]/np.sqrt(np.einsum('...i,...i', Js, Js))[:,None]
-
-        # spin alignment
-        merger.merger_arr["nstep"]=main_part.nstep
-        merger.merger_arr["id_p"]=main_part.id
-        merger.merger_arr["idx_p"]=main_part.idx
-        merger.merger_arr["id_s"]=merger.sat.id
-        merger.merger_arr["idx_s"]=merger.sat.idx
-        merger.merger_arr["m_s"]=merger.sat.mstar
-        merger.merger_arr["m_p"]=main_part.mstar
-        merger.merger_arr["rel_pos"]=rel_pos
-        merger.merger_arr["rel_vel"]=rel_vel
-        merger.merger_arr["jorbit"]=j_orbital
-        merger.merger_arr["dist"]=np.sqrt(np.einsum('...i,...i', rel_pos,rel_pos)) * 1e3 # in Kpc
-        merger.merger_arr["reff_p"]=main_part.reff
-        merger.merger_arr["reff_s"]=merger.sat.reff
-        merger.merger_arr["spinmag"]=np.sqrt(np.einsum('...i,...i', merger.sat.lvec,merger.sat.lvec))
-        merger.merger_arr["orbitang"] = 180./np.pi*np.arccos(np.einsum('...i,...i',main_part.nvec, j_orbital))
-        merger.merger_arr["spinang"] = 180./np.pi*np.arccos(np.einsum('...i,...i',main_part.nvec, merger.sat.nvec))
 
     def cal_passages(self, p_min=0.5):
         """
@@ -110,26 +99,6 @@ class Serial_result():
         If the period is shorter than that, assume the end of merger is near,
         and everthing thereafter is the effect of merger / final coalescence.
         """
-
-
-merger_props = [("nstep", '<i8'),
-                ("nout", '<i8'),
-                ("id_p", '<i8'),
-                ("idx_p", '<i8'),
-                ("id_s", '<i8'),
-                ("idx_s", '<i8'),
-                ("m_s", '<f8'),
-                ("m_p", '<f8'),
-                ("dist", "<f8"),
-                ("reff_p","<f8"),
-                ("reff_s","<f8"),
-                ("spinang", '<f8'),
-                ("spinmag", '<f8'),
-                ("orbitang", '<f8'),
-                ("rel_pos", '<f8', (3,)),
-                ("rel_vel", '<f8', (3,)),
-                ("jorbit", '<f8', (3,))]
-
 
 class Merger():
     """
@@ -148,12 +117,67 @@ class Merger():
         ----
 
     """
-    def __init__(self, rec_main, sat, sattree):
+    def __init__(self, rec_main, sat, sattree, host_gal):
         self.main_idx=rec_main[0].idx
         # if main and sat are OK.
         #merger.count_mergers(sat)
         self.main = rec_main
         self.sattree = sattree
         self.sat = galresult2rec(sat)
+        self.host = host_gal
+        self.cal_main_counterpart()
         #merger.merger_arr = merger.get_merger_props(rec_main, merger.sat)
         #self.cal_passages()
+
+    def cal_main_counterpart(self):
+        """
+        Counterpart main result and main tree.
+        """
+        main_arr = self.host.main_arr
+        # allow_swap = Fales
+        # => Even if the sat is longer than the main,
+        # indices for only common elements are returned.
+        self.main_part = main_arr[mtc.match_list_ind(main_arr["nstep"], self.sat["nstep"],allow_swap=False)]
+        main_tree = self.host.maintree
+        self.main_tree = main_tree[mtc.match_list_ind(main_tree["nstep"], self.sattree["nstep"],allow_swap=False)]
+        #return
+
+    def cal_merger_props(self):
+        """
+            Calculate quantities often need for determining merger properties.
+            Stores values in recarray and add to the given merger instance.
+
+            Must be called after self.main_arr is assigned.
+
+            merger.sat is a recarrays.
+
+            Every gal has to have all the properties.
+            None-good galaxies must have been filtered out beforehand.
+        """
+        self.merger_arr = np.zeros(len(self.sat), dtype=merger_props)
+        main_part = self.main_part#get_main_counterpart(self.main_arr, merger.sat)
+
+        rel_pos = main_part.pos - self.sat.pos
+        rel_vel = main_part.vel - self.sat.vel
+        Js=np.cross(rel_pos, rel_vel)
+        j_orbital = Js[:]/np.sqrt(np.einsum('...i,...i', Js, Js))[:,None]
+
+        # spin alignment
+        self.merger_arr["nstep"]=main_part.nstep
+        self.merger_arr["id_p"]=main_part.id
+        self.merger_arr["idx_p"]=main_part.idx
+        self.merger_arr["id_s"]=self.sat.id
+        self.merger_arr["idx_s"]=self.sat.idx
+        self.merger_arr["m_s"]=self.sat.mstar
+        self.merger_arr["m_p"]=main_part.mstar
+        #merger.merger_arr["size_s"]=merger.sat.rgal
+        #merger.merger_arr["size_p"]=main_part.rgal
+        self.merger_arr["rel_pos"]=rel_pos
+        self.merger_arr["rel_vel"]=rel_vel
+        self.merger_arr["jorbit"]=j_orbital
+        self.merger_arr["dist"]=np.sqrt(np.einsum('...i,...i', rel_pos,rel_pos)) * 1e3 # in Kpc
+        self.merger_arr["reff_p"]=main_part.reff
+        self.merger_arr["reff_s"]=self.sat.reff
+        self.merger_arr["spinmag"]=np.sqrt(np.einsum('...i,...i', self.sat.lvec,self.sat.lvec))
+        self.merger_arr["orbitang"] = 180./np.pi*np.arccos(np.einsum('...i,...i',main_part.nvec, j_orbital))
+        self.merger_arr["spinang"] = 180./np.pi*np.arccos(np.einsum('...i,...i',main_part.nvec, self.sat.nvec))

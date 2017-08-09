@@ -12,7 +12,7 @@ def get_cold_cell(gg, info, dr=5, rmax=200, density_ratio=1e-3):
     """
     cold_cell = gg.cell[rho_t_cut(gg.cell, info)]
     if len(cold_cell) < 1:
-        # this galaxy has no cold gas. That's possible. 
+        # this galaxy has no cold gas. That's possible.
         return False
     else:
         #print("Numbe of cold cells", len(cold_cell))
@@ -24,7 +24,7 @@ def get_cold_cell(gg, info, dr=5, rmax=200, density_ratio=1e-3):
         #make_gal.extract_cold_gas(gg, dr=5, rmax=200)
 
 def rho_t_cut(cell, info, lose_cut=False):
-    """ 
+    """
         Extract galactic cold gas following Torrey+12 criterion.
         Assume cells in the original (code) unit.
     """
@@ -94,19 +94,19 @@ def ind_dense(cell, rmax = 200, dr = 5, rmin=1):
 
 def get_gas_properties(gg, info):
     """
-        Calculates cold gas mass, angular 
+        Calculates cold gas mass, angular
 
         Length must be in kpc unit, velocities in km/s unit.
         But densities... not sure yet.
 
-        
+
     """
     vrho = "var0"
     vdx = "dx"
     vvx = "var1"
     vvy = "var2"
     vvz = "var3"
-    
+
     # total gas mass before extracting cold gas.
     gg.meta.gas_results["mgas_tot"] = np.sum(gg.cell[vrho]*gg.cell[vdx]**3)
 
@@ -141,31 +141,30 @@ def get_sfr_all(gg, sfr_dts=0.1,
     gg.meta.sfr_results["hist_tmax"]=hist_tmax
 
 
-
-def get_age_hist(gg, 
+def get_age_hist(gg,
                 dt = 0.1,
                 tmin=0,
                 tmax=None):
     """
-        Returns results in the result_sfr format. 
+        Returns results in the result_sfr format.
         I.e., dt, tmin, tmax, and the histogram in Msun * yr-1  unit.
-        
+
         Note
         ----
         the result container namedtuple is NOT generated inside the funtion.
         the result container subclass is defined in the outer function once
-        and each instance is generated for each galaxy. 
-        This suppresses defining the same subclass over and over. 
+        and each instance is generated for each galaxy.
+        This suppresses defining the same subclass over and over.
         After all, there is no difference if I put results to the namedtuple instance
         inside this function or outside the function by returning them.
         To make clear what is being stored, this function returns the result and let
-        the outer function do the assignment. 
+        the outer function do the assignment.
     """
 
     if tmax is None:
         tmax = gg.star["time"].max()
     h, _ = np.histogram(gg.star["time"],weights=gg.star["m"]/(dt*1e9),bins=np.arange(tmin,tmax,dt))
-    
+
     return h
 
 
@@ -196,7 +195,6 @@ def get_sfr(gg, dts, age_hist=None, dt_age_hist=None):
         except:
             # probably scalar.
             return np.sum(age_hist[:int(dt/dt_age_hist)])
-        
 
 
 def get_galaxy_area(gg):
@@ -205,4 +203,3 @@ def get_galaxy_area(gg):
     """
     dx = gg.rgal / gg.npix_per_reff # right?
     return dx*dx*sum(gg.mmap.ravel() > 0)
-

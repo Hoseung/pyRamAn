@@ -29,7 +29,20 @@ class Nnza():
                             ("nstep", int),
                             ("zred", float),
                             ("aexp", float)])
+    def a2b(self, vals, field_a, field_b):
+        if not (field_a in self.nnza.dtype.names  and  field_b in self.nnza.dtype.names):
+            raise ValueError("One or both of {} {} not found".format(field_a, field_b))
+        if isinstance(vals, np.integer):
+            return int(self.nnza[field_b][np.where(self.nnza[field_a] == vals)[0]])
+        elif not isinstance(vals, str) and isinstance(vals, Iterable):
+            return self.nnza[field_b][mtc.match_list_ind(self.nnza[field_a], vals)]
+        else:
+            NotImplementedError()
+
     def step2out(self, nstep):
+        """
+        Deprecated, Use a2b instead. 
+        """
         if isinstance(nstep, np.integer):
             return int(self.nnza["nout"][np.where(self.nnza["nstep"] == nstep)[0]])
         elif not isinstance(nstep, str) and isinstance(nstep, Iterable):
@@ -39,6 +52,9 @@ class Nnza():
 
 
     def out2step(self, nout):
+        """
+        Deprecated, Use a2b instead.
+        """
         if isinstance(nout, np.integer):
             return int(self.nnza["nstep"][np.where(self.nnza["nout"] == nout)[0]])
         elif not isinstance(nout, str) and isinstance(nout, Iterable):
