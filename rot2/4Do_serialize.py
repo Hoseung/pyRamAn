@@ -51,7 +51,7 @@ if not os.path.isdir(serial_out_dir):
 # Build serial results and dump.
 # Chunks of results in each nout (lambda_results/{nout}/result_sub_sample_{nout})
 
-Allallidxs=[]
+Allallidxs= []
 for result_thisnout in allresults:
     Allallidxs.append(np.array([agal.idx for agal in result_thisnout]))
 Allallids=[]
@@ -112,6 +112,7 @@ for i, this_idx in enumerate(all_final_idxs):
             # Merger properties
             if i == 0:
                 this_gal.main_arr = serialize_results.galresult2rec(sat_results)
+                #this_gal.cal_fine_arr(do_smooth=True)
             elif len(sat_results) > 0 and sat_results[0].mstar > 0.0:
                 #print("merger2")
                 this_gal.add_merger(sat_results, sat)
@@ -126,6 +127,43 @@ for i, this_idx in enumerate(all_final_idxs):
     all_fidx_ok.append(this_idx)
     #break
 
-
 np.savetxt(serial_out_dir+"all_fidx_ok.txt", all_fidx_ok, fmt="%d")
 serial_results = [pickle.load(open(serial_out_dir+"serial_result{}.pickle".format(this_idx), "rb")) for this_idx in all_fidx_ok]
+
+
+# interpolate main galaxy results
+fields_interp = ["reff", "rgal", "mstar", "mgas", "mgas_cold", "lgas", "lvec", "nvec"]
+do_smooth=True
+for i, this_gal in enumerate(serial_results):
+    finetree=this_gal.maintree
+    mainarr = this_gal.main_arr
+    finearr = np.zeros(len(finetree),dtype=mainarr.dtype)
+
+    lbt = tc.zred2gyr(nnza_all.a2b(finetree["nstep"],"nstep","zred"), z_now=0)
+    lbt_cell = tc.zred2gyr(nnza_cell.a2b(mainarr["nstep"],"nstep","zred"), z_now=0)
+
+    for field in fields_interp:
+        # Begining of merger
+        if mainarr[field].ndim == 2:
+            for i in range(3):
+                if do_smooth:
+                    r_p = smooth(mainarr[field][:,i],
+                                 window_len=5,
+                                 clip_tail_zeros=False)
+                    finearr[field][:,i] = np.interp(lbt, lbt_cell, r_p)
+                else:
+                    r_p = mainarr[field][:,i]
+                finearr[field][:,i] = np.interp(lbt, lbt_cell, mainarr[field][:,i])
+        else:
+            if do_smooth:
+                r_p = smooth(mainarr[field],
+                             window_len=5,
+                             clip_tail_zeros=False) # odd number results in +1 element in the smoothed array.
+            else:
+                r_p = mainarr[field]
+            finearr[field] = np.interp(lbt, lbt_cell, r_p)
+
+
+    this_gal.finearr = finearr
+
+    pickle.dump(this_gal, open(serial_out_dir+"serial_result{}.pickle".format(this_idx), "wb"))
