@@ -48,11 +48,3 @@ def get_all_results(nouts,
             #    agal.idx =idx
         allresults.append(allresults_thisnout)
     return allresults
-
-
-class Serial_result():
-    def __init__(self, main):
-        self.idx = main.idx
-        self.data = main
-        self.merger = None
-        self.data = None

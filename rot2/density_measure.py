@@ -2,7 +2,7 @@ import utils.match as mtc
 import numpy as np
 from scipy.spatial import cKDTree
 
-def find_top_host_halo(gdata, hkdt, n_match=50):
+def find_top_host_halo(gdata, hdata, hkdt, n_match=50):
     """
     Todo
     ----
@@ -11,16 +11,17 @@ def find_top_host_halo(gdata, hkdt, n_match=50):
     """
     matched_halo = np.zeros(len(gdata), dtype=hdata.dtype)
     for i, thisgal in enumerate(gdata[np.argsort(gdata["m"])[::-1]]):
-        dist, i_neigh = get_kd_matches(hkdt, thisgal, n_match=n_match)
+        dist, i_neigh = get_kd_matches(hkdt, thisgal, n_match=n_match, dist_upper=0.1)
         touching = dist < hdata[i_neigh]["r"] + thisgal["r"]
         neighbor_h = hdata[i_neigh][touching]
 
-        try:
-            matched_halo[i]=neighbor_h[np.argmin(neighbor_h["mvir"])]
-        except:
-            pass
+        #try:
+        if True:
+            matched_halo[i]=neighbor_h[np.argmax(neighbor_h["mvir"])]
+        #except:
+        #    pass
 
-        return matched_halo
+    return matched_halo
 
 def get_kd_matches(kdtree, gal, n_match=5, rscale = 2.0, dist_upper=None):
     #len_tree = kdtree.length
@@ -83,7 +84,7 @@ def measure_density(idxs):
     Ds = density_D2N(gcat, np.array(all_fid_ok), Ns=[10,30], mass_cut=1e9)
 
 
-def density_halo_mass(ids, nout_fi=782, masscut = 1e10):
+def density_halo_mass(ids, gcat, hcat, nout_fi=782, masscut = 1e10):
     """
         IDs of halos. (Not IDxs.)
 
@@ -97,16 +98,15 @@ def density_halo_mass(ids, nout_fi=782, masscut = 1e10):
 
 
     """
-    gcat = tree.halomodule.Halo(nout=nout_fi, is_gal=True)
-    hcat = tree.halomodule.Halo(nout=nout_fi, is_gal=False)
-
+    #gcat = tree.halomodule.Halo(nout=nout_fi, is_gal=True)
+    #hcat = tree.halomodule.Halo(nout=nout_fi, is_gal=False)
 
     gdata = gcat.data[mtc.match_list_ind(gcat.data["id"], ids)]
     hdata = hcat.data[np.where(hcat.data["mvir"] > masscut)[0]]
     hkdt = cKDTree(np.stack((hdata["x"], hdata["y"], hdata["z"]),axis=1))
     gkdt = cKDTree(np.stack((gdata["x"], gdata["y"], gdata["z"]),axis=1))
 
-    halos = find_top_host_halo(gdata, hkdt, n_match=50)
+    halos = find_top_host_halo(gdata, hdata, hkdt, n_match=50)
 
     return halos["mvir"]
 
@@ -131,7 +131,7 @@ def density_LS_lum(gcat, rMpc=5.7):
     #return DNs
 
 
-def density_D2N(gcat, IDs, Ns=[5,10], mass_cut=1e9):
+def density_D2N(gcat, IDs, Ns=[5,10], mass_cut=1e9,dist_upper=10./100.):
     """
     Distance to the N-th nearest neighbor.
 
@@ -154,7 +154,7 @@ def density_D2N(gcat, IDs, Ns=[5,10], mass_cut=1e9):
     DNs = np.zeros((len(gdata), len(Ns)))
     for i, thisgal in enumerate(gdata):
         #print(i)
-        dist, i_neigh = get_kd_matches(gkdt, thisgal, n_match=n_match, dist_upper=5./100.)
+        dist, i_neigh = get_kd_matches(gkdt, thisgal, n_match=n_match, dist_upper=dist_upper)
         #print(dist)
         for j, nn in enumerate(Ns):
             DNs[i,j]=dist[nn]

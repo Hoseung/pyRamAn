@@ -224,7 +224,6 @@ def get_npix(plate_scale, gal_range, Lum_dist, npixmax):
 
     return (npixx, npixy)
 
-
 class BandSDSS():
     def __init__(self):
         self.u = dict(pivot_lambda = 3557.0, name="u")

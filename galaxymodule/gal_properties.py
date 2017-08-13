@@ -21,7 +21,7 @@ def get_cold_cell(gg, info, dr=5, rmax=200, density_ratio=1e-3):
             print("Warning.. only a tiny fraction of cold gas is bound to the galaxy?")
         gg.cell = cold_cell[i_dense]
         return True
-        #make_gal.extract_cold_gas(gg, dr=5, rmax=200)
+        #make_gal.extract_cold_gas(gg, dr=5, rmax=200)  
 
 def rho_t_cut(cell, info, lose_cut=False):
     """

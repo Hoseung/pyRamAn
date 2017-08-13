@@ -50,7 +50,7 @@ class Timeconvert():
         returns the age of "universe" at the given time.
         """
         if z_now is not None:
-            z_now = max([z_now,1e-10])
+            #z_now = max([z_now,1e-10])
             t_lback_now = np.interp(z_now, self.zred[::-1], self.tlb[::-1])
         else:
             t_lback_now = self.t_lback_now
@@ -67,12 +67,10 @@ class Timeconvert():
 
     def zred2gyr(self, zreds, z_now=None):
         if z_now is not None:
-            z_now = max([z_now,1e-10])
+            #z_now = max([z_now,1e-10])
             t_lback_now = np.interp(z_now, self.zred[::-1], self.tlb[::-1])
         else:
             t_lback_now = self.t_lback_now
-
-        # zreds[zreds < 0] = 0
         #
         t_lback_in  = np.interp(zreds, self.zred[::-1], self.tlb[::-1])
         return t_lback_in - t_lback_now

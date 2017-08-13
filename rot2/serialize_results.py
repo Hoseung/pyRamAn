@@ -122,12 +122,17 @@ class Merger():
         # if main and sat are OK.
         #merger.count_mergers(sat)
         self.main = rec_main
-        self.sattree = sattree
-        self.sat = galresult2rec(sat)
         self.host = host_gal
+        self.add_sattree(sattree)
+        self.sat = galresult2rec(sat)
+
         self.cal_main_counterpart()
         #merger.merger_arr = merger.get_merger_props(rec_main, merger.sat)
         #self.cal_passages()
+
+    def add_sattree(self, sattree):
+        # sattree part earlier than the begining of the main tree is not needed.
+        self.sattree = sattree[sattree["nstep"]>=min(self.host.maintree["nstep"][self.host.maintree["nstep"] > 0])]
 
     def cal_main_counterpart(self):
         """
@@ -155,7 +160,7 @@ class Merger():
             None-good galaxies must have been filtered out beforehand.
         """
         self.merger_arr = np.zeros(len(self.sat), dtype=merger_props)
-        main_part = self.main_part#get_main_counterpart(self.main_arr, merger.sat)
+        main_part = self.main_part
 
         rel_pos = main_part.pos - self.sat.pos
         rel_vel = main_part.vel - self.sat.vel
