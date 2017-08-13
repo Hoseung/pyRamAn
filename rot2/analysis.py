@@ -48,3 +48,51 @@ def get_all_results(nouts,
             #    agal.idx =idx
         allresults.append(allresults_thisnout)
     return allresults
+
+
+def smooth(x, beta=5, window_len=20, monotonic=False, clip_tail_zeros=True):
+    """
+    kaiser window smoothing.
+
+    If len(x) < window_len, window_len is overwritten to be len(x).
+    This ensures to return valid length fo array, but with modified window size.
+
+    Parameters
+    ----------
+        window_len = 20
+
+        monotoinc =
+
+        clip_tail_zereos = True
+            returned array is shorter than the original.
+
+    beta = 5 : Similar to Hamming
+
+
+    """
+    lx = len(x)
+    if clip_tail_zeros:
+        x = x[:max(np.where(x > 0)[0])+1]
+
+    if monotonic:
+        """
+        if there is an overall slope, smoothing may result in offset.
+        compensate for that.
+        """
+        slope, intercept, r_value, p_value, std_err = scipy.stats.linregress(x, y=np.arange(len(x)))
+        xx = np.arange(len(x)) * slope + intercept
+        x = x - xx
+
+    # extending the data at beginning and at the end
+    # to apply the window at the borders
+    window_len = min([window_len, len(x)])
+    s = np.r_[x[window_len-1:0:-1], x, x[-1:-window_len:-1]] # concatenate along 0-th axis.
+    # periodic boundary.
+    w = np.kaiser(window_len,beta)
+    y = np.convolve(w/w.sum(), s, mode='valid')
+    aa = len(y)-lx
+    if monotonic:
+        return y[int(window_len/2):len(y)-int(window_len/2) + 1] + xx
+    else:
+        #return y[int(window_len-1/2)-2:len(y)-int((window_len-1)/2)]
+        return y[int(aa/2):int(aa/2)+len(x)]

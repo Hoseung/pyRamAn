@@ -21,26 +21,34 @@ merger_props = [("nstep", '<i8'),
                 ("rel_vel", '<f8', (3,)),
                 ("jorbit", '<f8', (3,))]
 
+gal_props = [ ("nstep", "<i4"),
+              ("nout", "<i4"),
+              ("id", "<i4"),
+              ("idx", "<i4"),
+              ("mstar", "<f8"),
+              ("mgas", "<f8"),
+              ("mgas_cold", "<f8"),
+              ("rgal", "<f8"),
+              ("reff", "<f8"),
+              ("lgas", "<f8", (3)),
+              ("pos", "<f8", (3)),
+              ("vel", "<f8", (3)),
+              ("lvec", "<f8", (3)),
+              ("nvec", "<f8", (3))]
 
-def galresult2rec(sat):
+fields_interp = ["reff", "rgal", "mstar", "mgas", "mgas_cold", "lgas", "lvec", "nvec"]
+
+def galresult2rec(sat, is_main=False):
     """
     Convert result of a tree (sat or main) into recarray.
     Having them in array is useful for calculating merger properties.
     """
-    sat_data=np.recarray(len(sat), dtype=[("nstep", "<i4"),
-                                          ("nout", "<i4"),
-                                          ("id", "<i4"),
-                                          ("idx", "<i4"),
-                                          ("mstar", "<f8"),
-                                          ("mgas", "<f8"),
-                                          ("mgas_cold", "<f8"),
-                                          ("rgal", "<f8"),
-                                          ("reff", "<f8"),
-                                          ("lgas", "<f8", (3)),
-                                          ("pos", "<f8", (3)),
-                                          ("vel", "<f8", (3)),
-                                          ("lvec", "<f8", (3)),
-                                          ("nvec", "<f8", (3))])
+    if is_main:
+        dtype = gal_props + [("P_tidal", "<f8")]
+    else:
+        dtype = gal_props
+
+    sat_data=np.recarray(len(sat), dtype=dtype)
     sat_data.nout = np.array([ss.nout for ss in sat])
     sat_data.nstep = np.array([ss.nstep for ss in sat])
     sat_data.id = np.array([ss.id for ss in sat])
@@ -55,11 +63,12 @@ def galresult2rec(sat):
             sat_data.mgas[i]= ss.gas_results["mgas_tot"]
             sat_data.mgas_cold[i]= ss.gas_results["mgas_cold"]
             sat_data.lgas[i]= ss.gas_results["Ln_gas"]
-        if ss.lvec is not None:
+        if ss.lvec is not None: 
             sat_data.lvec[i]= ss.lvec
             sat_data.nvec[i]= ss.nvec
             # If there is Lvec, there is rgal.
             sat_data.rgal[i]= ss.rgal
+            if is_main: sat_data.P_tidal[i] = ss.P
     return sat_data
 
 
@@ -69,13 +78,58 @@ class Serial_result():
     So both ADP and 'results' must be stored.
     """
     def __init__(self, adp):
-        self.maintree = adp[0][0]
+        self.set_maintree(adp[0][0])
+        #self.maintree = adp[0][0]
         self.alltree = adp
         self.fidx = adp[0][0]["idx"][0]
         self.data = []
         self.mergers = []
 
+    def set_maintree(self, tree):
+        tree = tree[tree["nstep"] > 0]
+        self.maintree = np.zeros(len(tree["nstep"]),
+                                 dtype=gal_props + [("P_tidal", "<f8"),
+                                                    ("time", "<f8")])
+        self.maintree["pos"] = np.ma.compress_rowcols(tree["xp"])
+        self.maintree["vel"] = np.ma.compress_rowcols(tree["vp"])
+        self.maintree["id"] = tree["id"].compressed()
+        self.maintree["idx"] = tree["idx"].compressed()
+        self.maintree["nstep"] = tree["nstep"].compressed()
+        #self.maintree["time"] = tree[""].compressed()
+
+    def cal_fine_arr(self, do_smooth=True):
+        finetree=self.maintree
+        mainarr = self.main_arr
+        finearr = np.zeros(len(finetree),dtype=mainarr.dtype)
+
+        lbt = tc.zred2gyr(nnza_all.a2b(finetree["nstep"],"nstep","zred"), z_now=0)
+        lbt_cell = tc.zred2gyr(nnza_cell.a2b(mainarr["nstep"],"nstep","zred"), z_now=0)
+
+        for field in fields_interp:
+            # Begining of merger
+            if mainarr[field].ndim == 2:
+                for i in range(3):
+                    if do_smooth:
+                        r_p = smooth(mainarr[field][:,i],
+                                     window_len=5,
+                                     clip_tail_zeros=False)
+                        finearr[field][:,i] = np.interp(lbt, lbt_cell, r_p)
+                    else:
+                        r_p = mainarr[field][:,i]
+                    finearr[field][:,i] = np.interp(lbt, lbt_cell, mainarr[field][:,i])
+            else:
+                if do_smooth:
+                    r_p = smooth(mainarr[field],
+                                 window_len=5,
+                                 clip_tail_zeros=False) # odd number results in +1 element in the smoothed array.
+                else:
+                    r_p = mainarr[field]
+                finearr[field] = np.interp(lbt, lbt_cell, r_p)
+
+        self.finearr = finearr
+
     def add_merger(self, results, sattree):
+        # self.main_arr is assigned in serialize script.
         mm = Merger(self.main_arr, results, sattree, self)
         mm.cal_merger_props()
         self.mergers.append(mm)
