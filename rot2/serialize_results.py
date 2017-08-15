@@ -30,6 +30,12 @@ gal_props = [ ("nstep", "<i4"),
               ("mgas_cold", "<f8"),
               ("rgal", "<f8"),
               ("reff", "<f8"),
+              ("lambda_r", "<f8"),
+              ("vsig", "<f8"),
+              ("sfr01", "<f8"),
+              ("sfr05", "<f8"),
+              ("sfr1", "<f8"),
+              ("sfr_area", "<f8"),
               ("lgas", "<f8", (3)),
               ("pos", "<f8", (3)),
               ("vel", "<f8", (3)),
@@ -38,7 +44,8 @@ gal_props = [ ("nstep", "<i4"),
 
 fields_interp = ["reff", "rgal", "mstar", "mgas", "mgas_cold", "lgas", "lvec", "nvec"]
 
-def galresult2rec(sat, is_main=False):
+
+def galresult2rec(sat, is_main=False, fill_missing=True):
     """
     Convert result of a tree (sat or main) into recarray.
     Having them in array is useful for calculating merger properties.
@@ -63,12 +70,35 @@ def galresult2rec(sat, is_main=False):
             sat_data.mgas[i]= ss.gas_results["mgas_tot"]
             sat_data.mgas_cold[i]= ss.gas_results["mgas_cold"]
             sat_data.lgas[i]= ss.gas_results["Ln_gas"]
-        if ss.lvec is not None: 
+        if ss.lvec is not None:
             sat_data.lvec[i]= ss.lvec
             sat_data.nvec[i]= ss.nvec
             # If there is Lvec, there is rgal.
             sat_data.rgal[i]= ss.rgal
-            if is_main: sat_data.P_tidal[i] = ss.P
+            try:
+                sat_data.lambda_r[i]=ss.lambda_r[0]
+            except:
+                sat_data.lambda_r[i]=ss.lambda_r
+            if is_main:
+                if hasattr(ss, 'P'):
+                    sat_data.P_tidal[i] = ss.P
+                else:
+                    sat_data.P_tidal[i] = 0
+        try:
+            sat_data["vsig"][i]=ss.vsig_results["V_sig"]
+        except:
+            sat_data["vsig"][i]=0
+
+        if hasattr(ss, "sfr_results"):
+            sat_data["sfr01"][i]=ss.sfr_results["sfrs"][0]
+            sat_data["sfr05"][i]=ss.sfr_results["sfrs"][1]
+            sat_data["sfr1"][i]=ss.sfr_results["sfrs"][2]
+            sat_data["sfr_area"][i]=ss.sfr_results["area"]
+
+
+    #if fill_missing and len(sat_data.nstep) <= sat_data.nstep.ptp():
+    #    smooth_all(sat_data)
+
     return sat_data
 
 
@@ -95,6 +125,7 @@ class Serial_result():
         self.maintree["id"] = tree["id"].compressed()
         self.maintree["idx"] = tree["idx"].compressed()
         self.maintree["nstep"] = tree["nstep"].compressed()
+        self.maintree["mstar"] = tree["m"].compressed()
         #self.maintree["time"] = tree[""].compressed()
 
     def cal_fine_arr(self, do_smooth=True):
@@ -196,7 +227,10 @@ class Merger():
         # allow_swap = Fales
         # => Even if the sat is longer than the main,
         # indices for only common elements are returned.
-        self.main_part = main_arr[mtc.match_list_ind(main_arr["nstep"], self.sat["nstep"],allow_swap=False)]
+        #print(main_arr["nstep"])
+        imtc = mtc.match_list_ind(main_arr["nstep"], self.sat["nstep"],allow_swap=False)
+        #print(len(imtc))
+        self.main_part = main_arr[imtc]
         main_tree = self.host.maintree
         self.main_tree = main_tree[mtc.match_list_ind(main_tree["nstep"], self.sattree["nstep"],allow_swap=False)]
         #return
@@ -216,27 +250,27 @@ class Merger():
         self.merger_arr = np.zeros(len(self.sat), dtype=merger_props)
         main_part = self.main_part
 
-        rel_pos = main_part.pos - self.sat.pos
-        rel_vel = main_part.vel - self.sat.vel
+        rel_pos = main_part["pos"] - self.sat.pos
+        rel_vel = main_part["vel"] - self.sat.vel
         Js=np.cross(rel_pos, rel_vel)
         j_orbital = Js[:]/np.sqrt(np.einsum('...i,...i', Js, Js))[:,None]
 
         # spin alignment
-        self.merger_arr["nstep"]=main_part.nstep
-        self.merger_arr["id_p"]=main_part.id
-        self.merger_arr["idx_p"]=main_part.idx
-        self.merger_arr["id_s"]=self.sat.id
-        self.merger_arr["idx_s"]=self.sat.idx
-        self.merger_arr["m_s"]=self.sat.mstar
-        self.merger_arr["m_p"]=main_part.mstar
+        self.merger_arr["nstep"]=main_part["nstep"]
+        self.merger_arr["id_p"]=main_part["id"]
+        self.merger_arr["idx_p"]=main_part["idx"]
+        self.merger_arr["id_s"]=self.sat["id"]
+        self.merger_arr["idx_s"]=self.sat["idx"]
+        self.merger_arr["m_s"]=self.sat["mstar"]
+        self.merger_arr["m_p"]=main_part["mstar"]
         #merger.merger_arr["size_s"]=merger.sat.rgal
         #merger.merger_arr["size_p"]=main_part.rgal
         self.merger_arr["rel_pos"]=rel_pos
         self.merger_arr["rel_vel"]=rel_vel
         self.merger_arr["jorbit"]=j_orbital
         self.merger_arr["dist"]=np.sqrt(np.einsum('...i,...i', rel_pos,rel_pos)) * 1e3 # in Kpc
-        self.merger_arr["reff_p"]=main_part.reff
+        self.merger_arr["reff_p"]=main_part["reff"]
         self.merger_arr["reff_s"]=self.sat.reff
         self.merger_arr["spinmag"]=np.sqrt(np.einsum('...i,...i', self.sat.lvec,self.sat.lvec))
-        self.merger_arr["orbitang"] = 180./np.pi*np.arccos(np.einsum('...i,...i',main_part.nvec, j_orbital))
-        self.merger_arr["spinang"] = 180./np.pi*np.arccos(np.einsum('...i,...i',main_part.nvec, self.sat.nvec))
+        self.merger_arr["orbitang"] = 180./np.pi*np.arccos(np.einsum('...i,...i',main_part["nvec"], j_orbital))
+        self.merger_arr["spinang"] = 180./np.pi*np.arccos(np.einsum('...i,...i',main_part["nvec"], self.sat.nvec))
