@@ -558,10 +558,9 @@ class Galaxy():
                                 vx, vy, vz, mm, tol=5, niter=8)
 
     def cal_mgas(self):
-        msun = 1.98892e33 # solar mass in gram.
-        kpc_in_cm = 3.086e21
-        self.meta.mgas = sum((self.cell['rho'] * self.info.unit_d) *
-                             (self.cell['dx']  * kpc_in_cm)**3) / msun
+        #msun = 1.98892e33 # solar mass in gram.
+        #kpc_in_cm = 3.086e21
+        self.meta.mgas = sum(self.cell['rho'] * self.cell['dx']**3) * self.info.punit_m
         # [g/cm^3] * [cm^3] / [g/msun] = [msun]
 
     def cal_ssfr(self):
