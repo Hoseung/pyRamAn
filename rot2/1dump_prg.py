@@ -16,7 +16,7 @@ def fname(fidx, is_gal=False):
 
 if __name__ == "__main__":
 
-    test = True
+    test = False
 
     wdir = './'
     is_gal = True
@@ -25,9 +25,9 @@ if __name__ == "__main__":
     if is_gal:
         Mcut = 1e10
         if test:
-            basedir = wdir + "test_direct_prgs_gal/"
+            basedir = wdir + "test_fine_direct_prgs_gal/"
         else:
-            basedir = wdir + "all_direct_prgs_gal/"
+            basedir = wdir + "all_fine_direct_prgs_gal/"
     if not is_gal:
         Mcut = 5e10
         if test:
@@ -38,8 +38,8 @@ if __name__ == "__main__":
     mkdir(basedir)
     # Load data
 
-    #tt = tree.tmtree.Tree(is_gal=is_gal)
-    tt=pickle.load(open("tree.pickle", "rb"))
+    tt = tree.tmtree.Tree(is_gal=is_gal)
+    #tt=pickle.load(open("tree.pickle", "rb"))
     print("Loading tree done")
 
     tnow = tt.tree[tt.tree["nstep"]==max(tt.tree["nstep"])]
@@ -50,7 +50,7 @@ if __name__ == "__main__":
     if test:
         large_last = large_last[(np.abs(large_last["xp"][:,0])
                                + np.abs(large_last["xp"][:,1])
-                               + np.abs(large_last["xp"][:,2]) < 30)] # 
+                               + np.abs(large_last["xp"][:,2]) < 50)] # 
 
     print("Number of sample galaxies:", len(large_last))
 
@@ -65,16 +65,16 @@ if __name__ == "__main__":
         good =refined_tree.refined_tree(tt, fidx,
                                   f_dist_sum = 0.66,
                                   r_fi = 0.5,
-                                  step_early_enough = 30,
-                                  m_small_enough = 3.3e8,
+                                  step_early_enough = 120,
+                                  m_small_enough = 5e8,
                                   too_short_ref = 2,
                                   threshold_score=2.0,
-                                  l_tree_max=50,
-                                  l_too_short_close=15,
-                                  do_plot=True,
+                                  l_tree_max=100,
+                                  l_too_short_close=25,
+                                  do_plot=test,
                                   out_dir=basedir)
         if good:
             good_idxs.append(fidx)
         print("{}-th / {}".format(i, num_gal), end="\r")
 
-    pickle.dump(good_idxs, open("final_ids_good_massive.pickle", "wb"))
+    pickle.dump(good_idxs, open(basedir+"final_ids_good_massive.pickle", "wb"))

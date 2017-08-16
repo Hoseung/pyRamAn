@@ -171,7 +171,7 @@ def test_dist_similar(ref, cbs,
             #print(cbs[3])
             cbs.pop(icb)
         else:
-            print("good cb")
+            #print("good cb")
             dists.append(dist[0])
             icb+=1
 
@@ -228,7 +228,7 @@ def fix_broken_tree(adp,
                               n_pos_interpol=n_pos_interpol,
                               deg_poly=deg_poly,
                               do_plot=poly_fit_plot)
-    print("Now {} CBs left".format(len(candidate_branches)))
+    #print("Now {} CBs left".format(len(candidate_branches)))
     if len(candidate_branches) == 0:
         return "no candidates after dist cut"
 
@@ -303,7 +303,7 @@ def fix_broken_tree(adp,
     elif sum(score_composite < threshold_score) == 1:
         #print(np.argmin(score_composite))
         ref_post=candidate_branches[np.argmin(score_composite)]
-        print("Got one match")
+        #print("Got one match")
         n_steps_missing = ref["nstep"][-1] - ref_post["nstep"][0]-1
         missing_tree = np.zeros(n_steps_missing, dtype=ref.dtype)
         for i, tm in enumerate(missing_tree):
@@ -334,7 +334,7 @@ def fix_broken_tree(adp,
 
 
 def removearray(L,arr):
-    print("nstep cb, adp",arr["nstep"][0],L[0][0]["nstep"])
+    #print("nstep cb, adp",arr["nstep"][0],L[0][0]["nstep"])
     ind = 0
     size = len(L)
     while ind != size and not L[ind][0]["idx"] == arr[0]["idx"]:
@@ -370,5 +370,5 @@ def ind_pericentric_dist_ok(main, sat, r_ini=1.0, r_fi=1.0):
     merger_fi = np.argmin(all_dist > r_fi)
     # find local minima
     #d_min = argrelmax(all_dist, mode="clip")[-1]
-    print(all_dist)
+    #print(all_dist)
     return merger_ini, merger_fi
