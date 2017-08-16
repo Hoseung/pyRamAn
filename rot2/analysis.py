@@ -12,8 +12,7 @@ def idxfromid(org_ids, ids_ref, idxs_ref):
 
 def get_all_results(nouts,
                     prg_dir = "./test_direct_prgs_gal/",
-                    out_dir = "./lambda_results/",
-                    fix_idx_nout=9999):
+                    out_dir = "./lambda_results/"):
     # ALL ALL results.
     all_sample_ids=pickle.load(open(prg_dir + "all_sample_ids.pickle", "rb"))
     all_sample_idxs=pickle.load(open(prg_dir + "all_sample_idxs.pickle", "rb"))
@@ -37,15 +36,7 @@ def get_all_results(nouts,
                 for idx, agal in zip(allidxs, this_result):
                     agal.idx =idx
             allresults_thisnout.extend(this_result)
-            # Don't like using glob.
-            # file name will be "ixiyiz" instead of "from xxxx".
-            # then just i=0:999
-            #if nout >= fix_idx_nout:
-            # Fix IDx on the fly.
 
-            #allidxs = idxfromid(np.array([agal.idx for agal in allresults_thisnout]), idsnow, idxsnow)
-            #for idx, agal in zip(allidxs, allresults_thisnout):
-            #    agal.idx =idx
         allresults.append(allresults_thisnout)
     return allresults
 
