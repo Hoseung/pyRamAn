@@ -1,4 +1,4 @@
-from tree import rshalo
+#from tree import rshalo
 from tree import hmutil
 from tree import treeutils
 from tree import treeplots
