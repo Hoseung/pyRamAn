@@ -10,9 +10,9 @@ from rot2 import serialize_results
 #from rot2 import cell_chunk_module as ccm
 import numpy.lib.recfunctions as recf
 from utils import cosmology
-from load import info
+from load.info import Info
 
-def fill_main(mainarr, nnza_cell):
+def fill_main(mainarr, nnza_cell, tc):
     # Set up a new array.
     new_nouts = nnza_cell.nnza["nout"][:mainarr["nstep"].ptp()+1]
     newarr = np.zeros(len(new_nouts), dtype=mainarr.dtype)
@@ -44,7 +44,7 @@ def fill_main(mainarr, nnza_cell):
 # interpolate main galaxy results on finetree.
 
 
-def interpol_fine(this_gal, nnza_cell, nnza_all, do_smooth=True):
+def interpol_fine(this_gal, nnza_cell, nnza_all, tc, do_smooth=True):
     finetree=this_gal.maintree
     mainarr = this_gal.main_arr
     finearr = np.zeros(len(finetree),dtype=mainarr.dtype)
@@ -94,15 +94,14 @@ def interpol_fine(this_gal, nnza_cell, nnza_all, do_smooth=True):
     return finearr
 
 
-def serialize(allresults, all_final_idxs,  nnza, nnza_cell,
+def serialize(allresults, all_final_idxs,  nnza_all, nnza_cell,
               istep_max = 50,
               prg_dir="./",
-              out_dir="./",
+              out_base="./",
               nstep_too_short_main = 100):
     nouts = nnza_cell.nnza["nout"][:istep_max]
     print("Considering nouts: ", nouts)
 
-    allresults = get_all_results(nouts, prg_dir=prg_dir, out_dir =result_dir)
     """
     For an unknown reason, some of galaxies are repeatedly analized, and found in the result_lambda pickle.
     Those repeatition must be removed from the begining.
@@ -125,7 +124,7 @@ def serialize(allresults, all_final_idxs,  nnza, nnza_cell,
         Allallids.append(np.array([agal.id for agal in result_thisnout]))
 
 
-    info = info.Info(nout=nouts[0])
+    info = Info(nout=nouts[0])
     tc = cosmology.Timeconvert(info, zred_now=0)
 
     all_fid_ok=[]
@@ -177,8 +176,8 @@ def serialize(allresults, all_final_idxs,  nnza, nnza_cell,
                     #print(len(this_gal.main_arr.nstep), this_gal.main_arr.nstep.ptp())
                     if len(this_gal.main_arr.nstep) <= this_gal.main_arr.nstep.ptp():
                         #bad_main=True
-                        this_gal.main_arr = fill_main(this_gal.main_arr, nnza_cell)
-                    this_gal.finearr = interpol_fine(this_gal, nnza_cell, nnza_all, do_smooth=True)
+                        this_gal.main_arr = fill_main(this_gal.main_arr, nnza_cell, tc)
+                    this_gal.finearr = interpol_fine(this_gal, nnza_cell, nnza_all, tc, do_smooth=True)
                     #print("BAD", bad_main)
 
                 elif len(sat_results) > 0 and sat_results[0].mstar > 0.0:
