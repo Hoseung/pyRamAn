@@ -145,6 +145,6 @@ if __name__ == "__main__":
     # "07206", "10002", "14172", "17891", "24954",
     # "28930", "29172", "29176", "35663", "36413",
     # "36415", "39990", "49096"]
-    clusters=["01605"]
+    clusters=["49919"]
     for cluster in clusters:
         run(wdir = here + "/" + cluster + "/" , is_gal=is_gal, nout_ini=nout_ini)

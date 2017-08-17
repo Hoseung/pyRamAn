@@ -33,6 +33,10 @@ MODIFICATIONS:
 @author: hoseung
 """
 
+import tree.rd_hal as rd_halo
+import numpy as np
+from load.utils import read_fortran, skip_fortran
+from load.info import Info
 class HaloMeta():
     """
     HaloMeta class.
@@ -141,12 +145,11 @@ class HaloMeta():
 
 
     def _load_info(self):
-        import load.info
         #if self.verbose:
         if True:
             print("[Halo.load_info] loading info")
             print("[Halo.load_info] nout = {}, base ={}".format(self.nout, self.base))
-        self.info = load.info.Info(nout=self.nout, base=self.base, load=True)
+        self.info = Info(nout=self.nout, base=self.base, load=True)
         if self.verbose : print("[Halo.load_info] info is loaded")
 
 
@@ -205,13 +208,9 @@ class Halo(HaloMeta):
         if self.halofinder is 'Rockstar':
             self.load_rs()
         elif self.halofinder is 'HaloMaker':
-            if self.return_id:
-                self.load_hm_old()
-            else:
-                self.load_hm()
+            self.load_hm()
             if self.info is None:
-                import load
-                info = load.info.Info(base = self.base, nout = self.nout, load=True)
+                info = Info(base = self.base, nout = self.nout, load=True)
                 self.set_info(info)
         if self.convert:
             self.normalize()
@@ -252,22 +251,25 @@ class Halo(HaloMeta):
                                ('g_nbin', '<i4'), ('g_rr', '<f4', (100,)),
                                ('g_rho', '<f4', (100,))]
 
-            import tree.rd_hal as rd_halo
-            import numpy as np
-            temp = rd_halo.read_file(fn.encode(), int(self.is_gal))# as a byte str.
-
-            self.nbodies, self.halnum, self.subnum,\
-                self.massp, self.aexp, self.omegat, self.age = temp[0:7]
+            
+            f = open(fn, "rb")
+            self.nbodies = read_fortran(f, np.dtype('i4'), 1)[0]
+            f.close()
+            #self.nbodies = rd_halo.read_nbodies(fn.encode())
+            temp = rd_halo.read_file(fn.encode(), self.nbodies, int(self.is_gal))# as a byte str.
+            
+            allID, __, self.halnum, self.subnum,\
+                self.massp, self.aexp, self.omegat, self.age = temp[0:8]
             ntot = self.halnum + self.subnum
             self.data = np.recarray(ntot, dtype=dtype_halo)
             self.data['np'], self.data['id'],\
             levels, ang, energy, \
             self.data['m'],\
             radius, pos,\
-            self.data['sp'], vel = temp[7:17]
-            vir, profile = temp[17:19]
+            self.data['sp'], vel = temp[8:18]
+            vir, profile = temp[18:20]
             if self.is_gal:
-                temp_gal = temp[19]
+                temp_gal = temp[20]
 
             self.data['energy'] = energy.reshape((ntot,3))
             levels = levels.reshape((ntot,5))
@@ -296,11 +298,25 @@ class Halo(HaloMeta):
                 self.data['sig'], self.data['sigbulge'], self.data['mbulge'] =\
                         temp_gal[::3].copy(), temp_gal[1::3].copy(), temp_gal[2::3].copy()
                 self.data['g_nbin'] = temp[20]
-                self.data['g_rr'] = temp[21].reshape(ntot,100)
-                self.data['g_rho']= temp[22].reshape(ntot,100)
-
+                self.data['g_rr'] = temp[22].reshape(ntot,100)
+                self.data['g_rho']= temp[23].reshape(ntot,100)
         except:
             print("Something wrong")
+
+        if self.return_id:
+            self.idlists=[]
+            self.hal_idlists=[]
+            iskip=0
+            for hid, hnp in zip(self.data["id"],self.data["np"]):
+                if self.return_id_list is not None:
+                    if hnu in self.return_id_list:
+                        self.idlists.append(allID[iskip:iskip+hnp])
+                        self.hal_idlists.append(hid)
+                else:
+                    # for every halo.
+                    self.idlists.append(allID[iskip:iskip+hnp])
+                    self.hal_idlists.append(hid)
+                iskip += hnp
 
 
     def refactor_hm(self):

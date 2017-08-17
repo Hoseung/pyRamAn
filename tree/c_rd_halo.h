@@ -8,6 +8,7 @@
 struct Meta{
     int nbodies, halnum, subnum;
     float massp, aexp, omegat, age;
+    int * allID;
 };
 
 struct Data2{
@@ -42,4 +43,4 @@ void load_data_gal(std::fstream&,  Data2&, int, int);
 
 void allocate_data(Data2&, int, int);
 
-void load(std::string&, Meta&, Data2&, int);
+void load(std::string&, Meta&, Data2&, int, int);
