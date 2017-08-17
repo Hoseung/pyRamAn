@@ -355,6 +355,7 @@ def do_plot(x,y, obsdata,
             sizeOfFont=12,
             label="This work",
             label2="",
+            title="",
             ):
     import scipy.stats as st
 
@@ -448,7 +449,8 @@ def do_plot(x,y, obsdata,
         axmain.clabel(cfset, inline=1, fontsize=7)
 
     #Observation data
-    axmain.scatter(obsdata[:,0], obsdata[:,1],
+    if obsdata is not None:
+        axmain.scatter(obsdata[:,0], obsdata[:,1],
                    s=40,
                    color=twocolors[1],
                    marker=".",
@@ -479,6 +481,7 @@ def do_plot(x,y, obsdata,
 
     plt.savefig(fname_vs_e + ".pdf", bbox_inches='tight')
     plt.savefig(fname_vs_e + ".png", bbox_inches='tight', dpi=200)
+    axmain.set_title(title)
     #plt.savefig(fname_vs_e + ".svg", bbox_inches='tight')
     #plt.savefig(fname_vs_e + ".eps", bbox_inches='tight')
 
