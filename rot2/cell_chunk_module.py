@@ -105,9 +105,9 @@ def do_work(sub_sample, nout, i_subsample,
     for this_gal in sub_sample:
         if os.path.isfile(out_base+"CELL_{:05d}/CELL_{:d}_{:d}.pickle".format(nout,nout,this_gal["id"])):
             this_gal["level"] = 1234 # Overwrite level to mark CELL_ availability.
-            print("Has cell")
+            #print("Has cell")
         else:
-            print("No cell")
+            #print("No cell")
             this_gal["level"] = -9 # Overwrite level to mark CELL_ availability.
 
     if sum(sub_sample["level"] < 0) > 0:
@@ -170,10 +170,10 @@ def do_work(sub_sample, nout, i_subsample,
         fn_cell=out_base+"CELL_{:05d}/CELL_{:d}_{:d}.pickle".format(nout,nout,gg.meta.id)
         if gcat_this["level"] ==1234:
             gg.cell = pickle.load(open(fn_cell, "rb"))
-            print("Load cell")
+            #print("Load cell")
         else:
             get_cell(s.hydro.cell, kdtree, gg, s.info)
-            print("Read from hydro")
+            #print("Read from hydro")
         #gg.cell = s.hydro.cell[ind_cell_kd(s.hydro.cell, kdtree, gg, s.info)]
         if len(gg.cell) > 1:
             if save_cell:
@@ -211,7 +211,7 @@ def do_work(sub_sample, nout, i_subsample,
         result_sub_sample.append(gg.meta)
 
     fout = out_dir + "result_sub_sample_{}_{}.pickle".format(nout, i_subsample)
-    print(out_dir, fout)
+    #print(out_dir, fout)
     pickle.dump(result_sub_sample, open(fout, "wb"))
     #print("Galaxy properties took {:.2f}s with {} particles".format(time.time() - t1, gg.meta.nstar))
 

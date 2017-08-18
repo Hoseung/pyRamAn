@@ -33,9 +33,9 @@ MODIFICATIONS:
 @author: hoseung
 """
 
-import tree.rd_hal as rd_halo
+from tree import rd_hal as rd_halo
 import numpy as np
-from load.utils import read_fortran, skip_fortran
+from utils.io_module import read_fortran, skip_fortran
 from load.info import Info
 class HaloMeta():
     """
