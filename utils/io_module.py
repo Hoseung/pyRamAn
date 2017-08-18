@@ -2,14 +2,14 @@ import struct
 import numpy as np
 _head_type = np.dtype('i4')
 
-def write_fortran(f, array, check=True):
+def write_fortran(f, array, dtype="i", check=True):
     """
         Note 
         type 'i' meant to be int32. Can I explicitly tell?
     """
-    f.write(struct.pack('i', array.nbytes))
+    f.write(struct.pack(dtype, array.nbytes))
     array.tofile(f)
-    f.write(struct.pack('i', array.nbytes))
+    f.write(struct.pack(dtype, array.nbytes))
 
 
 def skip_fortran(f, n=1, verbose=False):
