@@ -7,7 +7,7 @@ import os
 import utils.match as mtc
 
 if __name__ == "__main__":
-    test=True
+    test=False
     nnza = np.genfromtxt("./nout_nstep_zred_aexp.txt",
                      dtype=[("nout", int),
                             ("nstep", int),
@@ -23,15 +23,14 @@ if __name__ == "__main__":
                             ("zred", float),
                             ("aexp", float)])
 
-
     nbins=10
     save_cell=True
     wdir = '/home/hoseung/data/Horizon-AGN/'
-    out_base='/scratch09/Hoseung/'
+    out_base='/scratchb01/hoseung/'
     if test:
-        prg_dir = "./test_direct_prgs_gal/"
+        prg_dir = "./test_fine_direct_prgs_gal/"
     else:
-        prg_dir = "./all_direct_prgs_gal/"
+        prg_dir = "./all_fine_direct_prgs_gal/"
  
     outdir = "./lambda_results/"
     if not os.path.isdir(outdir):
@@ -42,7 +41,7 @@ if __name__ == "__main__":
     #all_sample_ids = np.intersect1d(small_sample_id, all_sample_ids[str(nout)])
 
     #for nout in nouts:
-    for nout in nnza_cell["nout"][3:]:
+    for nout in nnza_cell["nout"][:13]:
         gcat = hmo.Halo(nout=nout, is_gal=True)
         if not os.path.isdir(outdir + str(nout)):
             os.mkdir(outdir + str(nout))
@@ -75,7 +74,7 @@ if __name__ == "__main__":
         print("# of subsamples", len(args))
         # Parallelize
         if True:
-            with Pool(processes=3) as pool:
+            with Pool(processes=4) as pool:
                 pool.starmap(ccm.do_work, args)
             # Why can't I use starmap_async?
  
