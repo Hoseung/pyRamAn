@@ -9,7 +9,6 @@ def age2zred(lts):
     zreds = [z_at_value(WMAP7.age, ll * u.Gyr) for ll in lts]
     return zreds
 
-
 def zreds2nouts(nouts, nnza):
     pass
 
@@ -27,9 +26,8 @@ def modify_ticks1(ax, nnza, nouts, nbins = 40):
 
     # For a given list of nouts,
     # calculate a nice-looking set of zreds AND lookback times
-    zz_target = [0, 0.5, 1.0, 2.0, 3.0]
-
-    x_tick_pos = match.match_list_ind(nouts, np.array([782, 535, 343, 197, 125]))# - nouts[-1]
+    zz_target = [2.0, 1.0, 0.5, 0.0]
+    x_tick_pos = match.match_list_ind(nouts, np.array([197, 343, 535, 782]))# - nouts[-1]
 
     ax.set_xlabel("Redshift")
     ax.set_xlim([0, nnouts])
@@ -51,23 +49,26 @@ def modify_ticks2(ax2, nnza, nouts, nbins = 40):
 
     # For a given list of nouts,
     # calculate a nice-looking set of zreds AND lookback times
-    zz_target = [0, 0.5, 1.0, 2.0, 3.0]
-
-    x_tick_pos = match.match_list_ind(nouts, np.array([782, 535, 343, 197, 125]))
-
-    nnouts = len(nouts)
+    #zz_target = [2.0, 1.0, 0.5, 0.0]
+    #x_tick_pos = match.match_list_ind(nouts[::-1], np.array([197, 343, 535, 782]))
+    #nnouts = len(nouts)
 
     # For a given list of nouts,
     # calculate a nice-looking set of zreds AND lookback times
-    x_tick_pos = np.searchsorted(zreds[::-1], zz_target)[::-1]# + nout_ini# + nout_min
+
     # searchsorted requires arrays be in ascending order.
 
     #  at z = 3, lbt = 11.5243, age of universe = 2.18844
-    u_age_targets=[3,5,8,10,13]
-    z_targets_u_age = age2zred(u_age_targets)
-    u_age_pos = np.searchsorted(zreds, z_targets_u_age)
+    lbt_targets=[0,5,8,12]
+    nnza.a2b(lbt_targets, "age", "zred")
+    # INCOMPLETE
+    z_targets_u_age = age2zred(lbt_targets)
+    print(z_targets_u_age)
+    x_tick_pos = len(nouts) - np.searchsorted(zreds, z_targets_u_age)#[::-1]# + nout_ini# + nout_min
+    print(x_tick_pos)
+    #u_age_pos = np.searchsorted(zreds, )
 
-    ax2.set_xticks(u_age_pos)
+    ax2.set_xticks(x_tick_pos)
     ax2.set_xticklabels(labels = ["{:.0f}".format(l) for l in u_age_targets])
     ax2.set_xlabel("Age of the universe (Gyr)")
 
@@ -98,7 +99,6 @@ def plot_lambda_evol(serial_results, nouts,
                  cmap ="jet")
     """
 
-
     # compile data
     nnouts = len(nouts)
     ngals_tot = len(serial_results)
@@ -122,10 +122,10 @@ def plot_lambda_evol(serial_results, nouts,
     zreds = nnza.a2b(nouts, "nout", "zred")
 
     fig, ax = plt.subplots(1)
-    ax2 = ax.twiny()
+    #ax2 = ax.twiny()
 
     modify_ticks1(ax, nnza, nouts)
-    modify_ticks2(ax2, nnza, nouts)
+    #modify_ticks2(ax2, nnza, nouts)
 
     lambda_range = nouts.ptp()
 
@@ -155,6 +155,7 @@ def plot_lambda_evol(serial_results, nouts,
         im = ax.scatter(xx, yy, c=z, s=50, edgecolor='', cmap=cmap)
         lambda_range=[0.01, 0.8]
         yticks_ok=[0.0, 0.2, 0.4, 0.6, 0.8]
+        ax.set_xlim([nnouts+1,-1])
         ax.set_ylim([-0.05, 0.9])
         ax.set_yticks([0.0, 0.2, 0.4, 0.6, 0.8])
         ax.set_yticklabels([str(yy) for yy in yticks_ok])
