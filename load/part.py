@@ -112,7 +112,7 @@ class Part(load.sim.Simbase):
         if info is None:
             assert nout is not None, "either info or nout is required"
             from load.info import Info
-            info = Info(nout=nout, cosmo=self.cosmo)
+            info = Info(base=base,nout=nout, cosmo=self.cosmo)
         self.info = info
         self.nout = info.nout
         #self.ptypes = ptypes
@@ -124,8 +124,11 @@ class Part(load.sim.Simbase):
             self.ncpu = 0
         self.nstar = 0
         self.nsink = 0
+
+        print("Part", base)
         try:
             self.set_base(info.base)
+            print(info.base)
         except:
             self.set_base(base)
         self.data_dir = data_dir
@@ -135,6 +138,7 @@ class Part(load.sim.Simbase):
         self.dm_with_vel = dmvel
         self.dm_with_mass = dmmass
 
+        print("Part2", self.base)
         self.set_fbase(self.base, data_dir)
 
         if region is not None:
