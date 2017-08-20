@@ -231,7 +231,8 @@ class Halo(HaloMeta):
         if self.verbose:
             print("Loading file:", fn)
 
-        try:
+        #try:
+        if True:
             dtype_halo = [('np', '<i4'), ('id', '<i4'), ('level', '<i4'),
                           ('host', '<i4'), ('sub', '<i4'), ('nsub', '<i4'),
                           ('nextsub', '<i4'),
@@ -251,13 +252,13 @@ class Halo(HaloMeta):
                                ('g_nbin', '<i4'), ('g_rr', '<f4', (100,)),
                                ('g_rho', '<f4', (100,))]
 
-            
+
             f = open(fn, "rb")
             self.nbodies = read_fortran(f, np.dtype('i4'), 1)[0]
             f.close()
             #self.nbodies = rd_halo.read_nbodies(fn.encode())
             temp = rd_halo.read_file(fn.encode(), self.nbodies, int(self.is_gal))# as a byte str.
-            
+
             allID, __, self.halnum, self.subnum,\
                 self.massp, self.aexp, self.omegat, self.age = temp[0:8]
             ntot = self.halnum + self.subnum
@@ -297,10 +298,10 @@ class Halo(HaloMeta):
             if self.is_gal:
                 self.data['sig'], self.data['sigbulge'], self.data['mbulge'] =\
                         temp_gal[::3].copy(), temp_gal[1::3].copy(), temp_gal[2::3].copy()
-                self.data['g_nbin'] = temp[20]
+                self.data['g_nbin'] = temp[21]
                 self.data['g_rr'] = temp[22].reshape(ntot,100)
                 self.data['g_rho']= temp[23].reshape(ntot,100)
-        except:
+        else:
             print("Something wrong")
 
         if self.return_id:
