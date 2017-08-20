@@ -214,16 +214,20 @@ def mk_gal(gal,
         dtype_cell = [('x', '<f8'), ('y', '<f8'), ('z', '<f8'),
                       ('dx', '<f8'), ('rho', '<f8'),
                       ('vx', '<f8'), ('vy', '<f8'), ('vz', '<f8'),
-                      ('temp', '<f8'), ('metal', '<f8') ]
-
+                      ('temp', '<f8')]#, ('metal', '<f8')]
+        if "var5" in cell.dtype.names:
+            if len(cell.dtype.names < 12)
+                dtype_cell.append(("metal", "<f8"))
+            else:
+                print("Warning...")
+                print("Don't know what to do with all the hydro-variables:")
+                print(cell.dtype)
+                print("Ignoring anyting after the temperature field.")
 
         if "cpu" in cell.dtype.names:
             dtype_cell.append(('cpu', '<f8'))
-        #for i in range(nvarh):
-        #    dtype_cell.append( ('var' + str(i), '<f8'))
 
         if verbose: print("Cell is NOT none")
-        print(xc, yc, zc, rgal_tmp)
         icell = np.where(np.square(cell["x"] - (xc/pbx + 0.5)) +
                          np.square(cell["y"] - (yc/pbx + 0.5)) +
                          np.square(cell["z"] - (zc/pbx + 0.5)) <= np.square(rgal_tmp))[0]
@@ -241,7 +245,8 @@ def mk_gal(gal,
         gal.cell['vy'] = cell['var2'][icell] * gal.info.kms - gal.meta.vyc
         gal.cell['vz'] = cell['var3'][icell] * gal.info.kms - gal.meta.vzc
         gal.cell['temp'] = cell['var4'][icell]
-        gal.cell['metal'] = cell['var5'][icell]
+        if "var5" in cell.dtype.names:
+            gal.cell['metal'] = cell['var5'][icell]
         if "cpu" in cell.dtype.names:
             gal.cell['cpu'] = cell['cpu'][icell]
 
@@ -284,9 +289,9 @@ def extract_cold_gas(gg, rmax = 180, dr = 5):
     m_sorted = mm[i_sort]
 
     rmax = min([np.max(rr), rmax])
-    
+
     # Note 1.
-    # Depends on the cell resolution. How about 8 * dx_min? 
+    # Depends on the cell resolution. How about 8 * dx_min?
     # Larger dx will count in small satellites,
     # while smaller dx will make the measurement sensitive to density fluctuations.
     nbins= int(rmax/dr)
@@ -309,12 +314,12 @@ def extract_cold_gas(gg, rmax = 180, dr = 5):
     if i_zero > 0:
         ind_min = i_zero -1
     else:
-        ind_min= argrelmin(m_radial)[0] -1 # 1D array for 1D input. 
+        ind_min= argrelmin(m_radial)[0] -1 # 1D array for 1D input.
         ind_min = ind_min[np.argmax(ind_min * dr > rmin)]* dr
-    
+
     # Note 2.
-    # If the minimum is farther than rmin=10kpc, 
-    # I assume that is correct. 
+    # If the minimum is farther than rmin=10kpc,
+    # I assume that is correct.
     gg.cell = cold_cell[rr < bin_centers[ind_min]]
     gg.mgas_cold = np.sum(gg.cell["var0"]*gg.cell["dx"]**3)
     gg.cold_gas_profile = dict(profile=m_radial[:ind_min],dr=dr)
@@ -322,16 +327,16 @@ def extract_cold_gas(gg, rmax = 180, dr = 5):
 def rho_t_cut(cell, info, clip_sigma=0):
     """
         Extract galactic cold gas following Torrey+12 criterion.
-        Assume cells in the original (code) unit. 
+        Assume cells in the original (code) unit.
     """
     # Var0 in Msun h^2 kpc^-3 unit.
     kpc_in_cm = 3.08567758e21
     msun_in_g = 1.99e33
-    gcc2this_unit = kpc_in_cm**3/msun_in_g 
+    gcc2this_unit = kpc_in_cm**3/msun_in_g
     if clip_sigma > 0:
         pass
-        #Do sigma clipping.. 
-    return np.log10(cell["var4"]/cell["var0"]*info.unit_T2) < 6 + 0.25*np.log10((cell["var0"]*info.unit_d)*gcc2this_unit*1e-10) # 
+        #Do sigma clipping..
+    return np.log10(cell["var4"]/cell["var0"]*info.unit_T2) < 6 + 0.25*np.log10((cell["var0"]*info.unit_d)*gcc2this_unit*1e-10) #
 
 
 def radial_profile_cut(gal, xx, yy, mm,

@@ -8,6 +8,7 @@ __pycache__/
 *.pdf
 *.eps
 *.o
+*.cpp
 */*.so
 */*/*.so
 */build/*

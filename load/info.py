@@ -18,7 +18,7 @@ def get_minimal_info(info):
     keep_list=["msun", "unit_Z", "unit_l", "unit_d", "unit_t", "unit_v",\
                "unit_T2", "pboxsize","kms","unit_nH",\
                "base", "nout", "aexp","zred","h","H0","time",\
-               "ob","ol","om","tGyr","unit_flux","boxtokpc"]
+               "ob","ol","om","tGyr","unit_flux","boxtokpc", "punit_m"]
 
     mini_info = Dummy()
     for name, val in info.__dict__.items():

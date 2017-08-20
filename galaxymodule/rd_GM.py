@@ -7,8 +7,9 @@ Inherits galaxymodule.galaxy.Galaxy class
 @author: hoseung
 """
 from galaxymodule.galaxy import Galaxy
-from load.utils import read_header, read_fortran
+from utils.io_module import read_header, read_fortran
 import numpy as np
+import pickle
 
 class Header():
     def __init__(self):
@@ -96,6 +97,7 @@ class Dummy():
 class Gal(Galaxy):
     def __init__(self, nout, idgal=None,
                  catalog=None, halo=None, info=None,
+                 type_dm="gm", type_cell="gm",
                  wdir='./', idhal = -1, load=True, rscale=1.5):
         """
 
@@ -103,10 +105,40 @@ class Gal(Galaxy):
         ----------
         load : logical (Default = True)
             load avaialable (star, dm, cell) data on creating an instance.
+        idgal : int
+            galaxy ID
+        catalog : gcat.data
+            gcat if avaialble.
+            Well, actually it does not work properly without a catalog.
+        halo : hcat.data
+            If there is no CELL, DM, or GAL files avaialble, automatically fallback
+            to read dm and cell from the raw data. halo information is required in that case.
+            And... again, this does not work properly, yet...??
+        type_dm : ["gm", "raw"], "gm" by default.
+            indicate the type of intended DM.
+            "gm" tries to read DM dump file, while "raw" tries to read from raw DM data.
+        type_cell : ["gm", "raw"], "gm" by default.
+            Same as type_dm.
+            Note that there is no type_star, as GAL dump are always assuemd to be avaialble.
+        idhal : defaults to -1
+            ID of the mathing halo must be provided explicitly.
+
+        wdir : "./" by default.
+
+        load : True
+            Load actual data. If false, only meta data are loaded.
+        rscale : 1.5
+            scale factor in grabbing galaxy data from raw DM/CELL data.
 
         Notes
         -----
         By default, loaded data (star, dm, cell) are in "gm" units.
+
+
+        ToDo
+        ----
+        GAL, CELL files naming convention is confusing. (17.08.20)
+
 
         """
         assert(not(idgal == None and catalog == None)), ("either idgal or a catalog"
@@ -117,9 +149,9 @@ class Gal(Galaxy):
 
         super(Gal, self).__init__(catalog=catalog, info=info, halo=halo)
         self.star = None # data -> star
-        self.header = None
-        self.dm = None
         self.cell = None
+        self.dm = None
+        self.header = None
         self.nout = nout
         self.gid = idgal
         self.hid = idhal
@@ -129,11 +161,14 @@ class Gal(Galaxy):
         self.units.cell = Units()
         self.units.header = Units()
         self.wdir = wdir
-        #self.info = Dummy()
         self.set_info(info)
         self.rscale=rscale
         if load:
-            self.load(type_dm=None, type_cell=None)
+            if idhal == -1:
+                type_dm = None
+            self.load(type_dm=type_dm, type_cell=type_cell)
+        # try loading cell:
+
 
     def _check_info(self):
         return hasattr(self.info, "unit_l")
@@ -638,7 +673,6 @@ def rd_gm_star_file(fname, metal=True, nchem=0, long=True):
     return header, data
 
 
-
 def rd_cell(nout, idgal, wdir="./", metal=True, nchem=0,
             fname=None):
     """
@@ -646,10 +680,14 @@ def rd_cell(nout, idgal, wdir="./", metal=True, nchem=0,
     header xg in Mpc (physical, centered at 0.5, 0.5, 0.5 of the simualtion volume)
     """
     if fname is None:
-        idgal = str(idgal).zfill(7)
-        dir_nout = "CELL_" + str(nout).zfill(5)
-        fname = wdir + 'GalaxyMaker/' +  dir_nout + '/gal_cells_'+ str(idgal).zfill(7)
-    return rd_gm_cell_file(nout, idgal, fname, metal=metal, nchem=nchem)
+        snout = str(nout).zfill(5)
+        dir_nout = "CELL_" + snout
+        try:
+            fname = wdir + 'GalaxyMaker/' +  dir_nout + '/CELL_'+str(nout)+"_"+str(idgal)+".pickle"
+            return pickle.load(open(fname, "rb"))
+        except:
+            fname = wdir + 'GalaxyMaker/' +  dir_nout + '/CELL_'+str(nout)+"_"+str(idgal).zfill(7)
+            return rd_gm_cell_file(nout, idgal, fname, metal=metal, nchem=nchem)
 
 
 def rd_gm_cell_file(nout, idgal, fname, metal=True, nchem=0):
