@@ -5,7 +5,7 @@ Created on Thu Mar 26 17:44:27 2015
 @author: hoseung
 """
 import numpy as np
-from load.utils import read_header, read_fortran, skip_fortran
+from utils.io_module import read_header, read_fortran, skip_fortran
 
 class AmrHeader():
     """

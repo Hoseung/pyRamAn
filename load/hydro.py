@@ -6,7 +6,7 @@ Created on Thu Mar 26 21:32:55 2015
 """
 import numpy as np
 from load.sim import Simbase
-from load.utils import read_header
+from utils.io_module import read_header
 
 class Dummy():
     def __init__(self):
