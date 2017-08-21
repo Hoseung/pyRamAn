@@ -180,7 +180,6 @@ def den2d(x, y, z, m, npix, region=None, proj='z',
             x = (z - min(z)) / lbox * npix
             y = (y - min(y)) / lbox * npix
 
-
         # mass in solar mass unit.
     # Test if that's true.
     if not mass_test:
@@ -730,9 +729,10 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
 
     x = cell[dim1]
     y = cell[dim2]
-
 #    di = [0, 1]  # What is this?
 #    zh = xh[2]  # what is this?
+    xmi0 = xma0 = ymi0 = yma0 = None
+
     if (xmin is None) & (xmax is None) & (ymin is None) & (ymax is None):
         if region is not None:
             xmi0, xma0 = region[dim1r][0], region[dim1r][1]
@@ -757,7 +757,7 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
 
 # Assuming no slice.
     tol = maxdx #
-    print("maxdx", tol)
+    #print("maxdx", tol)
     val = np.where((xr >= xmi0-tol) & (xl <= xma0+tol) &
                    (yr >= ymi0-tol) & (yl <= yma0+tol))[0]
 
@@ -795,8 +795,9 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
     mass.transpose()
 
     mindx = min(dx)
-    print("mindx", mindx)
-    print("xmi, ymi", xmi0, xma0, ymi0, yma0)
+    if verbose:
+        print("mindx", mindx)
+        print("xmi, ymi", xmi0, xma0, ymi0, yma0)
 
     xmi = np.floor(xmi0/mindx)*mindx
     xma = np.ceil(xma0/mindx)*mindx
@@ -828,7 +829,7 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
     iyl = np.round(yl / mindx).astype(np.int32) - iymi
     iyr = np.round(yr / mindx).astype(np.int32) - iymi -1
     iin = np.where((ixr >= 0) * (ixl <= nx-1) * (iyr >= 0) * (iyl <= ny-1))[0].astype(np.int32)
-    print(len(iin))
+    #print(len(iin))
     # What does it mean?
 
     fd = ixl < 0
