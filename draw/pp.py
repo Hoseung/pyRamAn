@@ -731,7 +731,10 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
     y = cell[dim2]
 #    di = [0, 1]  # What is this?
 #    zh = xh[2]  # what is this?
-    xmi0 = xma0 = ymi0 = yma0 = None
+    xmi0 = xmin
+    xma0 = xmax
+    ymi0 = ymin
+    yma0 = ymax
 
     if (xmin is None) & (xmax is None) & (ymin is None) & (ymax is None):
         if region is not None:
@@ -747,6 +750,8 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
         ymi0 = min(y)
     if yma0 is None:
         yma0 = max(y)
+
+    print("xmi, ymi", xmi0, xma0, ymi0, yma0)
 
     xl = x - cell['dx']*0.5*sigrange # array as long as x
     xr = x + cell['dx']*0.5*sigrange
@@ -797,7 +802,6 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
     mindx = min(dx)
     if verbose:
         print("mindx", mindx)
-        print("xmi, ymi", xmi0, xma0, ymi0, yma0)
 
     xmi = np.floor(xmi0/mindx)*mindx
     xma = np.ceil(xma0/mindx)*mindx
