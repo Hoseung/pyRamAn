@@ -113,8 +113,6 @@ def mk_gal(gal,
         print("SAVE:", save)
         print("Halo size:", gal.gcat['rvir'])
 
-    #########################
-    #########################
 
     rgal_tmp = min([gal.gcat['r'] * 1e3, 30]) # gcat["rvir"] in kpc
     if verbose:
@@ -216,7 +214,7 @@ def mk_gal(gal,
                       ('vx', '<f8'), ('vy', '<f8'), ('vz', '<f8'),
                       ('temp', '<f8')]#, ('metal', '<f8')]
         if "var5" in cell.dtype.names:
-            if len(cell.dtype.names < 12)
+            if len(cell.dtype.names < 12):
                 dtype_cell.append(("metal", "<f8"))
             else:
                 print("Warning...")
@@ -249,7 +247,6 @@ def mk_gal(gal,
             gal.cell['metal'] = cell['var5'][icell]
         if "cpu" in cell.dtype.names:
             gal.cell['cpu'] = cell['cpu'][icell]
-
 
         print("cell x, final", cell["x"])
         gal.cal_mgas()

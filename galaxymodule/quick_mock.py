@@ -81,7 +81,8 @@ class Simplemock():
             print("Sorry, Only bc03 is implemented.")
 
     def get_flux(self, star,
-                 extinction = False,
+                 cell=None,
+                 info=None,
                  metal_lower_cut = True,
                  filter_name='r'):
         ### star data ########################################################
@@ -168,11 +169,31 @@ class Simplemock():
 
         # Need to multiply stellar mass
 
-        if not extinction:
+        if cell is None or info is None:
             return np.sum(Flux, axis=1) / np.sum(div) * Lum_sun * star["m"]
         else:
-            print("Extinction - Not yet implemented")
-            return
+            colden = get_star_colden(star, cell) *info.unit_nH *info.unit_l / info.boxtokpc * 1e3
+            #lams = np.linspace(1e3,1e4,1e3) # in Angstrom
+            waven = wavelength[:-1] * 1e-4 # in 1e-6 m
+
+            #EBV =
+            Es = 0.44#*EBV
+            # Hydrogen column number density
+            colden = colden/5.8e21  # -1mag per 5.8e21 Hydrogen.
+            print(colden.min(), colden.max())
+            # No... it must be a function of metalliticy!
+            # But I will simply ignore that....
+            #print(colden.shape, waven.shape, Flux.shape)
+            tau = 0.4 * Es * np.outer(ext_curve_k(waven), colden)
+            #print(tau.shape)
+
+            #for ff,tt in
+            F_ext= [ff*np.power(10,(-1*tt)) for ff, tt in zip(Flux, tau.T)]
+            #print(len(F_ext))
+            #F_ext = Flux*10**(-1*tau)
+
+            return np.sum(F_ext, axis=1) / np.sum(div) * Lum_sun * star["m"]
+
 
 ##################################################################
 def flux2mag(flux,
@@ -347,3 +368,100 @@ def get_absolute_mag(flux, band=None, bandname="r"):
     return - 2.5 * np.log10(np.sum(flux)/(4.*np.pi*d_lum_10p*d_lum_10p)*1e-2) \
             - 5. * np.log10(getattr(band, bandname)["pivot_lambda"]) \
            + 2.5 * np.log10(speed_of_light) - 48.6
+
+
+def get_star_colden(star, cell):
+    nstar = len(star)
+    # no need to perform calculations on irrelevant cells
+    # cut cells behind the further
+    # This shrinks the cell length significantly.
+
+    cell_dx_min = np.min(cell["dx"])
+
+    ddx_h = cell["dx"] * 0.5
+
+    xl = cell["x"] - ddx_h
+    xr = cell["x"] + ddx_h
+    yl = cell["y"] - ddx_h
+    yr = cell["y"] + ddx_h
+    zr = cell["z"] + ddx_h
+
+    sub_cell = cell[(xr > star["x"].min()) * (xl < star["x"].max()) *\
+                    (yr > star["y"].min()) * (yl < star["y"].max()) *\
+                    (zr < star["y"].max())]
+
+    ddx_h = sub_cell["dx"] * 0.5
+    xl = sub_cell["x"] - ddx_h
+    xr = sub_cell["x"] + ddx_h
+    yl = sub_cell["y"] - ddx_h
+    yr = sub_cell["y"] + ddx_h
+
+    xrange = (xl.min(),xr.max())
+    yrange = (yl.min(),yr.max())
+    xspan = xrange[1]-xrange[0]
+    yspan = yrange[1]-yrange[0]
+    npixx = np.int(np.ceil(xspan/cell_dx_min))
+    npixy = np.int(np.ceil(yspan/cell_dx_min))
+
+    h = np.histogram2d(star["x"], star["y"],
+                       bins=[npixx,npixy],
+                       range=[xrange, yrange])
+
+    dxmap = dymap = cell_dx_min
+
+    # Sort cells
+    i_relev = np.where(h[0].ravel() > 0)[0]
+
+    # Sort stars
+    ix=np.searchsorted(h[1], star["x"]) - 1
+    iy=np.searchsorted(h[2], star["y"]) - 1
+
+    ixy = iy + npixx*ix
+    #print("histogram indicies and ixy are equivalent:", np.all(np.unique(ixy) == i_relev))
+
+    i_star_sort = np.argsort(ixy)
+    i_star = np.concatenate((np.searchsorted(ixy[i_star_sort], np.unique(ixy)),
+                             [nstar]))
+
+    # stars grouped in each lum map.
+    sorted_star = star[i_star_sort]
+    sorted_flux = star.Flux_r[i_star_sort]
+    colden_star = np.zeros(nstar)
+
+    for i in range(len(i_star)-1):
+        stars_here = sorted_star[i_star[i]:i_star[i+1]]
+        jx, jy = ix[i_star_sort[i_star[i]]], iy[i_star_sort[i_star[i]]]
+        cells_here = sub_cell[ (xr >= h[1][jx]) * (xl <= h[1][jx]) *\
+                               (yr >= h[2][jy]) * (yl <= h[2][jy]) ]
+        # column density for each star.
+        i_star_z = np.searchsorted(cells_here["z"]+cells_here["dx"], stars_here["z"])
+        i_star_z[i_star_z >= len(cells_here)] = len(cells_here)-1
+        colden_star[i_star[i]:i_star[i+1]] = np.cumsum(cells_here["var0"]*cells_here["dx"])[i_star_z]
+
+    return colden_star
+
+
+def ext_curve_k(lam, Rv=4.05):
+    H_frac = 0.76
+    n_H0 = 5.8e21 #  N hydrogen / cm^2 / mag -> 5.de21 H atoms per 1cm^2 cause 1mag drop.
+
+    lambda1 = 0.48613 # 1e-6 m
+    lambda2 = 0.65628 # 1e-6 m
+
+    # Why use only lambda 2
+    inv_lambda1 = 1./lam[lam < lambda2]
+    inv_lambda2 = 1./lam[lam > lambda2]
+
+    k = np.zeros(len(lam))
+    # lambda : 0.09 ~ 0.63 1e-6m
+    k1 = 2.659 * (-2.156 + (1.509 * inv_lambda1)
+                      - (0.198*inv_lambda1**2)
+                  + (0.011*inv_lambda1**3)) + Rv
+    # lambda : 0.63 ~ 5.08 1e-6m
+    k2 = 2.659 * (-1.857 + (1.040*inv_lambda2)) + Rv
+
+    #print(sum(lam < lambda2))
+    k[lam < lambda2] = k1
+    k[lam > lambda2] = k2
+    #print(k)
+    return k

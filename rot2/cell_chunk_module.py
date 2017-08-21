@@ -40,6 +40,9 @@ def get_cell(allcell, kdtree, gg, info):
         gg.cell["x"] = (gg.cell["x"]-gg.center_code[0])*info.boxtokpc
         gg.cell["y"] = (gg.cell["y"]-gg.center_code[1])*info.boxtokpc
         gg.cell["z"] = (gg.cell["z"]-gg.center_code[2])*info.boxtokpc
+        gg.cell["var1"] = gg.cell["var1"]*info.kms
+        gg.cell["var2"] = gg.cell["var2"]*info.kms
+        gg.cell["var3"] = gg.cell["var3"]*info.kms
         gg.cell["dx"] *= info.boxtokpc
 
 
@@ -101,7 +104,7 @@ def do_work(sub_sample, nout, i_subsample,
     # simulation information
     s = Sim(nout=nout)
 
-    # If there are CELL_ files available, use them. 
+    # If there are CELL_ files available, use them.
     for this_gal in sub_sample:
         if os.path.isfile(out_base+"CELL_{:05d}/CELL_{:d}_{:d}.pickle".format(nout,nout,this_gal["id"])):
             this_gal["level"] = 1234 # Overwrite level to mark CELL_ availability.
@@ -170,6 +173,12 @@ def do_work(sub_sample, nout, i_subsample,
         fn_cell=out_base+"CELL_{:05d}/CELL_{:d}_{:d}.pickle".format(nout,nout,gg.meta.id)
         if gcat_this["level"] ==1234:
             gg.cell = pickle.load(open(fn_cell, "rb"))
+            # Temporary fix for early CELLS
+            if gg.cell["var1"].ptp() < 10:
+                gg.cell["var1"] = gg.cell["var1"]*info.kms
+                gg.cell["var2"] = gg.cell["var2"]*info.kms
+                gg.cell["var3"] = gg.cell["var3"]*info.kms
+
             #print("Load cell")
         else:
             get_cell(s.hydro.cell, kdtree, gg, s.info)
