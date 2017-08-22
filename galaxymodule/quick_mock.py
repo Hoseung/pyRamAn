@@ -172,28 +172,21 @@ class Simplemock():
         if cell is None or info is None:
             return np.sum(Flux, axis=1) / np.sum(div) * Lum_sun * star["m"]
         else:
-            colden = get_star_colden(star, cell) *info.unit_nH *info.unit_l / info.boxtokpc * 1e3
+            colden = get_star_colden(star, cell) *info.unit_nH *info.unit_l / info.boxtokpc #* 1e3
             #lams = np.linspace(1e3,1e4,1e3) # in Angstrom
             waven = wavelength[:-1] * 1e-4 # in 1e-6 m
 
-            #EBV =
             Es = 0.44#*EBV
             # Hydrogen column number density
             colden = colden/5.8e21  # -1mag per 5.8e21 Hydrogen.
-            print(colden.min(), colden.max())
-            # No... it must be a function of metalliticy!
-            # But I will simply ignore that....
-            #print(colden.shape, waven.shape, Flux.shape)
             tau = 0.4 * Es * np.outer(ext_curve_k(waven), colden)
-            #print(tau.shape)
-
-            #for ff,tt in
+            # colden = N_star array.
+            # waven = N_wavelengths array
+            # tau = N_wave X N_star 
+            # Flux = N_star X N_wave  ... (may be the other way around.)
             F_ext= [ff*np.power(10,(-1*tt)) for ff, tt in zip(Flux, tau.T)]
-            #print(len(F_ext))
-            #F_ext = Flux*10**(-1*tau)
 
             return np.sum(F_ext, axis=1) / np.sum(div) * Lum_sun * star["m"]
-
 
 ##################################################################
 def flux2mag(flux,
@@ -443,7 +436,6 @@ def get_star_colden(star, cell):
 
 def ext_curve_k(lam, Rv=4.05):
     H_frac = 0.76
-    n_H0 = 5.8e21 #  N hydrogen / cm^2 / mag -> 5.de21 H atoms per 1cm^2 cause 1mag drop.
 
     lambda1 = 0.48613 # 1e-6 m
     lambda2 = 0.65628 # 1e-6 m
@@ -460,8 +452,6 @@ def ext_curve_k(lam, Rv=4.05):
     # lambda : 0.63 ~ 5.08 1e-6m
     k2 = 2.659 * (-1.857 + (1.040*inv_lambda2)) + Rv
 
-    #print(sum(lam < lambda2))
     k[lam < lambda2] = k1
     k[lam > lambda2] = k2
-    #print(k)
     return k
