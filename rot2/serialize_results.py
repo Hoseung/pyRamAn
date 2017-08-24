@@ -102,6 +102,91 @@ def galresult2rec(sat, is_main=False, fill_missing=True):
     return sat_data
 
 
+def fill_main(mainarr, nnza_cell):
+    # Set up a new array.
+    # [3:] because the lambda_reuslts are mixed-up.
+    # remove later.
+    new_nouts = nnza_cell.nnza["nout"][3:3+mainarr["nstep"].ptp()+1]
+    newarr = np.zeros(len(new_nouts), dtype=mainarr.dtype)
+    # It's easy to fill nouts and nsteps.
+    newarr["nout"]=new_nouts
+    newarr["nstep"]=nnza_cell.a2b(newarr["nout"], "nout", "nstep")
+
+    interp_fields = list(this_gal.main_arr.dtype.names)
+    for field in ["nout", "nstep"]:
+        interp_fields.remove(field)
+
+    lbt_org = tc.zred2gyr(nnza_cell.a2b(mainarr["nstep"],"nstep","zred"), z_now=0)
+    lbt_new = tc.zred2gyr(nnza_cell.a2b(newarr["nstep"],"nstep","zred"), z_now=0)
+
+    for field in ["id", "idx"]:
+        newarr[field][mtc.match_list_ind(newarr["nout"], mainarr["nout"])] = mainarr[field]
+        interp_fields.remove(field)
+
+    for field in interp_fields:
+        if mainarr[field].ndim == 2:
+            for i in range(3):
+                r_p = mainarr[field][:,i]
+                newarr[field][:,i] = np.interp(lbt_new, lbt_org, mainarr[field][:,i])
+        else:
+            r_p = mainarr[field]
+            newarr[field] = np.interp(lbt_new, lbt_org, r_p)
+    return newarr
+
+# interpolate main galaxy results on finetree.
+
+
+def interpol_fine(this_gal, nnza_cell, nnza_all, do_smooth=True):
+    finetree=this_gal.maintree
+    mainarr = this_gal.main_arr
+    finearr = np.zeros(len(finetree),dtype=mainarr.dtype)
+    fields_interp = list(mainarr.dtype.names)
+
+    finearr["nstep"]=finetree["nstep"]
+    finearr["id"] = finetree["id"]
+    finearr["idx"] = finetree["idx"]
+    finearr["pos"] = finetree["pos"] # Pos and vel can be overwritten if a better measurement from galaxy proeprty exist.
+    finearr["vel"] = finetree["vel"] #
+    finearr["nout"]=nnza_all.a2b(finetree["nstep"],"nstep","nout")
+
+    for field in ["id", "idx", "pos", "vel", "nstep", "nout"]:
+        fields_interp.remove(field)
+
+
+    lbt = tc.zred2gyr(nnza_all.a2b(finetree["nstep"],"nstep","zred"), z_now=0)
+    lbt_cell = tc.zred2gyr(nnza_cell.a2b(mainarr["nstep"],"nstep","zred"), z_now=0)
+
+
+    for mar in mainarr:
+        finearr["pos"][finearr["nout"] == mar["nout"]] = mar["pos"]
+        finearr["vel"][finearr["nout"] == mar["nout"]] = mar["vel"]
+
+
+    for field in fields_interp:
+        # Begining of merger
+        if mainarr[field].ndim == 2:
+            for i in range(3):
+                if do_smooth:
+                    r_p = smooth(mainarr[field][:,i],
+                                 window_len=5,
+                                 clip_tail_zeros=False)
+                    finearr[field][:,i] = np.interp(lbt, lbt_cell, r_p)
+                else:
+                    r_p = mainarr[field][:,i]
+                finearr[field][:,i] = np.interp(lbt, lbt_cell, mainarr[field][:,i])
+        else:
+            if do_smooth:
+                r_p = smooth(mainarr[field],
+                             window_len=5,
+                             clip_tail_zeros=False) # odd number results in +1 element in the smoothed array.
+            else:
+                r_p = mainarr[field]
+            finearr[field] = np.interp(lbt, lbt_cell, r_p)
+
+    return finearr
+
+
+
 class Serial_result():
     """
     Only part of steps in AllDirectProgenitors(ADP) is calculated.
