@@ -58,7 +58,7 @@ class HaloMeta():
 
 
     """
-    def __init__(self, nout=None, base='./', info=None, halofinder='HM',
+    def __init__(self, fn=None, nout=None, base='./', info=None, halofinder='HM',
                  load=True, is_gal=False, return_id=False, outdir=None,
                  verbose=False):
         """
@@ -84,7 +84,7 @@ class HaloMeta():
         given nout and base, info is auto-loaded if not explicitely given.
 
         """
-
+        self.fn = fn
         self.nout = nout
         self.verbose = verbose
         self.base = base
@@ -203,12 +203,31 @@ class Halo(HaloMeta):
         else:
             self.data = data
 
-    def load(self):
-        self._check_params()
+    def load(self, nout=None, base=None, info=None):
+        """
+        There are nout, base keywords.
+        But self.nout and self.base are already available.
+        Determine the priority among them.
+        """
+        if self.fn is None:
+            self._check_params()
         if self.halofinder is 'Rockstar':
             self.load_rs()
         elif self.halofinder is 'HaloMaker':
-            self.load_hm()
+            if self.fn is None:
+                if nout is None:
+                    nout = self.nout
+                if base is None:
+                    base = self.base
+                snout = str(self.nout).zfill(3)
+                if self.is_gal:
+                    self.fn = base + self.gal_find_dir + 'gal/tree_bricks' + snout
+                else:
+                    self.fn = base + self.dm_find_dir + 'DM/tree_bricks' + snout
+                    #print(fn)
+            if self.verbose:
+                print("Loading file:", self.fn)
+            self.load_hm(self.fn)
             if self.info is None:
                 info = Info(base = self.base, nout = self.nout, load=True)
                 self.set_info(info)
@@ -217,20 +236,7 @@ class Halo(HaloMeta):
         else:
             print("Not converting unit!")
 
-    def load_hm(self, nout=None, base=None, info=None):
-        if nout is None:
-            nout = self.nout
-        if base is None:
-            base = self.base
-        snout = str(self.nout).zfill(3)
-        if self.is_gal:
-            fn = base + self.gal_find_dir + 'gal/tree_bricks' + snout
-        else:
-            fn = base + self.dm_find_dir + 'DM/tree_bricks' + snout
-            print(fn)
-        if self.verbose:
-            print("Loading file:", fn)
-
+    def load_hm(self, fn):
         #try:
         if True:
             dtype_halo = [('np', '<i4'), ('id', '<i4'), ('level', '<i4'),

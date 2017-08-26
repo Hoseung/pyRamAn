@@ -1,5 +1,6 @@
 import numpy as np
 import utils.match as mtc
+from rot2.analysis import smooth
 
 merger_props = [("nstep", '<i8'),
                 ("nout", '<i8'),
@@ -42,7 +43,7 @@ gal_props = [ ("nstep", "<i4"),
               ("lvec", "<f8", (3)),
               ("nvec", "<f8", (3))]
 
-fields_interp = ["reff", "rgal", "mstar", "mgas", "mgas_cold", "lgas", "lvec", "nvec"]
+#fields_interp = ["reff", "rgal", "mstar", "mgas", "mgas_cold", "lgas", "lvec", "nvec"]
 
 
 def galresult2rec(sat, is_main=False, fill_missing=True):
@@ -136,7 +137,7 @@ def fill_main(mainarr, nnza_cell):
 # interpolate main galaxy results on finetree.
 
 
-def interpol_fine(this_gal, nnza_cell, nnza_all, do_smooth=True):
+def interpol_fine(this_gal, nnza_cell, nnza_all, tc, do_smooth=True):
     finetree=this_gal.maintree
     mainarr = this_gal.main_arr
     finearr = np.zeros(len(finetree),dtype=mainarr.dtype)
@@ -152,10 +153,9 @@ def interpol_fine(this_gal, nnza_cell, nnza_all, do_smooth=True):
     for field in ["id", "idx", "pos", "vel", "nstep", "nout"]:
         fields_interp.remove(field)
 
-
+    # Physical time based interpolation
     lbt = tc.zred2gyr(nnza_all.a2b(finetree["nstep"],"nstep","zred"), z_now=0)
     lbt_cell = tc.zred2gyr(nnza_cell.a2b(mainarr["nstep"],"nstep","zred"), z_now=0)
-
 
     for mar in mainarr:
         finearr["pos"][finearr["nout"] == mar["nout"]] = mar["pos"]
@@ -164,16 +164,19 @@ def interpol_fine(this_gal, nnza_cell, nnza_all, do_smooth=True):
 
     for field in fields_interp:
         # Begining of merger
+        #print("Main tree interpol", field)
+        #print(mainarr[field][15])
         if mainarr[field].ndim == 2:
             for i in range(3):
                 if do_smooth:
                     r_p = smooth(mainarr[field][:,i],
                                  window_len=5,
                                  clip_tail_zeros=False)
-                    finearr[field][:,i] = np.interp(lbt, lbt_cell, r_p)
+                    #finearr[field][:,i] = np.interp(lbt, lbt_cell, r_p)
                 else:
                     r_p = mainarr[field][:,i]
-                finearr[field][:,i] = np.interp(lbt, lbt_cell, mainarr[field][:,i])
+                #print("3", r_p)
+                finearr[field][:,i] = np.interp(lbt, lbt_cell, r_p)
         else:
             if do_smooth:
                 r_p = smooth(mainarr[field],
@@ -181,6 +184,9 @@ def interpol_fine(this_gal, nnza_cell, nnza_all, do_smooth=True):
                              clip_tail_zeros=False) # odd number results in +1 element in the smoothed array.
             else:
                 r_p = mainarr[field]
+            #print("1", r_p, lbt, lbt_cell)
+            #dat =
+            #print(dat)
             finearr[field] = np.interp(lbt, lbt_cell, r_p)
 
     return finearr
@@ -213,13 +219,13 @@ class Serial_result():
         self.maintree["mstar"] = tree["m"].compressed()
         #self.maintree["time"] = tree[""].compressed()
 
-    def cal_fine_arr(self, do_smooth=True):
+    def cal_fine_arr(self, lbt, lbt_cell, do_smooth=True):
         finetree=self.maintree
         mainarr = self.main_arr
         finearr = np.zeros(len(finetree),dtype=mainarr.dtype)
 
-        lbt = tc.zred2gyr(nnza_all.a2b(finetree["nstep"],"nstep","zred"), z_now=0)
-        lbt_cell = tc.zred2gyr(nnza_cell.a2b(mainarr["nstep"],"nstep","zred"), z_now=0)
+        #lbt = tc.zred2gyr(nnza_all.a2b(finetree["nstep"],"nstep","zred"), z_now=0)
+        #lbt_cell = tc.zred2gyr(nnza_cell.a2b(mainarr["nstep"],"nstep","zred"), z_now=0)
 
         for field in fields_interp:
             # Begining of merger
