@@ -103,7 +103,7 @@ def galresult2rec(sat, is_main=False, fill_missing=True):
     return sat_data
 
 
-def fill_main(mainarr, nnza_cell):
+def fill_main(mainarr, nnza_cell, tc):
     # Set up a new array.
     # [3:] because the lambda_reuslts are mixed-up.
     # remove later.
@@ -113,7 +113,7 @@ def fill_main(mainarr, nnza_cell):
     newarr["nout"]=new_nouts
     newarr["nstep"]=nnza_cell.a2b(newarr["nout"], "nout", "nstep")
 
-    interp_fields = list(this_gal.main_arr.dtype.names)
+    interp_fields = list(mainarr.dtype.names)
     for field in ["nout", "nstep"]:
         interp_fields.remove(field)
 
