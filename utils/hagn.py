@@ -24,11 +24,22 @@ import utils.match as mtc
 
 class Nnza():
     def __init__(self, fname="./nout_nstep_zred_aexp.txt"):
-        self.nnza = np.genfromtxt(fname,
+        nnza = np.genfromtxt(fname,
                      dtype=[("nout", int),
                             ("nstep", int),
                             ("zred", float),
                             ("aexp", float)])
+
+        self.nnza = np.zeros(len(nnza),dtype=[("nout", int),
+                                    ("nstep", int),
+                                    ("zred", float),
+                                    ("aexp", float),
+                                    ("lbt", float)])
+        self.nnza["nout"] = nnza["nout"]
+        self.nnza["nstep"] = nnza["nstep"]
+        self.nnza["zred"] = nnza["zred"]
+        self.nnza["aexp"] = nnza["aexp"]
+
     def a2b(self, vals, field_a, field_b):
         if not (field_a in self.nnza.dtype.names  and  field_b in self.nnza.dtype.names):
             raise ValueError("One or both of {} {} not found".format(field_a, field_b))
@@ -41,7 +52,7 @@ class Nnza():
 
     def step2out(self, nstep):
         """
-        Deprecated, Use a2b instead. 
+        Deprecated, Use a2b instead.
         """
         if isinstance(nstep, np.integer):
             return int(self.nnza["nout"][np.where(self.nnza["nstep"] == nstep)[0]])
