@@ -146,7 +146,7 @@ def plot_lambda_evol(serial_results, nouts,
     if ax is None:
         fig, ax = plt.subplots()
         fig.set_size_inches(6,4)
-        fname=None
+        #fname=None
     #ax2 = ax.twiny()
 
     modify_ticks1(ax, nnza, nouts)
@@ -172,6 +172,7 @@ def plot_lambda_evol(serial_results, nouts,
                        bins=None,
                        cmap=cmap)
 
+        ax.set_ylim([-0.5, 9])
         y_tick_pos=np.arange(10)
         ax.set_yticks(y_tick_pos)#[::-1]
         ax.set_yticklabels(labels = ["{:0.1f}".format(0.1*y) for y in y_tick_pos])
@@ -200,5 +201,7 @@ def plot_lambda_evol(serial_results, nouts,
 
         plt.tight_layout()
         plt.savefig(fname)
+    else:
+        print("FNAME", fname)
 
     return im
