@@ -2,28 +2,32 @@ import utils.match as mtc
 import numpy as np
 from scipy.spatial import cKDTree
 
-def find_top_host_halo(gdata, hdata, hkdt, n_match=50):
+
+def periodic_bc(data, buf=0.05):
+    new=[]
+    for dp1 in [1, 0, -1]:
+        for dp2 in [1, 0, -1]:
+            for dp3 in [1, 0, -1]:
+                temp = data.copy()
+                if dp1 != 0:
+                    temp["x"]+=dp1
+                if dp2 != 0:
+                    temp["y"]+=dp2
+                if dp3 != 0:
+                    temp["z"]+=dp3
+                new.append(temp)
+
+    new = np.concatenate(new)
+    return new[np.where( (new["x"] > -buf)*(new["x"] < 1+buf)*
+                         (new["y"] > -buf)*(new["y"] < 1+buf)*
+                         (new["z"] > -buf)*(new["z"] < 1+buf))[0]]
+
+
+def get_kd_matches(kdtree, gal, n_match=5, rscale = 4.0, dist_upper=None):
     """
-    Todo
-    ----
-    Periodic boundary condition.
-    Just copy and pad around the cube at ~ 1Mpc thickness.
+    Allow large enough rscale so that even the most sparse galaxy will find one match.
+    
     """
-    matched_halo = np.zeros(len(gdata), dtype=hdata.dtype)
-    for i, thisgal in enumerate(gdata[np.argsort(gdata["m"])[::-1]]):
-        dist, i_neigh = get_kd_matches(hkdt, thisgal, n_match=n_match, dist_upper=0.1)
-        touching = dist < hdata[i_neigh]["r"] + thisgal["r"]
-        neighbor_h = hdata[i_neigh][touching]
-
-        #try:
-        if True:
-            matched_halo[i]=neighbor_h[np.argmax(neighbor_h["mvir"])]
-        #except:
-        #    pass
-
-    return matched_halo
-
-def get_kd_matches(kdtree, gal, n_match=5, rscale = 2.0, dist_upper=None):
     #len_tree = kdtree.length
     if dist_upper is None:
         dist_upper = gal["rvir"] * rscale
@@ -33,25 +37,82 @@ def get_kd_matches(kdtree, gal, n_match=5, rscale = 2.0, dist_upper=None):
                             distance_upper_bound=dist_upper,
                             k=n_match)
 
-    return dd[np.isfinite(dd)], ind[np.isfinite(dd)]
+    ind = ind[np.isfinite(dd)]
+    dd = dd[np.isfinite(dd)]
+
+    return dd,ind
 
 
-def find_direct_halo(gdata, hkdt, n_match=50):
+def find_top_host_halo(gdata, hdata, hkdt, n_match=50, rscale=1.0):
+    """ 
+    Todo
+    ----
+    Periodic boundary condition.
+    Just copy and pad around the cube at ~ 1Mpc thickness.
+    """
     matched_halo = np.zeros(len(gdata), dtype=hdata.dtype)
+    for i, thisgal in enumerate(gdata[np.argsort(gdata["m"])[::-1]]):
+        dist, i_neigh = get_kd_matches(hkdt, thisgal, n_match=n_match, dist_upper=0.2)
+        touching = dist < (hdata[i_neigh]["r"] + thisgal["r"]) * rscale
+        neighbor_h = hdata[i_neigh][touching]
+
+        try:
+        #if True:
+            matched_halo[i]=neighbor_h[np.argmax(neighbor_h["mvir"])]
+        except:
+            print("No Most massive halo...???")
+            pass
+
+    return matched_halo
+
+
+def match_halo_gal(ids, gcdata, hcdata, masscut=None):
+    """
+        IDs of halos. (Not IDxs.)
+
+        Parameters
+        ----------
+
+        masscut:
+            masscut for the halo.
+            In general, no haloes smaller than the smallest galaxy are excepted.
+
+    """
+    gdata = gcdata[mtc.match_list_ind(gcdata["id"], ids)]
+    mcut = np.median(gdata["m"]) * 0.2
+    print(np.log10(mcut))
+    hdata = hcdata[np.where(hcdata["mvir"] > mcut)[0]]
+    hdata = periodic_bc(hdata)
+    hkdt = cKDTree(np.stack((hdata["x"], hdata["y"], hdata["z"]),axis=1))
+    gkdt = cKDTree(np.stack((gdata["x"], gdata["y"], gdata["z"]),axis=1))
+
+    direct_halos = find_direct_halo(gdata, hdata, hkdt, n_match=50)
+    halos = find_top_host_halo(gdata, hdata, hkdt, n_match=50)
+    halos2 = find_top_host_halo(gdata, hdata, hkdt, n_match=50, rscale=2.0)
+
+    return direct_halos, halos, halos2
+
+
+
+def find_direct_halo(gdata, hdata, hkdt, n_match=50):
+    matched_halo = np.zeros(len(gdata), dtype=hdata.dtype)
+    miss=0
     for i, thisgal in enumerate(gdata[np.argsort(gdata["m"])[::-1]]):
         dist, i_neigh = get_kd_matches(hkdt, thisgal, n_match=n_match)#, dist_upper=0.5/100.)
 
         # Exclude already-matched haloes
         id_neighbor_h_ok = np.setdiff1d(hdata["id"][i_neigh], matched_halo["id"])
+        
         #print(id_neighbor_h_ok)
+        
         i_ok = mtc.match_list_ind(hdata["id"][i_neigh], id_neighbor_h_ok)
         dist = dist[i_ok]
         neighbor_h = hdata[i_neigh[i_ok]]
-        #print(neighbor_h["x"],neighbor_h["y"],neighbor_h["z"])
 
         # Mass cut.
-        neighbor_h = neighbor_h[neighbor_h["m"] > thisgal["m"]]
-        dist = dist[neighbor_h["m"] > thisgal["m"]]
+        i_mass_ok =neighbor_h["m"] > thisgal["m"]
+        neighbor_h = neighbor_h[i_mass_ok]
+        dist = dist[i_mass_ok]
         #print(i, len(neighbor_h), thisgal["m"], thisgal["x"], thisgal["y"], thisgal["z"])
         # 6-D dist.
         rel_vel = np.sqrt(np.einsum("...i,...i",np.column_stack((thisgal["vx"] - neighbor_h["vx"],
@@ -63,7 +124,10 @@ def find_direct_halo(gdata, hkdt, n_match=50):
         try:
             matched_halo[i]=neighbor_h[np.argmin(dist * rel_vel)]
         except:
+            #print("Missing match")
+            miss+=1
             pass
+    print("There are {} missing matches".format(miss))
 
     return matched_halo
 
@@ -81,7 +145,7 @@ def measure_density(idxs):
     # Halo - Galaxy Match.
     Mhal=density_halo_mass(ids, nout_fi=782, masscut = 1e10)
     #LS_d=
-    Ds = density_D2N(gcat, np.array(all_fid_ok), Ns=[10,30], mass_cut=1e9)
+    Ds = density_D2N(gcat, np.array(all_fid_ok), Ns=[10,30])
 
 
 def density_halo_mass(ids, gcat, hcat, nout_fi=782, masscut = 1e10):
@@ -106,9 +170,12 @@ def density_halo_mass(ids, gcat, hcat, nout_fi=782, masscut = 1e10):
     hkdt = cKDTree(np.stack((hdata["x"], hdata["y"], hdata["z"]),axis=1))
     gkdt = cKDTree(np.stack((gdata["x"], gdata["y"], gdata["z"]),axis=1))
 
+    # !!!!!! find_direct_halo sorts galaxy order. check for consistency.
+    direct_halos = find_direct_halo(gdata, hdata, hkdt, n_match=50)
     halos = find_top_host_halo(gdata, hdata, hkdt, n_match=50)
 
-    return halos["mvir"]
+    return direct_halos["mvir"], halos["mvir"]
+
 
 def density_LS_lum(gcat, rMpc=5.7):
     """
@@ -130,8 +197,48 @@ def density_LS_lum(gcat, rMpc=5.7):
 
     #return DNs
 
+def density_D2N(gcdata, serial_results, Ns=[10,50], dist_upper=15./100.):
+    """
+    Distance to the N-th nearest neighbor.
 
-def density_D2N(gcat, IDs, Ns=[5,10], mass_cut=1e9,dist_upper=10./100.):
+    This has been impelented elsewhere. Find it.
+
+    Veal+17 applied Mk < −23 mag limit (MASSIVE sample).
+    Cappellari+11 applied Mk < −21.5 mag limit (ATLAS sample).
+    Not sure what would be the rough mass cut, but 1e4 galaxies with Mk < -23 mag are found in the MASSIVE volume (108Mpc)
+    I think that's ~ 1e10.
+
+    Now, I really have to worry about periodic boundary condition!.
+
+    """
+    info = gcat.info
+    nout = info.nout
+
+    n_match = max(Ns) + 1 # 0 == itself.
+
+    # All galaxies.
+    gdata = gcdata[gcdata["m"] >= min(gdata_target["m"])]
+    gdata = periodic_bc(gdata)
+    gkdt = cKDTree(np.stack((gdata["x"], gdata["y"], gdata["z"]),axis=1))
+    # Sample galaxies
+
+    for tg in serial_results:
+        vals = tg.finearr
+        inow=np.where(vals["nout"]==nout)[0]
+        if len(inow) > 0:
+            val_now = vals[inow]
+            dist, i_neigh =  gkdt.query((val_now["x"],val_now["y"], val_now["z"]),
+                                 distance_upper_bound=dist_upper,
+                                 k=n_match)
+            i_neigh = i_neigh[np.isfinite(dist)]
+            dist = dist[np.isfinite(dist)]
+            for j, nn in enumerate(Ns):
+                tg.env["d10"]=dist[10]
+                tg.env["d50"]=dist[50]
+
+
+
+def density_D2N_old(gcdata, IDs, Ns=[5,10], dist_upper=15./100.):
     """
     Distance to the N-th nearest neighbor.
 
@@ -146,17 +253,68 @@ def density_D2N(gcat, IDs, Ns=[5,10], mass_cut=1e9,dist_upper=10./100.):
 
     """
     n_match = max(Ns) + 1 # 0 == itself.
-    # All galaxies.
-    gkdt = cKDTree(np.stack((gcat.data["x"], gcat.data["y"], gcat.data["z"]),axis=1))
-    # Sample galaxies
-    gdata = gcat.data[mtc.match_list_ind(gcat.data["id"], IDs)]
+    gdata_target = gcdata[mtc.match_list_ind(gcdata["id"], IDs)]
 
-    DNs = np.zeros((len(gdata), len(Ns)))
-    for i, thisgal in enumerate(gdata):
-        #print(i)
+    # All galaxies.
+    #print("len_before", len(gcat.data))
+    gdata = gcdata[gcdata["m"] >= min(gdata_target["m"])]
+    gdata = periodic_bc(gdata)
+    #print("len_after", len(gdata))
+    gkdt = cKDTree(np.stack((gdata["x"], gdata["y"], gdata["z"]),axis=1))
+    # Sample galaxies
+
+    DNs = np.zeros((len(gdata_target), len(Ns)))
+    for i, thisgal in enumerate(gdata_target):
         dist, i_neigh = get_kd_matches(gkdt, thisgal, n_match=n_match, dist_upper=dist_upper)
-        #print(dist)
         for j, nn in enumerate(Ns):
             DNs[i,j]=dist[nn]
 
     return DNs
+
+
+def measure_P(gdata, info, serial_results, dt,
+                                dist_upper = 3.0,
+                                n_match=100, short=False):
+    """
+
+        Dist upper in Mpc.
+    """
+    info = gcat.info
+    nout = info.nout
+    
+    #gdata = gcat.data[mtc.match_list_ind(gcat.data["id"], ids)]
+    gdata = periodic_bc(gdata)
+    print("ind = 10, id=", gdata["id"][10])
+
+    gkdt = cKDTree(np.stack(((gdata["x"] -0.5)*info.pboxsize,
+                             (gdata["y"] -0.5)*info.pboxsize,
+                             (gdata["z"] -0.5)*info.pboxsize), axis=1))
+
+    for thisgal in serial_results:
+        if short:
+            vals = thisgal.main_arr
+        else:
+            vals = thisgal.finearr
+        inow=np.where(vals["nout"]==nout)[0]
+        if len(inow) > 0:
+            if vals["rgal"][inow]==0:
+                print("rgal==0")
+                continue
+            else:
+                val_now = vals[inow]
+                dist, i_neigh =  gkdt.query(gkdt.data[vals_now['id']+1],
+                                     distance_upper_bound=dist_upper,
+                                     k=n_match)
+                i_neigh = i_neigh[np.isfinite(dist)]
+                dist = dist[np.isfinite(dist)]
+                neighbor_dist = dist[1:] * 1e3 # in kpc
+                neighbor_mass = gdata[i_neigh[1:]]["m"]
+                #thisgal["P_tidal_h_nout"] = nout_now
+                if short:
+                    thisgal.env["P_tidal"][inow] = np.sum(neighbor_mass/vals_now["mstar"] \
+                                                   * (vals_now["rgal"]/neighbor_dist)**3) *dt
+                else:
+                    thisgal.env_short["P_tidal_h"][inow] = np.sum(neighbor_mass/vals_now["mstar"] \
+                                                   * (vals_now["rgal"]/neighbor_dist)**3) *dt
+        else:
+            print("No matching galaxy at {}".format(nout))
