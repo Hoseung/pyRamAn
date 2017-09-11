@@ -97,7 +97,8 @@ def match_halo_gal(ids, gcdata, hcdata, masscut=None):
 def find_direct_halo(gdata, hdata, hkdt, n_match=50):
     matched_halo = np.zeros(len(gdata), dtype=hdata.dtype)
     miss=0
-    for i, thisgal in enumerate(gdata[np.argsort(gdata["m"])[::-1]]):
+    isort = np.argsort(gdata["m"])[::-1]
+    for i, thisgal in enumerate(gdata[isort]):
         dist, i_neigh = get_kd_matches(hkdt, thisgal, n_match=n_match)#, dist_upper=0.5/100.)
 
         # Exclude already-matched haloes
@@ -122,7 +123,7 @@ def find_direct_halo(gdata, hdata, hkdt, n_match=50):
                                          thisgal["vy"] - neighbor_h["vy"],
                                          thisgal["vz"] - neighbor_h["vz"]))))
         try:
-            matched_halo[i]=neighbor_h[np.argmin(dist * rel_vel)]
+            matched_halo[isort[i]]=neighbor_h[np.argmin(dist * rel_vel)]
         except:
             #print("Missing match")
             miss+=1
@@ -143,18 +144,17 @@ def measure_density(idxs):
 
     """
     # Halo - Galaxy Match.
-    Mhal=density_halo_mass(ids, nout_fi=782, masscut = 1e10)
+    Mhal=density_halo_mass(ids, masscut = 1e10)
     #LS_d=
     Ds = density_D2N(gcat, np.array(all_fid_ok), Ns=[10,30])
 
 
-def density_halo_mass(ids, gcat, hcat, nout_fi=782, masscut = 1e10):
+def density_halo_mass(ids, gcat, hcat, masscut = 1e10):
     """
         IDs of halos. (Not IDxs.)
 
         Parameters
         ----------
-        nout_fi: [=782]
 
         masscut:
             masscut for the halo.
