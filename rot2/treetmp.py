@@ -166,10 +166,6 @@ def extract_main_tree(self, idx,
     Explicitly check the end of progenitor tree and make the function more predictable.
 
     """
-    # Tree reconstruction parameters
-    nstep_back_max = 3 # At most 5 steps backwards.
-    nstep_early = 10
-    m_small = 5e8
     # in comoving Mpc.
 
     t = self.tree
