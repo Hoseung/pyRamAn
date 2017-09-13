@@ -24,6 +24,7 @@ merger_props = [("nstep", '<i8'),
 
 gal_props = [ ("nstep", "<i4"),
               ("nout", "<i4"),
+              ("zred", "<f8"),
               ("id", "<i4"),
               ("idx", "<i4"),
               ("mstar", "<f8"),
@@ -56,51 +57,51 @@ def galresult2rec(sat, is_main=False, fill_missing=True):
     else:
         dtype = gal_props
 
-    sat_data=np.recarray(len(sat), dtype=dtype)
-    sat_data.nout = np.array([ss.nout for ss in sat])
-    sat_data.nstep = np.array([ss.nstep for ss in sat])
-    sat_data.id = np.array([ss.id for ss in sat])
-    sat_data.idx= np.array([ss.idx for ss in sat])
-    sat_data.mstar= np.array([ss.mstar for ss in sat])
-    sat_data.reff= np.array([ss.reff for ss in sat])
-    sat_data.pos = np.array([(ss.xc, ss.yc, ss.zc) for ss in sat])
-    sat_data.vel = np.array([(ss.vxc, ss.vyc, ss.vzc) for ss in sat])
+    main_arr=np.recarray(len(sat), dtype=dtype)
+    main_arr.nout = np.array([ss.nout for ss in sat])
+    main_arr.nstep = np.array([ss.nstep for ss in sat])
+    main_arr.id = np.array([ss.id for ss in sat])
+    main_arr.idx= np.array([ss.idx for ss in sat])
+    main_arr.mstar= np.array([ss.mstar for ss in sat])
+    main_arr.reff= np.array([ss.reff for ss in sat])
+    main_arr.pos = np.array([(ss.xc, ss.yc, ss.zc) for ss in sat])
+    main_arr.vel = np.array([(ss.vxc, ss.vyc, ss.vzc) for ss in sat])
 
     for i, ss in enumerate(sat):
         if hasattr(ss,"gas_results"):
-            sat_data.mgas[i]= ss.gas_results["mgas_tot"]
-            sat_data.mgas_cold[i]= ss.gas_results["mgas_cold"]
-            sat_data.lgas[i]= ss.gas_results["Ln_gas"]
+            main_arr.mgas[i]= ss.gas_results["mgas_tot"]
+            main_arr.mgas_cold[i]= ss.gas_results["mgas_cold"]
+            main_arr.lgas[i]= ss.gas_results["Ln_gas"]
         if ss.lvec is not None:
-            sat_data.lvec[i]= ss.lvec
-            sat_data.nvec[i]= ss.nvec
+            main_arr.lvec[i]= ss.lvec
+            main_arr.nvec[i]= ss.nvec
             # If there is Lvec, there is rgal.
-            sat_data.rgal[i]= ss.rgal
+            main_arr.rgal[i]= ss.rgal
             try:
-                sat_data.lambda_r[i]=ss.lambda_r[0]
+                main_arr.lambda_r[i]=ss.lambda_r[0]
             except:
-                sat_data.lambda_r[i]=ss.lambda_r
+                main_arr.lambda_r[i]=ss.lambda_r
             if is_main:
                 if hasattr(ss, 'P'):
-                    sat_data.P_tidal[i] = ss.P
+                    main_arr.P_tidal[i] = ss.P
                 else:
-                    sat_data.P_tidal[i] = 0
+                    main_arr.P_tidal[i] = 0
         try:
-            sat_data["vsig"][i]=ss.vsig_results["V_sig"]
+            main_arr["vsig"][i]=ss.vsig_results["V_sig"]
         except:
-            sat_data["vsig"][i]=0
+            main_arr["vsig"][i]=0
 
         if hasattr(ss, "sfr_results"):
-            sat_data["sfr01"][i]=ss.sfr_results["sfrs"][0]
-            sat_data["sfr05"][i]=ss.sfr_results["sfrs"][1]
-            sat_data["sfr1"][i]=ss.sfr_results["sfrs"][2]
-            sat_data["sfr_area"][i]=ss.sfr_results["area"]
+            main_arr["sfr01"][i]=ss.sfr_results["sfrs"][0]
+            main_arr["sfr05"][i]=ss.sfr_results["sfrs"][1]
+            main_arr["sfr1"][i]=ss.sfr_results["sfrs"][2]
+            main_arr["sfr_area"][i]=ss.sfr_results["area"]
 
 
-    #if fill_missing and len(sat_data.nstep) <= sat_data.nstep.ptp():
-    #    smooth_all(sat_data)
+    #if fill_missing and len(main_arr.nstep) <= main_arr.nstep.ptp():
+    #    smooth_all(main_arr)
 
-    return sat_data
+    return main_arr
 
 
 def fill_main(mainarr, nnza_cell, tc):
@@ -198,25 +199,27 @@ class Serial_result():
     Only part of steps in AllDirectProgenitors(ADP) is calculated.
     So both ADP and 'results' must be stored.
     """
-    def __init__(self, adp):
-        self.set_maintree(adp[0][0])
+    def __init__(self, adp, nnza_all):
+        self.set_maintree(adp[0][0], nnza_all)
         #self.maintree = adp[0][0]
         self.alltree = adp
         self.fidx = adp[0][0]["idx"][0]
         self.data = []
         self.mergers = []
 
-    def set_maintree(self, tree):
-        tree = tree[tree["nstep"] > 0]
+    def set_maintree(self, tree, nnza_all):
+        tree = tree[np.where(tree["nstep"] > 0)[0]]
         self.maintree = np.zeros(len(tree["nstep"]),
                                  dtype=gal_props + [("P_tidal", "<f8"),
                                                     ("time", "<f8")])
-        self.maintree["pos"] = np.ma.compress_rowcols(tree["xp"])
-        self.maintree["vel"] = np.ma.compress_rowcols(tree["vp"])
-        self.maintree["id"] = tree["id"].compressed()
-        self.maintree["idx"] = tree["idx"].compressed()
-        self.maintree["nstep"] = tree["nstep"].compressed()
-        self.maintree["mstar"] = tree["m"].compressed()
+        self.maintree["pos"] = tree["xp"]
+        self.maintree["vel"] = tree["vp"]
+        self.maintree["id"] = tree["id"]#.compressed()
+        self.maintree["idx"] = tree["idx"]#.compressed()
+        self.maintree["nstep"] = tree["nstep"]#.compressed()
+        self.maintree["mstar"] = tree["m"]#.compressed()
+        self.maintree["zred"] = nnza_all.a2b(self.maintree["nstep"],"nstep","zred")
+        self.maintree["nout"] = nnza_all.a2b(self.maintree["nstep"],"nstep","nout")
         #self.maintree["time"] = tree[""].compressed()
 
     def cal_fine_arr(self, lbt, lbt_cell, do_smooth=True):
@@ -250,9 +253,22 @@ class Serial_result():
 
         self.finearr = finearr
 
-    def add_merger(self, results, sattree):
-        # self.main_arr is assigned in serialize script.
-        mm = Merger(self.main_arr, results, sattree, self)
+    def add_merger(self, results, sattree, nnza_all):
+        #self.main_arr is assigned in serialize script.
+        #print("min main_arr",self.main_arr["nout"])
+        #sat_nouts = nnza_all.a2b(sattree["nstep"], "nstep", "nout")
+        #print("All sattree", sat_nouts)
+
+        # sat no longer than the main.
+        #sattree = sattree[sattree["nstep"] > self.maintree["nstep"].min()]
+        #mm = Merger(self.main_arr[self.main_arr["nout"] > min(sat_nouts)], results, sattree, self)
+        # main longer than sat is not needed.
+        # change field name.
+        # nextsub -> nout
+        name_org = sattree.dtype.names
+        sattree.dtype.names = [dd if dd !="nextsub" else "nout" for dd in name_org]
+        sattree["nout"] = nnza_all.a2b(sattree["nstep"], "nstep", "nout")
+        mm = Merger(self.main_arr[self.main_arr["nout"] >= sattree["nout"].min()], results, sattree, self)
         mm.cal_merger_props()
         self.mergers.append(mm)
 
@@ -307,8 +323,11 @@ class Merger():
         #self.cal_passages()
 
     def add_sattree(self, sattree):
-        # sattree part earlier than the begining of the main tree is not needed.
-        self.sattree = sattree[sattree["nstep"]>=min(self.host.maintree["nstep"][self.host.maintree["nstep"] > 0])]
+        # sattree part earlier than the beginning of the main tree is not needed.
+        #print("before", sattree["nstep"])
+        #sattree=sattree[sattree["nstep"]>=min(self.host.maintree["nstep"][self.host.maintree["nstep"] > 0])]
+        #print("After", sattree["nstep"])
+        self.sattree = sattree
 
     def cal_main_counterpart(self):
         """
@@ -324,6 +343,7 @@ class Merger():
         self.main_part = main_arr[imtc]
         main_tree = self.host.maintree
         self.main_tree = main_tree[mtc.match_list_ind(main_tree["nstep"], self.sattree["nstep"],allow_swap=False)]
+        #print("main",self.main_tree["nstep"], "sat",self.sat["nstep"])
         #return
 
     def cal_merger_props(self):
@@ -354,8 +374,6 @@ class Merger():
         self.merger_arr["idx_s"]=self.sat["idx"]
         self.merger_arr["m_s"]=self.sat["mstar"]
         self.merger_arr["m_p"]=main_part["mstar"]
-        #merger.merger_arr["size_s"]=merger.sat.rgal
-        #merger.merger_arr["size_p"]=main_part.rgal
         self.merger_arr["rel_pos"]=rel_pos
         self.merger_arr["rel_vel"]=rel_vel
         self.merger_arr["jorbit"]=j_orbital

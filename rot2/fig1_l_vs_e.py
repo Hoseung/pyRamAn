@@ -72,9 +72,9 @@ def lambda_vs_e(gal_data,
     elif data_type == "serial_results":
         for gg in gal_data:
             try:
-                lambda_e.append(gg.data[0][0][0].lambda_r[0])
-                eps.append(gg.data[0][0][0].mge_result_list[0]["eps"])
-                mass.append(gg.data[0][0][0].mstar)
+                lambda_e.append(gg.data[0].lambda_r[0])
+                eps.append(gg.data[0].mge_result_list[0]["eps"])
+                mass.append(gg.data[0].mstar)
             except:
                 pass
 

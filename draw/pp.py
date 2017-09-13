@@ -751,8 +751,6 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
     if yma0 is None:
         yma0 = max(y)
 
-    print("xmi, ymi", xmi0, xma0, ymi0, yma0)
-
     xl = x - cell['dx']*0.5*sigrange # array as long as x
     xr = x + cell['dx']*0.5*sigrange
     yl = y - cell['dx']*0.5*sigrange

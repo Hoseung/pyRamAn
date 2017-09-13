@@ -75,7 +75,27 @@ def modify_ticks2(ax2, nnza, nouts, nbins = 40):
     ax2.set_xticklabels(labels = ["{:.0f}".format(l) for l in u_age_targets])
     ax2.set_xlabel("Age of the universe (Gyr)")
 
-def density_map(x, y, sort=True):
+def density_map(x, y, bandwidth=3., xbins=100j, ybins=80j, **kwargs): 
+    from sklearn.neighbors import KernelDensity
+    """Build 2D kernel density estimate (KDE)."""
+
+    # create grid of sample locations (default: 100x100)
+    xx, yy = np.mgrid[x.min():x.max():xbins, 
+                      y.min():y.max():ybins]
+
+    xy_sample = np.vstack([yy.ravel(), xx.ravel()]).T
+    xy_train  = np.vstack([y, x]).T
+
+    kde_skl = KernelDensity(bandwidth=bandwidth, **kwargs)
+    kde_skl.fit(xy_train)
+
+    # score_samples() returns the log-likelihood of the samples
+    z = np.exp(kde_skl.score_samples(xy_sample))
+    return xx, yy, np.reshape(z, xx.shape)
+
+
+
+def density_map_slow(x, y, sort=True):
     from scipy.stats import gaussian_kde
     xy = np.vstack([x,y])
     z = gaussian_kde(xy)(xy)
@@ -93,7 +113,9 @@ def plot_lambda_evol(serial_results, nouts,
                      nnza, ax=None,
                      density = "hexbin",
                      fname=None,
-                     cmap ="jet"):
+                     cmap ="jet",
+                     fine=True,
+                     nhexbin=45):
     """
     im= plot_lambda_evol(serial_results, nouts,
                  nnza_cell,
@@ -101,12 +123,6 @@ def plot_lambda_evol(serial_results, nouts,
                  fname="./RUN2/figs/Lambda_evol.png",
                  cmap ="jet")
     """
-
-    if hasattr(serial_results[0], "finearr"):
-        fine=True
-        #print("fine")
-    else:
-        fine=False
 
     # compile data
     nnouts = len(nouts)
@@ -131,7 +147,7 @@ def plot_lambda_evol(serial_results, nouts,
         for igal, gal in enumerate(serial_results):
             if len(gal.data) == 0:
                 continue
-            for gg in gal.data[0][0]:
+            for gg in gal.data:
                 try:
                     nstep = gg.nstep
                     lambda_evol_all[igal][nstep_max - nstep] = gg.lambda_r[0]
@@ -168,11 +184,14 @@ def plot_lambda_evol(serial_results, nouts,
         ind_ok = all_data > 0.01
         #xx,yy,z = density_map(xx[ind_ok], all_data[ind_ok])
         im = ax.hexbin(xx[ind_ok], 10 * all_data[ind_ok],
-                       gridsize=40,
+                       gridsize=nhexbin,
                        bins=None,
                        cmap=cmap)
 
         ax.set_ylim([-0.5, 9])
+        #fig = plt.gcf()
+        #cb = fig.colorbar(im, ax=ax)
+        #cb.set_label('log10(N)')
         y_tick_pos=np.arange(10)
         ax.set_yticks(y_tick_pos)#[::-1]
         ax.set_yticklabels(labels = ["{:0.1f}".format(0.1*y) for y in y_tick_pos])
@@ -182,8 +201,9 @@ def plot_lambda_evol(serial_results, nouts,
         xx = np.tile(np.arange(nnouts), ngals_tot)
         all_data = lambda_evol_all.ravel()
         ind_ok = all_data > 0.01
-        xx,yy,z = density_map(xx[ind_ok], all_data[ind_ok])
-        im = ax.scatter(xx, yy, c=z, s=50, edgecolor='', cmap=cmap)
+        xx,yy,zz = density_map(xx[ind_ok], all_data[ind_ok])
+        #im = ax.scatter(xx, yy, c=z, s=50, edgecolor='', cmap=cmap)
+        im = ax.pcolormesh(xx, yy, zz, cmap=cmap)
         lambda_range=[0.01, 0.8]
         yticks_ok=[0.0, 0.2, 0.4, 0.6, 0.8]
         ax.set_ylim([-0.05, 0.9])
