@@ -3,7 +3,6 @@ import pickle
 import os
 import numpy as np
 from rot2 import serialize_results
-from rot2.analysis import smooth
 from glob import glob
 
 def idxfromid(org_ids, ids_ref, idxs_ref):
@@ -93,10 +92,6 @@ def smooth(x, beta=5, window_len=20, monotonic=False, clip_tail_zeros=True):
         return y[int(aa/2):int(aa/2)+len(x)]
 
 
-
-
-
-
 def cal_merger_epoch(serial_results, tc,
                  nnza_cell, nnza_all,
                  prg_dir, serial_out_dir,
@@ -152,7 +147,7 @@ def cal_merger_epoch(serial_results, tc,
     rare_mergers=[]
 
 
-    for i, this_gal in enumerate(serial_results[7:19]):
+    for i, this_gal in enumerate(serial_results):
         try:
             len(this_gal.data[0][0]) > 1
         except:
@@ -168,7 +163,7 @@ def cal_merger_epoch(serial_results, tc,
         this_gal.n_minor_arr=np.zeros(len(this_gal.finearr))
 
 
-        for merger in this_gal.mergers[21:]:
+        for merger in this_gal.mergers:
             zred_fine = nnza_all.a2b(merger.main_tree["nstep"],"nstep","zred")
             zred_sat = nnza_cell.a2b(merger.sat["nstep"],"nstep","zred")
             i_lbt_end = np.argmax(zred_fine > zred_sat.max())
@@ -437,7 +432,6 @@ def cal_merger_epoch(serial_results, tc,
                     dj_all.append(thisdj)
 
        # for each main galaxy, compare and take larger ones, or give each merger a weight.
-
     if do_plot: plt.close()
     return dj_all, dl_all
 
