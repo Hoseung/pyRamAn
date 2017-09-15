@@ -12,30 +12,28 @@ dtype_maintree = [('nstep', '<i4'), ('nout', '<i4'), ('lbt', '<f8'),
                   ('d50', '<f8')]
 
 dtype_merger_props = [("nstep", '<i8'),
-                ("nout", '<i8'),
-                ("id", '<i8'),
-                ("idx", '<i8'),
-                ("dist", "<f8"),
-                ("orbitang", '<f8'),
-                ("m", "<f8"),
-                ("rel_pos", '<f8', (3,)),
-                ("rel_vel", '<f8', (3,)),
-                ("jorbit", '<f8', (3,)),
-                # Below are to be interpolated from measurements.
-                ("spinang", '<f8'),
-                ("spinmag", '<f8'),
-                ("mstar", '<f8'),
-                ("m_frac", '<f8'),
-                ("m_gas", '<f8'),
-                ("m_gas_cold", '<f8'),
-                ("size_s", '<f8'),
-                ("size_p", '<f8'),
-                ("rgal_sum","<f8"),
-                ("reff_s","<f8")]
+                    ("nout", '<i8'),
+                    ("id", '<i8'),
+                    ("idx", '<i8'),
+                    ("dist", "<f8"),
+                    ("orbitang", '<f8'),
+                    ("rel_pos", '<f8', (3,)),
+                    ("rel_vel", '<f8', (3,)),
+                    ("jorbit", '<f8', (3,)),
+                    # Below are to be interpolated from measurements.
+                    ("spinang", '<f8'),
+                    ("spinmag", '<f8'),
+                    ("mstar", '<f8'),
+                    ("m_frac", '<f8'),
+                    ("m_gas", '<f8'),
+                    ("m_gas_cold", '<f8'),
+                    ("rgal", '<f8'),
+                    ("rgal_sum","<f8"),
+                    ("reff_s","<f8")]
 
 dtype_main_results = [("nstep", "<i4"),
                       ("nout", "<i4"),
-                      ("zred", "<f8"),
+                      ("lbt", "<f8"),
                       ("id", "<i4"),
                       ("idx", "<i4"),
                       ("mstar", "<f8"),
@@ -58,7 +56,7 @@ dtype_main_results = [("nstep", "<i4"),
                       ("P_tidal_h", "<f8")]
 
 dtype_sat_results = [ ("nout", "<i4"),
-                      ("zred", "<f8"),
+                      ("lbt", "<f8"),
                       ("mstar", "<f8"),
                       ("mgas", "<f8"),
                       ("mgas_cold", "<f8"),
@@ -78,19 +76,23 @@ dtype_sat_results = [ ("nout", "<i4"),
 
 
 class Maingal():
-    def __init__(self, adp, nnza_all, nnouts, nouts_cell):
+    def __init__(self, adp, nnza_all, nnouts, nnza_cell):
         self.i_last_main=0 # main_arr data input index
         self.fidx = adp[0][0]["idx"][0]
         # maintree is poppeds
         self.set_maintree(adp[0].pop(0), nnza_all)
+
         # Now Only sats are remaing.
         self.main_data=np.zeros(nnouts, dtype=dtype_main_results)
-        self.main_data["nout"] = nouts_cell[:nnouts]
+        self.main_data["nout"] = nnza_cell.nnza["nout"][:nnouts]
+        self.main_data["lbt"] = nnza_cell.nnza["lbt"][:nnouts]
+        # What if main gal measurements are not available at early nouts?
         self.mergers=[]
         self.sat_data=[]
-        self.add_mergers_tree(adp, nouts_cell)
+        self.add_mergers_tree(adp, nnza_cell, nnouts)
         self.n_minor = 0
         self.n_major = 0
+        #self.nout_first = nouts_cell.min()
 
     def set_maintree(self, tree, nnza_all):
         tree = tree[np.where(tree["nstep"] > 0)[0]]
@@ -119,7 +121,6 @@ class Maingal():
         self.measurements["vel"][il,0] = ss.vxc
         self.measurements["vel"][il,1] = ss.vyc
         self.measurements["vel"][il,2] = ss.vzc
-
         self.measurements["lambda_r"][il] = data.nout
 
         if hasattr(ss, "gas_results"):
@@ -127,6 +128,8 @@ class Maingal():
             self.measurements["mgas_col"] = ss.gas_results["mgas_cold"]
             self.measurements["lgas"]= ss.gas_results["Ln_gas"]
         if ss.lvec is not None:
+            # Todo
+            # suppress nvec being nan when measuring it from stars.
             self.measurements["lvec"][il] = ss.lvec
             self.measurements["nvec"][il] = ss.nvec
             # If there is Lvec, there is rgal.
@@ -148,7 +151,7 @@ class Maingal():
             self.measurements["sfr_area"][il]=ss.sfr_results["area"]
     #def finalize_main_result
 
-    def add_mergers_tree(self, adp, nouts_cell):
+    def add_mergers_tree(self, adp, nnza_cell, nnouts):
         """
             Add merger_arr from sat fine merger trees.
         """
@@ -160,24 +163,19 @@ class Maingal():
         # nextsub -> nout
         for adps_now in adp:
             for sattree in adps_now:
-                marr = cal_merger_props_tree(self.maintree, sattree)
+                marr = cal_merger_props_tree(self, sattree)
                 if marr is not None:
                     self.mergers.append(marr)
 
         # sat_data to hold sat measurements
         for mm in self.mergers:
-            matched_nouts =np.intersect1d(mm["nout"],nouts_cell)
-            sd = np.zeros(len(matched_nouts), dtype=dtype_sat_results)
+            matched_nouts =np.intersect1d(mm["nout"],nnza_cell.nnza["nout"][:nnouts])
+            sd = np.full(len(matched_nouts), np.nan, dtype=dtype_sat_results)
             sd["nout"]=matched_nouts[::-1]
+            sd["lbt"]=nnza_cell.a2b(sd["nout"], "nout", "lbt")
             self.sat_data.append(sd)
 
-
-        #name_org = sattree.dtype.names
-        #sattree.dtype.names = [dd if dd !="nextsub" else "nout" for dd in name_org]
-        #sattree["nout"] = nnza_all.a2b(sattree["nstep"], "nstep", "nout")
-        #mm = Merger(self.main_arr[self.main_arr["nout"] >= sattree["nout"].min()], results, sattree, self)
-
-def cal_merger_props_tree(maintree, sattree,
+def cal_merger_props_tree(this_gal, sattree,
                            mass_ratio_cut=1/50, min_len=15):
     """
         Calculate merger related quantities, this time with only tree information.
@@ -199,14 +197,19 @@ def cal_merger_props_tree(maintree, sattree,
         return None
 
     # only overlapping part of trees.
+    maintree = this_gal.maintree
     common_nsteps = np.intersect1d(maintree["nstep"], sattree["nstep"])[::-1]
     if len(common_nsteps) < 15:
         return None
 
     main_tree_part = maintree[mtc.match_list_ind(maintree["nstep"],common_nsteps)]
     sattree = sattree[mtc.match_list_ind(sattree["nstep"],common_nsteps)]
-
     assert (np.all(main_tree_part["nstep"] == sattree["nstep"])), "main and tree are incompatible"
+
+    # Even the trees are long and overlapping, measured part can only minimally overlap.
+    # Abort in such cases.
+    if this_gal.main_data["nout"][this_gal.main_data["nout"] > 0][-3] > main_tree_part["nout"].max():
+        return None
 
     # If the sat is too small, throw away.
     if np.max(sattree["m"]/main_tree_part["m"]) < mass_ratio_cut:
@@ -217,21 +220,19 @@ def cal_merger_props_tree(maintree, sattree,
     # throw it away.
     if np.sum(rel_pos[:,0] == 0) > len(rel_pos)/2:
         return None
+
     rel_vel = main_tree_part["vel"] - sattree["vp"]
 
     merger_arr = np.zeros(len(sattree), dtype=dtype_merger_props)
-    merger_arr["jorbit"]=np.cross(rel_pos, rel_vel)
-
+    merger_arr["nout"]=main_tree_part["nout"]
     # spin alignment
     merger_arr["nstep"]=sattree["nstep"]
-    merger_arr["nout"]=main_tree_part["nout"]
+
     merger_arr["id"]=sattree["id"]
-    merger_arr["m"] = sattree["m"] # Just for checking
+    merger_arr["mstar"] = sattree["m"] # Just for checking
     merger_arr["idx"]=sattree["idx"]
     merger_arr["rel_pos"]=rel_pos
     merger_arr["rel_vel"]=rel_vel
-
-    merger_arr["dist"]=np.sqrt(np.einsum('...i,...i', rel_pos,rel_pos)) * 1e3 # in Kpc
     return merger_arr
 
 def cal_merger_props_measurments(main_arr, sat_arr):
