@@ -3,9 +3,93 @@ import pickle
 import os
 import numpy as np
 from rot2 import serialize_results
-from rot2.analysis import smooth
+from glob import glob
+
+def idxfromid(org_ids, ids_ref, idxs_ref):
+    i_sort = np.argsort(ids_ref)
+    ids_ref_new = ids_ref[i_sort]
+    idxs_ref_new = idxs_ref[i_sort]
+
+    return idxs_ref_new[np.argsort(org_ids).argsort()]
 
 
+def get_all_results(nouts,
+                    prg_dir = "./test_direct_prgs_gal/",
+                    out_dir = "./lambda_results/"):
+    # ALL ALL results.
+    all_sample_ids=pickle.load(open(prg_dir + "all_sample_ids.pickle", "rb"))
+    all_sample_idxs=pickle.load(open(prg_dir + "all_sample_idxs.pickle", "rb"))
+    allresults=[]
+    for nout in nouts:
+        allresults_thisnout = []
+        # Better that the list of sample is stored in a separate file, instead of
+        # trying to read ALL files in a directory...
+        fn_all = glob(out_dir+"{}/result_sub_sample_{}_*.pickle".format(nout, nout))
+        # Get right IDx
+        for fn in fn_all:
+            idsnow = np.array(all_sample_ids[str(nout)])
+            idxsnow = np.array(all_sample_idxs[str(nout)])
+
+            # Some results have right idx, some are wrong...
+            this_result = pickle.load(open(fn, "rb"))
+            allidxs = np.array([agal.idx for agal in this_result])
+            if max(allidxs) < 1e6:
+                allidxs = idxsnow[mtc.match_list_ind(idsnow, allidxs)]
+                #idxfromid(allidxs, idsnow, idxsnow)
+                for idx, agal in zip(allidxs, this_result):
+                    agal.idx =idx
+            allresults_thisnout.extend(this_result)
+
+        allresults.append(allresults_thisnout)
+    return allresults
+
+
+def smooth(x, beta=5, window_len=20, monotonic=False, clip_tail_zeros=True):
+    """
+    kaiser window smoothing.
+
+    If len(x) < window_len, window_len is overwritten to be len(x).
+    This ensures to return valid length fo array, but with modified window size.
+
+    Parameters
+    ----------
+        window_len = 20
+
+        monotoinc =
+
+        clip_tail_zereos = True
+            returned array is shorter than the original.
+
+    beta = 5 : Similar to Hamming
+
+
+    """
+    lx = len(x)
+    if clip_tail_zeros:
+        x = x[:max(np.where(x > 0)[0])+1]
+
+    if monotonic:
+        """
+        if there is an overall slope, smoothing may result in offset.
+        compensate for that.
+        """
+        slope, intercept, r_value, p_value, std_err = scipy.stats.linregress(x, y=np.arange(len(x)))
+        xx = np.arange(len(x)) * slope + intercept
+        x = x - xx
+
+    # extending the data at beginning and at the end
+    # to apply the window at the borders
+    window_len = min([window_len, len(x)])
+    s = np.r_[x[window_len-1:0:-1], x, x[-1:-window_len:-1]] # concatenate along 0-th axis.
+    # periodic boundary.
+    w = np.kaiser(window_len,beta)
+    y = np.convolve(w/w.sum(), s, mode='valid')
+    aa = len(y)-lx
+    if monotonic:
+        return y[int(window_len/2):len(y)-int(window_len/2) + 1] + xx
+    else:
+        #return y[int(window_len-1/2)-2:len(y)-int((window_len-1)/2)]
+        return y[int(aa/2):int(aa/2)+len(x)]
 
 def save_gals_for_P_per_nout(serial_results, save=True, out_base="./"):
     # Length of required array
@@ -105,11 +189,6 @@ def cal_merger_epoch(serial_results, tc,
     dl_all = []
     dj_all = []
 
-    Major_dominated=[] # Major merger overlaps totally
-    minor_dominated=[] #
-    mixed_mergers=[]
-    rare_mergers=[]
-
     print("!!!!!!!!!!!")
     for i, this_gal in enumerate(serial_results):
         n_too_small=0
@@ -137,6 +216,7 @@ def cal_merger_epoch(serial_results, tc,
             merger.sattree = merger.sattree[:i_lbt_end]
             merger.main_tree = merger.main_tree[:i_lbt_end]
             main_tree_part = merger.main_tree
+            ###
             m_ratio = merger.sattree["m"]/main_tree_part["mstar"]
             if max(m_ratio) < m_ratio_min:
                 #print("Too small", max(m_ratio[-50:]))
@@ -208,6 +288,7 @@ def cal_merger_epoch(serial_results, tc,
             r_tot = rp_fine + rs_fine
 
             # cumulative min dist Vs dM
+            # When do I need these?
             d_frac_min.extend(np.minimum.accumulate((dist3d/r_tot)[-2::-1]))
             delta_Msat.extend((s_mass[:-1]-s_mass[1:])/s_mass[1:])
             #print(rel_pos, rel_vel)
@@ -239,6 +320,7 @@ def cal_merger_epoch(serial_results, tc,
             # [:-1] Later
             # [1:] earlier
             #i_pericenter = # smoothed dist3d.
+            # ##########------------ Main part. -----------############
             i_j_max = 4 + np.argmax(j_orbit_mag[4:])
             # because j should decrease during the merger,
             # it should appear after the j_max.
@@ -248,7 +330,7 @@ def cal_merger_epoch(serial_results, tc,
             if len(i_merger_ini_all) > 0 and i_merger_ini_all[0] > 0:
                 i_ini = i_merger_ini_all[-1]
                 ii_dt = np.argmax(lbt - lbt[i_ini] > dt_merger_ini)
-                #print(ii_dt, i_ini)
+
                 new_ini = min([max([ii_dt, i_ini + ii_dt_min]), len(j_orbit_mag) -1])
                 # minimum j0 = j0 at 3R
                 j0 = np.max([np.median(j_orbit_mag[i_ini:new_ini]) * j0_merger_frac, j_orbit_mag[i_ini]])
@@ -257,9 +339,7 @@ def cal_merger_epoch(serial_results, tc,
                 i_merger_end=[]
                 seek_ini=True
                 k = new_ini
-                #print("new i_ini", k)
-                #print("Initial J", j0)
-                #print(j_orbit_mag)
+
                 while k > 0:#i in range(new_ini-1,0,-1):
                     if seek_ini:
                         if j_orbit_mag[k] >= j0 and np.all(j_orbit_mag[k-n_min_decrease_j:k] < j0):
@@ -269,7 +349,7 @@ def cal_merger_epoch(serial_results, tc,
                                 #print(i, i_merger_end[-1])
                                 # If the next merger starts before the end of the previous merger
                                 # or if the next one starts very soon, then merge them.
-                                if i_merger_end[-1] <= i+min_dstep_mergers:
+                                if i_merger_end[-1] <= k+min_dstep_mergers:
                                     #print("remove", i_merger_end[-1])
                                     i_merger_end.pop(-1)
                                     seek_ini=False
