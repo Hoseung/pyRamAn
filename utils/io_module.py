@@ -4,7 +4,7 @@ _head_type = np.dtype('i4')
 
 def write_fortran(f, array, dtype="i", check=True):
     """
-        Note 
+        Note
         type 'i' meant to be int32. Can I explicitly tell?
     """
     f.write(struct.pack(dtype, array.nbytes))
@@ -26,8 +26,8 @@ def skip_fortran(f, n=1, verbose=False):
     np.fromfile(f, _head_type, n)
     # print('check',data)
     np.fromfile(f, _head_type, 1)
-    
-    
+
+
 def read_fortran(f, dtype, n=1, check=True):
     if not isinstance(dtype, np.dtype):
         dtype = np.dtype(dtype)
@@ -74,7 +74,6 @@ def read_header(f, dtype, check=True):
     q = np.empty(1, dtype=dtype)
     for i in range(len(dtype.fields)):
         data = read_fortran(f, dtype[i], check=check)
-#        print(dtype.names[i], data)
 
         if np.issubdtype(dtype[i], np.string_):
             q[0][i] = data
@@ -101,5 +100,3 @@ def read_header_string(f, dtype):
         raise IOError("Unexpected FORTRAN block length (tail) %d!=%d"
                       % (alen, length))
     return data
-
-
