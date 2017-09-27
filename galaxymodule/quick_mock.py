@@ -182,7 +182,7 @@ class Simplemock():
             tau = 0.4 * Es * np.outer(ext_curve_k(waven), colden)
             # colden = N_star array.
             # waven = N_wavelengths array
-            # tau = N_wave X N_star 
+            # tau = N_wave X N_star
             # Flux = N_star X N_wave  ... (may be the other way around.)
             F_ext= [ff*np.power(10,(-1*tt)) for ff, tt in zip(Flux, tau.T)]
 

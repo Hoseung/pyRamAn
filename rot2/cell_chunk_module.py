@@ -54,7 +54,11 @@ def add_output_containers(gg):
     gg.meta.vsig_results={"Vmax":None, "sigma":None, "V_sig":None}
 
 def do_work(sub_sample, nout, i_subsample,
-            rscale=1.5, save_cell=True):
+            out_base='/scratchb01/hoseung/',
+            wdir = "./",
+            rscale=1.5,
+            do_cell=True,
+            save_cell=True):
     """
     Per process.
     """
@@ -96,47 +100,53 @@ def do_work(sub_sample, nout, i_subsample,
 
     mgp.HAGN["verbose"] = False
     mgp.HAGN["mstar_min"] = 1e7
-    out_base='/scratchb01/hoseung/'
     out_dir = out_base+"RUN4/lambda_results/" + str(nout) +'/'
-
 
     # Common 1
     # simulation information
-    s = Sim(nout=nout)
+    s = Sim(base=wdir, nout=nout)
 
-    # If there are CELL_ files available, use them.
-    for this_gal in sub_sample:
-        if os.path.isfile(out_base+"CELL_{:05d}/CELL_{:d}_{:d}.pickle".format(nout,nout,this_gal["id"])):
-            this_gal["level"] = 1234 # Overwrite level to mark CELL_ availability.
-            #print("Has cell")
-        else:
-            #print("No cell")
-            this_gal["level"] = -9 # Overwrite level to mark CELL_ availability.
+    if do_cell:
+        # If there are CELL_ files available, use them.
+        for this_gal in sub_sample:
+            if os.path.isfile(out_base+"CELL_{:05d}/CELL_{:d}_{:d}.pickle".format(nout,nout,this_gal["id"])):
+                this_gal["level"] = 1234 # Overwrite level to mark CELL_ availability.
+                #print("Has cell")
+            else:
+                #print("No cell")
+                this_gal["level"] = -9 # Overwrite level to mark CELL_ availability.
 
-    if sum(sub_sample["level"] < 0) > 0:
-        # has something to load
-        xrange = [min(sub_sample["x"][sub_sample["level"] < 0] - sub_sample["r"][sub_sample["level"] < 0] * rscale),
-              max(sub_sample["x"][sub_sample["level"] < 0] + sub_sample["r"][sub_sample["level"] < 0] * rscale)]
-        yrange = [min(sub_sample["y"][sub_sample["level"] < 0] - sub_sample["r"][sub_sample["level"] < 0] * rscale),
-              max(sub_sample["y"][sub_sample["level"] < 0] + sub_sample["r"][sub_sample["level"] < 0] * rscale)]
-        zrange = [min(sub_sample["z"][sub_sample["level"] < 0] - sub_sample["r"][sub_sample["level"] < 0] * rscale),
-              max(sub_sample["z"][sub_sample["level"] < 0] + sub_sample["r"][sub_sample["level"] < 0] * rscale)]
-    #print(xrange, yrange, zrange)
-        region = smp.set_region(ranges=[xrange, yrange, zrange])
+        if sum(sub_sample["level"] < 0) > 0:
+            # has something to load
+            xrange = [min(sub_sample["x"][sub_sample["level"] < 0] -\
+                          sub_sample["r"][sub_sample["level"] < 0] * rscale),
+                  max(sub_sample["x"][sub_sample["level"] < 0] +\
+                      sub_sample["r"][sub_sample["level"] < 0] * rscale)]
+            yrange = [min(sub_sample["y"][sub_sample["level"] < 0] -\
+                          sub_sample["r"][sub_sample["level"] < 0] * rscale),
+                  max(sub_sample["y"][sub_sample["level"] < 0] +\
+                      sub_sample["r"][sub_sample["level"] < 0] * rscale)]
+            zrange = [min(sub_sample["z"][sub_sample["level"] < 0] -\
+                          sub_sample["r"][sub_sample["level"] < 0] * rscale),
+                  max(sub_sample["z"][sub_sample["level"] < 0] +\
+                      sub_sample["r"][sub_sample["level"] < 0] * rscale)]
 
-        s.set_ranges(region["ranges"])
-    #print(s.ranges)
-    # Common2
-    # Hydro cell data
-        t0 = time.time()
-        s.add_hydro(nvarh=5)
-        t1 = time.time()
-        print("Loading hydro took", t1 - t0)
-        # Common 3
-        # Cell KDTree
-        kdtree = cKDTree(np.stack((s.hydro.cell["x"],
-                                   s.hydro.cell["y"],
-                                   s.hydro.cell["z"])).T)
+        #print(xrange, yrange, zrange)
+            region = smp.set_region(ranges=[xrange, yrange, zrange])
+
+            s.set_ranges(region["ranges"])
+        #print(s.ranges)
+        # Common2
+        # Hydro cell data
+            t0 = time.time()
+            s.add_hydro(nvarh=5)
+            t1 = time.time()
+            print("Loading hydro took", t1 - t0)
+            # Common 3
+            # Cell KDTree
+            kdtree = cKDTree(np.stack((s.hydro.cell["x"],
+                                       s.hydro.cell["y"],
+                                       s.hydro.cell["z"])).T)
 
     # Common 4
     # Stellar age converter
@@ -169,33 +179,35 @@ def do_work(sub_sample, nout, i_subsample,
         # Add output dicts
         add_output_containers(gg)
 
-        # gas properties
-        fn_cell=out_base+"CELL_{:05d}/CELL_{:d}_{:d}.pickle".format(nout,nout,gg.meta.id)
-        if gcat_this["level"] ==1234:
-            gg.cell = pickle.load(open(fn_cell, "rb"))
-            # Temporary fix for early CELLS
-            if gg.cell["var1"].ptp() < 10:
-                gg.cell["var1"] = gg.cell["var1"]*info.kms
-                gg.cell["var2"] = gg.cell["var2"]*info.kms
-                gg.cell["var3"] = gg.cell["var3"]*info.kms
+        if do_cell:
+            # gas properties
+            fn_cell=out_base+"CELL_{:05d}/CELL_{:d}_{:d}.pickle".format(nout,nout,gg.meta.id)
+            if gcat_this["level"] ==1234:
+                gg.cell = pickle.load(open(fn_cell, "rb"))
+                # Temporary fix for early CELLS
+                if gg.cell["var1"].ptp() < 10:
+                    gg.cell["var1"] = gg.cell["var1"]*info.kms
+                    gg.cell["var2"] = gg.cell["var2"]*info.kms
+                    gg.cell["var3"] = gg.cell["var3"]*info.kms
 
-            #print("Load cell")
+                #print("Load cell")
+            else:
+                get_cell(s.hydro.cell, kdtree, gg, s.info)
+                #print("Read from hydro")
+            #gg.cell = s.hydro.cell[ind_cell_kd(s.hydro.cell, kdtree, gg, s.info)]
+            if len(gg.cell) > 1:
+                if save_cell:
+                    pickle.dump(gg.cell, open(fn_cell,"wb"))
+
+                gal_properties.get_cold_cell(gg, s.info, **gas_params)
+                gal_properties.get_gas_properties(gg, s.info)
         else:
-            get_cell(s.hydro.cell, kdtree, gg, s.info)
-            #print("Read from hydro")
-        #gg.cell = s.hydro.cell[ind_cell_kd(s.hydro.cell, kdtree, gg, s.info)]
-        if len(gg.cell) > 1:
-            if save_cell:
-                pickle.dump(gg.cell, open(fn_cell,"wb"))
-
-            gal_properties.get_cold_cell(gg, s.info, **gas_params)
-            gal_properties.get_gas_properties(gg, s.info)
-
-        # Now star and cell memberships are determined.
+            gg.cell = None
+            # Now star and cell memberships are determined.
 
         # Cell needed to calcluate gas attenuation.
         # r-band luminosity to be used as weights.
-        gg.star.Flux_r= MockSED.get_flux(star=gg.star, filter_name='r')
+        gg.star.Flux_r= MockSED.get_flux(star=gg.star, cell = gg.cell, filter_name='r')
 
        	gg.meta.mean_age = np.average(gg.star["time"], weights=gg.star["m"])
         gg.cal_norm_vec()

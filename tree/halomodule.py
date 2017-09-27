@@ -219,6 +219,12 @@ class Halo(HaloMeta):
                     nout = self.nout
                 if base is None:
                     base = self.base
+                try:
+                    self.data = pickle.load(open(base + self.gal_find_dir + "gal_pickle/gcat_{}.pickle".format(nout), "rb"))
+                    return
+                except:
+                    pass
+
                 snout = str(self.nout).zfill(3)
                 if self.is_gal:
                     self.fn = base + self.gal_find_dir + 'gal/tree_bricks' + snout
