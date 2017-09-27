@@ -113,8 +113,9 @@ def density_map_slow(x, y, sort=True):
 
 def plot_lambda_evol(alldata, nouts,
                      nnza, ax=None,
-                     data_type="serial_results",
+                     data_type="fine",
                      density = "kernel_column",
+                     add_errorbar = True,
                      fname=None,
                      cmap ="jet",
                      fine=True,
@@ -171,8 +172,6 @@ def plot_lambda_evol(alldata, nouts,
                     pass
     elif data_type == "array":
         lambda_evol_all = alldata["lambda_r"]
-
-
 
     # change ticks
     aexps = nnza.a2b(nouts, "nout", "aexp")
@@ -231,7 +230,6 @@ def plot_lambda_evol(alldata, nouts,
         ax.set_yticklabels([str(yy) for yy in yticks_ok])
     elif density == "kernel_column":
         #xx = np.tile(np.arange(nnouts), ngals_tot)
-        #all_data = lambda_evol_all.ravel()
         for inout, nout in enumerate(nouts):
             xx = np.repeat(inout, ngals_tot)
             ind_ok = np.where(lambda_evol_all[:,inout] > 0.01)[0]
@@ -249,6 +247,8 @@ def plot_lambda_evol(alldata, nouts,
                 zz = zz[idx]
 
                 im = ax.scatter(xx[ind_ok], yy, c=zz, s=60, edgecolor='', cmap=cmap)
+            print(nout)
+
         im.set_rasterized(True)
         lambda_range=[0.01, 0.8]
         yticks_ok=[0.0, 0.2, 0.4, 0.6, 0.8]
@@ -270,4 +270,4 @@ def plot_lambda_evol(alldata, nouts,
     else:
         print("FNAME", fname)
 
-    return im
+    #return im

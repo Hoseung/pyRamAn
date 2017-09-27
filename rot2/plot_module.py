@@ -83,7 +83,7 @@ def mean_alone(x,y,ax, nbins=10, **kwargs):
     ax.plot((_[1:] + _[:-1])/2, mean, **kwargs)
 
 
-def plot_scatter_mean_binned(ax, xx,yy,
+def plot_scatter_mean_binned(ax, xx, yy,
                              nbins = 10,
                              do_fill_between=True,
                              do_mean_std = False,
@@ -117,11 +117,9 @@ def plot_scatter_mean_binned(ax, xx,yy,
     if do_mean_alone:
         mean_alone(xx, yy, ax, nbins=nbins, color='b', linewidth=3)
 
-    line = ax.scatter(range(1),range(1),edgecolor='none',marker='o', facecolor="b",alpha=1.0, label=label)
+    #line = ax.scatter(range(1),range(1),edgecolor='none',marker='o', facecolor="b",alpha=1.0, label=label)
     if label is not None: ax.legend()
     #ax.plot()
     #ax.legend(line,"name",numpoints=3,loc=1)
     ax.set_ylabel(r"$\Delta \lambda_{R_{e}}$ per merger", fontsize=16)
     ax.set_xlabel("Merger mass ratio", fontsize=16)
-
-

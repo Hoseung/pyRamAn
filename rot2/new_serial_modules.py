@@ -15,7 +15,6 @@ def add_main(md, data, ind):
     except:
         md[ind]["lambda_r"] = data.lambda_r
 
-    md[ind]["eps"] = data.mge_result_list[0]["eps"]
     if data.lvec is not None:
         md[ind]["reff"] = data.reff
         md[ind]["nvec"] = data.nvec
