@@ -2,10 +2,9 @@ import utils.match as mtc
 import numpy as np
 from scipy.spatial import cKDTree
 
-
 def periodic_bc(data, buf=0.05):
     """
-    should run for 0,0,0 first so that index and id match remains. 
+    should run for 0,0,0 first so that index and id match remains.
     """
     new=[]
     for dp1 in [0, 1, -1]:
@@ -29,7 +28,7 @@ def periodic_bc(data, buf=0.05):
 def get_kd_matches(kdtree, gal, n_match=5, rscale = 4.0, dist_upper=None):
     """
     Allow large enough rscale so that even the most sparse galaxy will find one match.
-    
+
     """
     #len_tree = kdtree.length
     if dist_upper is None:
@@ -47,7 +46,7 @@ def get_kd_matches(kdtree, gal, n_match=5, rscale = 4.0, dist_upper=None):
 
 
 def find_top_host_halo(gdata, hdata, hkdt, n_match=50, rscale=1.0):
-    """ 
+    """
     Todo
     ----
     Periodic boundary condition.
@@ -83,7 +82,6 @@ def match_halo_gal(ids, gcdata, hcdata, masscut=None):
     """
     gdata = gcdata[mtc.match_list_ind(gcdata["id"], ids)]
     mcut = np.median(gdata["m"]) * 0.2
-    print(np.log10(mcut))
     hdata = hcdata[np.where(hcdata["mvir"] > mcut)[0]]
     hdata = periodic_bc(hdata)
     hkdt = cKDTree(np.stack((hdata["x"], hdata["y"], hdata["z"]),axis=1))
@@ -96,7 +94,6 @@ def match_halo_gal(ids, gcdata, hcdata, masscut=None):
     return direct_halos, halos, halos2
 
 
-
 def find_direct_halo(gdata, hdata, hkdt, n_match=50):
     matched_halo = np.zeros(len(gdata), dtype=hdata.dtype)
     miss=0
@@ -106,9 +103,7 @@ def find_direct_halo(gdata, hdata, hkdt, n_match=50):
 
         # Exclude already-matched haloes
         id_neighbor_h_ok = np.setdiff1d(hdata["id"][i_neigh], matched_halo["id"])
-        
-        #print(id_neighbor_h_ok)
-        
+
         i_ok = mtc.match_list_ind(hdata["id"][i_neigh], id_neighbor_h_ok)
         dist = dist[i_ok]
         neighbor_h = hdata[i_neigh[i_ok]]
@@ -165,13 +160,9 @@ def density_halo_mass(ids, gcat, hcat, masscut = 1e10):
 
 
     """
-    #gcat = tree.halomodule.Halo(nout=nout_fi, is_gal=True)
-    #hcat = tree.halomodule.Halo(nout=nout_fi, is_gal=False)
-
     gdata = gcat.data[mtc.match_list_ind(gcat.data["id"], ids)]
     hdata = hcat.data[np.where(hcat.data["mvir"] > masscut)[0]]
     hkdt = cKDTree(np.stack((hdata["x"], hdata["y"], hdata["z"]),axis=1))
-    #gkdt = cKDTree(np.stack((gdata["x"], gdata["y"], gdata["z"]),axis=1))
 
     # !!!!!! find_direct_halo sorts galaxy order. check for consistency.
     direct_halos = find_direct_halo(gdata, hdata, hkdt, n_match=50)
@@ -225,11 +216,9 @@ def density_D2N(gcdata, info, serial_results, Ns=[10,50], dist_upper=25.):
     gkdt = cKDTree(np.stack(((gdata["x"]-0.5)*pb,
                              (gdata["y"]-0.5)*pb,
                              (gdata["z"]-0.5)*pb),axis=1))
-#    print(gkdt.data[100])
     # Sample galaxies
-
     for tg in serial_results:
-        vals = tg.finearr
+        vals = tg.finedata
         inow=np.where(vals["nout"]==nout)[0]
         if len(inow) > 0:
             val_now = vals[inow][0]
@@ -239,14 +228,13 @@ def density_D2N(gcdata, info, serial_results, Ns=[10,50], dist_upper=25.):
 #            print("gal", val_now["pos"])
             i_neigh = i_neigh[np.isfinite(dist)]
             dist = dist[np.isfinite(dist)]
-#            print(dist)
             for j, nn in enumerate(Ns):
                 tg.env["d10"][inow]=dist[10]
                 tg.env["d50"][inow]=dist[50]
 
 
 def find_top_host_halo_old(gdata, hdata, hkdt, n_match=50, rscale=1.0):
-    """ 
+    """
     Todo
     ----
     Periodic boundary condition.
@@ -309,7 +297,7 @@ def measure_P(gdata, info, serial_results, dt,
         Dist upper in Mpc.
     """
     nout = info.nout
-    
+
     #gdata = gcat.data[mtc.match_list_ind(gcat.data["id"], ids)]
     gdata = periodic_bc(gdata)
 
@@ -319,9 +307,9 @@ def measure_P(gdata, info, serial_results, dt,
 
     for thisgal in serial_results:
         if short:
-            vals = thisgal.main_arr
+            vals = thisgal.main_data
         else:
-            vals = thisgal.finearr
+            vals = thisgal.finedata
         inow=np.where(vals["nout"]==nout)[0]
         if len(inow) > 0:
             if vals["rgal"][inow]==0:

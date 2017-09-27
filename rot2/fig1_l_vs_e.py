@@ -72,20 +72,25 @@ def lambda_vs_e(gal_data,
     elif data_type == "serial_results":
         for gg in gal_data:
             try:
-                lambda_e.append(gg.data[0].lambda_r[0])
-                eps.append(gg.data[0].mge_result_list[0]["eps"])
-                mass.append(gg.data[0].mstar)
+                lambda_e.append(gg.finedata["lambda_r"][istep])
+                eps.append(gg.finedata["eps"][istep])
+                mass.append(gg.finedata["mstar"][istep])
             except:
                 pass
+    elif data_type == "array":
+        lambda_e = gal_data["lambda_r"][:,istep]
+        eps = gal_data["eps"][:,istep]
+        mass = gal_data["mstar"][:,istep]
 
-    i = np.isfinite(lambda_e)
+    i = np.isfinite(lambda_e) * lambda_e > 0
     x = np.array(eps)[i] # isfinit
     y = np.array(lambda_e)[i]
     mass = np.array(mass)[i]
 
-    x = x[(mass > mass_bin[0]) * ( mass < mass_bin[1])]
-    y = y[(mass > mass_bin[0]) * ( mass < mass_bin[1])]
-    mass = mass[(mass > mass_bin[0]) * ( mass < mass_bin[1])]
+    if mass_bin is not None:
+        x = x[(mass > mass_bin[0]) * ( mass < mass_bin[1])]
+        y = y[(mass > mass_bin[0]) * ( mass < mass_bin[1])]
+        mass = mass[(mass > mass_bin[0]) * ( mass < mass_bin[1])]
 
     print("number of galaxies in total", len(x))
     print("Number of galaxies below the demarkation line:", sum(y < 0.31 * np.sqrt(x)))

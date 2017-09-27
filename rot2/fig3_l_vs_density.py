@@ -3,6 +3,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 def lambda_vs_density(allresults, out_dir="./"):
+    """
+    What..?
+    """
 
     den_cmap = "YlGnBu_r"
     allids = [gal.id for gal in allresults]

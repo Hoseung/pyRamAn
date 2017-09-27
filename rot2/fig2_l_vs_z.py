@@ -3,6 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from astropy.cosmology import WMAP7, z_at_value
 from utils import match
+from scipy.stats import gaussian_kde
+
 
 def age2zred(lts):
     import astropy.units as u
@@ -75,12 +77,12 @@ def modify_ticks2(ax2, nnza, nouts, nbins = 40):
     ax2.set_xticklabels(labels = ["{:.0f}".format(l) for l in u_age_targets])
     ax2.set_xlabel("Age of the universe (Gyr)")
 
-def density_map(x, y, bandwidth=3., xbins=100j, ybins=80j, **kwargs): 
+def density_map(x, y, bandwidth=3., xbins=100j, ybins=80j, **kwargs):
     from sklearn.neighbors import KernelDensity
     """Build 2D kernel density estimate (KDE)."""
 
     # create grid of sample locations (default: 100x100)
-    xx, yy = np.mgrid[x.min():x.max():xbins, 
+    xx, yy = np.mgrid[x.min():x.max():xbins,
                       y.min():y.max():ybins]
 
     xy_sample = np.vstack([yy.ravel(), xx.ravel()]).T
@@ -109,42 +111,55 @@ def density_map_slow(x, y, sort=True):
     return xx,yy,z
 
 
-def plot_lambda_evol(serial_results, nouts,
+def plot_lambda_evol(alldata, nouts,
                      nnza, ax=None,
-                     density = "hexbin",
+                     data_type="serial_results",
+                     density = "kernel_column",
                      fname=None,
                      cmap ="jet",
                      fine=True,
-                     nhexbin=45):
+                     nhexbin=45,
+                     nout_max=782):
     """
-    im= plot_lambda_evol(serial_results, nouts,
+    im= plot_lambda_evol(alldata, nouts,
                  nnza_cell,
                  density = "kernel",
                  fname="./RUN2/figs/Lambda_evol.png",
                  cmap ="jet")
+
+    nout_max = 782 : extrapolated values (783 ~ 787) are unreliable.
     """
 
     # compile data
     nnouts = len(nouts)
-    ngals_tot = len(serial_results)
+    ngals_tot = len(alldata)
+    nout_min = min(nouts)
 
-    lambda_evol_all = np.zeros([ngals_tot, nnouts])
-    nstep_max = nnza.nnza["nstep"].max()
-    nstep_min = nstep_max - nnouts
+    #nstep_max = nnza.nnza["nstep"].max()
+    #nstep_min = nstep_max - nnouts
     # Starting nouts of galaxies are different.
-    if fine:
-        for igal, gal in enumerate(serial_results):
-            if len(gal.finearr) == 0:
+    if data_type == "fine":
+        lambda_evol_all = np.zeros([ngals_tot, nnouts])
+        for igal, gal in enumerate(alldata):
+            if len(gal.finedata) == 0:
                 continue
             if True:
-                nstep = gal.finearr["nstep"]
-                #print(igal, nstep_max-nstep, nstep_min)
-                ind = np.where(gal.finearr["nstep"] > nstep_min)[0]
-                lambda_evol_all[igal,ind] = gal.finearr["lambda_r"][ind]
+                #nstep = gal.finedata["nstep"]
+                ind = np.where((gal.finedata["nout"] > nout_min)*\
+                               (gal.finedata["nout"] < nout_max))[0]
+                lambda_evol_all[igal,ind] = gal.finedata["lambda_r"][ind]
             else:
                 pass
-    else:
-        for igal, gal in enumerate(serial_results):
+
+        # Cut out unreliable data
+        ind_good_nout = np.where(nouts <= nout_max)[0]
+        lambda_evol_all = lambda_evol_all[:,ind_good_nout]
+        nouts = nouts[ind_good_nout]
+        nnouts = len(nouts)
+        #print(lambda_evol_all)
+    elif data_type == "coarse":
+        lambda_evol_all = np.zeros([ngals_tot, nnouts])
+        for igal, gal in enumerate(alldata):
             if len(gal.data) == 0:
                 continue
             for gg in gal.data:
@@ -154,6 +169,10 @@ def plot_lambda_evol(serial_results, nouts,
                     #print("Good")
                 except:
                     pass
+    elif data_type == "array":
+        lambda_evol_all = alldata["lambda_r"]
+
+
 
     # change ticks
     aexps = nnza.a2b(nouts, "nout", "aexp")
@@ -168,16 +187,18 @@ def plot_lambda_evol(serial_results, nouts,
     modify_ticks1(ax, nnza, nouts)
     #modify_ticks2(ax2, nnza, nouts)
 
-    lambda_range = nouts.ptp()
-
     if density == "heat":
+        nbins=100
         den_map = np.zeros((nbins, nnouts))
         for i in range(nnouts):
-            den_map[:,i], ypoints = np.histogram(lambda_evol_all[:,i], bins=nbins, range=lambda_range)
+            #print(i)
+            den_map[:,i], ypoints = np.histogram(lambda_evol_all[:,i], bins=nbins, range=[0,0.9])
             den_map[:,i] /= den_map[:,i].max()
         im = ax.imshow(den_map, origin="lower",
                        cmap=cmap,
                        interpolation="gaussian")
+        ax.set_aspect('auto')
+
     elif density == "hexbin":
         xx = np.tile(np.arange(nnouts), ngals_tot)
         all_data = lambda_evol_all.ravel()
@@ -196,7 +217,6 @@ def plot_lambda_evol(serial_results, nouts,
         ax.set_yticks(y_tick_pos)#[::-1]
         ax.set_yticklabels(labels = ["{:0.1f}".format(0.1*y) for y in y_tick_pos])
 
-
     elif density == "kernel":
         xx = np.tile(np.arange(nnouts), ngals_tot)
         all_data = lambda_evol_all.ravel()
@@ -204,6 +224,32 @@ def plot_lambda_evol(serial_results, nouts,
         xx,yy,zz = density_map(xx[ind_ok], all_data[ind_ok])
         #im = ax.scatter(xx, yy, c=z, s=50, edgecolor='', cmap=cmap)
         im = ax.pcolormesh(xx, yy, zz, cmap=cmap)
+        lambda_range=[0.01, 0.8]
+        yticks_ok=[0.0, 0.2, 0.4, 0.6, 0.8]
+        ax.set_ylim([-0.05, 0.9])
+        ax.set_yticks([0.0, 0.2, 0.4, 0.6, 0.8])
+        ax.set_yticklabels([str(yy) for yy in yticks_ok])
+    elif density == "kernel_column":
+        #xx = np.tile(np.arange(nnouts), ngals_tot)
+        #all_data = lambda_evol_all.ravel()
+        for inout, nout in enumerate(nouts):
+            xx = np.repeat(inout, ngals_tot)
+            ind_ok = np.where(lambda_evol_all[:,inout] > 0.01)[0]
+            if len(ind_ok) > 0:
+                yy = lambda_evol_all[ind_ok,inout]#[:,np.newaxis]
+                #print(inout, len(yy))
+                #xx,yy,zz = density_map_slow(xx[ind_ok], all_data[ind_ok])
+                zz = gaussian_kde(yy)(yy)
+                #kde = KernelDensity(kernel='gaussian', bandwidth=0.75).fit(X)
+                #log_dens = kde.score_samples(X_plot)
+                zz /= max(zz)
+
+                idx = zz.argsort()
+                yy = yy[idx]
+                zz = zz[idx]
+
+                im = ax.scatter(xx[ind_ok], yy, c=zz, s=60, edgecolor='', cmap=cmap)
+        im.set_rasterized(True)
         lambda_range=[0.01, 0.8]
         yticks_ok=[0.0, 0.2, 0.4, 0.6, 0.8]
         ax.set_ylim([-0.05, 0.9])
@@ -220,7 +266,7 @@ def plot_lambda_evol(serial_results, nouts,
         ax.set_xlabel("Redshift")
 
         plt.tight_layout()
-        plt.savefig(fname)
+        plt.savefig(fname, dpi=200)
     else:
         print("FNAME", fname)
 
