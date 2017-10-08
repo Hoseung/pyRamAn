@@ -167,6 +167,82 @@ def polish_sat_data(gals, nnza_all,
 
 
 
+def find_merger_ini_ends(j_orbit_mag, k, j0, lbt, lbt_min_j_decrease,
+                         j0_percentile=80,
+                         dt_merger_ini = 0.5,
+                         dt_merger_fi=-0.2,
+                         ii_dt_min = 20):
+    """
+        Parameters
+        ----------
+        dt_merger_fi:
+            what is this...?
+
+        NOTE
+        ----
+        Next merger can happen 0.75 * lbt_min_j_decrease after the end of earlier merger.
+        If not, two event are merged to be one longer merger.
+
+
+
+    """
+    i_merger_ini=[]
+    i_merger_end=[]
+    n_min_decrease_j = np.argmax(lbt > lbt[k] - lbt_min_j_decrease)
+
+    seek_ini=True
+    while k > 0:
+        # j should decrease for at least n_min_decrease (0.5Gyr).
+        # As long as j does not grow above j0.
+
+        if seek_ini:
+            # np.all(j_orbit_mag[k-n_min_decrease_j:k] < j0)
+            # This condition requires j_orbit_mag can not fluctuate to get shot up above j0.
+            # Isn't it too strict?
+            if j_orbit_mag[k] >= j0 and np.all(j_orbit_mag[k-n_min_decrease_j:k] < j0):
+
+                #print("New j0 {:.2f} at ind = {}".format(j0,k))
+                if len(i_merger_end) > 0:
+                    # If the next merger starts before the end of the previous merger
+                    # or if the next one starts very soon, then merge them.
+                    #if i_merger_end[-1] <= i+min_dstep_mergers:
+                    #
+                    if i_merger_end[-1] <= k+n_min_decrease_j * 0.75:
+                        #print("remove", i_merger_end[-1])
+                        i_merger_end.pop(-1)
+                        seek_ini=False
+                        continue
+                        #print("not continued")
+                i_merger_ini.append(k)
+                k -= n_min_decrease_j # Because this far has been tested.
+                seek_ini=False
+                #print("modified k",k)
+        else:
+            # if it rise again, above the initial j0
+            if j_orbit_mag[k] <= j0 and j_orbit_mag[k-1] > j0:
+                #print("end", k)
+                i_merger_end.append(np.argmax(lbt - lbt[k] > dt_merger_fi))
+                seek_ini=True
+
+                if len(i_merger_ini) < len(i_merger_ini_all):
+                    i_ini = np.argmax(i_merger_ini_all[:-len(i_merger_end)] < i_merger_end[-1])
+                    #print("new i_ini", i_ini)
+                    ii_dt = np.argmax(lbt - lbt[i_ini] > dt_merger_ini)
+                    new_ini = min([max([ii_dt, i_ini + ii_dt_min]), len(j_orbit_mag) -1])
+                    # minimum j0 = j0 at 3R
+                    #j0 = np.max([np.median(j_orbit_mag[i_ini:new_ini]) * j0_merger_frac, j_orbit_mag[i_ini]])
+                    j0 = np.percentile(j_orbit_mag[i_ini:new_ini], j0_percentile)
+                    k =i_ini +1
+                    # update n_min_decrease_j
+                    n_min_decrease_j = np.argmax(lbt > lbt[k] - lbt_min_j_decrease)
+        k -=1
+
+    if not seek_ini:
+        i_merger_end.append(0)
+
+    return np.array(i_merger_ini), np.array(i_merger_end)
+
+
 def cal_merger_props(gals,
                      verbose=True,
                      j_smooth_w = 51,
