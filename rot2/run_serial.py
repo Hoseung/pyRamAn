@@ -394,20 +394,17 @@ def measure_density(gals, nnza_all, nnza_cell,
 
 
 
-if __name__ == "__main__":
+def run(sim_base = "/media/hoseung/t3/data/HAGN/",
+        out_base=sim_base + "RUN4/",
+        istep_max = 38
+        nout_fi_measure = 782
+        nout_max = 787
+        nstep_782 = 752
+        ETGs_only = True
+        sub_sample_ind=[0,1,2][0] # divide into 3 pieces.
+        ):
 
     t0 = time()
-    sim_base = "/media/hoseung/t3/data/HAGN/"
-    out_base=sim_base + "RUN4/"
-    istep_max = 38#40
-
-    nout_fi_measure = 782
-    nout_max = 787
-    nstep_782 = 752
-
-    ETGs_only = True
-
-    sub_sample_ind=[0,1,2][0] # divide into 3 pieces.
 
     # Where tree information is stored.
     prg_dir = out_base+"all_fine_direct_prgs_gal/"
