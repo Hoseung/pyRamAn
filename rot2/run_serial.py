@@ -414,32 +414,40 @@ def measure_density(gals, nnza_all, nnza_cell,
                                                          ("host_t1r_id", "<i4"),
                                                          ("host_t1r_m", "<f8"),
                                                          ("host_t2r_id", "<i4"),
-                                                         ("host_t2r_m", "<f8")])
+                                                         ("host_t2r_m", "<f8"),
+                                                         ("pos1", "<f8", (3,)),
+                                                         ("Rvir1", "<f8"),
+                                                         ("r_dist1", "<f8"),
+                                                         ("pos2", "<f8", (3,)),
+                                                         ("Rvir2", "<f8"),
+                                                         ("r_dist2", "<f8")])
+
 
     """
         this_gal.main_data will be removed.
         Use finedata whenever possible.
     """
 
-    for i,nout in enumerate(nouts_all):
+    importlib.reload(denm)
+    for i,nout in enumerate(nouts_cell):
         if nout in [584,585,359,293,294]:
             continue
 
         #if nout not in nouts:
         #    continue
-        gdata = pickle.load(open("./GalaxyMaker/gal_pickle/gcat_{}.pickle".format(nout),"rb"))
+        gdata = pickle.load(open(sim_base+"GalaxyMaker/gal_pickle/gcat_{}.pickle".format(nout),"rb"))
         print("Now ", nout)
-        info = Info(nout=nout)
+        info = Info(base=sim_base, nout=nout)
 
-        denm.density_D2N(gdata, info, gals, Ns=[10, 50])
-        dt_fine = nnza_all.nnza["lbt"][i]-nnza_all.nnza["lbt"][i-1]
-        denm.measure_P(gdata, info, gals, dt_fine, short=False)
+        #denm.density_D2N(gdata, info, gals, Ns=[10, 50])
+        #dt_fine = nnza_all.nnza["lbt"][i]-nnza_all.nnza["lbt"][i-1]
+        #denm.measure_P(gdata, info, gals, dt_fine, short=False)
 
         # Only 63 snapshots
         if nout not in nnza_cell.nnza["nout"]:
             continue
         else:
-            hdata = pickle.load(open("./halo/DM_pickle/hcat_{}.pickle".format(nout),"rb"))
+            hdata = pickle.load(open(sim_base+"halo/DM_pickle/hcat_{}.pickle".format(nout),"rb"))
             inout_cell = np.where(nnza_cell.nnza["nout"] == nout)[0]
             dt = nnza_cell.nnza["lbt"][inout_cell-1]-nnza_all.nnza["lbt"][inout_cell]
             denm.measure_P(hdata, info, gals, dt, short=True)
@@ -465,6 +473,18 @@ def measure_density(gals, nnza_all, nnza_cell,
                 this_gal.env_short["host_t1r_m"][i_cell]  = largest_hosts[j]["mvir"]
                 this_gal.env_short["host_t2r_id"][i_cell] = largest_hosts2[j]["id"]
                 this_gal.env_short["host_t2r_m"][i_cell]  = largest_hosts2[j]["mvir"]
+
+                this_gal.env_short["pos1"][i_cell] = (largest_hosts[j]["x"]-0.5,
+                                                      largest_hosts[j]["y"]-0.5,
+                                                      largest_hosts[j]["z"]-0.5)
+                this_gal.env_short["pos1"][i_cell]*=  info.pboxsize
+                this_gal.env_short["Rvir1"][i_cell] =  largest_hosts[j]["rvir"] * info.pboxsize
+
+                this_gal.env_short["pos2"][i_cell] = (largest_hosts2[j]["x"]-0.5,
+                                                      largest_hosts2[j]["y"]-0.5,
+                                                      largest_hosts2[j]["z"]-0.5)
+                this_gal.env_short["pos2"][i_cell]*=info.pboxsize
+                this_gal.env_short["Rvir2"][i_cell] = largest_hosts2[j]["rvir"] * info.pboxsize
 
 
 

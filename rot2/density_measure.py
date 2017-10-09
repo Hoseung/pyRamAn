@@ -90,7 +90,7 @@ def find_top_host_halo(gdata, hdata, hkdt, n_match=50, rscale=1.0):
     isort = np.argsort(gdata["m"])[::-1]
     for i, thisgal in enumerate(gdata[isort]):
         dist, i_neigh = get_kd_matches(hkdt, thisgal, n_match=n_match, dist_upper=0.2)
-        touching = (dist/rscale) < (hdata[i_neigh]["r"] + thisgal["r"])
+        touching = dist < (hdata[i_neigh]["r"] + thisgal["r"]) * rscale
         neighbor_h = hdata[i_neigh[touching]]
         #print(dist[touching])
 
@@ -116,7 +116,6 @@ def match_halo_gal(ids, gcdata, hcdata, masscut=None):
             In general, no haloes smaller than the smallest galaxy are excepted.
 
     """
-    print("HH")
     gdata = gcdata[mtc.match_list_ind(gcdata["id"], ids)]
     mcut = np.median(gdata["m"]) * 0.2 # Host halo must be larger than 20% of Mstar.
     hdata = hcdata[np.where(hcdata["mvir"] > mcut)[0]]
