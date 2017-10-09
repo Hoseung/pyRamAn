@@ -16,8 +16,9 @@ from time import time
 from glob import glob
 from rot2 import new_serial as ns
 import rot2.new_serial_modules as nsm
+from scipy.signal import savgol_filter
 
-def gather_sample_gals(all_final_idxs, nnza_all,
+def gather_sample_gals(all_final_idxs, nnza_cell, nnza_all, prg_dir,istep_max,
                         nstep_main_too_short = 500):
 
     gals=[]
@@ -243,7 +244,7 @@ def find_merger_ini_ends(j_orbit_mag, k, j0, lbt, lbt_min_j_decrease,
     return np.array(i_merger_ini), np.array(i_merger_end)
 
 
-def cal_merger_props(gals,
+def cal_merger_props(gals, nouts_all,
                      verbose=True,
                      j_smooth_w = 51,
                      smooth_poly_deg = 5,
@@ -471,16 +472,16 @@ def measure_density(gals, nnza_all, nnza_cell,
 
 
 def run(sim_base = "/media/hoseung/t3/data/HAGN/",
-        out_base=sim_base + "RUN4/",
-        istep_max = 38
-        nout_fi_measure = 782
-        nout_max = 787
-        nstep_782 = 752
-        ETGs_only = True
+        istep_max = 38,
+        nout_fi_measure = 782,
+        nout_max = 787,
+        nstep_782 = 752,
+        ETGs_only = True,
         sub_sample_ind=[0,1,2][0] # divide into 3 pieces.
         ):
 
     t0 = time()
+    out_base=sim_base + "RUN4/"
 
     # Where tree information is stored.
     prg_dir = out_base+"all_fine_direct_prgs_gal/"
@@ -512,8 +513,8 @@ def run(sim_base = "/media/hoseung/t3/data/HAGN/",
         all_final_ids = id_etgs
     else:
         # May want to divide into pieces.
-        all_final_idxs = all_ids[sub_sample_ind::3,0]
-        all_final_ids = all_ids[sub_sample_ind::3,1]
+        all_final_idxs = all_ids[sub_sample_ind::10,0]
+        all_final_ids = all_ids[sub_sample_ind::10,1]
 
 
     # nstep data
@@ -536,12 +537,12 @@ def run(sim_base = "/media/hoseung/t3/data/HAGN/",
     all_fidx_ok=[]
 
     # Build gal classes.
-    gals = gather_sample_gals(all_final_idxs, nnza_all)
+    gals = gather_sample_gals(all_final_idxs,nnza_cell, nnza_all, prg_dir, istep_max)
 
     # Put measurments to each gal.
     nout_results_to_gal_serial(gals, nouts, out_base)
 
-    cal_merger_props(gals,
+    cal_merger_props(gals,nouts_all,
                      verbose=True,
                      j_smooth_w = 51,
                      smooth_poly_deg = 5,
