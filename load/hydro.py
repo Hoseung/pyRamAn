@@ -24,7 +24,8 @@ class Hydro(Simbase):
                  cosmo=True,
                  cpus=None,
                  cpu_fixed=None,
-                 nvarh=5):
+                 nvarh=5,
+                 amr2cell_params={}):
         """
         Parameters
         ----------
@@ -79,7 +80,8 @@ class Hydro(Simbase):
             print("Loading amr first! \n")
 
         if load:
-            self.amr2cell()
+            print("amr2cell_params", amr2cell_params)
+            self.amr2cell(**amr2cell_params)
 
     def _get_basic_info(self):
         try:
@@ -117,7 +119,7 @@ class Hydro(Simbase):
         self.header.gamma = h1['gamma']
         self.header.nvarh_org = h1['nvarh']
 
-    def amr2cell(self, lmax=None, icpu=0, cpu=True,
+    def amr2cell(self, lmax=None, icpu=0, cpu=True, ref=False,
                  verbose=False, return_meta=False,
                  ranges=None, nvarh=None):
         """
@@ -140,7 +142,7 @@ class Hydro(Simbase):
             if self.header.nvarh is None:
                 nvarh = self.header.nvarh_org
                 self.header.nvarh = nvarh
-            else: 
+            else:
                 nvarh = self.header.nvarh
 
         nlevelmax = self.header.nlevelmax
@@ -170,10 +172,12 @@ class Hydro(Simbase):
         else:
             cell = a2c.a2c_load(work_dir, xmi, xma, ymi, yma, zmi, zma,\
                                 lmax, out[0], nvarh+2, self.cpus)
-            # nvarh + 2 because fortran stars from 1, and nvarh=5 means 0,1,2,3,4,5.
+            # nvarh + 2 because fortran counts from 1, and nvarh=5 means 0,1,2,3,4,5.
             dtype_cell = [('x', '<f8'), ('y', '<f8'), ('z', '<f8'), ('dx', '<f8')]
             if cpu:
                 dtype_cell.append(('cpu', '<f8'))
+            if ref:
+                dtype_cell.append(('ref', 'bool'))
             for i in range(nvarh):
                 dtype_cell.append( ('var' + str(i), '<f8'))
 
@@ -186,6 +190,8 @@ class Hydro(Simbase):
             self.cell['var' + str(i)] = cell[2][:,i]
         if cpu:
             self.cell['cpu'] = cell[3]
+        if ref:
+            self.cell["ref"] = cell[4]
 
 
     def amr2cell_old(self, lmax=None, icpu=0, verbose=False):

@@ -22,7 +22,7 @@ def modify_ticks1(ax, nnza, nouts, nbins = 40):
         # of bins along the y-axis.
     """
 
-    aexps = nnza.a2b(nouts, "nout", "aexp")
+    #aexps = nnza.a2b(nouts, "nout", "aexp")
     zreds = nnza.a2b(nouts, "nout", "zred")
     nnouts = len(nouts)
 
@@ -48,7 +48,7 @@ def modify_ticks2(ax2, nnza, nouts, nbins = 40):
     nbins:
         # of bins along the y-axis.
     """
-    aexps = nnza.a2b(nouts, "nout", "aexp")
+    #aexps = nnza.a2b(nouts, "nout", "aexp")
     zreds = nnza.a2b(nouts, "nout", "zred")
     nnouts = len(nouts)
 
@@ -174,7 +174,7 @@ def plot_lambda_evol(alldata, nouts,
         lambda_evol_all = alldata["lambda_r"]
 
     # change ticks
-    aexps = nnza.a2b(nouts, "nout", "aexp")
+    #aexps = nnza.a2b(nouts, "nout", "aexp")
     zreds = nnza.a2b(nouts, "nout", "zred")
 
     if ax is None:
@@ -229,10 +229,16 @@ def plot_lambda_evol(alldata, nouts,
         ax.set_yticks([0.0, 0.2, 0.4, 0.6, 0.8])
         ax.set_yticklabels([str(yy) for yy in yticks_ok])
     elif density == "kernel_column":
+        from matplotlib.patches import Circle
         #xx = np.tile(np.arange(nnouts), ngals_tot)
+        patches = []
+        all_xxs=[]
+        all_yys=[]
+        all_zzs=[]
         for inout, nout in enumerate(nouts):
             xx = np.repeat(inout, ngals_tot)
             ind_ok = np.where(lambda_evol_all[:,inout] > 0.01)[0]
+
             if len(ind_ok) > 0:
                 yy = lambda_evol_all[ind_ok,inout]#[:,np.newaxis]
                 #print(inout, len(yy))
@@ -243,16 +249,42 @@ def plot_lambda_evol(alldata, nouts,
                 zz /= max(zz)
 
                 idx = zz.argsort()
-                yy = yy[idx]
-                zz = zz[idx]
+                #yy = yy[idx]
+                #zz = zz[idx]
 
-                im = ax.scatter(xx[ind_ok], yy, c=zz, s=60, edgecolor='', cmap=cmap)
-            print(nout)
+                all_xxs.extend(xx[idx])
+                all_yys.extend(yy[idx])
+                all_zzs.extend(zz[idx])
 
-        im.set_rasterized(True)
+
+                #patches.append(Circle((xx[ind_ok], yy), 60,
+                #                color=cmap.zz,
+                #                facecolor='none'))
+                                #edgecolor=(0, 0.8, 0.8),
+                                #linewidth=3, alpha=0.5))
+
+                #ax.scatter(xx[ind_ok], yy, c=zz, s=60,
+                #          edgecolor='',
+                #          cmap=cmap,
+                #          rasterized=True)
+
+            print(nout, end='\r')
+
+        ax.scatter(all_xxs, all_yys, c=all_zzs, s=60,
+                  edgecolor='',
+                  cmap=cmap,
+                  rasterized=True)
+
+        #patches.
+        #p = PatchCollection(patches)
+        #p.set_array(np.array(colors))
+        #ax.add_collection()
+
+        #ax.set_rasterization_zorder(-10)
+        #ax.set_rasterized(True)
         lambda_range=[0.01, 0.8]
         yticks_ok=[0.0, 0.2, 0.4, 0.6, 0.8]
-        ax.set_ylim([-0.05, 0.9])
+        ax.set_ylim([-0.01, 0.9])
         ax.set_yticks([0.0, 0.2, 0.4, 0.6, 0.8])
         ax.set_yticklabels([str(yy) for yy in yticks_ok])
 
@@ -266,7 +298,7 @@ def plot_lambda_evol(alldata, nouts,
         ax.set_xlabel("Redshift")
 
         plt.tight_layout()
-        plt.savefig(fname, dpi=200)
+        plt.savefig(fname, dpi=200, rasterized=True)
     else:
         print("FNAME", fname)
 

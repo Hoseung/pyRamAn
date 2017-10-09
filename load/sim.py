@@ -346,16 +346,22 @@ class Sim(Simbase):
             region = self.region
         if ranges is None:
             ranges = self.ranges
+
         self.hydro = hydro.Hydro(info=self.info,
                                  cpus=self.cpus,
                                  cpu_fixed=self.cpu_fixed,
                                  region=region,
                                  ranges=ranges,
-                                 amr=self.amr, **kwargs)
+                                 amr=self.amr)
+
+        #for kwarg in kwargs:
+        #    if kwarg== "amr2cell_params":
+        #        amr2cell_params = kwarg
+        #print(amr2cell_params)
         if load :
             if lmax is None:
                 lmax = self.info.lmax
-            self.hydro.amr2cell(lmax=lmax, cpu=cpu)
+            self.hydro.amr2cell(lmax=lmax, cpu=cpu, **kwargs)
         else:
             print("Use hydro.amr2cell() to load hydro variables")
 

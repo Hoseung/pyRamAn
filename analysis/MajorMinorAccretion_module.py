@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import analysis.evol_lambda as evl
-import analysis.Major_Minor_accretion as mma
+#import analysis.Major_Minor_accretion as mma
 import analysis.misc as amsc
 import tree.ctutils as ctu
 import utils.match as mtc
@@ -38,7 +38,7 @@ def plot_violin(mpgs,
                 linewidth = 0.8,
                 bw = 0.1,
                 gridsize=10):
-    
+
     dlt_all=[]
     dlo_all=[]
     dlM_all=[]
@@ -50,13 +50,13 @@ def plot_violin(mpgs,
             dlo_all.append(gal.dlo) # Other
             dlM_all.append(gal.dlM) # Major
             dlm_all.append(gal.dlm) # minor
-            mass_all.append(gal.data["mstar"][0]) # 
+            mass_all.append(gal.data["mstar"][0]) #
             #print(gal.dlM, gal.dlm, gal.dlt, gal.data["mstar"][0])
 #        try:
 #            mass_all.append(gal.data["mstar"][0].repeat(len(gal.dlm)))
 #        except:
 
-    
+
     dlM_all = remove_nan(np.array(dlM_all))
     dlm_all = remove_nan(np.array(dlm_all))
     dlo_all = remove_nan(np.array(dlo_all))
@@ -69,7 +69,7 @@ def plot_violin(mpgs,
 
     if use_seaborn:
         import pandas as pd
-        # Prepare data in Pandas DataFrame format. 
+        # Prepare data in Pandas DataFrame format.
         val = np.concatenate((dlM_all, dlm_all, dlt_all))
         merger = np.concatenate((np.full(len(dlM_all), 0),
                                  np.full(len(dlm_all), 1),
@@ -87,18 +87,18 @@ def plot_violin(mpgs,
                                 ,"merger":merger[[i_detected]]
                                 ,"massive":mass_all[i_detected] > massive_cut})
         #print(sum((detected["merger"] == 0) * (detected["massive"])))
-        
+
         fig, axs = plt.subplots(2,2,
                             sharex=True,
                             sharey=True)
         fig.set_size_inches(8,6)
         axs = axs.ravel()
-        
+
         pos = [0,1,2]
         import seaborn.apionly as sns
         sns.set_style("whitegrid")
         #sns.set(font_scale=1.0)
-        
+
         if violin:
             # All
             sns.violinplot(x="merger", y="delta",
@@ -137,7 +137,7 @@ def plot_violin(mpgs,
                         , horizontalalignment="center")
             axs[2].text(2, -0.7, str(sum(detected["merger"] == 2))
                         , horizontalalignment="center")
-            
+
             # detected - Mass
             last_ax = sns.violinplot(x="merger", y="delta",
                            data=detected, hue="massive", palette=pallette,
@@ -169,7 +169,7 @@ def plot_violin(mpgs,
             # left column
             for ax in [axs[0], axs[2]]:
                 ax.tick_params(labelsize=14)
-                ax.set_ylabel(r"$ \Delta \lambda_{R_{eff}}$", fontsize=16)   
+                ax.set_ylabel(r"$ \Delta \lambda_{R_{eff}}$", fontsize=16)
 
             # right column
             for ax in [axs[1], axs[3]]:
@@ -187,19 +187,19 @@ def plot_violin(mpgs,
         #                   fontsize=22)
     else:
         pos = [1,2,3]
-        plt.violinplot([dlM_all, dlm_all, dlt_all], pos, 
+        plt.violinplot([dlM_all, dlm_all, dlt_all], pos,
                       points=30,
                       widths=0.5,
                       showmeans=True,
                       showextrema=True,
                       showmedians=True,
                       bw_method="silverman")
-        
+
         #ax.annotate(r"$ \log_{10}(M_{*}) >$" + "{:.1f}".format(np.log10(mstar_limit)), xy=[0.7,0.5])
     plt.tight_layout()
     plt.savefig(fname, dpi=200)
     plt.close()
-    print("Total {} galaxies above the mass cut {}".format(len(dlM_all), 
+    print("Total {} galaxies above the mass cut {}".format(len(dlM_all),
                                                            np.log10(mstar_cut_hard)))
     #plt.show()
     return last_ax
@@ -217,9 +217,9 @@ def plot_violin2(mpgs,
                 bw = 0.1,
                 gridsize=10,
                 violin = True):
-    
+
     from matplotlib.ticker import NullFormatter
-    
+
     # Per event data
     dl = []
     dm = []
@@ -233,17 +233,17 @@ def plot_violin2(mpgs,
                     dm.extend(gal.merger.delta_m)
                     mr.extend(gal.merger.mr)
                     mass.extend([gal.data["mstar"][0]]*len(gal.merger.delta_l))
-    
+
     i_ok = (np.array(mr) < 20 ) * (np.array(dl) > -1)
     dl = np.array(dl)[i_ok]
     dm = np.array(dm)[i_ok]
     mr = np.array(mr)[i_ok]
     mass = np.array(mass)[i_ok]
-        
 
-    # Prepare data in Pandas DataFrame format. 
+
+    # Prepare data in Pandas DataFrame format.
     import pandas as pd
-    
+
     # Per galaxy data
     dlt_all=[]
     dlo_all=[]
@@ -256,7 +256,7 @@ def plot_violin2(mpgs,
             dlo_all.append(gal.dlo) # Other
             dlM_all.append(gal.dlM) # Major
             dlm_all.append(gal.dlm) # minor
-            mass_all.append(gal.data["mstar"][0]) # 
+            mass_all.append(gal.data["mstar"][0]) #
 
     dlM_all = remove_nan(np.array(dlM_all))
     dlm_all = remove_nan(np.array(dlm_all))
@@ -269,34 +269,34 @@ def plot_violin2(mpgs,
     dl_minor = dl[mr > mr_major]
 
     yll, ylr = (-0.5, 0.4)
-    
+
     if use_seaborn:
         pallette="Paired"
         #sns.set_style("whitegrid", {'axes.grid' : False})
         plt.figure(1, figsize=(6,4))
         axHist = plt.axes([0,0,0.3,1])
         axViolin = plt.axes([0.31,0,1,1])
-        
+
         sns.distplot(dl_major, color="r",hist=True
                      , kde_kws={"shade": True}, vertical=True
                      , ax=axHist, label="major mergers")
-        
+
         sns.distplot(dl_minor, color="b",hist=True
                      , kde_kws={"shade": True}, vertical=True
                      , ax=axHist, label="minor mergers")
-        
+
         sns.distplot(dlo_all, color="g",hist=True
                      , kde_kws={"shade": True}, vertical=True
                      , ax=axHist, label="non-mergers")
-        
+
         axHist.xaxis.set_major_formatter(NullFormatter())
         axHist.set_ylabel(r"$\Delta \lambda_{R_{eff}}$")
         axHist.set_xlabel("Normalized probability")
         axHist.set_ylim([-0.7,0.6])
-        
+
         axHist.legend(fontsize=12)
         axHist.yaxis.grid()
-        
+
         ## Violin plot data
         Merger_alone=False
         if Merger_alone:
@@ -304,7 +304,7 @@ def plot_violin2(mpgs,
                                  "merger":mr < mr_major,
                                  "massive":mass > massive_cut})
         else:
-            
+
             mass_concat = np.concatenate((mass, mass_all))
             mr_tag = np.concatenate((np.full(len(mr), 1), np.full(len(dlo_all), 2)))
             mr_tag[mr < mr_major] = 0
@@ -312,7 +312,7 @@ def plot_violin2(mpgs,
             all_data = pd.DataFrame({"delta":np.concatenate((dl,dlo_all)),
                                  "merger":mr_tag,
                                  "massive":is_massive})
-        
+
             sns.violinplot(x="merger", y="delta",
                            data=all_data, hue="massive", palette=pallette,
                            bw=bw, scale=scale, split=True, ax=axViolin,
@@ -327,8 +327,8 @@ def plot_violin2(mpgs,
                       , horizontalalignment="center")
         axViolin.text(2, -0.65, str(sum((mr_tag == 2) * ~is_massive)) + "/" +\
                       str(sum((mr_tag == 2) * is_massive))
-                      , horizontalalignment="center")    
-        
+                      , horizontalalignment="center")
+
         axViolin.set_xticks([0,1,2])
         axViolin.set_xticklabels(labels = ["Major", "Minor", "non-merger"])
         axViolin.tick_params(labelsize=14)
@@ -336,17 +336,17 @@ def plot_violin2(mpgs,
         axViolin.set_ylabel("")
         axViolin.set_xlabel("")
         axViolin.set_ylim([-0.7,0.6])
-        
+
         handles, labels = axViolin.get_legend_handles_labels()
         axViolin.legend(handles, [r"$log_{10}M_{*} < $ " +"{:.1f}".format(np.log10(massive_cut)),
                                   r"$log_{10}M_{*} > $ " +"{:.1f}".format(np.log10(massive_cut))],
                             loc='upper left',
                             fontsize=12)
         axViolin.yaxis.grid()
-        
+
     else:
         same_x = True
-        # same x scale 
+        # same x scale
         if same_x:
             hist_major, bin_edges = np.histogram(dl_major, bins=10, range=(yll,ylr))
             hist_minor, bin_edges = np.histogram(dl_minor, bins=10, range=(yll,ylr))
@@ -409,8 +409,8 @@ def plot_simple(mpgs, wdir='./', suffix=""):
         if gal.merger is not None:
             for mr, xx, delta in zip(gal.merger.mr, gal.merger.nout, gal.merger.delta_l):
                 ax[0].scatter(mr, delta)
-        ax[1].scatter([1],gal.dlM) 
-        ax[1].scatter([3],gal.dlm) 
+        ax[1].scatter([1],gal.dlM)
+        ax[1].scatter([3],gal.dlm)
         ax[1].scatter([5],gal.dlo)
     #plt.show()
     ax[0].set_xscale("log")
@@ -442,7 +442,7 @@ def plot_hist(mpgs, wdir='./', suffix=""):
              facecolor='none', edgecolor='b', linestyle="-.", lw=3)
     plt.savefig(wdir + 'MMA_hist' + suffix +'.png')
     plt.close()
-    
+
     print(len(all_mr))
 
 
@@ -455,7 +455,7 @@ def filter_small_mergers(mm, window=7):
     """
     if mm is None:
         return
-    
+
     if len(mm.nout) == 1:
         return
 
@@ -468,7 +468,7 @@ def filter_small_mergers(mm, window=7):
         if abs(mm.nout[i] - mm.nout[i+1]) > window:
             delimeter +=1
 
-        
+
         #print(neighbor)
     # last element
     neighbor[-1] = delimeter
@@ -492,7 +492,7 @@ def filter_small_mergers(mm, window=7):
     mm.mr = mm.mr[ind_ok]
     mm.nout_ini = mm.nout_ini[ind_ok]
 
-    
+
 def remove_nan(x):
     return x[~np.isnan(x)]
 
@@ -521,7 +521,7 @@ def l_at_smoothed_r(gal, npix_per_reff=5):
                 #new_l_arr[i] = lambdar[il]*(ir-ind_org) + lambdar[ir]*(ind_org-il)
         except:
             new_l_arr[i] = gal.data["lambda_arr"][i][ind_org] # = 0 with bad measurements.
-            
+
     return new_l_arr
 
 
@@ -534,14 +534,14 @@ def individual_lambda_evol(mpgs, fname="figs/individual_lambda_evol.pdf"):
             ax.set_title(str(gal.cluster) + "  " + str(gal.idxs[0]))
             pdf.savefig()
             ax.clear()
-            
-            
 
-            
-def find_merger_epochs(alltrees, 
-                       idx_all, 
-                       mpgs, 
-                       nout_ini=37, 
+
+
+
+def find_merger_epochs(alltrees,
+                       idx_all,
+                       mpgs,
+                       nout_ini=37,
                        dist_gal_scale_in=2.0,
                        dist_gal_scale_out =3.0,
                        min_mass_ratio = 0.05,
@@ -553,7 +553,7 @@ def find_merger_epochs(alltrees,
     """
     Parameters
     ----------
-    dist_gal_scale 
+    dist_gal_scale
         if two galaxies are closer than dist_gal_scale * (sum of raidus of the two),
         that epoch is the nout_init_merger.
     nout_ini
@@ -562,7 +562,7 @@ def find_merger_epochs(alltrees,
     gal_list=[]
     mr_list=[]
     nout_list=[]
-    nout_ini_list=[] # initial time when two halos(Galaxy stellar components in this case) overlap. 
+    nout_ini_list=[] # initial time when two halos(Galaxy stellar components in this case) overlap.
 
     #for idx in idx_all:
     if do_plot:
@@ -589,12 +589,12 @@ def find_merger_epochs(alltrees,
         pos[1,:] = main['y']
         pos[2,:] = main['z']
 
-        
+
         ## 왜 len(main)?
         mass_ratios_single = np.zeros(len(main))
         nout_inits = np.zeros(len(main))
         #print("log M* ={}".format(np.log10(gal.data["mstar"][0])))
-        
+
         ## Substitute main["r"] with gal.data["reff"]
         if len(main) < len(gal.smoothed_r):
             main["r"] = gal.smoothed_r[:len(main)]
@@ -602,42 +602,42 @@ def find_merger_epochs(alltrees,
             main["r"][:len(gal.smoothed_r)] = gal.smoothed_r
         elif len(main) == len(gal.smoothed_r):
             main["r"] = gal.smoothed_r
-        
+
         for i, nout in enumerate(main['nout']):
             # merger ratio
             # First, check if there are multiple progenitors.
             i_prgs = np.where(atree['desc_id'] == main['id'][i])[0]
-            
+
             # multiple prgs = merger
             if len(i_prgs) > 1:
-                if verbose: 
+                if verbose:
                     print("idx:{}, {} Progenitors at nout = {}".format(main["id"][0], len(i_prgs), nout))
-                
+
                 #print("i, inout_mpgs", i, np.where(gal.nouts == nout)[0])
                 #print(gal.data["reff"][i])
-                
-                # Mass ratio must be calculated inside get_merger_info. 
-                
+
+                # Mass ratio must be calculated inside get_merger_info.
+
                 id_prgs = atree['id'][i_prgs]
                 mass_prgs = atree['m'][i_prgs]
                 #m_r = mass_prgs / max(mass_prgs)
-                
+
                 # Progenitor with maximum mass at the FINAL COALESCENCE is the main progenitor.
                 # Others are satellites.
                 sats = id_prgs[mass_prgs < max(mass_prgs)]
-                
+
                 mass_ratios_now=[]
                 nout_inits_now=[]
-                
+
                 # loop over satellites at a given nout.
                 for this_sat in sats:
                     n_i_t, mass_this_sat = get_merger_info(main, atree, this_sat,
                                                            dist_gal_scale_in=dist_gal_scale_in,
                                                            dist_gal_scale_out = dist_gal_scale_out,
                                                            do_plot=do_plot,
-                                                           ax=ax, 
+                                                           ax=ax,
                                                            max_rgal=max_rgal)
-                    
+
                     mass_ratio = mass_this_sat / max(mass_prgs)
                     if do_plot:
                         ax.text(40, 600, "{:.3f}".format(mass_ratio))
@@ -663,12 +663,12 @@ def find_merger_epochs(alltrees,
             else:
                 mass_ratios_single[i] = 0
             ##--------------------------------------------------
-                    
+
 
         ind_ok = np.where(mass_ratios_single > min_mass_ratio)[0]
         if len(ind_ok) > 0:
-            # if a satellite oscillates around the host, 
-            # it could be identified as multiple mergers with short time interval. 
+            # if a satellite oscillates around the host,
+            # it could be identified as multiple mergers with short time interval.
             # leave only the first passage / merger.
             # No, it doesn't happen in ConsistentTrees.
 
@@ -682,7 +682,7 @@ def find_merger_epochs(alltrees,
 
             gal_list.append(idx)
             mr_list.append(mr)
-            nout_list.append(main_nout[ind_ok])    
+            nout_list.append(main_nout[ind_ok])
             nout_ini_list.append(nout_inits[ind_ok])
             #print(idx)
     if do_plot:
@@ -701,8 +701,8 @@ def find_merger_epochs(alltrees,
             gal.merger = merger
         else:
             gal.merger = None
-    
-    
+
+
 class Merger():
     pass
 
@@ -714,15 +714,15 @@ def get_merger_info(main, atree, sat_root_idx,
                     ax=None,
                     max_rgal=40):
     """
-    Returns merger mass ratio at the BEGINNING of the merger. 
+    Returns merger mass ratio at the BEGINNING of the merger.
     nout_init_this_merger, mass_this_merger = get_merger_info()
-    
+
     Main["r"] = gal.smoothed_r.
     So I can use the main galaxy radius to decide whether a satellite is
     touching/affecting the main galaxy or not.
     """
     satellite = ctu.extract_main_tree(atree, sat_root_idx, no_subset=True)
-    
+
     # nouts where both of galaxies' trees exist.
     nout_min = max([min(main['nout']), min(satellite['nout'])])
     idx_main = main["id"][0]
@@ -749,26 +749,26 @@ def get_merger_info(main, atree, sat_root_idx,
         ax.plot(main_this['nout'], rgal_tot * dist_gal_scale_in, label="threshold in")
         ax.plot(main_this['nout'], rgal_tot * dist_gal_scale_out, label="threshold out")
         ax.plot(satellite['nout'], dd, label="distance")
-        
+
         #plt.set_yscale('log')
-        
+
         ax.set_ylim([1,1e3])
         ax.set_xlim([30,200])
         ax.set_title("main:" + str(idx_main) +  " sat:" + str(sat_root_idx))
         ax.legend()
 
-    
+
     # A steep plunging orbit may cross the threshold in one snapshot.
     # in such cases, the final snapshot should be within the 'out' threshold,
     # and then the beginning of merger is thought to be the one right before it merge.
     # So any galaxy that entered closer than the dis_gal_scale_OUT are taken into account.
-    # This assumes that these galaxies DO merge at the next snapshot. 
+    # This assumes that these galaxies DO merge at the next snapshot.
     # So make sure that the tree is correct.
     if sum(dist_gal_scale_out * rgal_tot > dd) > 0:
         # First close encounter is technically the beginning of merger,
-        # but in practice that could be merely a flyby, 
-        # and whether they will merger soon or not is not known. 
-        # I can't call an encounter a merger if the encounter will end up merging in 100Gyrs.        
+        # but in practice that could be merely a flyby,
+        # and whether they will merger soon or not is not known.
+        # I can't call an encounter a merger if the encounter will end up merging in 100Gyrs.
         #nout_init_this = min(satellite['nout'][dist_gal_scale * rgal_tot < dd])
 
         i_dist_out = np.where(dist_gal_scale_out * rgal_tot < dd)[0]
@@ -803,7 +803,7 @@ def get_merger_info(main, atree, sat_root_idx,
                 nout_init_this = satellite['nout'][i_dist_final]
                 mass_this = satellite['m'][satellite['nout'] == nout_init_this].squeeze()
             #if len(i_dist_final) > 0:
-            
+
         elif 0 in i_dist_bet:
             if do_plot: ax.text(40, 800, "bet")
             # A steep plunging orbit may cross the threshold in one snapshot.
@@ -818,19 +818,19 @@ def get_merger_info(main, atree, sat_root_idx,
             nout_init_this = -1
         #print(nout_init_this, dd[i_dist_final])
         if do_plot: ax.scatter(nout_init_this, dd[i_dist_final])
-        
+
     else:
         #print("None")
         nout_init_this = -1
         mass_this = 0
-    
+
     return nout_init_this, mass_this
 
 
 
 
-def measure_delta(mpgs, 
-                  nout_ini=37, 
+def measure_delta(mpgs,
+                  nout_ini=37,
                   nout_fi = 187,
                   wdir='./',
                   dt_after = 0.5,
@@ -841,35 +841,35 @@ def measure_delta(mpgs,
     """
     Measure lambda change at every merger and draw lambda evolution with merger events.
     time span over which average lambda value is measured is given in Gyr unit.
-    
-    
+
+
     lambda_before = average(lambda[nout_begin-dt_before] ~ lambda[nout_begin])
     lambda_after  = average(lambda[nout_merger-dt_before] ~ lambda[nout_merger])
     ** nout_merger = nout at final coalescence.
-    
+
     Parameters
     ----------
     dt_after:
         d
-    
+
     dt_before:
         ddd
-    
+
     dt_settle:
         aa
 
 
     galaxies must have smoothed quantaties.
     """
-    
-    from utils.util import dgyr2dnout    
+
+    from utils.util import dgyr2dnout
     if savefig:
         from matplotlib.backends.backend_pdf import PdfPages
         fig, ax = plt.subplots(1,2, sharex=True)
         plt.subplots_adjust(hspace=0.001)
-        fig.set_size_inches(8,4)    
+        fig.set_size_inches(8,4)
         pdf = PdfPages(wdir + figname + '.pdf')
-        
+
     for gal in mpgs:
         ind_nout = gal.nouts > nout_ini
         gal.nouts = gal.nouts[ind_nout]
@@ -877,9 +877,9 @@ def measure_delta(mpgs,
         if savefig:
             ax[0].plot(gal.nouts, np.log10(gal.data['mstar']), 'b:')
             ax[0].set_xlim([50,190])
-            plt.suptitle(str(gal.cluster) + " - " + 
-                         str(gal.ids[0]) + ", " + 
-                         str(gal.idxs[0]) + 
+            plt.suptitle(str(gal.cluster) + " - " +
+                         str(gal.ids[0]) + ", " +
+                         str(gal.idxs[0]) +
                          "  {:.2e}".format(gal.data["mstar"][0]))
             ax[1].plot(gal.nouts, gal.smoothed_lambda, 'black')
 
@@ -888,9 +888,9 @@ def measure_delta(mpgs,
             delta_mass = []
             n_after = []
             n_before = []
-            
+
             for mr, nout_merger, nout_begin in zip(gal.merger.mr, gal.merger.nout, gal.merger.nout_ini):
-                # nout_ini가 너무 옛날인 경우 gal.nouts에 nout_ini - dt가 없음. 
+                # nout_ini가 너무 옛날인 경우 gal.nouts에 nout_ini - dt가 없음.
                 nout_merger =min([nout_merger + 3, 187])
                 if True:
                     # index of merger (final coalescence)
@@ -902,8 +902,8 @@ def measure_delta(mpgs,
                         n_after.append(0)
                         n_before.append(0)
                         continue
-                    
-                    i_nout = np.where(gal.nouts == nout_merger)[0]                    
+
+                    i_nout = np.where(gal.nouts == nout_merger)[0]
                     # index of the begining of merger (determined in find_merger_epoch())
                     iini_nout = np.where(gal.nouts == nout_begin)[0]
                     if len(iini_nout) == 0:
@@ -914,7 +914,7 @@ def measure_delta(mpgs,
                     # snapshot number apart by dt from nout
                     nout_settle = dgyr2dnout(dt_settle, nout_merger)
                     nout_after = dgyr2dnout(dt_settle + dt_after, nout_merger)
-                    
+
                     # indices of the snapshots.
                     #if min(gal.nouts) < nout_after:
                     if min(gal.nouts) < nout_settle:
@@ -925,8 +925,8 @@ def measure_delta(mpgs,
                         n_after.append(0)
                         n_before.append(0)
                         print("end of merger + dt_settle is earlier than the min nout.")
-                        continue                       
-                        
+                        continue
+
                     if i_nout == 0:
                         l_inds_after = [0]
                     else:
@@ -934,15 +934,15 @@ def measure_delta(mpgs,
                         #print("inout_after, i_nout, xx, gal.nouts", inout_after, i_nout, xx, gal.nouts)
                         #l_inds_after = range(max(inout_after), i_nout)
                         l_inds_after = range(inout_after, min([i_nout, inout_settle])) # index 0 = nout 187.
-                    
+
                     # quantities at measurement points
                     nouts_after = gal.nouts[l_inds_after]
                     l_after = gal.smoothed_lambda[l_inds_after]
                     m_after = gal.data['mstar'][l_inds_after]
                     lambda_after = np.average(l_after)
                     mass_after = np.average(m_after)
-                        
-                        
+
+
                     nout_before = dgyr2dnout(-1 * dt_before, nout_begin)
                     nout_before = max([nout_before, min(gal.nouts)])
                     # Tree may be longer than valid lambda measurement points.
@@ -963,11 +963,11 @@ def measure_delta(mpgs,
                     n_after.append(nout_after)
                     n_before.append(nout_before)
                     if savefig:
-                        ax[1].plot(nouts_after,l_after, 'g-')                                           
+                        ax[1].plot(nouts_after,l_after, 'g-')
                         # Check again.
                         #nn = range(
                         # Average value
-                        ax[1].plot(nouts_after, [lambda_after]*len(nouts_after), "g:")                    
+                        ax[1].plot(nouts_after, [lambda_after]*len(nouts_after), "g:")
 
                         ax[1].plot(nouts_before,l_before, 'r-')
                         #nn = range(max([nout_ini, min(nouts_before) - 5]), max(nouts_before) + 5)
@@ -988,7 +988,7 @@ def measure_delta(mpgs,
 
 
             gal.merger.delta_l = np.array(delta_lambda)
-            gal.merger.delta_m = np.array(delta_mass)    
+            gal.merger.delta_m = np.array(delta_mass)
             gal.merger.nout_after = np.array(n_after)
             gal.merger.nout_before = np.array(n_before)
         if savefig:
