@@ -45,6 +45,40 @@ def get_kd_matches(kdtree, gal, n_match=5, rscale = 4.0, dist_upper=None):
     return dd,ind
 
 
+def find_direct_halo(gdata, hdata, hkdt, n_match=50):
+    matched_halo = np.zeros(len(gdata), dtype=hdata.dtype)
+    miss=0
+    isort = np.argsort(gdata["m"])[::-1]
+    for i, thisgal in enumerate(gdata[isort]):
+        dist, i_neigh = get_kd_matches(hkdt, thisgal, n_match=n_match)#, dist_upper=0.5/100.)
+
+        # Exclude already-matched haloes
+        id_neighbor_h_ok = np.setdiff1d(hdata["id"][i_neigh], matched_halo["id"])
+
+        i_ok = mtc.match_list_ind(hdata["id"][i_neigh], id_neighbor_h_ok)
+        dist = dist[i_ok]
+        neighbor_h = hdata[i_neigh[i_ok]]
+
+        # Mass cut.
+        i_mass_ok =neighbor_h["m"] > thisgal["m"]
+        neighbor_h = neighbor_h[i_mass_ok]
+        dist = dist[i_mass_ok]
+        # 6-D dist.
+        rel_vel = np.sqrt(np.einsum("...i,...i",np.column_stack((thisgal["vx"] - neighbor_h["vx"],
+                                         thisgal["vy"] - neighbor_h["vy"],
+                                         thisgal["vz"] - neighbor_h["vz"])),
+                                        np.column_stack((thisgal["vx"] - neighbor_h["vx"],
+                                         thisgal["vy"] - neighbor_h["vy"],
+                                         thisgal["vz"] - neighbor_h["vz"]))))
+        try:
+            matched_halo[isort[i]]=neighbor_h[np.argmin(dist * rel_vel)]
+        except:
+            miss+=1
+            pass
+    print("There are {} missing matches".format(miss))
+
+    return matched_halo
+
 def find_top_host_halo(gdata, hdata, hkdt, n_match=50, rscale=1.0):
     """
     Todo
@@ -53,14 +87,16 @@ def find_top_host_halo(gdata, hdata, hkdt, n_match=50, rscale=1.0):
     Just copy and pad around the cube at ~ 1Mpc thickness.
     """
     matched_halo = np.zeros(len(gdata), dtype=hdata.dtype)
-    for i, thisgal in enumerate(gdata[np.argsort(gdata["m"])[::-1]]):
+    isort = np.argsort(gdata["m"])[::-1]
+    for i, thisgal in enumerate(gdata[isort]):
         dist, i_neigh = get_kd_matches(hkdt, thisgal, n_match=n_match, dist_upper=0.2)
-        touching = dist < (hdata[i_neigh]["r"] + thisgal["r"]) * rscale
-        neighbor_h = hdata[i_neigh][touching]
+        touching = (dist/rscale) < (hdata[i_neigh]["r"] + thisgal["r"])
+        neighbor_h = hdata[i_neigh[touching]]
+        #print(dist[touching])
 
         try:
         #if True:
-            matched_halo[i]=neighbor_h[np.argmax(neighbor_h["mvir"])]
+            matched_halo[isort[i]]=neighbor_h[np.argmax(neighbor_h["mvir"])]
         except:
             print("No Most massive halo...???")
             pass
@@ -80,8 +116,9 @@ def match_halo_gal(ids, gcdata, hcdata, masscut=None):
             In general, no haloes smaller than the smallest galaxy are excepted.
 
     """
+    print("HH")
     gdata = gcdata[mtc.match_list_ind(gcdata["id"], ids)]
-    mcut = np.median(gdata["m"]) * 0.2
+    mcut = np.median(gdata["m"]) * 0.2 # Host halo must be larger than 20% of Mstar.
     hdata = hcdata[np.where(hcdata["mvir"] > mcut)[0]]
     hdata = periodic_bc(hdata)
     hkdt = cKDTree(np.stack((hdata["x"], hdata["y"], hdata["z"]),axis=1))
@@ -92,43 +129,6 @@ def match_halo_gal(ids, gcdata, hcdata, masscut=None):
     halos2 = find_top_host_halo(gdata, hdata, hkdt, n_match=50, rscale=2.0)
 
     return direct_halos, halos, halos2
-
-
-def find_direct_halo(gdata, hdata, hkdt, n_match=50):
-    matched_halo = np.zeros(len(gdata), dtype=hdata.dtype)
-    miss=0
-    isort = np.argsort(gdata["m"])[::-1]
-    for i, thisgal in enumerate(gdata[isort]):
-        dist, i_neigh = get_kd_matches(hkdt, thisgal, n_match=n_match)#, dist_upper=0.5/100.)
-
-        # Exclude already-matched haloes
-        id_neighbor_h_ok = np.setdiff1d(hdata["id"][i_neigh], matched_halo["id"])
-
-        i_ok = mtc.match_list_ind(hdata["id"][i_neigh], id_neighbor_h_ok)
-        dist = dist[i_ok]
-        neighbor_h = hdata[i_neigh[i_ok]]
-
-        # Mass cut.
-        i_mass_ok =neighbor_h["m"] > thisgal["m"]
-        neighbor_h = neighbor_h[i_mass_ok]
-        dist = dist[i_mass_ok]
-        #print(i, len(neighbor_h), thisgal["m"], thisgal["x"], thisgal["y"], thisgal["z"])
-        # 6-D dist.
-        rel_vel = np.sqrt(np.einsum("...i,...i",np.column_stack((thisgal["vx"] - neighbor_h["vx"],
-                                         thisgal["vy"] - neighbor_h["vy"],
-                                         thisgal["vz"] - neighbor_h["vz"])),
-                                        np.column_stack((thisgal["vx"] - neighbor_h["vx"],
-                                         thisgal["vy"] - neighbor_h["vy"],
-                                         thisgal["vz"] - neighbor_h["vz"]))))
-        try:
-            matched_halo[isort[i]]=neighbor_h[np.argmin(dist * rel_vel)]
-        except:
-            #print("Missing match")
-            miss+=1
-            pass
-    print("There are {} missing matches".format(miss))
-
-    return matched_halo
 
 
 def measure_density(idxs):

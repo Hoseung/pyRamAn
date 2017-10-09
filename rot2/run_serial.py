@@ -409,13 +409,12 @@ def measure_density(gals, nnza_all, nnza_cell,
                                                          ("P_tidal", "<f8")])
 
         this_gal.env_short=np.zeros(len(nnza_cell.nnza), dtype=[("P_tidal_h", "<f8"),
-                                                         ("host_d_id", "<f8"),
+                                                         ("host_d_id", "<i4"),
                                                          ("host_d_m", "<f8"),
-                                                         ("host_t1r_id", "<f8"),
+                                                         ("host_t1r_id", "<i4"),
                                                          ("host_t1r_m", "<f8"),
-                                                         ("host_t2r_id", "<f8"),
+                                                         ("host_t2r_id", "<i4"),
                                                          ("host_t2r_m", "<f8")])
-
 
     """
         this_gal.main_data will be removed.
@@ -466,8 +465,6 @@ def measure_density(gals, nnza_all, nnza_cell,
                 this_gal.env_short["host_t1r_m"][i_cell]  = largest_hosts[j]["mvir"]
                 this_gal.env_short["host_t2r_id"][i_cell] = largest_hosts2[j]["id"]
                 this_gal.env_short["host_t2r_m"][i_cell]  = largest_hosts2[j]["mvir"]
-
-
 
 
 
