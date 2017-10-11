@@ -61,7 +61,7 @@ class Tree():
         from utils import util
         
         nout_fi = util.get_last_snapshot(self.wdir)
-        info = Info(nout=nout_fi)
+        self.info = Info(nout=nout_fi)
     
 
     def cal_time(self, info=None):
@@ -446,6 +446,10 @@ class Tree():
         return np.copy(atree[:i])
 
     def cal_nnza(self):
+        """
+
+        ToDo: change name as get_nnza()
+        """
         fdir = self.fn.split("tree.dat")[0]
 
         fsave = fdir+"nout_nstep_zred_aexp.txt"
