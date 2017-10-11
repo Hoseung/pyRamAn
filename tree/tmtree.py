@@ -10,6 +10,7 @@ Created on Wed Jan 21 11:45:42 2015
 import numpy as np
 from utils.io_module import read_fortran, skip_fortran
 from utils.hagn import Nnza
+from utils import cosmology
 import os
 
 class Tree():
@@ -17,8 +18,10 @@ class Tree():
                      wdir='./',
                      load=True,
                      nout_now=None,
+                     info=None,
                      BIG_RUN=True,
-                     is_gal=False):
+                     is_gal=False,
+                     load_info=True):
 
         self.set_fn(fn)
         self.tree = None
@@ -35,6 +38,9 @@ class Tree():
         self.omega_ts = None
         self.age_univs = None
         self.nsteps = None
+        self.info = info
+        if self.info is None and load_info:
+            self.load_info()
 
         if fn is None:
             self.get_fn()
@@ -49,6 +55,37 @@ class Tree():
                 self.nnza = Nnza(fname=self.fn.split("tree.dat")[0]+"nout_nstep_zred_aexp.txt")
             except:
                 print("Can not load nnza")
+
+    def load_info(self):
+        from load.info import Info
+        from utils import util
+        
+        nout_fi = util.get_last_snapshot(self.wdir)
+        info = Info(nout=nout_fi)
+    
+
+    def cal_time(self, info=None):
+        """
+            Calculate look back time and update nnza["lbt"].
+            Assuems now = the end of tree. 
+            If the last step is at z=1, then lbt=0Gyr and z=0.
+        """
+        if not hasattr(self, "nnza"):
+            print("No nnza attribute found, Can't proceed")
+            return
+            
+        if info is None:
+           info = self.info
+    
+        if info is None:
+            self.load_info()
+
+        # Add error handling. Give useful information on error
+        tc = cosmology.Timeconvert(info)
+        z_now = min(self.nnza.nnza["zred"])
+        self.nnza.nnza["lbt"] = tc.zred2gyr(self.nnza.nnza["zred"], z_now=z_now)
+        print("Look back time calculation done")
+        print("Current time : z={:.2f}".format(z_now))
 
 
     def dump(self, suffix="", force=False, protocol=-1):
@@ -134,11 +171,13 @@ class Tree():
             Parameters
             ----------
 
-            nout_now : int
+            nout_now (Deprecated) : int
                 correct nstep to match with simulation nout.
-
                 The first treebrick in the tree is usually between
                 a few to a few tens snapshot.
+                **
+                nout - nstep relation is no more that simple due to missing nouts when building trees. 
+                    Thus it is better to keep a nout-nstep-zred-aexp(-lbt) matching list, which is hagn.Nnza().
 
             BIG_RUN : logical
                 for large simulation, particle mass is excluded.

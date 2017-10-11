@@ -5,6 +5,8 @@ Created on Thu Jan 29 00:26:50 2015
 @author: hoseung
 """
 import os
+import numpy as np
+
 def mkdir(dirpath):
     if not os.path.isdir(dirpath):
         os.mkdir(dirpath)
@@ -104,3 +106,10 @@ def dgyr2dnout(dt, nout_now):
     i_dt= np.argmin(np.abs(lbt - lbt_now + dt))
 
     return df.times["nout"][i_dt]
+
+
+def get_last_snapshot(base='./'):
+    #from glob import glob
+
+    return int(np.sort(os.listdir("./snapshots/"))[-1].split("_")[1])
+    # fi = glob("./snapshots/" +  + "/info*.txt")
