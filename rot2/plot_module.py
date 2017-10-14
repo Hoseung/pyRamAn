@@ -112,7 +112,7 @@ def plot_scatter_mean_binned(ax, xx, yy,
         ax.plot(xpos, y_upper, lw=2, color="blue")
 
     if do_mean_std:
-        mean_std(xx, yy, ax, nbins=nbins, fmt='b-', linewidth=3)
+        mean_std(xx, yy, ax, nbins=nbins, color="orange", linewidth=3)
 
     if do_mean_alone:
         mean_alone(xx, yy, ax, nbins=nbins, color='b', linewidth=3)
@@ -121,5 +121,5 @@ def plot_scatter_mean_binned(ax, xx, yy,
     if label is not None: ax.legend()
     #ax.plot()
     #ax.legend(line,"name",numpoints=3,loc=1)
-    ax.set_ylabel(r"$\Delta \lambda_{R_{e}}$ per merger", fontsize=16)
-    ax.set_xlabel("Merger mass ratio", fontsize=16)
+    #ax.set_ylabel(r"$\Delta \lambda_{R_{e}}$ per merger", fontsize=16)
+    #ax.set_xlabel("Merger mass ratio", fontsize=16)
