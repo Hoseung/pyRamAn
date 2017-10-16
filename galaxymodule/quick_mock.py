@@ -357,6 +357,7 @@ def get_absolute_mag(flux, band=None, bandname="r"):
     if band is None:
         band = BandSDSS()
 
+    speed_of_light = 3e18 # angstrom / sec
     d_lum_10p = 3.0857e19 # lumminonsity distance of 10pc in cm
     return - 2.5 * np.log10(np.sum(flux)/(4.*np.pi*d_lum_10p*d_lum_10p)*1e-2) \
             - 5. * np.log10(getattr(band, bandname)["pivot_lambda"]) \

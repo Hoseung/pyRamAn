@@ -65,8 +65,8 @@ class Meta():
         self.vmap = None
         self.pt=[]
         self.pq=[]
-        self.sfr=0.0
-        self.ssfr=0.0
+        #self.sfr=0.0
+        #self.ssfr=0.0
         self.mrj=0.0
         self.d2t=0.0
         self.nvec=None
@@ -181,6 +181,11 @@ class Galaxy():
             return
 
         data = getattr(self, pop)
+        print("vcx before", self.meta.vxc)
+        vxc_before = self.meta.vxc
+        self.meta.vxc = np.median(data["vx"]) * self.info.kms
+        self.meta.vyc = np.median(data["vy"]) * self.info.kms
+        self.meta.vzc = np.median(data["vz"]) * self.info.kms
         # Unit conversion
         if unit_conversion == "code":
             if "x" in data.dtype.names:
@@ -190,6 +195,8 @@ class Galaxy():
             if 'm' in data.dtype.names:
                 data['m'] = data['m'] * self.info.msun
             if "vx" in data.dtype.names:
+                print("vcx after", self.meta.vxc)
+                print("vcx diff", self.meta.vxc - vxc_before)
                 data['vx'] = data['vx'] * self.info.kms - self.meta.vxc
                 data['vy'] = data['vy'] * self.info.kms - self.meta.vyc
                 data['vz'] = data['vz'] * self.info.kms - self.meta.vzc
@@ -929,7 +936,6 @@ class Galaxy():
             pos1, pos2, vel1, vel2 = 'z', 'x', 'vz', 'vx'
         if proj=="z":
             pos1, pos2, vel1, vel2 = 'x', 'y', 'vx', 'vy'
-
 
 
         # Radius

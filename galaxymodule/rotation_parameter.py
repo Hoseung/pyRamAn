@@ -276,7 +276,8 @@ def _measure_lambda(mge_par,
     if verbose: print("Reff = half light?1", sum(mmap[dd < 1.0])/ sum(mmap))
     dist1d = np.sqrt(np.square(xNode - xcen) + np.square(yNode - ycen))
     for i in range(len(points)):
-        ind = np.where( (dd > i) & (dd < (i+1)))[0]
+        #ind = np.where( (dd > i) & (dd < (i+1)))[0]
+        ind = np.where(dd < (i+1))[0]
 
         if len(ind) >  0:
             a = sum(mmap[ind] * dist1d[ind] * abs(vmap[ind]))
@@ -287,8 +288,7 @@ def _measure_lambda(mge_par,
 
                 points[i] = a/b
 
-
-    if voronoi == 123:
+    if voronoi:
         dd = np.sqrt((xNode - 0.5*npix)**2 + (yNode - 0.5*npix)**2) *\
              npix_per_reff
         i_radius = np.fix(dd).astype(int)

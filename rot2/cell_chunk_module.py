@@ -1,4 +1,7 @@
 import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.colors import LogNorm
+
 
 def ind_cell(allcell, region):
     x=allcell["x"]
@@ -21,7 +24,7 @@ def ind_cell_kd(kdtree, gal, pboxsize, rscale=25.0):
     Extract cells within rscale * Rreff and add to the galaxy.
     """
     xc,yc,zc = gal.meta.xc, gal.meta.yc, gal.meta.zc
-    rgal = gal.meta.reff * rscale / (pboxsize*1e3) # kpc -> code unit
+    rgal = min([100, max([30, gal.meta.reff * rscale])]) / (pboxsize*1e3) # kpc -> code unit
     #index = kdtree.query_ball_point((xc,yc,zc), rgal)
     xyzcen = (xc/pboxsize + 0.5,
               yc/pboxsize + 0.5,
@@ -54,11 +57,13 @@ def add_output_containers(gg):
     gg.meta.vsig_results={"Vmax":None, "sigma":None, "V_sig":None}
 
 def do_work(sub_sample, nout, i_subsample,
-            out_base='/scratchb01/hoseung/',
+            out_base='/scratchb01/hoseung/newrun/',
             wdir = "./",
             rscale=1.5,
             do_cell=True,
-            save_cell=True):
+            out_subdir = "lambda_results/",
+            save_cell=True,
+            do_plot=False):
     """
     Per process.
     """
@@ -71,7 +76,7 @@ def do_work(sub_sample, nout, i_subsample,
     from load.sim import Sim
     from galaxymodule import vmax_sig
     import pickle
-    from galaxymodule.quick_mock import Simplemock
+    import galaxymodule.quick_mock as qmc     
     from galaxymodule import gal_properties
     import time
     import os
@@ -90,6 +95,7 @@ def do_work(sub_sample, nout, i_subsample,
                              save_result = True,
                              galaxy_plot_dir='./')
 
+    
     sfr_params = dict(hist_dt=0.1,
                       hist_tmin=0,
                       hist_tmax=None,
@@ -99,14 +105,15 @@ def do_work(sub_sample, nout, i_subsample,
 
 
     mgp.HAGN["verbose"] = False
-    mgp.HAGN["mstar_min"] = 1e7
-    out_dir = out_base+"RUN4/lambda_results/" + str(nout) +'/'
+    mgp.HAGN["mstar_min"] = 1e8 * nout / 782
+    out_dir = out_base+out_subdir+ str(nout) +'/'
 
     # Common 1
     # simulation information
     s = Sim(base=wdir, nout=nout)
 
     if do_cell:
+        print("Do CELL")
         # If there are CELL_ files available, use them.
         for this_gal in sub_sample:
             if os.path.isfile(out_base+"CELL_{:05d}/CELL_{:d}_{:d}.pickle".format(nout,nout,this_gal["id"])):
@@ -154,14 +161,15 @@ def do_work(sub_sample, nout, i_subsample,
 
     # Common 5
     # Mock image generator
-    MockSED = Simplemock()#repo=dfl.dir_repo+'sed/')
+    MockSED = qmc.Simplemock()#repo=dfl.dir_repo+'sed/')
+    sdss_band = qmc.BandSDSS()
 
     result_sub_sample=[]
     print("{} galaxies in this sub sample".format(len(sub_sample)))
     for i, gcat_this in enumerate(sub_sample):
-        gg = rd_GM.Gal(nout=nout,
+        gg = rd_GM.Gal(nout=nout,wdir=wdir,
                        catalog=gcat_this.copy(),
-                       info=s.info)
+                       info=s.info, type_cell=do_cell)
         #print("s.info.pboxsize", s.info.pboxsize)
         gg.debug=False
         make_gal.mk_gal(gg,**mgp.HAGN)
@@ -207,7 +215,12 @@ def do_work(sub_sample, nout, i_subsample,
 
         # Cell needed to calcluate gas attenuation.
         # r-band luminosity to be used as weights.
+        gg.star.Flux_u= MockSED.get_flux(star=gg.star, cell = gg.cell, filter_name='u')
+        gg.meta.Mu = qmc.get_absolute_mag(gg.star.Flux_u, band=sdss_band, bandname="u")
+        gg.star.Flux_g= MockSED.get_flux(star=gg.star, cell = gg.cell, filter_name='g')
+        gg.meta.Mg = qmc.get_absolute_mag(gg.star.Flux_g, band=sdss_band, bandname="g")
         gg.star.Flux_r= MockSED.get_flux(star=gg.star, cell = gg.cell, filter_name='r')
+        gg.meta.Mr = qmc.get_absolute_mag(gg.star.Flux_r, band=sdss_band, bandname="r")
 
        	gg.meta.mean_age = np.average(gg.star["time"], weights=gg.star["m"])
         gg.cal_norm_vec()
@@ -216,11 +229,67 @@ def do_work(sub_sample, nout, i_subsample,
         # Make pseudo particles. - memory usage!
         rotation_parameter.gen_vmap_sigmap(gg, **gen_vmap_sigmap_params)
         rotation_parameter.cal_lambda_r_eps(gg, **cal_lambda_params)
+        if do_plot:
+            plt.rcParams["mathtext.fontset"] = "dejavusans"
+            fig,axs = plt.subplots(2,2)
+            im = axs[0,0].imshow(gg.mmap, norm=LogNorm())
+            fig.colorbar(im,ax=axs[0,0])
+            axs[0,0].set_title("Stellar density")
+            im=axs[0,1].imshow(gg.vmap, cmap="RdYlBu")
+            fig.colorbar(im,ax=axs[0,1], label=r"$kms^{-1}$")
+            axs[0,1].set_title("Velocity")
+            im=axs[1,0].imshow(gg.sigmap)
+            fig.colorbar(im,ax=axs[1,0], label=r"$kms^{-1}$")
+            axs[1,0].set_title("Velocity dispersion")
+            axs[1,1].plot(np.arange(15)/5.,gg.meta.lambda_result_list[0])
+            axs[1,1].set_title("Stellar density")
+
+            axs[0,0].set_xticks([0,10,20,30,40])
+            xticks = ["{:.1f}".format(x) for x in np.arange(-4,5,2)]
+            axs[0,0].set_xticklabels(xticks)
+            axs[0,0].set_ylabel("position [kpc]")
+            axs[0,0].set_yticks(np.linspace(0,40,5))
+            yticks = ["{:.1f}".format(y) for y in np.linspace(-gg.meta.rgal, gg.meta.rgal, num=5)]
+            axs[0,0].set_yticklabels(yticks)
+
+            axs[0,1].set_xticks([0,10,20,30,40])
+            xticks = ["{:.1f}".format(x) for x in np.arange(-4,5,2)]
+            axs[0,1].set_xticklabels(xticks)
+            axs[0,1].set_ylabel("position [kpc]")
+            axs[0,1].set_yticks(np.linspace(0,40,5))
+            yticks = ["{:.1f}".format(y) for y in np.linspace(-gg.meta.rgal, gg.meta.rgal, num=5)]
+            axs[0,1].set_yticklabels(yticks)
+
+            axs[1,0].set_xticks([0,10,20,30,40])
+            xticks = ["{:.1f}".format(x) for x in np.arange(-4,5,2)]
+            axs[1,0].set_xticklabels(xticks)
+            axs[1,0].set_ylabel("position [kpc]")
+            axs[1,0].set_yticks(np.linspace(0,40,5))
+            yticks = ["{:.1f}".format(y) for y in np.linspace(-gg.meta.rgal, gg.meta.rgal, num=5)]
+            axs[1,0].set_yticklabels(yticks)
+            
+            axs[0,0].set_xlabel(r"R/R$_{eff}$")
+            axs[0,1].set_xlabel(r"R/R$_{eff}$")
+            axs[1,0].set_xlabel(r"R/R$_{eff}$")
+            axs[1,1].set_xlabel(r"R/R$_{eff}$")
+            #axs[0,0].set_ylabel(r"R/R$_{eff}$")
+            axs[1,1].set_ylabel(r"$\lambda$")
+            axs[1,1].set_ylim([0,1.0])
+            axs[1,1].set_aspect(3.)
+            axs[1,1].set_xticks([0,1,2,3])
+            xticks = ["{:1d}".format(x) for x in [0,1,2,3]]
+            axs[1,1].set_xticklabels(xticks)
+            axs[1,1].text(10, 0.8, "{:.2e}M" + r"$\odot$".format(gg.meta.mstar))
+            fig.suptitle("ID {},  z={:.1f}".format(gg.meta.id, gg.info.zred))
+            plt.tight_layout()
+            plt.savefig(out_dir + "lam_map_{}_{}.png".format(nout, gg.meta.id), dpi=200)
+            plt.close()
+        
 
         # Calculate Vmax, Sig
         # get_vmax_sig uses vmap and sigmap from get_vmap_sigmap.
         # So if the maps were luminosity weighted, that also applies to the vmax and sig.
-        vmax_sig.get_vmax_sig(gg, make_plot=False)
+        vmax_sig.get_vmax_sig(gg, make_plot=False, out_dir=out_dir)
 
         # SFR
         # send the parameters to the begining.
@@ -235,6 +304,7 @@ def do_work(sub_sample, nout, i_subsample,
     #print(out_dir, fout)
     pickle.dump(result_sub_sample, open(fout, "wb"))
     #print("Galaxy properties took {:.2f}s with {} particles".format(time.time() - t1, gg.meta.nstar))
+    return gg
 
 
 #########################################################

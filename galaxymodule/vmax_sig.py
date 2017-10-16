@@ -14,8 +14,9 @@ def weighted_std(values, weights):
     return math.sqrt(variance)
 
 def get_vmax_sig(gal,
-                 make_plot=True,
-                 nreff=2.0):
+                 make_plot=False,
+                 nreff=2.0,
+                 out_dir="./"):
 
     # get points near the major axis line
     n_pseudo = 30
@@ -85,7 +86,8 @@ def get_vmax_sig(gal,
 
         print("Vmax {:.2f}, sigma {:.2f}, v/sig {:.2f}".format(vmax, sig, vmax/sig))
         ax[1].set_aspect('auto')
-        plt.savefig(str(gal.meta.id) + "_vel_curve" + str(n_pseudo) + ".png")
+        plt.savefig(out_dir + str(gal.meta.id) + "_vel_curve" + str(n_pseudo) + ".png")
+        plt.close()
 
     gal.meta.vsig_results["Vmax"]= vmax
     gal.meta.vsig_results["sigma"] = sig

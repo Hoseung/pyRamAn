@@ -318,13 +318,18 @@ class Gal(Galaxy):
             if type_cell == "gm":
                 self.cell = rd_cell(self.nout, self.gid, wdir=self.wdir, metal=True)
                 self.units.cell= unit_gm
+                self._has_cell=True
             elif type_cell == "raw":
                 from load.hydro import Hydro
                 hh = Hydro(info=self.info, region=self.region)
                 hh.amr2cell()
                 self.cell = hh.cell
                 self.units.cell= unit_raw
-            self._has_cell=True
+                self._has_cell=True
+            elif type_cell == False:
+                self.cell = None
+                pass
+
         except FileNotFoundError as e:
             print("File Not Found:", e.filename)
             print("No CELL data loaded")

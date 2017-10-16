@@ -2,11 +2,11 @@ import numpy as np
 
 # 1. Gas properties
 def get_gas_all(gg, info, dr=5, rmax=200, density_ratio=1e-3):
-    get_cold_cell(gg, info, dr, rmax, density_ratio)
+    #get_cold_cell(gg, info, dr, rmax, density_ratio)
     #mgas_tot, mgas_cold, Ln_gas = get_gas_properties(gg, info)
     gg.meta.gas_results = get_gas_properties(gg, info)
 
-def get_cold_cell(gg, info, dr=5, rmax=200, density_ratio=1e-3):
+def get_cold_cell(gg, info, dr=5, rmax=200, density_ratio=1e-3, check_bound=False):
     """
         returns True if the galaxy has cold gas.
     """
@@ -16,12 +16,14 @@ def get_cold_cell(gg, info, dr=5, rmax=200, density_ratio=1e-3):
         return False
     else:
         #print("Numbe of cold cells", len(cold_cell))
-        i_dense = ind_dense(cold_cell, dr=dr, rmax=rmax)
-        if len(i_dense)/len(cold_cell) < density_ratio:
-            print("Warning.. only a tiny fraction of cold gas is bound to the galaxy?")
-        gg.cell = cold_cell[i_dense]
+        if check_bound:
+            i_dense = ind_dense(cold_cell, dr=dr, rmax=rmax)
+            if len(i_dense)/len(cold_cell) < density_ratio:
+                print("Warning.. only a tiny fraction of cold gas is bound to the galaxy?")
+            gg.cell = cold_cell[i_dense]
+        else:
+            gg.cell = cold_cell
         return True
-        #make_gal.extract_cold_gas(gg, dr=5, rmax=200)  
 
 def rho_t_cut(cell, info, lose_cut=False):
     """
