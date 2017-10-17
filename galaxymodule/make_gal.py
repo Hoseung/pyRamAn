@@ -132,17 +132,20 @@ def mk_gal(gal,
     if method_com=="catalog":
         gal.meta.xc, gal.meta.yc, gal.meta.zc = gal.header["xg"]
 
+    dd = (np.square(star['x']) +
+          np.square(star['y']) +
+          np.square(star['z'])) 
+
     if method_cov=="close_member":
-        gal.meta.vxc = np.average(vx[i_close])
-        gal.meta.vyc = np.average(vy[i_close])
-        gal.meta.vzc = np.average(vz[i_close])
+        i_close = np.argsort(dd)[:int(len(star))] # half close members
+        gal.meta.vxc = np.average(star["vx"][i_close])
+        gal.meta.vyc = np.average(star["vy"][i_close])
+        gal.meta.vzc = np.average(star["vz"][i_close])
     elif method_cov=="catalog":
         gal.meta.vxc, gal.meta.vyc, gal.meta.vzc = gal.header["vg"]
 
     # Membership
-    ind = np.where((np.square(star['x']) +
-                    np.square(star['y']) +
-                    np.square(star['z'])) < gal.meta.rgal**2)[0]# in kpc unit
+    ind = np.where(dd < gal.meta.rgal**2)[0]# in kpc unit
 
     gal.star = star[ind]
     gal.star["vx"] -= gal.meta.vxc
