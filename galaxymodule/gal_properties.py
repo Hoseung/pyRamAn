@@ -203,5 +203,6 @@ def get_galaxy_area(gg):
     """
         Returns the area coverd by stellar particles based on the gal.mmap.
     """
+    #gg.npix_per_reff = 5
     dx = gg.rgal / gg.npix_per_reff # right?
     return dx*dx*sum(gg.mmap.ravel() > 0)

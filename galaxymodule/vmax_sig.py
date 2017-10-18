@@ -14,6 +14,7 @@ def weighted_std(values, weights):
     return math.sqrt(variance)
 
 def get_vmax_sig(gal,
+                 vsig_results,
                  make_plot=False,
                  nreff=2.0,
                  out_dir="./"):
@@ -89,6 +90,6 @@ def get_vmax_sig(gal,
         plt.savefig(out_dir + str(gal.meta.id) + "_vel_curve" + str(n_pseudo) + ".png")
         plt.close()
 
-    gal.meta.vsig_results["Vmax"]= vmax
-    gal.meta.vsig_results["sigma"] = sig
-    gal.meta.vsig_results["V_sig"] = vmax/sig
+    vsig_results["Vmax"]= vmax
+    vsig_results["sigma"] = sig
+    vsig_results["V_sig"] = vmax/sig

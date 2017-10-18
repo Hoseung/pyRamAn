@@ -86,6 +86,12 @@ def do_work(sub_sample, nout, i_subsample,
                                   verbose=False,
                                   voronoi=None, #voronoi_dict
                                   weight="luminosity")
+    gen_vmap_sigmap_params2 = dict(npix_per_reff=5,
+                                  rscale=3.0,
+                                  n_pseudo=1,
+                                  verbose=False,
+                                  voronoi=None, #voronoi_dict
+                                  weight="luminosity")
 
     cal_lambda_params = dict(npix_per_reff=5,
                              rscale=3.0,
@@ -172,7 +178,9 @@ def do_work(sub_sample, nout, i_subsample,
                        info=s.info, type_cell=do_cell)
         #print("s.info.pboxsize", s.info.pboxsize)
         gg.debug=False
+        mgp.HAGN["method_cov"] = "close_member"
         make_gal.mk_gal(gg,**mgp.HAGN)
+
         gg.meta.idx = gcat_this["idx"]
         #print(i,"-th, idx=", gg.meta.idx)
         if gg.meta.nstar < 60:
@@ -223,6 +231,12 @@ def do_work(sub_sample, nout, i_subsample,
         gg.meta.Mr = qmc.get_absolute_mag(gg.star.Flux_r, band=sdss_band, bandname="r")
 
        	gg.meta.mean_age = np.average(gg.star["time"], weights=gg.star["m"])
+
+        # SFR
+        # send the parameters to the begining.
+        # Each function assumes various attributes from the gal object.
+        # you may want to check them exist before/in each function.
+
         gg.cal_norm_vec()
 
         gg.meta.rscale_lambda = gen_vmap_sigmap_params["rscale"]
@@ -289,13 +303,22 @@ def do_work(sub_sample, nout, i_subsample,
         # Calculate Vmax, Sig
         # get_vmax_sig uses vmap and sigmap from get_vmap_sigmap.
         # So if the maps were luminosity weighted, that also applies to the vmax and sig.
-        vmax_sig.get_vmax_sig(gg, make_plot=False, out_dir=out_dir)
+        vmax_sig.get_vmax_sig(gg, gg.meta.vsig_results, make_plot=False, out_dir=out_dir)
 
-        # SFR
-        # send the parameters to the begining.
-        # Each function assumes various attributes from the gal object.
-        # you may want to check them exist before/in each function.
+        # B/T?
+        # Could be done after 
+        if False:
+            gal.reorient() 
+            gal.cal_b2t(ptype='star', disk_criterion="Scannapieco2009",bound_only=False)
+            # once again with edge-on?
+            gg.meta.vsig_results_edge={"Vmax":None, "sigma":None, "V_sig":None}
+            rotation_parameter.gen_vmap_sigmap(gg, **gen_vmap_sigmap_params2)
+            rotation_parameter.cal_lambda_r_eps(gg, **cal_lambda_params)
+            vmax_sig.get_vmax_sig(gg,gg.meta.vsig_results_edge, make_plot=False, out_dir=out_dir)
+
+        # Calculate SFR before making pseudo particls
         gal_properties.get_sfr_all(gg, **sfr_params)
+
 
         # Misc
         result_sub_sample.append(gg.meta)
