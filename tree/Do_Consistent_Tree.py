@@ -19,10 +19,18 @@ from tree.tree_builder import convert_halo_list
 
 
 def run(wdir ='./', nout_ini=None, is_gal=False,
-        out_dir_g='GalaxyMaker/', out_dir_d='halo/'):
+        out_dir_g='GalaxyMaker/', out_dir_d='halo/',
+        iap=False):
     base = os.path.abspath(wdir) + '/'
     print(base)
     cluster = base.split('/')[-2]
+    if iap:
+        from glob import glob
+        tl = glob(wdir + 'GalaxyMaker/gal/tree_bricks*')
+        nout_list = [int(tt.split("_bricks")[1]) for tt in tl]
+    else:
+        nout_list = None
+
     if is_gal:
         if nout_ini is None:
             nout_ini=11
@@ -33,7 +41,8 @@ def run(wdir ='./', nout_ini=None, is_gal=False,
         out_dir = base + out_dir_d
 
 
-    convert_halo_list(nout_ini=nout_ini, nout_fi = 187,
+    convert_halo_list(nout_ini=nout_ini, nout_fi=187,
+                      nout_list=nout_list,
                       base=base, out_dir=out_dir, is_gal=is_gal,
                       nmax_fracmax_ratio=1.01,
                       nmax_fracmax_ratio2=1.00,
@@ -126,16 +135,16 @@ if __name__ == "__main__":
     #nout_ini=int(input("not_ini=? (12)"))
     #if nout_ini == "":
     #    nout_ini = 12
-    is_gal = False
+    is_gal = True
     nout_ini = 20
     #run(wdir = here + "/" , is_gal=is_gal, nout_ini=nout_ini,
     #    out_dir_g="halo/")
     #clusters=["29176"]
-
-    # 29828 -> 29830
-    clusters=["01605", "04466", "05427", "10002", "14172",
-              "17891", "24954", "28930", "29172", "35663",
-              "36413", "36415", "49096", "06098", "07206", "39990"][-1]
-def run_all(clusters, is_gal=True, nout_ini=20):
+    # 29828 -> 29830, and 28930 is incomplete
+    #["01605", "04466", "05420", "05427", "06098",
+    # "07206", "10002", "14172", "17891", "24954",
+    # "28930", "29172", "29176", "35663", "36413",
+    # "36415", "39990", "49096"]
+    clusters=["49919"]
     for cluster in clusters:
-        run(wdir = cluster + "/" , is_gal=is_gal, nout_ini=nout_ini)
+        run(wdir = here + "/" + cluster + "/" , is_gal=is_gal, nout_ini=nout_ini)

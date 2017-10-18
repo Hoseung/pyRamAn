@@ -4,7 +4,7 @@ Created on Mon Jun  1 00:15:25 2015
 
 @author: hoseung
 """
-from galaxy import galaxy
+from galaxymodule import galaxy
 
 
 def get_center(x, y, z, m, method='default'):

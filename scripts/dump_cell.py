@@ -95,8 +95,6 @@ def main(nout_ini, nout_fi, wdir='./', rcluster_scale = 2.9):
     nouts = range(nout_fi, nout_ini -1, -1)
 
 # In[15]:
-    prg_only_tree = pickle.load(open(wdir + "prg_only_tree.pickle", 'rb'))
-
     for nout in nouts:
         print("Nout =", nout)
         s = load.sim.Sim(nout=nout, base=wdir, setup=True)
@@ -104,19 +102,13 @@ def main(nout_ini, nout_fi, wdir='./', rcluster_scale = 2.9):
     
         info = load.info.Info(base=wdir, nout=nout)
         gcat = hmo.Halo(base=wdir, is_gal=True, verbose=True, nout=nout)
-        result = analysis.misc.load_cat(wdir + 'easy_new/catalog' + str(nout) + '.pickle')
+        # result = analysis.misc.load_cat(wdir + 'easy_new/catalog' + str(nout) + '.pickle')
+        result = 
         
-        
-#        hcat = hmo.Halo(base=wdir, is_gal=False, nout=nout)    
-#        cluster = hcat.data[np.argmax(hcat.data['np'])]
         out_dir = wdir + 'GalaxyMaker/CELL_' + str(nout).zfill(5) + '/'
         if not os.path.isdir(out_dir):
             os.mkdir(out_dir)
     
-#        i_ok_gals = radial_cut(cluster['x'], cluster['y'], cluster['z'],
-#                               rcluster_scale * cluster['rvir'],
-#                               gcat.data['x'], gcat.data['y'], gcat.data['z'])    
-#        g_ok = gcat.data[i_ok_gals]
         i_ok_gals = mtc.match_list_ind(gcat.data['id'], result['id'])
 
         # small galaxies have small data.

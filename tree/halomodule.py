@@ -2,7 +2,7 @@
 """
 Created on Mon Apr  6 11:00:31 2015
 
-halo / galaxy calss including basic data load functionality. 
+halo / galaxy calss including basic data load functionality.
 
 Parameters
 ----------
@@ -13,10 +13,10 @@ base : str
 is_gal : logical
     load galaxy if true
 return_id : logical
-    If True, load and return constituent particle id of each halo. 
+    If True, load and return constituent particle id of each halo.
 return_id_list : int list
     specify halos of which particle id is returned.
-    If return_id is True but return_id_list is None, 
+    If return_id is True but return_id_list is None,
     particle id of all halos are returned.
 
 
@@ -33,6 +33,10 @@ MODIFICATIONS:
 @author: hoseung
 """
 
+from tree import rd_hal as rd_halo
+import numpy as np
+from utils.io_module import read_fortran, skip_fortran
+from load.info import Info
 class HaloMeta():
     """
     HaloMeta class.
@@ -43,7 +47,7 @@ class HaloMeta():
 
     Attributes
     ----------
- 
+
     Methods
     -------
     set_info(self, info)
@@ -54,7 +58,7 @@ class HaloMeta():
 
 
     """
-    def __init__(self, nout=None, base='./', info=None, halofinder='HM',
+    def __init__(self, fn=None, nout=None, base='./', info=None, halofinder='HM',
                  load=True, is_gal=False, return_id=False, outdir=None,
                  verbose=False):
         """
@@ -68,19 +72,19 @@ class HaloMeta():
 
         halofinder : {"RS", "HM"}
             Full names also work. case insensitive.
-  
+
 
         Examples
         --------
-        It is better to specify nout, base, halofinder from the beginning. 
+        It is better to specify nout, base, halofinder from the beginning.
         All three are necessary to load a halo output
-        
-        >>> h = tree.halomodule.Halo(nout=132, halofinder="RS", base='~/data/AGN2/')    
-        
+
+        >>> h = tree.halomodule.Halo(nout=132, halofinder="RS", base='~/data/AGN2/')
+
         given nout and base, info is auto-loaded if not explicitely given.
 
         """
-
+        self.fn = fn
         self.nout = nout
         self.verbose = verbose
         self.base = base
@@ -98,6 +102,7 @@ class HaloMeta():
         self.massp = 0 # in case of single level DMO run.
         self.unit={"mass":None, "lengh":None, "velocity":None}
         self.is_gal = is_gal
+        self.convert=True
         if return_id is False:
             self.return_id = False
         else:
@@ -107,7 +112,7 @@ class HaloMeta():
             else:
                 self.return_id_list = None # None = load all halo's ids.
             self.return_id = True
-        
+
         if outdir is None:
             if is_gal:
                 self.gal_find_dir = 'GalaxyMaker/'
@@ -117,13 +122,13 @@ class HaloMeta():
             if is_gal:
                 self.gal_find_dir = outdir
             else:
-                self.dm_find_dir= outdir
-        
+                self.dm_find_dir = outdir
+
         try:
             self.set_nout(nout)
         except:
             pass
-        
+
         if load:
             self.load()
 
@@ -140,11 +145,11 @@ class HaloMeta():
 
 
     def _load_info(self):
-        import load.info
-        if self.verbose: 
+        #if self.verbose:
+        if True:
             print("[Halo.load_info] loading info")
             print("[Halo.load_info] nout = {}, base ={}".format(self.nout, self.base))
-        self.info = load.info.Info(nout=self.nout, base=self.base, load=True)    
+        self.info = Info(nout=self.nout, base=self.base, load=True)
         if self.verbose : print("[Halo.load_info] info is loaded")
 
 
@@ -182,56 +187,75 @@ class Halo(HaloMeta):
 
 
     """
+    def __init__(self, convert=True, **kwargs):
+        self.convert = convert
+        super(Halo, self).__init__(**kwargs)
+
+
     def _check_params(self):
         assert (self.base is not None), "No working directory given : {}".format(self.base)
         assert (self.nout is not None), "No nout given : {}".format(self.nout)
         #assert (self.base is not None), "No  : {}".format(self.base)
-    
+
     def set_data(self, data):
         if data is None:
             self.load()
         else:
             self.data = data
 
-    def load(self):
-        self._check_params()
+    def load(self, nout=None, base=None, info=None):
+        """
+        There are nout, base keywords.
+        But self.nout and self.base are already available.
+        Determine the priority among them.
+        """
+        if self.fn is None:
+            self._check_params()
         if self.halofinder is 'Rockstar':
             self.load_rs()
         elif self.halofinder is 'HaloMaker':
-            if self.return_id:
-                self.load_hm_old()
-            else:
-                self.load_hm()
-            if self.info is None:
-                import load
-                info = load.info.Info(base = self.base, nout = self.nout, load=True)
-                self.set_info(info)
-        
-            self.normalize()
+            if self.fn is None:
+                if nout is None:
+                    nout = self.nout
+                if base is None:
+                    base = self.base
+                try:
+                    self.data = pickle.load(open(base + self.gal_find_dir + "gal_pickle/gcat_{}.pickle".format(nout), "rb"))
+                    return
+                except:
+                    pass
 
-    def load_hm(self, nout=None, base=None, info=None):
-        if nout is None:
-            nout = self.nout
-        if base is None:
-            base = self.base
-        snout = str(self.nout).zfill(3)
-        if self.is_gal:
-            fn = base + self.gal_find_dir + 'gal/tree_bricks' + snout
+                snout = str(self.nout).zfill(3)
+                if self.is_gal:
+                    self.fn = base + self.gal_find_dir + 'gal/tree_bricks' + snout
+                else:
+                    self.fn = base + self.dm_find_dir + 'DM/tree_bricks' + snout
+                    #print(fn)
+            if self.verbose:
+                print("Loading file:", self.fn)
+            self.load_hm(self.fn)
+            if self.info is None:
+                info = Info(base = self.base, nout = self.nout, load=True)
+                self.set_info(info)
+        if self.convert:
+            self.normalize()
         else:
-            fn = base + self.dm_find_dir + 'DM/tree_bricks' + snout
-        if self.verbose: print("Loading file:", fn)
-        try:
+            print("Not converting unit!")
+
+    def load_hm(self, fn):
+        #try:
+        if True:
             dtype_halo = [('np', '<i4'), ('id', '<i4'), ('level', '<i4'),
                           ('host', '<i4'), ('sub', '<i4'), ('nsub', '<i4'),
                           ('nextsub', '<i4'),
                           ('m', '<f4'), ('mvir', '<f4'),
-                          ('r', '<f4'), ('rvir', '<f4'), 
-                          ('tvir', '<f4'), ('cvel', '<f4'), 
+                          ('r', '<f4'), ('rvir', '<f4'),
+                          ('tvir', '<f4'), ('cvel', '<f4'),
                           ('x', '<f4'), ('y', '<f4'), ('z', '<f4'),
                           ('vx', '<f4'), ('vy', '<f4'), ('vz', '<f4'),
                           ('ax', '<f4'), ('ay', '<f4'), ('az', '<f4'),
                           ('sp', '<f4'), ('idx', '<i4'),
-                          ('p_rho', '<f4'),('p_c', '<f4'), 
+                          ('p_rho', '<f4'),('p_c', '<f4'),
                           ('energy', '<f8', (3,)), ('radius', '<f8', (4,))]
 
             if self.is_gal:
@@ -240,22 +264,25 @@ class Halo(HaloMeta):
                                ('g_nbin', '<i4'), ('g_rr', '<f4', (100,)),
                                ('g_rho', '<f4', (100,))]
 
-            import tree.load_c.rd_hal as rd_halo
-            import numpy as np
-            temp = rd_halo.read_file(fn.encode(), int(self.is_gal))# as a byte str.
-            
-            self.nbodies, self.halnum, self.subnum,\
-                self.massp, self.aexp, self.omegat, self.age = temp[0:7]
+
+            f = open(fn, "rb")
+            self.nbodies = read_fortran(f, np.dtype('i4'), 1)[0]
+            f.close()
+            #self.nbodies = rd_halo.read_nbodies(fn.encode())
+            temp = rd_halo.read_file(fn.encode(), self.nbodies, int(self.is_gal))# as a byte str.
+
+            allID, __, self.halnum, self.subnum,\
+                self.massp, self.aexp, self.omegat, self.age = temp[0:8]
             ntot = self.halnum + self.subnum
             self.data = np.recarray(ntot, dtype=dtype_halo)
             self.data['np'], self.data['id'],\
             levels, ang, energy, \
             self.data['m'],\
             radius, pos,\
-            self.data['sp'], vel = temp[7:17]
-            vir, profile = temp[17:19]
+            self.data['sp'], vel = temp[8:18]
+            vir, profile = temp[18:20]
             if self.is_gal:
-                temp_gal = temp[19]
+                temp_gal = temp[20]
 
             self.data['energy'] = energy.reshape((ntot,3))
             levels = levels.reshape((ntot,5))
@@ -283,116 +310,27 @@ class Halo(HaloMeta):
             if self.is_gal:
                 self.data['sig'], self.data['sigbulge'], self.data['mbulge'] =\
                         temp_gal[::3].copy(), temp_gal[1::3].copy(), temp_gal[2::3].copy()
-                self.data['g_nbin'] = temp[20]
-                self.data['g_rr'] = temp[21].reshape(ntot,100)
-                self.data['g_rho']= temp[22].reshape(ntot,100)
-
-        except:
+                self.data['g_nbin'] = temp[21]
+                self.data['g_rr'] = temp[22].reshape(ntot,100)
+                self.data['g_rho']= temp[23].reshape(ntot,100)
+        else:
             print("Something wrong")
 
-    def load_hm_old(self, nout=None, base=None, info=None):
-        if nout is None:
-            nout = self.nout
-        if base is None:
-            base = self.base
-        snout = str(self.nout).zfill(3)
-        if self.is_gal:
-            fn = base + self.gal_find_dir + 'gal/tree_bricks' + snout
-        else:
-            fn = base + self.dm_find_dir + 'DM/tree_bricks' + snout
-        try:
-            f = open(fn, "rb")
-            import numpy as np
-            from load.utils import read_fortran, skip_fortran
-            self.nbodies = read_fortran(f, np.dtype('i4'), 1)
-            self.massp = read_fortran(f, np.dtype('f4'), 1)
-            self.aexp = read_fortran(f, np.dtype('f4'), 1)
-            self.omegat = read_fortran(f, np.dtype('f4'), 1)
-            self.age = read_fortran(f, np.dtype('f4'), 1)
-            self.halnum, self.subnum = read_fortran(f, np.dtype('i4'), 2)
+        if self.return_id:
+            self.idlists=[]
+            self.hal_idlists=[]
+            iskip=0
+            for hid, hnp in zip(self.data["id"],self.data["np"]):
+                if self.return_id_list is not None:
+                    if hnu in self.return_id_list:
+                        self.idlists.append(allID[iskip:iskip+hnp])
+                        self.hal_idlists.append(hid)
+                else:
+                    # for every halo.
+                    self.idlists.append(allID[iskip:iskip+hnp])
+                    self.hal_idlists.append(hid)
+                iskip += hnp
 
-            dtype_halo = [('np', '<i4'), ('id', '<i4'), ('level', '<i4'),
-                          ('host', '<i4'), ('sub', '<i4'), ('nsub', '<i4'),
-                          ('nextsub', '<i4'),
-                          ('m', '<f4'), ('mvir', '<f4'),
-                          ('r', '<f4'), ('rvir', '<f4'), 
-                          ('tvir', '<f4'), ('cvel', '<f4'), 
-                          ('x', '<f4'), ('y', '<f4'), ('z', '<f4'),
-                          ('vx', '<f4'), ('vy', '<f4'), ('vz', '<f4'),
-                          ('ax', '<f4'), ('ay', '<f4'), ('az', '<f4'),
-                          ('sp', '<f4'), ('idx', '<i4'),
-                          ('p_rho', '<f4'),('p_c', '<f4')]
-            if self.is_gal:
-                dtype_halo += [('sig', '<f4'), ('sigbulge', '<f4'),
-                               ('mbulge', '<f4'), ('hosthalo', '<i4')]
-
-            tothal = self.halnum + self.subnum
-            self.data = np.recarray(tothal, dtype=dtype_halo)
-#            print("retunr id?", self.return_id)
-            if self.return_id:
-                self.idlists=[]
-                self.hal_idlists=[]
-          
-#            print("idlists", self.idlists)          
-            for i in range(tothal):
-                nph = read_fortran(f, np.dtype('i4'), 1)
-                self.data['np'][i] = nph
-
-                tmp = read_fortran(f, np.dtype('i4'), nph) # id list. 
-                hnu = read_fortran(f, np.dtype('i4'), 1)[0]
-                self.data['id'][i] = hnu
-#                print(self.return_id_list, "return_id_list")
-                if self.return_id:
-                    if self.return_id_list is not None:
-                        if hnu in self.return_id_list:
-                            self.idlists.append(tmp)
-                            self.hal_idlists.append(hnu)
-                    else:
-                        self.idlists.append(tmp)
-                        self.hal_idlists.append(hnu)
-                  # By default save all id lists. 
-#                        self.idlists.append(tmp)
-            
-                read_fortran(f, np.dtype('i4'), 1) #timestep
-                self.data['level'][i], self.data['host'][i], \
-                self.data['sub'][i], self.data['nsub'][i], \
-                self.data['nextsub'][i] = read_fortran(f, np.dtype('i4'), 5)
-                self.data['m'][i] = read_fortran(f, np.dtype('f4'), 1)
-                self.data['x'][i], self.data['y'][i], self.data['z'][i] \
-                    = read_fortran(f, np.dtype('f4'), 3)
-                self.data['vx'][i], self.data['vy'][i], self.data['vz'][i] \
-                    = read_fortran(f, np.dtype('f4'), 3)
-                self.data['ax'][i], self.data['ay'][i], self.data['az'][i] \
-                    = read_fortran(f, np.dtype('f4'), 3)                
-                self.data['r'][i] = read_fortran(f, np.dtype('f4'), 4)[0]
-                read_fortran(f, np.dtype('f4'), 3)#energies
-                self.data['sp'][i] = read_fortran(f, np.dtype('f4'), 1)
-                if self.is_gal:
-                    self.data['sig'][i], self.data['sigbulge'][i], self.data['mbulge'][i] \
-                        = read_fortran(f, np.dtype('f4'), 3)
-                    #skip_fortran(f)
-                    
-                self.data['rvir'][i], self.data['mvir'][i],self.data['tvir'][i],self.data['cvel'][i] \
-                        = read_fortran(f, np.dtype('f4'), 4)
-                self.data['p_rho'][i], self.data['p_c'][i] = read_fortran(f, np.dtype('f4'), 2)# profile rho and concentration
-                if self.is_gal:
-                    # stellar surface profile
-                    skip_fortran(f) # nbin
-                    skip_fortran(f) # rr
-                    skip_fortran(f) # rho
-    
-            f.close()
-    
-            if self.return_id_list is None:
-                self.hal_idlists = self.data['id']
-#            self.refactor_hm()
-        except IOError:
-            print("Couldn't find {}".format(fn))
-
-        if self.return_id_list is not None:
-            import utils.match as mtc
-            ind_ok = mtc.match_list_ind(self.data['id'], self.return_id_list)
-            self.data = self.data[ind_ok]
 
     def refactor_hm(self):
         """
@@ -515,8 +453,8 @@ class Halo(HaloMeta):
     def derive_from(self, old_halo, ind=None):
         """
         derive a subset from another halo instance.
-        1) all meta data will be overwritten.
-        2) ind specifies the part of .data to be inherited.
+        1) all meta data is overwritten.
+        2) ind specifies the part of .data to be copied.
 
         """
         if ind is None:
@@ -527,8 +465,7 @@ class Halo(HaloMeta):
                 continue
             self.__dict__.update({key:val})
         self.data = old_halo.data[ind]
-        try:        
+        try:
             self.nhalo = len(ind)
         except:
             self.nhalo = len([ind])
-

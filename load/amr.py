@@ -5,7 +5,7 @@ Created on Thu Mar 26 17:44:27 2015
 @author: hoseung
 """
 import numpy as np
-from load.utils import read_header, read_fortran, skip_fortran 
+from utils.io_module import read_header, read_fortran, skip_fortran
 
 class AmrHeader():
     """
@@ -42,7 +42,7 @@ class AmrHeader():
     def __init__(self):
         pass
 
-    def _read_amr_header(self, f, skip_header = True):
+    def _read_amr_header(self, f, skip_header = False):
         """
         Make this visible from outside, and more general
         this can be used everytime you need to skip header
@@ -55,8 +55,8 @@ class AmrHeader():
         parameters
         ----------
         skip_header :
-            makes the core more tolerant. 
-            AMR header structure may change depending on the 
+            makes the core more tolerant.
+            AMR header structure may change depending on the
             type of the simulation.
         """
         h1 = read_header(f, np.dtype(
@@ -71,6 +71,7 @@ class AmrHeader():
         self.ng = h1['ng']
         self.nlevelmax = h1['nlevelmax']
         self.ngridmax = h1['ngridmax']
+        self.ngridtot = 0
         self.nboundary = h1['nboundary']
         self.ngrid = h1['ngrid']
         self.boxlen = h1['boxlen']
@@ -113,6 +114,7 @@ class AmrHeader():
         else:
             h2 = read_header(f, dtype_h2)
             h20= read_header(f, dtype_h20)
+            self.numbl = h20["numbl"]
             skip_fortran(f)
 
         if (h1['nboundary'] > 0):
@@ -141,8 +143,8 @@ class AmrHeader():
     # and is accessed by numbl[icpu,ilevel]
 
     # where is the 170 coming from?
-        
-        
+
+
         #h4 = read_header(f, np.dtype([('bound_key', 'f8', (ncpu+1,))]),check=False)
         # Get the data type by calculating precision from the fortran block header
         alen = np.fromfile(f, np.dtype('i4'), 1)
@@ -151,18 +153,18 @@ class AmrHeader():
         elif alen/(ncpu + 1) == 16:
             dtype = np.float128
         else:
-            raise Exception('Failed to detect bound_key precision.')        
+            raise Exception('Failed to detect bound_key precision.')
         self.bound_key = np.fromfile(f, dtype, ncpu + 1)
         np.fromfile(f, np.dtype('i4'), 1) # skip tail.
 
-                                      
+
         h4 = read_header(f, np.dtype([('son', 'i4', (ncoarse,)),
                                       ('flag1', 'i4', (ncoarse,)),
                                       ('cpu_map', 'i4', (ncoarse,))]),check=True)
-                                      
+
 # Aquarius data has 16Byte "bound_key".
 # Because of QUADHILBERT??
-                                      
+
 # check=False => Even if user gives a wrong size,
 # it still reads based on what fortran binary says.
 
@@ -204,13 +206,40 @@ class AmrHeader():
         self.flag1 = h4['flag1']
         self.cpu_map = h4['cpu_map']
 
+class Grid():
+    def __init__(self):
+        self.ncpu = 0
+        self.ndim = 0
+        self.time = 0.
+        self.aexp = 0.
+        self.nlevelmax=0
+        self.boxlen = 0.
+        self.ngridtot=0
+        self.ngridarr=None
+        self.levellist=None
+
+    def set_data(self, ncpu=0, ndim=0, time=0., aexp=0.,
+                nlevelmax=0, boxlen=0., ngridtot=0,
+                ngridarr=None, levellist=None):
+        self.ncpu = ncpu
+        self.ndim = ndim
+        self.time = time
+        self.aexp = aexp
+        self.nlevelmax=nlevelmax
+        self.boxlen = boxlen
+        self.ngridtot=ngridtot
+        self.ngridarr=ngridarr
+        self.levellist=levellist
+
 
 class Amr():
     """
     AMR class, which is required by Hydro class.
+
     """
 
-    def __init__(self, info):
+    def __init__(self, info, cpus=None, load=True):
+        import os
         """
         Parameters
         ----------
@@ -219,17 +248,26 @@ class Amr():
         """
         snout = str(info.nout).zfill(5)
         self.info = info
-        self._fnbase = info.data_dir + 'output_' + snout + '/amr_' + snout + '.out'
-        f = open(self._fnbase + '00001', "rb")
+        self.cpus = cpus
+
+        self._fnbase = os.path.join(info.base, info.data_dir) + 'output_' + snout + '/amr_' + snout + '.out'
+        try:
+            f = open(self._fnbase + '00001', "rb")
+        except:
+            import glob
+            amrs = glob.glob(self._fnbase + "*")
+            f = open(amrs[0], "rb")
 
         self.header = AmrHeader()
         self.header._read_amr_header(f)
+        if load:
+            self.load()
         f.close()
 
     def _load_mesh(f, ndim=3):
         for i in np.arange(ndim):
             read_fortran(f, np.dtype('f8'))
-            
+
     def get_zoomin(self, scale=1.0):
         """
         Returns a spherical region encompassing maximally refined cells.
@@ -238,7 +276,7 @@ class Amr():
         ----------
         scale : float
             The radius of the returned sphere is scaled by 'scale'.
-        
+
         """
         from utils import sampling
         imin = np.where(self.dm['m'] == self.dm['m'].min())
@@ -265,27 +303,30 @@ class Amr():
         -----
         The building block of FTT AMR is an oct, which is a group of 8 cells and data
         either associate with cells or the oct(called 'mesh' in IDL analysis routine).
-        An Oct consists of (level, xyz coordinates, poiner to the parent,
-        pointer to 6 neighbouring parents, pointer to child oct)
+        An Oct consists of (level, xyz coordinates, pointer to the parent,
+        pointer to 6 neighbouring parents, pointer to the child oct)
 
         cpu map and refinement map is additionaly needed to restart a simulation.
         octs of the same level are written at once. (So you need to loop over ilevel)
 
         <Todo>
         Think about when you will need to load the amr file.
-        It's rather unclear!
-    """
+        It's rather unclear.
+
+        -> When I want to draw cell map!
+        """
 
         # global header variables are available.
         icpu = 0  # icpu
-        cpus = self.info.cpus
+        cpus = self.cpus
         ndim = self.header.ndim
-        ngridtot = 0
 
         ncpu = self.header.ncpu
         nboundary = self.header.nboundary
         nlevelmax = self.header.nlevelmax
 
+        ncell = 2**ndim
+        xbound=np.zeros(3)
         # Size of arrays
 
         if icpu == 0:
@@ -294,24 +335,32 @@ class Amr():
             listmax = ncpu + nboundary
 
         ngridarr = np.zeros((nlevelmax, listmax), dtype=np.int32)
-
+        #ngridarr = np.zeros((nlevelmax, listmax))
+        levellist = [[0] * listmax for i in range(nlevelmax)] # nlevelmax by listmax list.
+        #levellist = [[0] * nlevelmax for i in range(listmax)] # nlevelmax by listmax list.
+        #np.zeros((nlevelmax, listmax), dtype=np.int32)
         llist = 0
+        self.header.ngridtot = 0
         for jcpu in cpus:
             if(verbose):
                 self.print_cpu(self, icpu)
 
-            print(self._fnbase + str(jcpu).zfill(5))
+            #print(self._fnbase + str(jcpu).zfill(5))
             f = open(self._fnbase + str(jcpu).zfill(5), "rb")  # +1
 
             # read header
             header_icpu = AmrHeader()
             header_icpu._read_amr_header(f)
+            #print(header_icpu.ngridtot)
+            #print(header_icpu.ngrid)
+            self.header.ngridtot += header_icpu.ngrid
 
             numbl = header_icpu.numbl
             if nboundary > 0:
                 numbb = header_icpu.numbb  # None if nboundary = 0
+                xbound[:] = nx/2., ny/2., nz/2.
             else:
-                numbb = np.zeros(np.shape(numbl))
+                numbb = np.zeros(np.shape(numbl)) # need an empty array.
 
             ngridtot = 0
 
@@ -337,8 +386,12 @@ class Amr():
                         if (verbose):
                             print("Level %2d has %6d grids in proc %4d"
                                   % (ilevel + 1, ng, kcpu))
-                        print(f.tell())
+                        #print(f.tell())
                         nlevel = nlevel + 1  # number of valid (ng > 0) levels
+                        mesh = {"ilevel":ilevel,
+                                "nc":ng,
+                                "xg":np.zeros((ndim, ng), dtype=np.float64),
+                                "son":np.zeros((ng, ncell), dtype=np.int32)}
 
                         # Read actual data
                         i_skip = 0
@@ -348,6 +401,7 @@ class Amr():
                         ind_prev = read_fortran(f, np.dtype('i4'), ng)
                         for idim in range(ndim): # gird center
                             xx = read_fortran(f, np.dtype('f8'), ng)
+                            mesh["xg"][idim] = xx - xbound[idim]
                         # father index
                         read_fortran(f, np.dtype('i4'), ng)
 
@@ -355,7 +409,7 @@ class Amr():
                             read_fortran(f, np.dtype('i4'), ng)
 
                         for idim in range(2**ndim):  # son index
-                            read_fortran(f, np.dtype('i4'), ng)
+                            mesh["son"] = read_fortran(f, np.dtype('i4'), ng)
 
                         for idim in range(2**ndim):  # cpu map
                             read_fortran(f, np.dtype('i4'), ng)
@@ -365,7 +419,17 @@ class Amr():
 
                         if icpu == 0:
                             if (kcpu == jcpu):
-                                pc = 1
+                                levellist[ilevel][jcpu-1] = mesh
+                        else:
+                            levellist[ilevel][kcpu-1] = mesh
 
                         llist += 1
             f.close
+
+#        self.grid = Grid()
+        #self.grid.set_data(ncpu=listmax, ndim=ndim, time=t, aexp=aexp,
+        self.ngridarr = ngridarr
+        self.levellist = levellist
+        #grid.set_data(ngrid=ngridarr, levellist=levellist)
+
+        return

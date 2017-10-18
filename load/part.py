@@ -6,7 +6,7 @@ Created on Thu Mar 26 22:15:03 2015
 """
 import numpy as np
 import load
-from load.utils import read_header, read_fortran
+from utils.io_module import read_header, read_fortran, skip_fortran
 
 """
 pt = []
@@ -19,7 +19,7 @@ for pp in ptype:
     pqset.update(pp.split()[1:])
 quantities = set(["mass", "id", "vel", "ref", "time", "metal"])
 pqset.intersection_update(quantities) # any elements not listed in qunatities are removed.
-"""  
+"""
 # Check if there is dm / star / sink in quantities list
 # or mass, id, vel, and so on in ptype list.
 # Only exact match (lower or upper case) works. No tolerence for errata.
@@ -33,7 +33,7 @@ class Ptype():
         self.ref = False
         self.time = False
         self.metal = False
-    
+
     def _set_quantities(self, quantities):
         qlist = ["mass", "pos", "id", "vel", "ref", "time", "metal"]
         for i in qlist:
@@ -58,18 +58,18 @@ class Ptypes():
 
     def _add_dm(self):
         self.dm = Ptype()
-        
+
     def _add_star(self):
         self.star = Ptype()
-        
+
     def _add_sink(self):
         self.sink = Ptype()
 
 class Part(load.sim.Simbase):
-    """ 
+    """
     Particle data container supports different types of particles,
     and some meta data.
-        
+
     DM, star, sink
     """
 # Rule of thumb: initialize everything in __init__
@@ -77,19 +77,22 @@ class Part(load.sim.Simbase):
 # This is called 'Object consistency'
 #
 # Part inherits from Simbase, but if I define __init__ once again here,
-# the __init__ methods of Simbase and Part does not merge. 
+# the __init__ methods of Simbase and Part does not merge.
 # (Think about it, that's very strange).
 # Instead, Simbase.__init__ is overridden.
 #
 #
-    def __init__(self, nout=None, info=None, dmo=False, ptypes=None, base='./', 
-                 region=None, ranges=None,
+    def __init__(self, parent=None, nout=None, info=None, dmo=False, ptypes=None, base='./',
+                 region=None, ranges=[[0,1]]*3, cpus=None,
+                 cpu_fixed=False,
                  data_dir='snapshots/', dmref=False, dmvel=False,
-                 dmmass=True, load=False, cosmo=True):
+                 dmmass=True, load=False, cosmo=True, fortran=True):
         """
         parameters
         ----------
-        ptypes : list of particle type and information. 
+        parent : a super class.
+            If given, all the values of (non callable) attributes from the parent are inherited.
+        ptypes : list of particle type and information.
                 ["dm id pos"] or ["dm id pos", "star mass vel"]
         dmo : logical
             If True, a faster, DMO read routine invoked (NOT distingushing particle types).
@@ -104,20 +107,28 @@ class Part(load.sim.Simbase):
         info is required for domain decomposition.
 
         """
-
+        super(Part, self).__init__()
         self.cosmo = cosmo
         if info is None:
             assert nout is not None, "either info or nout is required"
             from load.info import Info
-            info = Info(nout=nout, cosmo=self.cosmo)
+            info = Info(base=base,nout=nout, cosmo=self.cosmo)
         self.info = info
         self.nout = info.nout
         #self.ptypes = ptypes
-        self.ncpu = 0
+        self.cpus = cpus
+        self.cpu_fixed=cpu_fixed
+        try:
+            self.ncpu = len(self.cpus)
+        except:
+            self.ncpu = 0
         self.nstar = 0
         self.nsink = 0
+
+        print("Part", base)
         try:
             self.set_base(info.base)
+            print(info.base)
         except:
             self.set_base(base)
         self.data_dir = data_dir
@@ -127,6 +138,9 @@ class Part(load.sim.Simbase):
         self.dm_with_vel = dmvel
         self.dm_with_mass = dmmass
 
+        print("Part2", self.base)
+        self.set_fbase(self.base, data_dir)
+
         if region is not None:
             ranges = region['ranges']
         if ranges is not None:
@@ -135,10 +149,11 @@ class Part(load.sim.Simbase):
             try:
                 self.set_ranges(ranges=self.info.ranges)
             except:
-                self.set_ranges(ranges=[[0,1]]*3)
-    
-        
-        self.set_fbase(self.base, data_dir)
+                pass
+                # If range, reigon, info.ranges are all None,
+                # then the region information is meant to be omitted.
+                # probably icpu=[1,2,3] option is used.
+
         # header structure
         self._ramses_particle_header = np.dtype([('ncpu', 'i4'),
                                                  ('ndim', 'i4'),
@@ -152,7 +167,7 @@ class Part(load.sim.Simbase):
         # Depending on user's choice, generate dm, star, sink classes
 
         if load:
-            self.load()
+            self.load(fortran=fortran)
 
     def mass2msun(self):
         """
@@ -171,7 +186,7 @@ class Part(load.sim.Simbase):
         from os import path
         self.base = path.abspath(base)
 #        self.show_base()
-        
+
     def set_fbase(self, base, data_dir):
         """
             Sets Working directory.
@@ -195,12 +210,12 @@ class Part(load.sim.Simbase):
             self.pq.append(pp.split()[1:])
             self.pqset.update(pp.split()[1:])
 
-        self.ptypes = Ptypes(self.pt, self.pq)   
+        self.ptypes = Ptypes(self.pt, self.pq)
     # Check if there is dm / star / sink in quantities list
     # or mass, id, vel, and so on in ptype list.
     # Only exact match (lower or upper case) works. No tolerence for errata.
         quantities = set(["mass", "id", "vel", "ref", "time", "metal"])
-        self.pqset.intersection_update(quantities) 
+        self.pqset.intersection_update(quantities)
         # any elements not listed in qunatities are removed.
 
 
@@ -209,7 +224,13 @@ class Part(load.sim.Simbase):
         self.dm_with_ref = ref
 
     def _get_basic_info(self):
-        f = open(self._fbase + '00001', "rb")
+        try:
+            f = open(self._fbase + '00001', "rb")
+        except:
+            from glob import glob
+            parts = glob(self._fbase + "*")
+            f = open(parts[0], "rb")
+
         header = read_header(f, self._ramses_particle_header)
         self.ncpu = header['ncpu']
         self.nstar = header['nstar']
@@ -267,9 +288,10 @@ class Part(load.sim.Simbase):
             self.load_dmo(self, **kwargs)
         else:
             if fortran:
-                self.load_fortran(self, read_metal=read_metal, **kwargs) 
+                self.load_fortran(self, read_metal=read_metal, **kwargs)
             else:
-                self.load_general(self, **kwargs)
+                self.load_2017(self, **kwargs)
+                #self.load_general(self, **kwargs)
 
     def get_dmo_ntot(self):
         ranges = self.ranges
@@ -296,9 +318,9 @@ class Part(load.sim.Simbase):
 
     def load_dmo(self, zoom=False, verbose=False, ranges=None):
         """
-        DMO run output is much simpler:
+        DMO run output is simpler:
         no time, no metal, no need to calculate number of each type of particles.
-        So it should run much faster!
+        So it should run faster!
         """
         # function argument is evaluated on function defining time,
         # So you can't pass the actual value of self.info instance
@@ -321,17 +343,17 @@ class Part(load.sim.Simbase):
                 self.print_cpu(icpu)
 
             with open(self._fbase + str(icpu).zfill(5), "rb") as f: # +1
-    
+
                 # skip header
                 header_icpu = read_header(f, self._ramses_particle_header)
-    
+
                 npart_icpu = header_icpu['npart']
-    
+
                 # position
                 x_temp = read_fortran(f, np.dtype('f8'), npart_icpu)  # row-major
                 y_temp = read_fortran(f, np.dtype('f8'), npart_icpu)
                 z_temp = read_fortran(f, np.dtype('f8'), npart_icpu)
-    
+
                 range_ok = np.where((ranges[0][0] < x_temp)
                                     & (ranges[0][1] > x_temp)
                                     & (ranges[1][0] < y_temp)
@@ -343,18 +365,18 @@ class Part(load.sim.Simbase):
                 self.dm['x'][i_skip_dm:i_skip_dm + ndm_icpu] = x_temp[range_ok]
                 self.dm['y'][i_skip_dm:i_skip_dm + ndm_icpu] = y_temp[range_ok]
                 self.dm['z'][i_skip_dm:i_skip_dm + ndm_icpu] = z_temp[range_ok]
-                    
+
                 # velocity
                 if "vx" in self.dm.dtype.names:
                     self.dm['vx'][i_skip_dm:i_skip_dm + ndm_icpu] = read_fortran(f, np.dtype('f8'), npart_icpu)[range_ok]
                     self.dm['vy'][i_skip_dm:i_skip_dm + ndm_icpu] = read_fortran(f, np.dtype('f8'), npart_icpu)[range_ok]
-                    self.dm['vz'][i_skip_dm:i_skip_dm + ndm_icpu] = read_fortran(f, np.dtype('f8'), npart_icpu)[range_ok]            
-                    
+                    self.dm['vz'][i_skip_dm:i_skip_dm + ndm_icpu] = read_fortran(f, np.dtype('f8'), npart_icpu)[range_ok]
+
                 else:
                     read_fortran(f, np.dtype('f8'), npart_icpu)
                     read_fortran(f, np.dtype('f8'), npart_icpu)
                     read_fortran(f, np.dtype('f8'), npart_icpu)
-    
+
                 # mass
                 if "m" in self.dm.dtype.names:
                     m_temp = read_fortran(f, np.dtype('f8'), npart_icpu)[range_ok]
@@ -363,16 +385,16 @@ class Part(load.sim.Simbase):
 
                 # id
                 self.dm['id'][i_skip_dm:i_skip_dm + ndm_icpu] = read_fortran(f, np.dtype('i4'), npart_icpu)[range_ok]
-    
+
                 # refinement
                 if self.dm_with_ref:
                     ref_temp = read_fortran(f, np.dtype('i4'), npart_icpu)[range_ok]
                 else:
                     read_fortran(f, np.dtype('i4'), npart_icpu)
-    
+
                 if "m" in self.dm.dtype.names:
                     self.dm['m'][i_skip_dm:i_skip_dm + ndm_icpu] = m_temp
-                
+
                 if  "ref" in self.dm.dtype.names:
                     self.dm['ref'][i_skip_dm:i_skip_dm + ndm_icpu] = ref_temp[range_ok]
                 i_skip_dm += ndm_icpu
@@ -392,19 +414,19 @@ class Part(load.sim.Simbase):
 
         if part_now.mass:
             dtype.append(('m', '<f8'))
-        
+
         if part_now.id:
             dtype.append(('id', '<i4'))
-        
+
         if part_now.time:
             dtype.append(('time', '<f8'))
-            
+
         if part_now.metal:
             dtype.append(('metal', '<f8'))
-                                
+
         return dtype
 
-    def load_general(self, zoom=False, verbose=False, ranges=None, pq=None):
+    def load_2017(self, zoom=False, verbose=True, ranges=None, pq=None):
         # only xyz coordinate is useful with Hilbert space domain decomposition
         # information.
         '''
@@ -421,7 +443,7 @@ class Part(load.sim.Simbase):
         self.star.m = np.zeros(self.ndm, dtype='f8')
         self.star.id = np.zeros(self.ndm, dtype='f8')
         self.star.t = np.zeros(self.ndm, dtype='f8')
-        self.star.z = np.zeros(self.ndm, dtype='f8')                
+        self.star.z = np.zeros(self.ndm, dtype='f8')
         '''
         if ranges is None:
             ranges = self.ranges
@@ -452,48 +474,64 @@ class Part(load.sim.Simbase):
                 npart_icpu = header_icpu['npart']
                 if verbose:
                 	print('cpu %s has %s particles.' % (icpu, npart_icpu))
-                
+
                 # read position and determine number of particles in the ranges.
                 x_temp = read_fortran(f, np.dtype('f8'), npart_icpu)  # row-major
                 y_temp = read_fortran(f, np.dtype('f8'), npart_icpu)
                 z_temp = read_fortran(f, np.dtype('f8'), npart_icpu)
-                
+
                 range_ok = np.where((ranges[0][0] < x_temp)
                 					& (ranges[0][1] > x_temp)
                 					& (ranges[1][0] < y_temp)
                 					& (ranges[1][1] > y_temp)
                 					& (ranges[2][0] < z_temp)
                 					& (ranges[2][1] > z_temp))
-                
+
                 # skip velocity
                 read_fortran(f, np.dtype('f8'), npart_icpu)
                 read_fortran(f, np.dtype('f8'), npart_icpu)
                 read_fortran(f, np.dtype('f8'), npart_icpu)
-                
+
                 # skip mass
                 read_fortran(f, np.dtype('f8'), npart_icpu)
-                
+
                 # read particle id
                 id_temp = read_fortran(f, np.dtype('i4'), npart_icpu)[range_ok]
-                
-                # skip refinement
+
+                # skip levelp
                 read_fortran(f, np.dtype('i4'), npart_icpu)
-                
+                #print("levelp", read_fortran(f, np.dtype('i4'), npart_icpu))
+
+                # read family
+                #print(f.tell())
+                family=read_fortran(f, np.dtype('i1'), npart_icpu)[range_ok]
+                #print(family)
+                tag=read_fortran(f, np.dtype('i1'), npart_icpu)[range_ok]
+                #print(tag)
+
+                # read subtype
+                #subtype = read_fortran(f, np.dtype('i8'), npart_icpu)
+                #print(subtype)
+                # skip refinement
+                #read_fortran(f, np.dtype('i4'), npart_icpu)
+
+
                 # read time
                 t_temp = read_fortran(f, np.dtype('f8'), npart_icpu)[range_ok]
+                #print(t_temp)
                 # star particles have positive creation time.. no!
                 # mostly positive ID, but young stars
                 # (before SN burst) have negative IDs.
-                i_star = (abs(t_temp) != 0.0) # negative creation time for young star!
-                i_dm = np.logical_and(id_temp > 0, t_temp == 0)
+                i_star = np.where(family==2)[0] # negative creation time for young star!
+                i_dm = np.where(family==1)[0]
                 # Sink (BH) particles have negative ID and creation time 0.
-                i_sink = np.logical_and(id_temp < 0, t_temp == 0)
-                    
-                
+                i_sink = np.where(family==3)[0]
+
+
                 # Dark Matter particles have 0 creation time, positive ID
-                nstar_icpu = sum(i_star)
-                ndm_icpu = sum(i_dm)
-                nsink_icpu = sum(i_sink)
+                nstar_icpu = len(i_star)
+                ndm_icpu = len(i_dm)
+                nsink_icpu = len(i_sink)
                 ndm_tot += ndm_icpu
                 nstar_tot += nstar_icpu
                 nsink_tot += nsink_icpu
@@ -518,10 +556,12 @@ class Part(load.sim.Simbase):
             i_skip_star = 0
 
         # Or, hasattr(self, 'sink')
-        if 'sink' in self.pt:        
+        if 'sink' in self.pt:
             dtype = self._get_dtype("sink")
             self.sink = np.recarray(nsink_tot, dtype=dtype)
             i_skip_sink = 0
+
+        #self.dm =
 
         self.ndm = ndm_tot
         self.nstar = nstar_tot
@@ -584,8 +624,277 @@ class Part(load.sim.Simbase):
                 ref_temp = read_fortran(f, np.dtype('i4'), npart_icpu)[range_ok]
             else:
                 read_fortran(f, np.dtype('i4'), npart_icpu)
-            
-            # time - necessary 
+
+            family=read_fortran(f, np.dtype('i1'), npart_icpu)[range_ok]
+            subtype=read_fortran(f, np.dtype('i1'), npart_icpu)[range_ok]
+            #print(family, subtype)
+            #print(np.unique(family))
+            #print(np.unique(subtype))
+
+            # time - necessary
+            t_temp = read_fortran(f, np.dtype('f8'), npart_icpu)[range_ok]
+
+            # metal
+            if self.cosmo:
+                if "metal" in self.pqset:
+                    z_temp = read_fortran(f, np.dtype('f8'), npart_icpu)[range_ok]
+                else:
+                    read_fortran(f, np.dtype('f8'), npart_icpu)
+
+            # distinguish sink / dm / star
+            # non star : t == 0
+            # sink : t ==0, id < 0
+
+# Copy data to form contiguous arrays of particles.
+            if 'star' in self.pt:
+                i_star = np.where(family==2)[0]
+                nstar_icpu = len(i_star)
+                if self.ptypes.star.pos:
+                    self.star['x'][i_skip_star:i_skip_star + nstar_icpu] = px_temp[i_star]
+                    self.star['y'][i_skip_star:i_skip_star + nstar_icpu] = py_temp[i_star]
+                    self.star['z'][i_skip_star:i_skip_star + nstar_icpu] = pz_temp[i_star]
+                if self.ptypes.star.vel:
+                    self.star['vx'][i_skip_star:i_skip_star + nstar_icpu] = vx_temp[i_star]
+                    self.star['vy'][i_skip_star:i_skip_star + nstar_icpu] = vy_temp[i_star]
+                    self.star['vz'][i_skip_star:i_skip_star + nstar_icpu] = vz_temp[i_star]
+                if self.ptypes.star.mass:
+                    self.star['m' ][i_skip_star:i_skip_star + nstar_icpu] = m_temp[i_star]
+                if self.ptypes.star.id:
+                    self.star['id'][i_skip_star:i_skip_star + nstar_icpu] = id_temp[i_star]
+                if self.ptypes.star.time:
+                    self.star['time'][i_skip_star:i_skip_star + nstar_icpu] = t_temp[i_star]
+                if self.ptypes.star.metal:
+                    self.star['metal'][i_skip_star:i_skip_star + nstar_icpu] = z_temp[i_star]
+                i_skip_star += nstar_icpu
+
+            # i_dm = id_temp < 0
+            i_dm = np.where(family==1)[0]
+            i_sink = np.where(family==3)[0]
+            ndm_icpu = len(i_dm)
+
+            nsink_icpu = len(i_sink)
+            # print('nDM, nSink', ndm_icpu, nsink_icpu)
+
+# Note that if it's two-division separation,
+# i_dm = t_temp == 0 and then,
+# it's faster to use ~i_dm than to generate another index array.
+
+            if 'dm' in self.pt:
+                if self.ptypes.dm.pos:
+                    self.dm['x'][i_skip_dm:i_skip_dm + ndm_icpu] = px_temp[i_dm]
+                    self.dm['y'][i_skip_dm:i_skip_dm + ndm_icpu] = py_temp[i_dm]
+                    self.dm['z'][i_skip_dm:i_skip_dm + ndm_icpu] = pz_temp[i_dm]
+                if self.ptypes.dm.vel:
+                    self.dm['vx'][i_skip_dm:i_skip_dm + ndm_icpu] = vx_temp[i_dm]
+                    self.dm['vy'][i_skip_dm:i_skip_dm + ndm_icpu] = vy_temp[i_dm]
+                    self.dm['vz'][i_skip_dm:i_skip_dm + ndm_icpu] = vz_temp[i_dm]
+                if self.ptypes.dm.mass:
+                    self.dm['m'][i_skip_dm:i_skip_dm + ndm_icpu] = m_temp[i_dm]
+                if self.ptypes.dm.id:
+                    self.dm['id'][i_skip_dm:i_skip_dm + ndm_icpu] = id_temp[i_dm]
+                if self.ptypes.dm.ref:
+                    self.dm['ref'][i_skip_dm:i_skip_dm + ndm_icpu] = ref_temp[i_dm]
+                i_skip_dm += ndm_icpu
+
+            # Which is faster?
+            # i_star[i_dm] as ndm array
+            # or i_dm as npart array + i_sink as npart array
+            if 'sink' in self.pt:
+                if self.ptypes.dm.pos:
+                    self.sink['x'][i_skip_sink:i_skip_sink + nsink_icpu] = px_temp[i_sink]
+                    self.sink['y'][i_skip_sink:i_skip_sink + nsink_icpu] = py_temp[i_sink]
+                    self.sink['z'][i_skip_sink:i_skip_sink + nsink_icpu] = pz_temp[i_sink]
+                if self.ptypes.dm.vel:
+                    self.sink['vx'][i_skip_sink:i_skip_sink + nsink_icpu] = vx_temp[i_sink]
+                    self.sink['vy'][i_skip_sink:i_skip_sink + nsink_icpu] = vy_temp[i_sink]
+                    self.sink['vz'][i_skip_sink:i_skip_sink + nsink_icpu] = vz_temp[i_sink]
+                if self.ptypes.dm.mass:
+                    self.sink['m'][i_skip_sink:i_skip_sink + nsink_icpu] = m_temp[i_sink]
+                if self.ptypes.dm.id:
+                    self.sink['id'][i_skip_sink:i_skip_sink + nsink_icpu] = id_temp[i_sink]
+                i_skip_sink += nsink_icpu
+
+    def load_general(self, zoom=False, verbose=False, ranges=None, pq=None):
+        # only xyz coordinate is useful with Hilbert space domain decomposition
+        # information.
+        '''
+        load(self,zoom=False,xr=[0,1],yr=[0,1],zr=[0,1]):
+        self.dm['px'] = np.zeros((self.ndim,self.ndm), dtype='f8')
+        self.dm.vel = np.zeros((self.ndim,self.ndm), dtype='f8')
+        self.dm.m = np.zeros(self.ndm, dtype='f8')
+        # Mass may also be omitted !
+        self.dm.id = np.zeros(self.ndm, dtype='f8')
+        #self.dm.t = np.zeros(self.ndm, dtype='f8')
+        #self.dm.z = np.zeros(self.ndm, dtype='f8') no need to store
+        self.star.pos = np.zeros((self.ndim,self.nstar), dtype='f8')
+        self.star.vel = np.zeros((self.ndim,self.nstar), dtype='f8')
+        self.star.m = np.zeros(self.ndm, dtype='f8')
+        self.star.id = np.zeros(self.ndm, dtype='f8')
+        self.star.t = np.zeros(self.ndm, dtype='f8')
+        self.star.z = np.zeros(self.ndm, dtype='f8')
+        '''
+        if ranges is None:
+            ranges = self.ranges
+        print("Loading particle... \n ranges:", ranges)
+        # Total particle number from selected cpus.
+#        npart_tot
+        npart_arr = self._get_npart_arr(self.cpus)
+        print('npart_arr:', npart_arr)
+
+        if hasattr(self.ptypes, "dm"):
+            i_skip_dm = 0
+        if hasattr(self.ptypes, "star"):
+            i_skip_star = 0
+        if hasattr(self.ptypes, "sink"):
+            i_skip_sink = 0
+
+        # Calculate total number of DM, star, sink from selected cpus.
+        # partilce ID, time are needed to distinguish particle type.
+        ndm_tot = 0
+        nstar_tot = 0
+        nsink_tot = 0
+
+        for icpu in self.cpus:
+            if verbose:
+                self.print_cpu(icpu)
+            with open(self._fbase + str(icpu).zfill(5), "rb") as f: # +1
+                header_icpu = read_header(f, self._ramses_particle_header)
+                npart_icpu = header_icpu['npart']
+                if verbose:
+                	print('cpu %s has %s particles.' % (icpu, npart_icpu))
+
+                # read position and determine number of particles in the ranges.
+                x_temp = read_fortran(f, np.dtype('f8'), npart_icpu)  # row-major
+                y_temp = read_fortran(f, np.dtype('f8'), npart_icpu)
+                z_temp = read_fortran(f, np.dtype('f8'), npart_icpu)
+
+                range_ok = np.where((ranges[0][0] < x_temp)
+                					& (ranges[0][1] > x_temp)
+                					& (ranges[1][0] < y_temp)
+                					& (ranges[1][1] > y_temp)
+                					& (ranges[2][0] < z_temp)
+                					& (ranges[2][1] > z_temp))
+
+                # skip velocity
+                read_fortran(f, np.dtype('f8'), npart_icpu)
+                read_fortran(f, np.dtype('f8'), npart_icpu)
+                read_fortran(f, np.dtype('f8'), npart_icpu)
+
+                # skip mass
+                read_fortran(f, np.dtype('f8'), npart_icpu)
+
+                # read particle id
+                id_temp = read_fortran(f, np.dtype('i4'), npart_icpu)[range_ok]
+
+                # skip refinement
+                read_fortran(f, np.dtype('i4'), npart_icpu)
+
+                # read time
+                t_temp = read_fortran(f, np.dtype('f8'), npart_icpu)[range_ok]
+                # star particles have positive creation time.. no!
+                # mostly positive ID, but young stars
+                # (before SN burst) have negative IDs.
+                i_star = (abs(t_temp) != 0.0) # negative creation time for young star!
+                i_dm = np.logical_and(id_temp > 0, t_temp == 0)
+                # Sink (BH) particles have negative ID and creation time 0.
+                i_sink = np.logical_and(id_temp < 0, t_temp == 0)
+
+
+                # Dark Matter particles have 0 creation time, positive ID
+                nstar_icpu = sum(i_star)
+                ndm_icpu = sum(i_dm)
+                nsink_icpu = sum(i_sink)
+                ndm_tot += ndm_icpu
+                nstar_tot += nstar_icpu
+                nsink_tot += nsink_icpu
+
+        # number of darkmatter = npart - nstar - nsink * 2109
+        # But!! nstar and nsink is for the whole simulation volume while
+        # npart is for only selected cpus. hmm.
+
+#        self.ndm = sum(npart_arr) - self.nstar - self.nsink * 2109
+
+        # Total number of particles stored in the cpus.
+        # But particles within ranges, not in cpus, are eventually returned.
+        # So ndm_tot is not going to be the size of DM array.
+        if 'dm' in self.pt:
+            dtype = self._get_dtype("dm")
+            self.dm = np.recarray(ndm_tot, dtype=dtype)
+            i_skip_dm = 0
+
+        if 'star' in self.pt:
+            dtype = self._get_dtype("star")
+            self.star = np.recarray(nstar_tot, dtype=dtype)
+            i_skip_star = 0
+
+        # Or, hasattr(self, 'sink')
+        if 'sink' in self.pt:
+            dtype = self._get_dtype("sink")
+            self.sink = np.recarray(nsink_tot, dtype=dtype)
+            i_skip_sink = 0
+
+        self.ndm = ndm_tot
+        self.nstar = nstar_tot
+        self.nsink = nsink_tot# / 2109
+
+        print("Total DM particle %d" % ndm_tot)
+        print("Total star particle %d" % nstar_tot)
+        print("Total sink particle %d (/2109)" % nsink_tot)
+
+        # iterate over files to read in data
+        for icpu in self.cpus:
+            if verbose:
+                self.print_cpu(icpu)
+
+            f = open(self._fbase + str(icpu).zfill(5), "rb")  # +1
+
+            header_icpu = read_header(f, self._ramses_particle_header)
+            # skip header
+
+            npart_icpu = header_icpu['npart']
+
+            # position
+            x_temp = read_fortran(f, np.dtype('f8'), npart_icpu)  # row-major
+            y_temp = read_fortran(f, np.dtype('f8'), npart_icpu)
+            z_temp = read_fortran(f, np.dtype('f8'), npart_icpu)
+
+            range_ok = np.where((ranges[0][0] < x_temp)
+                                & (ranges[0][1] > x_temp)
+                                & (ranges[1][0] < y_temp)
+                                & (ranges[1][1] > y_temp)
+                                & (ranges[2][0] < z_temp)
+                                & (ranges[2][1] > z_temp))
+
+            # make views to the original array
+            px_temp = x_temp[range_ok]
+            py_temp = y_temp[range_ok]
+            pz_temp = z_temp[range_ok]
+
+            # velocity
+            if "vel" in self.pqset:
+                vx_temp = read_fortran(f, np.dtype('f8'), npart_icpu)[range_ok]
+                vy_temp = read_fortran(f, np.dtype('f8'), npart_icpu)[range_ok]
+                vz_temp = read_fortran(f, np.dtype('f8'), npart_icpu)[range_ok]
+            else:
+                for i in range(3):
+                    read_fortran(f, np.dtype('f8'), npart_icpu)
+
+            # mass
+            if "mass" in self.pqset:
+                m_temp = read_fortran(f, np.dtype('f8'), npart_icpu)[range_ok]
+            else:
+                read_fortran(f, np.dtype('f8'), npart_icpu)
+
+            # id
+            id_temp = read_fortran(f, np.dtype('i4'), npart_icpu)[range_ok]
+
+            # refinement
+            if "ref" in self.pqset:
+                ref_temp = read_fortran(f, np.dtype('i4'), npart_icpu)[range_ok]
+            else:
+                read_fortran(f, np.dtype('i4'), npart_icpu)
+
+            # time - necessary
             t_temp = read_fortran(f, np.dtype('f8'), npart_icpu)[range_ok]
 
             # metal
@@ -685,17 +994,18 @@ class Part(load.sim.Simbase):
         self.nstar = nstar_actual
         self.nsink = nsink_actual
         if self.ndm == 0 and self.nstar == 0:
-            return 
+            return
         """
         if return_meta is True:
             return (ndm_actual, nstar_actual, nsink_actual, work_dir, xmi, xma, ymi, yma, zmi, zma)
         else:
         """
-# I want to pass shared arrays that are allocated in Python side. 
+# I want to pass shared arrays that are allocated in Python side.
 # But I get the following message
 # ValueError: failed to initialize intent(inout) array -- input not fortran contiguous
         ndm_actual = max([ndm_actual, 1])
         nstar_actual = max([nstar_actual, 1])
+        read_metal = 1 #
         star_float, star_int, dm_float, dm_int = part_shared.load_part(
                 nstar_actual, ndm_actual, nsink_actual,
                 work_dir, xmi, xma, ymi, yma, zmi, zma, read_metal, self.cpus)
@@ -705,8 +1015,8 @@ class Part(load.sim.Simbase):
                           ('vx', '<f8'), ('vy', '<f8'), ('vz', '<f8'),
                           ('m', '<f8'), ('time', '<f8'), ('id', '<i4')]
             if read_metal:
-                dtype_star.extend(('metal', '<f8'))
-         
+                dtype_star.append(('metal', '<f8'))
+
             self.star = np.zeros(self.nstar, dtype=dtype_star)
             self.star['x'] = star_float[:,0]
             self.star['y'] = star_float[:,1]
@@ -723,7 +1033,7 @@ class Part(load.sim.Simbase):
         if 'dm' in self.pt:
             dtype_dm = [('x', '<f8'), ('y', '<f8'), ('z', '<f8'),('vx', '<f8'),
                         ('vy', '<f8'), ('vz', '<f8'), ('m', '<f8'), ('id', '<i4')]
-         
+
             self.dm = np.zeros(self.ndm + self.nsink, dtype=dtype_dm)
             self.dm['x'] = dm_float[:,0]
             self.dm['y'] = dm_float[:,1]
@@ -744,6 +1054,3 @@ class Part(load.sim.Simbase):
         pass
         # fancy indexing returns view to array.
         # BUT indexing to multiple fields does not return a view, but copies memory.
-
-
-

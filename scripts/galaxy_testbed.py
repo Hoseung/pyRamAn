@@ -137,7 +137,7 @@ def mk_gal(halodata, info,
     Draw ed map of galaxy.
 
     """
-    from galaxy import galaxy
+    from galaxymodule import galaxy
 
     #Create galaxy ---------------------------------------------------------
     gal = galaxy.Galaxy(halodata, radius_method='simple', info=info)

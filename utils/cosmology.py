@@ -2,107 +2,75 @@
 """
 cosmology utils.
 
-... use astropy.cosmology. that is a full furnished util. 
+... use astropy.cosmology. that is a full furnished util.
 
 Created on Sun Jun 28 18:31:23 2015
 
 @author: hoseung
 """
 
-def nout2lbt(nout, nout_fi=187):
-    """
-      A very simple function assuming delta a = 0.005,
-      and nout_fi = 187 by default.
-    """
-    import astropy.cosmology as ac
-    aexp = 1 - (nout_fi - nout)*0.005
-    
-    return ac.WMAP7.lookback_time(1/aexp -1).value
+import numpy as np
+class Timeconvert():
+    def __init__(self, info=None, H0=None, om=None, ol=None, zred_now=None):
+        from general import defaults
+        from astropy.io import fits
+        dfl = defaults.Default()
+        self.repodir = dfl.dir_repo
+        self.info = info
+        if info is not None:
+            sh0       = str(round(info.H0))
+            som       = str(round(info.om*100))
+            sol       = str(round(info.ol*100))
+            zred_now = info.zred
+        else:
+            sh0       = str(round(H0))
+            som       = str(round(om*100))
+            sol       = str(round(ol*100))
+            zred_now  = zred_now
 
+        tablefile  = self.repodir+'Table_taz_H'+sh0+'_Om'+som+'_Ol'+sol+'.fits'
 
+        hdu = fits.open(tablefile)
+        ttable = hdu[1].data
 
-def time2gyr(times, z_now=None, info=None):
-    """
-    
-    returns the age of "universe" at the given time.
+        # Sort so that self.tu is in increasing order
+        # Because converting stellar conformal times to lookback time
+        # is the main use case.
+        # However, this sorting makes zred be a decreasing function.
+        # So is needed the [::-1] indexing.
+        isort=np.argsort(ttable['t_unit'][0])
+        self.zred     = ttable['z'][0][isort]
+        self.tu       = ttable['t_unit'][0][isort]
+        self.tlb      = ttable['t_lback'][0][isort]
+        self.aexp     = ttable['aexp'][0][isort]
+        self.t_lback_now = np.interp(zred_now, self.zred[::-1], self.tlb[::-1])  # interpolation
 
-    """
-    import pyfits
-    import numpy as np
-    
-#    repodir = '/home/hoseung/Copy/pyclusterevol/repo/'
-    import inspect
-    import os
-    import utils
-    repodir = os.path.dirname(inspect.getfile(utils)).split('/utils')[0] + '/repo/'
+    def time2gyr(self, times, z_now=None):
+        """
+        returns the age of "universe" at the given time.
+        """
+        if z_now is not None:
+            #z_now = max([z_now,1e-10])
+            t_lback_now = np.interp(z_now, self.zred[::-1], self.tlb[::-1])
+        else:
+            t_lback_now = self.t_lback_now
 
-    if z_now is None and info is not None:
-        z_now = 1/info.aexp-1
-    z_now = max([z_now, 1e-10])
-    sh0       = str(round(info.H0))
-    som       = str(round(info.om*100))
-    sol       = str(round(info.ol*100))
+        fd = np.where(times < min(self.tu))[0]
+        if len(fd) > 0:
+            ctime2 = times
+            ctime2[fd] = min(self.tu)
+            t_lback_in  = np.interp(ctime2, self.tu, self.tlb)
+        else:
+            t_lback_in  = np.interp(times, self.tu, self.tlb)
 
-    tablefile  = repodir+'Table_taz_H'+sh0+'_Om'+som+'_Ol'+sol+'.fits'
+        return t_lback_in - t_lback_now
 
-    hdu = pyfits.open(tablefile)
-    ttable = hdu[1].data
-
-    tu       = ttable['t_unit'][0]
-    tlb      = ttable['t_lback'][0]
-    zred     = ttable['z'][0]
-    aexp     = ttable['aexp'][0]
-
-    t_lback_now = np.interp(z_now, zred, tlb) 
-
-    fd = np.where(times < min(tu))[0]
-    if len(fd) > 0:
-        ctime2 = times
-        ctime2[fd] = min(tu)
-        t_lback_in  = np.interp(ctime2, tu, tlb)
-    else:
-        t_lback_in  = np.interp(times, tu, tlb)
-
-    return t_lback_in - t_lback_now
-
-
-"""    
-def friedman(O_mat_0, O_vac_0, O_k_0, alpha, ntable):
-    if ((O_mat_0 + O_vac_0 + O_k_0) != 1.0):
-        print('Error: wrong cosmological constants')
-        print('O_mat_0,O_vac_0,O_k_0= ',O_mat_0, O_vac_0, O_k_0)
-        print('The sum should be equal to 1.0, but ')
-        print('O_mat_0+O_vac_0+O_k_0= ',O_mat_0 + O_vac_0 + O_k_0)
-   
-    axp_tau  = 1.0
-    axp_t    = 1.0
-    tau      = 0.0
-    tau_prec = 0.0
-    t        = 0.0
-    t_prec   = 0.0
-    ncount   = 0 
-    
-    print('tau, tau_out(last)', tau, tau_out(ntable-1))
-    while (tau >= tau_out(ntable-1)):
-        dtau        = alpha * axp_tau / dadtau(axp_tau,O_mat_0,O_vac_0,O_k_0)
-        axp_tau_pre = axp_tau - dadtau(axp_tau,O_mat_0,O_vac_0,O_k_0)*dtau/2.0
-        axp_tau     = axp_tau - dadtau(axp_tau_pre,O_mat_0,O_vac_0,O_k_0)*dtau
-        tau         = tau - dtau
-    
-        dt          = alpha * axp_t / dadt(axp_t,O_mat_0,O_vac_0,O_k_0)
-        axp_t_pre   = axp_t - dadt(axp_t,O_mat_0,O_vac_0,O_k_0)*dt/2.0
-        axp_t       = axp_t - dadt(axp_t_pre,O_mat_0,O_vac_0,O_k_0)*dt
-        t           = t - dt
-    
-    if (tau <= tau_out[ncount] & tau_prec > tau_out[ncount]):
-        t_out[ncount] = -t_prec
-        zred_out[ncount] = 1.0/axp_t-1.0
-        if (ncount < ntable-1):
-            ncount = ncount + 1 
-        print( ncount, ntable)
-
-    tau_prec    = tau 
-    t_prec      = t 
-       
-    print(' Age of the Universe (in unit of 1/H0)=',-t,-tau)
-"""    
+    def zred2gyr(self, zreds, z_now=None):
+        if z_now is not None:
+            #z_now = max([z_now,1e-10])
+            t_lback_now = np.interp(z_now, self.zred[::-1], self.tlb[::-1])
+        else:
+            t_lback_now = self.t_lback_now
+        #
+        t_lback_in  = np.interp(zreds, self.zred[::-1], self.tlb[::-1])
+        return t_lback_in - t_lback_now

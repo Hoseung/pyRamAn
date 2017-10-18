@@ -37,6 +37,8 @@ def find_merger(atree, idx=None, aexp_min=0.0):
 def merger_mass_ratio(atree, idx=None):
     """
     return mass ratio of the given merger event
+    
+    Mass ratio should refer to the time before any stripping happen.
     """
     if idx == None:
         idx = atree['id'][0]

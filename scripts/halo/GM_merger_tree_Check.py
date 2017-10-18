@@ -152,10 +152,6 @@ if not load_extended_tree:
 
 
 
-# In[4]:
-
-# In[5]:
-
 import matplotlib.pyplot as plt
 
 nout_fi = 187

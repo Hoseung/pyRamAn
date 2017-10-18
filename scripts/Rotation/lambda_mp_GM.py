@@ -33,7 +33,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import utils.sampling as smp
 
-from galaxy import galaxy
+from galaxymodule import galaxy
 import utils.match as mtc
 def dist(data, center):
     return np.sqrt(np.square(center['x'] - data['x']) + 

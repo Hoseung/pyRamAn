@@ -11,13 +11,12 @@ import analysis.evol_lambda as evl
 import tree.ctutils as ctu
 import pandas as pd
 
+class Merger():
+    pass
+
 
 def load_cat(fname):
     return pd.DataFrame(pickle.load(open(fname, "rb"))).to_records()
-
-
-class Merger():
-    pass
 
 
 def get_tick_locations(org_range, x_range):
@@ -27,29 +26,32 @@ def get_tick_locations(org_range, x_range):
     x_ticks = np.ceil(x_range[0] + dt * np.arange(nticks))
     x_ticks = x_ticks[x_ticks < max(x_range)]
     labels = x_ticks[x_ticks < max(x_range)]
-    
+
     tick_pos = (labels - x_range[0]) * org_range.ptp()/xx + org_range[0]
     return  tick_pos, labels
 
 
 
-def find_merger_epochs(alltrees, idx_all, mpgs, nout_ini=37, dist_gal_scale=2,
-                       mass_ratio="early"):
+def find_merger_epochs(alltrees,
+                        idx_all,
+                        mpgs,
+                        nout_ini=37,
+                        dist_gal_scale=2,
+                        mass_ratio="early"):
     """
-    
-        parameter
-        ---------
-        dist_gal_scale 
-            if two galaxies are closer than dist_gal_scale * (sum of raidus of the two),
-            that epoch is the nout_init_merger.
-        nout_ini
-            blabla
+    parameter
+    ---------
+    dist_gal_scale
+        if two galaxies are closer than dist_gal_scale * (sum of raidus of the two),
+        that epoch is the nout_init_merger.
+    nout_ini
+        blabla
     """
     verbose=False
     gal_list=[]
     mr_list=[]
     nout_list=[]
-    nout_ini_list=[] # initial time when two halos(Galaxy stellar components in this case) overlap. 
+    nout_ini_list=[] # initial time when two halos(Galaxy stellar components in this case) overlap.
 
     for idx in idx_all:
         # full tree of a galaxy
@@ -66,7 +68,6 @@ def find_merger_epochs(alltrees, idx_all, mpgs, nout_ini=37, dist_gal_scale=2,
         pos[0,:] = main['x']
         pos[1,:] = main['y']
         pos[2,:] = main['z']
-
 
         mass_ratios_single = np.zeros(len(main))
         nout_inits = np.zeros(len(main))
@@ -95,8 +96,8 @@ def find_merger_epochs(alltrees, idx_all, mpgs, nout_ini=37, dist_gal_scale=2,
 
                 dd = np.sqrt(np.square(pos[0,i_main_ok] - satellite['x']) \
                              + np.square(pos[1,i_main_ok] - satellite['y'])
-                             + np.square(pos[2,i_main_ok] - satellite['z']))
-                rgal_tot = main['r'][i_main_ok] + satellite['r']
+                             + np.square(pos[2,i_main_ok] - satellite['z'])) * 1e3 # in kpc
+                rgal_tot = main['rvir'][i_main_ok] + satellite['rvir']
                 #print(" Galaxy sizes : main {}, and the second {}, and the sum {}".format(
                 #        main['r'][i_main_ok], satellite['r'], rgal_tot))
                 #print(" dd :", dd)
@@ -105,9 +106,9 @@ def find_merger_epochs(alltrees, idx_all, mpgs, nout_ini=37, dist_gal_scale=2,
                     #print(satellite['nout'][50 * rgal_tot < dd])
                     nout_inits[i] = max(satellite['nout'][dist_gal_scale * rgal_tot < dd])
                     if mass_ratio == "early":
-                        
+
                         mass_ratios_single[i] = satellite['m'][satellite['nout'] == nout_inits[i]] / mass_prgs[0]
-                        
+
                 else:
                     nout_inits[i] = nout
                 if verbose:
@@ -118,8 +119,8 @@ def find_merger_epochs(alltrees, idx_all, mpgs, nout_ini=37, dist_gal_scale=2,
 
         ind_ok = np.where(mass_ratios_single > 0.01)[0]
         if len(ind_ok) > 0:
-            # if a satellite oscillates around the host, 
-            # it could be identified as multiple mergers with short time interval. 
+            # if a satellite oscillates around the host,
+            # it could be identified as multiple mergers with short time interval.
             # leave only the first passage / merger.
             # No, it doesn't happen in ConsistentTrees.
 
@@ -133,7 +134,7 @@ def find_merger_epochs(alltrees, idx_all, mpgs, nout_ini=37, dist_gal_scale=2,
 
             gal_list.append(idx)
             mr_list.append(mr)
-            nout_list.append(x_nout[ind_ok])    
+            nout_list.append(x_nout[ind_ok])
             nout_ini_list.append(nout_inits[ind_ok])
 
 
@@ -152,7 +153,7 @@ def find_merger_epochs(alltrees, idx_all, mpgs, nout_ini=37, dist_gal_scale=2,
             gal.merger = None
     #return gal_list, mr_list, nout_list, nout_ini_list
 
-    
+
 
 def close_gals(halo, gals, return_ind=True, rscale=3.0):
     import numpy as np
@@ -165,15 +166,15 @@ def close_gals(halo, gals, return_ind=True, rscale=3.0):
     dd = np.square(gals.data['x'] - xc) + \
          np.square(gals.data['y'] - yc) + \
          np.square(gals.data['z'] - zc)
-    
+
     r_clu = rscale * cluster['rvir']
     #print(cluster['rvir'])
     if return_ind:
         return np.where(dd < r_clu**2)[0]
     else:
         return gals.data['id'][dd < r_clu**2][0]
-    
-    
+
+
 
 def compile_mpgs(alltrees, idx_all, wdir='./', cdir='easy/', nout_ini=37, nout_fi=187):
     ad = alltrees.data
@@ -192,7 +193,7 @@ def compile_mpgs(alltrees, idx_all, wdir='./', cdir='easy/', nout_ini=37, nout_f
     mpgs = []
     while len(mpg_tmp) > 0:
         mpgs.append(mpg_tmp.pop())
-        
+
     return mpgs
 
 
@@ -210,14 +211,21 @@ def Maj_min_acc_ratio(mpgs, dt=5, major_ratio=3):
             #print(gal.merger.mr, gal.merger.delta_l)
             i_major = np.where(gal.merger.mr <= major_ratio)[0]
             if len(i_major) > 0:
-                #print(gal.merger.delta, i_major, "M")
-                #print(gal.merger.delta[0])
-                delta_lambda_major = np.sum(gal.merger.delta_l[i_major])
+                #print(gal.merger.mr, gal.merger.delta_l, i_major, "M")
+                delta_lambda_major = 0
+                for iii in i_major:
+                    if gal.merger.delta_l[iii] > -1:
+                        delta_lambda_major += gal.merger.delta_l[iii]
+                    #delta_lambda_major = np.sum(gal.merger.delta_l[i_major])
 
-            i_minor = gal.merger.mr > major_ratio
-            if sum(i_minor) > 0:
-                delta_lambda_minor = sum(gal.merger.delta_l[i_minor])
-                #print(gal.merger.delta, i_minor, "m")
+            i_minor = np.where(gal.merger.mr > major_ratio)[0]
+            delta_lambda_minor = 0
+            if len(i_minor) > 0:
+                #print(gal.merger.delta_l, i_minor, "m")
+                for iii in i_minor:
+                    if gal.merger.delta_l[iii] > -1:
+                        delta_lambda_minor += gal.merger.delta_l[iii]
+#                    delta_lambda_minor = sum(gal.merger.delta_l[i_minor])
 
 
         delta_lambda_other = delta_lambda_tot - delta_lambda_major - delta_lambda_minor
@@ -227,7 +235,7 @@ def Maj_min_acc_ratio(mpgs, dt=5, major_ratio=3):
         gal.dlm = delta_lambda_minor
 
 
-       
+
 def multipage_plot(mpgs, nout_ini=37, nout_fi = 187,
                     wdir='./',
                     suffix="",
@@ -235,7 +243,7 @@ def multipage_plot(mpgs, nout_ini=37, nout_fi = 187,
                     dt_before = 1.0,
                     do_plot=True):
 
-    
+
     from matplotlib.backends.backend_pdf import PdfPages
     fig, ax = plt.subplots(1,2, sharex=True)
     plt.subplots_adjust(hspace=0.001)
@@ -247,15 +255,15 @@ def multipage_plot(mpgs, nout_ini=37, nout_fi = 187,
                     dt_after = dt_after,
                     dt_before = dt_before,
                     ax=ax)
-        
-        
+
+
         pdf.savefig()
         ax[0].clear()
         ax[1].clear()
 
     #plt.show()
     plt.close()
-    
+
 
 
 
@@ -265,18 +273,20 @@ def measure_delta(mpgs, nout_ini=37, nout_fi = 187,
                     dt_before = 1.0,
                     ax=None):
     """
-        Measure lambda change at every merger and draw lambda evolution with merger events.
-        time span over which average lambda value is measured is given in Gyr unit.
-        
+    Measure lambda change at every merger and draw lambda evolution with merger events.
+    time span over which average lambda value is measured is given in Gyr unit.
+
+
+    smoothing is done elsewhere.
     """
 
     from scipy.signal import medfilt
-    from utils.util import dgyr2dnout    
+    from utils.util import dgyr2dnout
     for gal in mpgs:
         ind_nout = gal.nouts > nout_ini
         gal.nouts = gal.nouts[ind_nout]
         gal.data = gal.data[ind_nout]
-        gal.smoothed_lambda = medfilt(gal.data['lambda_r'], kernel_size=5)
+#        gal.smoothed_lambda = medfilt(gal.data['lambda_r'], kernel_size=5)
         if ax is not None:
             ax[0].plot(gal.nouts, np.log10(gal.data['mstar']), 'b:')
             ax[0].set_xlim([50,190])
@@ -325,14 +335,14 @@ def measure_delta(mpgs, nout_ini=37, nout_fi = 187,
 
 
                 if ax is not None:
-                    ax[1].plot(nouts_after,l_after, 'g-')                                           
+                    ax[1].plot(nouts_after,l_after, 'g-')
                     # Check again.
                     nn = range(min(nouts_after) - 5, min([nout_fi, max(nouts_after) + 5]))
-                    ax[1].plot(nn, [lambda_after]*len(nn), "g:")                    
+                    ax[1].plot(nn, [lambda_after]*len(nn), "g:")
 
                     ax[1].plot(nouts_before,l_before, 'r-')
                     nn = range(max([nout_ini, min(nouts_before) - 5]), max(nouts_before) + 5)
-                    ax[1].plot(nn, [lambda_before]*len(nn), "r:")                    
+                    ax[1].plot(nn, [lambda_before]*len(nn), "r:")
 
                     ax[0].axvline(xx, linestyle=':')
                     ax[0].annotate("{:.1f}".format(mr), xy=(xx,0.8))
@@ -342,4 +352,42 @@ def measure_delta(mpgs, nout_ini=37, nout_fi = 187,
                     ax[1].axvline(x2, linestyle=':', c='g')
 
             gal.merger.delta_l = np.array(delta_lambda)
-            gal.merger.delta_m = np.array(delta_mass)        
+            gal.merger.delta_m = np.array(delta_mass)
+
+
+
+def smooth(x, beta=5, window_len=20, monotonic=False, clip_tail_zeros=True):
+    """
+    kaiser window smoothing.
+
+    If len(x) < window_len, window_len is overwritten to be len(x).
+    This ensures to return valid length fo array, but with modified window size.
+
+
+    beta = 5 : Similar to Hamming
+
+
+    """
+    if clip_tail_zeros:
+        x = x[:max(np.where(x > 0)[0])+1]
+
+    if monotonic:
+        """
+        if there is an overall slope, smoothing may result in offset.
+        compensate for that.
+        """
+        slope, intercept, r_value, p_value, std_err = scipy.stats.linregress(x, y=np.arange(len(x)))
+        xx = np.arange(len(x)) * slope + intercept
+        x = x - xx
+
+    # extending the data at beginning and at the end
+    # to apply the window at the borders
+    window_len = min([window_len, len(x)])
+    s = np.r_[x[window_len-1:0:-1], x, x[-1:-window_len:-1]] # concatenate along 0-th axis.
+    # periodic boundary.
+    w = np.kaiser(window_len,beta)
+    y = np.convolve(w/w.sum(), s, mode='valid')
+    if monotonic:
+        return y[int(window_len)/2:len(y)-int(window_len/2) + 1] + xx
+    else:
+        return y[int(window_len)/2:len(y)-int(window_len/2) + 1]

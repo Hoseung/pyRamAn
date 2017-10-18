@@ -8,11 +8,12 @@ import numpy as np
 from cython.view cimport array as cvarray
 
 cdef extern from "c_rd_halo.h":    
-    cdef void load(string, Meta&, Data2&, int)
-    cdef cppclass Meta:
+    void load(string, Meta&, Data2&, int, int)
+    cppclass Meta:
         int nbodies, halnum, subnum;
         float massp, aexp, omegat, age;
-    cdef cppclass Data2:
+        int * allID;
+    cppclass Data2:
         int * np;
         int * hnu;
         int * hhost ;
@@ -31,20 +32,21 @@ cdef extern from "c_rd_halo.h":
         float * g_rho;
         
 
-cpdef read_file(filename, is_gal):
+cpdef read_file(filename, nbodies, is_gal):
     cdef Meta haloinfo
     cdef Data2 halodata
     if is_gal > 0:
 #        print("Reading galaxies")
-        load(filename, haloinfo, halodata, 1)
+        load(filename, haloinfo, halodata, nbodies, 1)
     else:
-        load(filename, haloinfo, halodata, 0)
+        load(filename, haloinfo, halodata, nbodies, 0)
         
     # I don't need to do this. 
     # make a wrapper class and pass it directly to python
     # or, pass the pointer to the array to numpy directly (without copyint)
     # but.. I don't know how to do that :(
     ntot = haloinfo.halnum + haloinfo.subnum
+    allid = np.asarray(<int[:nbodies]> haloinfo.allID)
     hnu = np.asarray(<int[:ntot]> halodata.hnu)
     nump = np.asarray(<int[:ntot]> halodata.np)
     hhost = np.asarray(<int[:ntot*5]> halodata.hhost)
@@ -62,12 +64,12 @@ cpdef read_file(filename, is_gal):
         g_nbin = np.asarray(<int[:ntot]> halodata.g_nbin)
         g_rr = np.asarray(<float[:ntot*100]> halodata.g_rr)
         g_rho = np.asarray(<float[:ntot*100]> halodata.g_rho)
-        return [haloinfo.nbodies, haloinfo.halnum, haloinfo.subnum, haloinfo.massp,
+        return [allid, haloinfo.nbodies, haloinfo.halnum, haloinfo.subnum, haloinfo.massp,
             haloinfo.aexp, haloinfo.omegat, haloinfo.age,
             nump, hnu, hhost, ang, energy, mass, radius, pos, sp, vel, vir, profile,
             gal, g_nbin, g_rr, g_rho]
     else:
-        return [haloinfo.nbodies, haloinfo.halnum, haloinfo.subnum, haloinfo.massp,
+        return [allid, haloinfo.nbodies, haloinfo.halnum, haloinfo.subnum, haloinfo.massp,
             haloinfo.aexp, haloinfo.omegat, haloinfo.age,
             nump, hnu, hhost, ang, energy, mass, radius, pos, sp, vel, vir, profile]
 

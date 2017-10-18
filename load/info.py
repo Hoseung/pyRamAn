@@ -6,6 +6,27 @@ Created on Thu Mar 26 21:10:48 2015
 """
 import numpy as np
 
+class Dummy:
+    pass
+
+def get_minimal_info(info):
+    """
+    from an info instance, exclude methods and leave variables.
+    """
+    if info is None:
+        return
+    keep_list=["msun", "unit_Z", "unit_l", "unit_d", "unit_t", "unit_v",\
+               "unit_T2", "pboxsize","kms","unit_nH",\
+               "base", "nout", "aexp","zred","h","H0","time",\
+               "ob","ol","om","tGyr","unit_flux","boxtokpc", "punit_m"]
+
+    mini_info = Dummy()
+    for name, val in info.__dict__.items():
+        if name in keep_list:
+            setattr(mini_info, name, val)
+    return mini_info
+
+
 class Info:
     def __init__(self, nout = None, base = './',
                  fn = None, load=True, data_dir=None,
@@ -17,12 +38,14 @@ class Info:
         self.data_dir = data_dir
         self.fn = fn
         self.cosmo=cosmo
-        
+        if fn is not None:
+            nout = int(fn.split("info_")[1].split(".txt")[0])
+
         if nout is not None or base is not None or fn is not None:
             self.setup(nout=nout, base=base, fn=fn)
         if load:
             self.read_info()
-        
+
     def setup(self, nout = None, base = './', fn = None):
         try:  # set nout
             self._set_nout(nout)
@@ -34,14 +57,14 @@ class Info:
         except:
             print("info: BASE is not given")
 
-        self.update_fn(fn)
- 
+        if fn is None: self.update_fn(fn)
+
         if self.all_set():
             self.read_info()  # sets ncpu_tot,
 
 
     def __call__(self, *args):
-        # Function emulation      
+        # Function emulation
         return self.__init__(*args)
 
     def all_set(self):
@@ -62,7 +85,7 @@ class Info:
 
     def _set_base(self, base):
         self.base = base
-        
+
     def _set_nout(self, nout):
         self.nout = nout
         self.snout = str(self.nout).zfill(5)
@@ -82,7 +105,6 @@ class Info:
 # from M import * does not import _blah_blah.
 
     def _cal_units(self, arr, rarr):
-        import utils.cosmology
         # in cgs unit
         kpc = 3.08e21
         twopi = 6.2831853e0
@@ -125,17 +147,19 @@ class Info:
         self.pboxsize = rarr[0] * scale_l/(kpc*1000.)
         self.time = rarr[1]
         self.aexp = rarr[2]
-        self.zred = 1/rarr[2]-1
+        self.zred = 1.0/rarr[2]-1.0
         self.H0 = rarr[3]
-        self.h = self.H0 * self.aexp
         self.om = rarr[4]
         self.ol = rarr[5]
         self.ok = rarr[6]
         self.ob = rarr[7]
+        self.h = np.sqrt(self.H0**2 * ((self.om+self.ob) * (1+self.zred)**3 + self.ok * (1+self.zred)**2 + self.ol))
         self.msun = scale_d*scale_l**3/m_sun
         self.cboxsize = self.H0 * self.pboxsize / self.aexp * 1e-2
         if self.cosmo:
-            self.tGyr = utils.cosmology.time2gyr(rarr[1], z_now = self.zred, info = self)
+            from utils.cosmology import Timeconvert
+            tc = Timeconvert(self)
+            self.tGyr = tc.time2gyr(rarr[1], z_now = self.zred)
 
     def keys(self):
         from pprint import pprint
@@ -144,7 +168,7 @@ class Info:
     def read_info(self, base=None, nout=None, verbose=False):
         """ backward compatibility. but use .load instead"""
         self.load(base=base, nout=nout, verbose=verbose)
-        
+
     def load(self, base=None, nout=None, verbose=False):
         """
             parameters: nout, base
@@ -171,7 +195,7 @@ class Info:
             arr1 = []
             arr2 = []
 
-            # Parse info file. 
+            # Parse info file.
             for i in range(5):
                 arr1.append(int(str.split(f.readline(), '=')[1]))
             self.ndim = arr1[1]
@@ -264,4 +288,3 @@ class RefineParam():
             f.readline()  # R_REFINE
             for i in range(self.nnout):
                 self.r_refine.append(float(f.readline()))
-

@@ -1,7 +1,7 @@
 import numpy as np
 import utils.sampling as smp
 import collections
-from galaxy import galaxy
+from galaxymodule import galaxy
 import utils.match as mtc
 import tree.ctutils as ctu
 import pickle
@@ -11,13 +11,12 @@ import general
 from load.part import Part
 from load.hydro import Hydro
 
-#%%
+
 def get_mstar_min(aexp):
     masscut_a = 1256366362.16
     masscut_b = -20583566.5218
-    
-    return masscut_a * aexp + masscut_b
 
+    return masscut_a * aexp + masscut_b
 
 
 def extract_halos_within(halos, i_center, info, dist_in_mpc=1.0):
@@ -41,9 +40,9 @@ def distance_to(xc, xx):
 def all_gals_org(treedata, final_gals, nout_ini=None, nout_fi=None):
     """
        build a list of all progenitors of the final_gals from nout_fi up to nout_ini
-       [ [final_gals (at nout = nout_fi) ], 
-         [all progenitors of final gals at nout = nout_fi -1],
-         [ '' at the at nout = nout_fi -2 ], ...]
+       [ [final_gals (at nout = nout_fi) ],
+       [all progenitors of final gals at nout = nout_fi -1],
+       [ '' at the at nout = nout_fi -2 ], ...]
     """
     if nout_ini == None:
         nout_ini = min(treedata['nout'])
@@ -66,10 +65,10 @@ def all_gals_org(treedata, final_gals, nout_ini=None, nout_fi=None):
 
 def all_gals(treedata, final_gals, nout_ini=None, nout_fi=None):
     """
-    build a list of all progenitors of the final_gals from nout_fi up to nout_ini
-    [ [final_gals (at nout = nout_fi) ], 
-    [all progenitors of final gals at nout = nout_fi -1],
-    [ '' at the at nout = nout_fi -2 ], ...]
+        build a list of all progenitors of the final_gals from nout_fi up to nout_ini
+        [ [final_gals (at nout = nout_fi) ],
+        [all progenitors of final gals at nout = nout_fi -1],
+        [ '' at the at nout = nout_fi -2 ], ...]
     """
     if nout_ini == None:
         nout_ini = min(treedata['nout'])
@@ -127,9 +126,9 @@ def dist2(data, center):
 
 
 def associate_gal_hal(allgal, allhal, plot_check=False, dir_out=""):
-    """ 
-    associate halos with galaxies. 
-    Arbitrary maching parameters are used.
+    """
+        associate halos with galaxies.
+        Arbitrary maching parameters are used.
     """
     import numpy as np
 
@@ -167,7 +166,7 @@ def associate_gal_hal(allgal, allhal, plot_check=False, dir_out=""):
         else:
             # if closet than 40kpc/h and has similar velocity.
             dv = distv(allhal.data, gal)
-            d_nomi = dd < 2e-4 # within 40kpc!! 
+            d_nomi = dd < 2e-4 # within 40kpc!!
             v_nomi = dv < 150
             dvnomi = d_nomi * v_nomi
             if sum(dvnomi) > 1:
@@ -180,7 +179,7 @@ def associate_gal_hal(allgal, allhal, plot_check=False, dir_out=""):
                 # otherwise non-matched.
                 gal['hosthalo'] = -1
                 i1.append(i)
-                # copy galaxy catalog data to new 'fake' halo catalog. 
+                # copy galaxy catalog data to new 'fake' halo catalog.
                 newhals[i]['x'] = gal['x']
                 newhals[i]['y'] = gal['y']
                 newhals[i]['z'] = gal['z']
@@ -227,7 +226,7 @@ def get_sample_tree(alltrees,
     ----
     Add host halo property by runing associate_gal_hal() routine,
     so that all information needed to make a Galaxy instance is
-    contained. (2016/06/06) 
+    contained. (2016/06/06)
     """
     import load
     import tree.ctutils as ctu
@@ -236,7 +235,7 @@ def get_sample_tree(alltrees,
 
     # halo catalog
     hhal = hmo.Halo(base=wdir, nout=nout_fi, halofinder='HM', load=True, is_gal=False)
-    # cluster radius 
+    # cluster radius
 
     i_center = np.where(hhal.data['np'] == max(hhal.data['np']))[0]
     r_cluster = hhal.data['rvir'][i_center].squeeze() * hhal.info.pboxsize
@@ -244,7 +243,7 @@ def get_sample_tree(alltrees,
     # galaxies
     hh = hmo.Halo(base=wdir, nout=nout_fi, halofinder='HM', info=info, load=True, is_gal=is_gal)
     i_center = np.where(hh.data['np'] == max(hh.data['np']))[0]
-    # galaxies that are within r_cluster_scale * the cluster halo from the BCG 
+    # galaxies that are within r_cluster_scale * the cluster halo from the BCG
     # (not the cluster halo center, although two must be virtually identical)
 
     # All galaxies inside the cluster radius * r_scale
@@ -278,12 +277,13 @@ def get_sample_tree(alltrees,
 def get_sample_gal(wdir, nout, info, prg_only_tree, mstar_min):
     """
         return a list of galaxies of interest a the given nout.
-        
+
         Based on the progenitor-only-tree, add galaxies
         inside the zoom region above the mass cut.
     """
     import utils.match as mtc
-    
+    import numpy.lib.recfunctions as rf
+
     gals_in_tree_now = prg_only_tree[prg_only_tree['nout'] == nout]
     id_now = gals_in_tree_now['Orig_halo_id'] # this is Orig_halo_id
 
@@ -300,41 +300,42 @@ def get_sample_gal(wdir, nout, info, prg_only_tree, mstar_min):
                                np.square(cluster_now['z'] * 200 - gals_in_tree_now['z']))) # in Mpc/h
 
     # unless you have "perfect" trees, do not take the mass of the least massive progentor
-    # as the non-tree galaxy mass cut. Sometimes tree marks ridiculously small galaxy
+    # as the non-tree galaxy mass cut. Sometimes tree marks a ridiculously small galaxy
     # as a progenitor.
-    #mstar_min = min(gals_in_tree_now['m'][(gals_in_tree_now['mmp'] == 1) * (gals_in_tree_now['phantom'] == 0)])
+    # mstar_min = min(gals_in_tree_now['m'][(gals_in_tree_now['mmp'] == 1) * (gals_in_tree_now['phantom'] == 0)])
 
     # Galaxy with enough stellar mass
     # -> there is no stellar mass cut when building all_gals_in_trees list.
     allgal = hmo.Halo(base=wdir, nout=nout, is_gal=True, halofinder='HM',
                       return_id=False, load=True)
+    allgal.data = rf.append_fields(allgal.data, "tree_root_id", dtypes='i8', data = -1 * np.ones(len(allgal.data)))
 
     dd_cat = np.sqrt(np.square(cluster_now['x'] - allgal.data['x']) +
                      np.square(cluster_now['y'] - allgal.data['y']) +
                      np.square(cluster_now['z'] - allgal.data['z'])) * 200
 
     igal_ok_cat = (dd_cat < max_dist_prg) * (allgal.data['m'] > mstar_min)
-    print("(catalogue) # galaxies more massive than {:.2e} at nout ="
+    print("[get_sample_gal] (catalogue) # galaxies more massive than {:.2e} at nout ="
     " {}".format(mstar_min, nout, sum(igal_ok_cat)))
 
     final_sample_galaxies = \
         np.unique(np.concatenate((allgal.data[igal_ok_cat]['id'], id_now)))
-    print(" Originally the tree selected:", len(id_now))
-    print("Total set length:", len(final_sample_galaxies))
+    print("[get_sample_gal] Originally the tree selected:", len(id_now))
+    print("[get_sample_gal] Total set length:", len(final_sample_galaxies))
 
     i_gal_ok_final = mtc.match_list_ind(allgal.data['id'], final_sample_galaxies)
 
     # load GalaxyMaker output again, with return_id this time.
     allgal.data = allgal.data[i_gal_ok_final]
-    print("length of the original allgal: {}".format(len(allgal.data)))
+    print("[get_sample_gal] length of the original allgal: {}".format(len(allgal.data)))
 
 
-    # Associate galaxies with halos. 
+    # Associate galaxies with halos.
     # Mark non-matching galaxies.
-    print("Before associate_gal_hal,"
-          "length of the original allhal: {}".format(len(allhal.data)))
+    print("[get_sample_gal] Before associate_gal_hal,"
+          "[get_sample_gal] length of the original allhal: {}".format(len(allhal.data)))
     allhal = associate_gal_hal(allgal, allhal, plot_check=False, dir_out=wdir)
-    print("Now, {}".format(len(allhal.data)))
+    print("[get_sample_gal] Now, {}".format(len(allhal.data)))
 
 
     # load DM ids
@@ -349,17 +350,19 @@ def get_sample_gal(wdir, nout, info, prg_only_tree, mstar_min):
         ii = np.where(gals_in_tree_now['Orig_halo_id'] == gal['id'])[0]
         if len(ii) > 0:
             gal['idx'] = np.int32(gals_in_tree_now['id'][ii])
+            gal["tree_root_id"] = gals_in_tree_now["tree_root_id"][ii]
         else:
             gal['idx'] = np.int32(-1)
+            gal["tree_root_id"] = -1
 #    print(gal['idx'])
     allhal.data['idx'] = allgal.data['idx']
 
     return allgal, allhal
 
 def find_host_single(galdata, allhal):
-    """ 
+    """
         find the host halo of the given galaxy.
-        
+
         galdata should have ['x', 'y', 'z'. 'vx', 'vy', 'vz', 'm', 'r']
 
         INCOMPLETE
@@ -406,7 +409,7 @@ def save_dict_scalar(cc,f, delim="   "):
 
 def not_all_galaxies_have_hosthalo(allhal, allgal):
     """
-       But I don't need this.... 
+       But I don't need this....
        No need to know the ids of particles when I aleardy have the particle data.
     """
     newlist = [[]] * len(allhal.data)
@@ -423,7 +426,7 @@ def not_all_galaxies_have_hosthalo(allhal, allgal):
     allhal.idlists = newlist
 
 
-def extract_dm(halo, info, wdir, region=None):
+def load_dm_direct(halo, info, wdir, region=None):
     """
     Load and return DM paticles at the location of the halo.
     But unlike HaloMaker dump files, subhalos may be included.
@@ -441,7 +444,11 @@ def extract_dm(halo, info, wdir, region=None):
     return part.dm
 
 
-def extract_cell(halo, info, wdir, region=None, rscale=1.0):
+def load_cell_direct(halo, info, wdir, region=None, rscale=1.0):
+    """
+    Actually, it load the data from the binary.
+    Does not extract from a larger chunk of memory.
+    """
     if region is None:
         import utils.sampling as smp
         region = smp.set_region(xc=halo['x'],
@@ -454,21 +461,3 @@ def extract_cell(halo, info, wdir, region=None, rscale=1.0):
                load=True)
 
     return hh.cell
-
-
-def extract_dm_old(halo, nout, wdir):
-    import utils.sampling as smp
-    region = smp.set_region(xc=halo['x'],
-                            yc=halo['y'],
-                            zc=halo['z'],
-                            radius=halo['r'])
-    s = load.sim.Sim(nout=nout, base=wdir, setup=True)
-    s.set_ranges(region['ranges'])
-
-    s.add_part(ptypes=["dm id mass pos vel"],
-           load=True)
-
-    return s.part.dm
-
-
-

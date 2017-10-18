@@ -12,6 +12,7 @@
 # In[1]:
 
 import tree.ctutils as ctu
+import numpy as np
 
 def link_circle_up(x, y, r, ax, finish=0):
     """
@@ -36,7 +37,6 @@ def link_circle_up(x, y, r, ax, finish=0):
         ax.plot(x[1], y[1], 'o', ms=20, lw=2, alpha=0.7, mfc='orange')    
 
 def get_xarr(n):
-    import numpy as np
     arr=[]
     a=0
     for i in range(n):
@@ -109,85 +109,94 @@ def plot_atree(atree, galid):
     plt.savefig(wdir + "mergertrees/" + sidgal + '.png')
 
 
-# In[2]:
-
-from tree import treemodule
-from tree import treeutils
-import pickle
-import numpy as np
-
-alltrees = treemodule.CTree()
-wdir = './'
-
-
-alltrees = treemodule.load_tree(wdir)
-
-import matplotlib.pyplot as plt
-
-nout_fi = 187
-nout_ini = 30
+def run(wdir = './',
+        nout_ini = 30,
+        nout_fi = 187,  
+        saveformat="pdf"):
+    from tree import treemodule
+    from tree import treeutils
+    import pickle
+    import os
+    import matplotlib.pyplot as plt
+    from matplotlib.backends.backend_pdf import PdfPages
+    plt.ioff()
 
 
-i_final = np.where(alltrees.data["nout"] == nout_fi)
-ttt_sub = alltrees.data[i_final]
-
-nouts = np.arange(nout_fi - nout_ini + 1)
-
-final_gals = ttt_sub['id']
-final_gals_org = ttt_sub['Orig_halo_id']
-
-plt.ioff()
-
-#figure(figsize=[6,6])
-#ax = fig.add_subplot(211)
-
-#aexps = np.unique(alltrees.data["aexp"])[:len(nouts)]
-aexps = np.unique(alltrees.data["aexp"])[:-len(nouts):-1]
-zreds = ["%.2f" % (1/i -1) for i in aexps]
-
-import os
-if not os.path.isdir(wdir + "mergertrees/"):
-    os.mkdir(wdir + "mergertrees/")
-
-
-for galid in final_gals:
-    #galid = 42216
-    #galid = 42207
-    plt.clf()
-    fig, ax = plt.subplots(1,2)
-    fig.set_size_inches([12,6])
+    alltrees = treemodule.CTree()
     
-    sidgal = str(galid).zfill(5)      
-    
-    #print(zreds)
-    atree = ctu.extract_a_tree(alltrees.data, galid)
-    mtree = extract_main_tree(atree)
-    
-    ax[0].scatter(atree['aexp'], np.log10(atree['m']), edgecolors='none', alpha=0.3)
-    ax[0].scatter(mtree['aexp'], np.log10(mtree['m']), edgecolors='none', alpha=0.6,
-                  facecolors='red')
-    ax[0].set_xlim([0.15,1.1])
-    ax[0].set_xticks(aexps[0:151:20])
-    ax[0].set_xticklabels(zreds[0:151:20])
-    ax[0].set_title(galid)
-    
-    recursive_tree(galid, atree, 150, ax[1], 0, 0, 0.8, mass_unit=2e8)
-    
-    # y axis label (redshift)
-    ax[1].set_ylabel("Redshift")
-    #ax.set_xlim([-0.5,30])
-    ax[1].set_ylim([-5,155])
-    ax[1].set_yticks(range(0,151,10))
-    ax[1].set_yticklabels(zreds[0:151:10])
-    #plt.yticks(range(0,151,10), zreds[0:151:10])
-    ax[1].set_title(sidgal + ", " + str(atree[0]['Orig_halo_id']))
-    #fig.show()
-    plt.savefig(wdir + "mergertrees/" + sidgal + '.png')
-    #plt.close()
+
+    alltrees = treemodule.load_tree(wdir, is_gal=True)
 
 
-plt.close()
+    i_final = np.where(alltrees.data["nout"] == nout_fi)
+    ttt_sub = alltrees.data[i_final]
+
+    nouts = np.arange(nout_fi - nout_ini + 1)
+
+    final_gals = ttt_sub['id']
+    final_gals_org = ttt_sub['Orig_halo_id']
+
+    aexps = np.unique(alltrees.data["aexp"])[:-len(nouts):-1]
+    zreds = ["%.2f" % (1/i -1) for i in aexps]
+
+    if not os.path.isdir(wdir + "mergertrees/"):
+        os.mkdir(wdir + "mergertrees/")
+
+    print(final_gals)
+
+    if saveformat == "pdf":
+        fig, ax = plt.subplots(1,2)
+        fig.set_size_inches([12,6])
+        pdf = PdfPages(wdir + "mergertrees/" + "ALLtrees.pdf")
+
+    for galid in final_gals[:3]:
+        #galid = 42216
+        #galid = 42207
+        if saveformat == "png":
+            fig, ax = plt.subplots(1,2)
+            fig.set_size_inches([12,6])
+        
+        sidgal = str(galid).zfill(5)      
+        
+        #print(zreds)
+        atree = ctu.extract_a_tree(alltrees.data, galid)
+        mtree = extract_main_tree(atree)
+        
+        ax[0].scatter(atree['aexp'], np.log10(atree['m']), edgecolors='none', alpha=0.3)
+        ax[0].scatter(mtree['aexp'], np.log10(mtree['m']), edgecolors='none', alpha=0.6,
+                      facecolors='red')
+        ax[0].set_xlim([0.15,1.1])
+        ax[0].set_xticks(aexps[0:151:20])
+        ax[0].set_xticklabels(zreds[0:151:20])
+        ax[0].set_title(galid)
+        
+        recursive_tree(galid, atree, 150, ax[1], 0, 0, 0.8, mass_unit=2e8)
+        
+        # y axis label (redshift)
+        ax[1].set_ylabel("Redshift")
+        #ax.set_xlim([-0.5,30])
+        ax[1].set_ylim([-5,155])
+        ax[1].set_yticks(range(0,151,10))
+        ax[1].set_yticklabels(zreds[0:151:10])
+        #plt.yticks(range(0,151,10), zreds[0:151:10])
+        ax[1].set_title(sidgal + ", " + str(atree[0]['Orig_halo_id']))
+        #fig.show()
+        if saveformat=="png":
+            plt.savefig(wdir + "mergertrees/" + sidgal+ '.png')
+        elif saveformat == "pdf":
+            pdf.savefig()
+        #plt.close()
+        ax[0].clear()
+        ax[1].clear()
+
+    if saveformat=="pdf":
+        pdf.close()
+
+    plt.close()
 
 
-# It's working well. 
-# Now search the tree to calculate construct catalog, and search for mergers.
+    # It's working well. 
+    # Now search the tree to calculate construct catalog, and search for mergers.
+
+if __name__ == "__main__":
+    run()

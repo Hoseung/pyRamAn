@@ -7,55 +7,74 @@ Created on Tue Jan 13 23:27:16 2015
 
 import numpy as np
 
-
-
 class Simbase():
-    """ 
-    base    
     """
-    def __init__(self, cosmology=True):
-        self.cosmology=cosmology
-    
-    def add_amr(self):
+    base
+    """
+    def __init__(self, cosmo=True):
+        self.cosmo=cosmo
+        self.ranges=None
+        self.region=None
+        self.nout=None
+        self.cpu_fixed=False
+        self.cpus=None
+
+    def add_amr(self, load=False):
         from load.amr import Amr
-        self.amr = Amr(self.info)
+        self.amr = Amr(self.info, cpus=self.cpus, load=load)
         print("An AMR instance is created\n", self.__class__.__name__)
 
     def get_cpus(self):
         return self.cpus
 
-    def set_cpus(self, cpus):
-        self.cpus = np.array(cpus)
-        print("Updating info.cpus")
+    def unlock_cpus(self):
+        self.cpu_fixed=False
+
+    def set_cpus(self, cpus=None, lock=False):
+        if cpus is None:
+            if self.cpus is None:
+                print("self.cpus is None, provide cpus=")
+                return
+            else:
+                cpus = self.cpus
+        if not self.cpu_fixed:
+            self.cpus = np.array(cpus)
+        # Lock, but only there is a valid list of cpus.
+        if lock and self.cpus is not None:
+            self.cpu_fixed = True
+        #print("Updating info.cpus")
         #self.info._set_cpus(self.get_cpus())
 
     def show_cpus(self):
         print(" ncpus : %s \n" % self.get_cpus())
 
     def set_ranges(self, ranges=[[0, 1], [0, 1], [0, 1]]):
-        nr = np.asarray(ranges)
-        if not(nr.shape[0] == 3 and nr.shape[1] == 2):
-            # Because actual operation on the given input(ranges)
-            # does not take place soon, it's not a good place to use
-            # try & except clause. There is nothing to try yet.
-            print(' Error!')
-            print('Shape of ranges is wrong:', nr.shape)
-            print('example : [[0.1,0.3],[0.2,0.4],[0.6,0.8]] \n')
+        if ranges is not None:
+            nr = np.asarray(ranges)
+            if not(nr.shape[0] == 3 and nr.shape[1] == 2):
+                # Because actual operation on the given input(ranges)
+                # does not take place soon, it's not a good place to use
+                # try & except clause. There is nothing to try yet.
+                print(' Error!')
+                print('Shape of ranges is wrong:', nr.shape)
+                print('example : [[0.1,0.3],[0.2,0.4],[0.6,0.8]] \n')
+            else:
+                self.ranges = ranges
+    #            try:
+    #                self.info._set_ranges(self.ranges)
+    #            except AttributeError:
+    #                print("There is no info._set_ranges attribute")
+                self.set_cpus(self._hilbert_cpulist(self.info, self.ranges))
         else:
-            self.ranges = ranges
-#            try:
-#                self.info._set_ranges(self.ranges)
-#            except AttributeError:
-#                print("There is no info._set_ranges attribute")
-            self.set_cpus(self._hilbert_cpulist(self.info, self.ranges))
+            self.ranges = None
 
-    
+
     def _hilbert_cpulist(self, info, ranges):
         """
         After determining cpus, read the cpu files and cut off data
         that are outside ranges.
-        -> cpu files contain data points within a given ragnes
-        BUT! they also contain other data points outside the ragnes.
+        -> cpu files contain data points within a given ranges
+        BUT! they also contain other data points outside the ranges.
         """
 
         from load.a2c import hilbert3d
@@ -63,7 +82,8 @@ class Simbase():
         if not(hasattr(self, 'amr')):
             print("[sim._hilbert_cpulist] No AMR instance,")
             print("[sim._hilbert_cpulist] Loading one...")
-            self.amr = Amr(self.info)
+            #self.amr = Amr(self.info)
+            self.add_amr(load=False)# load only meta data
 
         nlevelmax = self.amr.header.nlevelmax
         nboundary = self.amr.header.nboundary
@@ -100,6 +120,7 @@ class Simbase():
         zzmax = ranges[2][1]
 
         dmax = max([xxmax-xxmin, yymax-yymin, zzmax-zzmin])
+#        lmin = lmax # sometimes even smallest dx is larger than the region size.
         for ilevel in range(1, lmax):
             dx = 0.5**ilevel
             if (dx < dmax):
@@ -204,29 +225,29 @@ class Sim(Simbase):
         Setup basic parameters need for an AMR instance.
 
     add_info(self, load=False)
-        
+
     add_hydro(self, load=False, lmax=None)
-    
+
     add_part(self, ptypes=[], load=False, fortran=True, dmo=False, **kwargs)
-   
+
     Examples
     --------
     >>> import load
     >>> s = load.sim.Sim(187, ranges=[[0.3,0.4], [0.35,0.45], [0.1,0.2]])
-    
+
     Notes
     -----
-    Global information is stored in this class: 
+    Global information is stored in this class:
         ndim, ncpu, base, type of simulation (DMO, zoom, and so on)
     Later it will also include .nml information.
     (Romain's git version generates such output in text files)
- 
+
     Currently this class deals with single snapshot.
     But I hope to expand it for multiple snapshots.
     """
     def __init__(self, nout, base='./', data_dir='snapshots/',
-                 ranges=[[0.0,1.0],[0.0,1.0],[0.0,1.0]], dmo=False, 
-                 setup=True, region=None, cosmological=True):
+                 ranges=[[0.0,1.0],[0.0,1.0],[0.0,1.0]], dmo=False,
+                 setup=True, region=None, cosmo=True):
         """
             Parameters
             ----------
@@ -241,20 +262,25 @@ class Sim(Simbase):
 
 
         """
+        super(Sim,self).__init__()
+        # should call parent class' init.
 
-        self.nout = nout          
+        self.nout = nout
         self.set_base(base)
         # info appreciates nout and base (not mandatary, though)
         self.dmo = dmo
-        self.cosmological = cosmological
+        self.cosmo = cosmo
         self.set_data_dir(data_dir)
         self.add_info()
         # set_data_dir and set_range needs info instance be exist.
-#        self.set_ranges(ranges)
+        self.set_ranges(ranges)
         if region is not None:
             ranges = [[region['xc'] - region['radius'], region['xc'] + region['radius']],
                       [region['yc'] - region['radius'], region['yc'] + region['radius']],
                       [region['zc'] - region['radius'], region['zc'] + region['radius']]]
+        else:
+            self.region=None
+
         if setup:
             self.setup(nout, base, data_dir, ranges, dmo)
 
@@ -264,7 +290,7 @@ class Sim(Simbase):
     def setup(self, nout=None, base='./', data_dir='snapshots/',
                  ranges=[[0.0,1.0],[0.0,1.0],[0.0,1.0]], dmo=False):
         self.nout = nout
-        self.set_base(base)        
+        self.set_base(base)
         if self.nout is None:
             raise ValueError("Note that 'nout' is not set. \n use sim.Sim.set_nout(nout)")
         self.add_info()
@@ -273,7 +299,8 @@ class Sim(Simbase):
 
         if self._all_set():
             self.add_amr()
-            self.set_cpus(self._hilbert_cpulist(self.info, self.ranges))
+            if self.ranges is not None:
+                self.set_cpus(self._hilbert_cpulist(self.info, self.ranges))
         print('Simulation set up.')
 
     def set_base(self, base):
@@ -296,65 +323,87 @@ class Sim(Simbase):
         By default, simulation outputs are in simulation_base/snapshots/
         """
         from os import path
-        self.data_dir =  path.join(self.base, '', data_dir, '')
+        #self.data_dir =  path.join(self.base, '', data_dir, '')
+        self.data_dir = path.join('', data_dir, '')
 
     def show_base(self):
         print("setting the base(working) directory to :", self.base)
 
-    def add_hydro(self, load=True, lmax=None, region=None, ranges=None):
+    def add_hydro(self, load=True, lmax=None, region=None, ranges=None,
+                  cpu=False, **kwargs):
         """
-        Add a hydro instance to the simulation instance. 
+        Add a hydro instance to the simulation instance.
 
         parameters
         ----------
         lmax : int
-            maximum AMR level of hydro variable retrieved. 
+            maximum AMR level of hydro variable retrieved.
         load : bool
             If false, an hydro instance is added without cell data.
         """
         from load import hydro
+        if region is None:
+            region = self.region
+        if ranges is None:
+            ranges = self.ranges
+
         self.hydro = hydro.Hydro(info=self.info,
-                                 amr=self.amr,
-                                 base=self.base,
+                                 cpus=self.cpus,
+                                 cpu_fixed=self.cpu_fixed,
                                  region=region,
-                                 ranges=ranges)
+                                 ranges=ranges,
+                                 amr=self.amr)
+
+        #for kwarg in kwargs:
+        #    if kwarg== "amr2cell_params":
+        #        amr2cell_params = kwarg
+        #print(amr2cell_params)
         if load :
             if lmax is None:
                 lmax = self.info.lmax
-            self.hydro.amr2cell(lmax=lmax)
+            self.hydro.amr2cell(lmax=lmax, cpu=cpu, **kwargs)
         else:
             print("Use hydro.amr2cell() to load hydro variables")
-            
+
     def add_info(self, load=False):
         from load import info
         self.info = info.Info(self.nout,
                               self.base,
                               load=load,
                               data_dir = self.data_dir,
-                              cosmological = self.cosmological)
+                              cosmo = self.cosmo)
 #        self.info.setup()
 
     def add_part(self, ptypes=[], load=True, fortran=True, dmo=False, **kwargs):
         """
-        Add a particle instance to the simulation instance. 
+        Add a particle instance to the simulation instance.
         Requires types of particles and particle data.
         load = True  to load actual data on creating the instance
 
         parameters
         ----------
-        ptypes : list of particle type and information. 
+        ptypes : list of particle type and information.
                 ["dm id pos"] or ["dm id pos", "star mass vel"]
-                
+
         """
         if dmo:
             self.dmo = True
         from load import part
         print("Types of particles you want to load are: ", ptypes)
+
+        # To do. instead of specifying every variables,
+        # make the Part object inherit common variables from the father class instance, sim.
+        # use inspect module??
         self.part = part.Part(info=self.info,
                               ptypes=ptypes,
                               data_dir=self.data_dir,
                               dmo=self.dmo,
-                              base=self.base, **kwargs)
+                              base=self.base,
+                              cpus=self.cpus,
+                              cpu_fixed=self.cpu_fixed,
+                              region=self.region,
+                              ranges=self.ranges,
+                              cosmo=self.cosmo, **kwargs)
         print("A particle instance is created\n")
 
         if load:
@@ -369,7 +418,7 @@ class Sim(Simbase):
     def search_zoomin_region(self, *args, **kwargs):
         """
         Determine Zoomin region.
-        
+
         Returns a spherical region encompassing maximally refined cells.
 
         Notes
@@ -393,4 +442,3 @@ class Sim(Simbase):
         """
         self.zregion = zregion
         self.info.zregion = zregion
-
