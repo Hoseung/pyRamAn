@@ -28,9 +28,18 @@ def get_vmax_sig(gal,
         lambdas = cal_lambda_r_eps(gal, save_result=False, n_pseudo=n_pseudo,
                                    npix_per_reff=npix_per_reff)
 
-
-    xinds = np.tile(np.arange(img_size) + 0.5, img_size)
-    yinds = np.repeat(np.arange(img_size) + 0.5, img_size)
+    
+    if hasattr(gal, "vmap_v"):
+        v_good = gal.vmap_v
+        xinds = gal.xNode
+        yinds = gal.yNode
+        vmap = gal.vmap_v
+        sigmap = gal.sigmap_v
+    else:
+        xinds = np.tile(np.arange(img_size) + 0.5, img_size)
+        yinds = np.repeat(np.arange(img_size) + 0.5, img_size)
+        vmap = gal.vmap
+        sigmap = gal.sigmap
 
     ## Pixels on the major axis.
 
@@ -50,20 +59,18 @@ def get_vmax_sig(gal,
         ax[0].imshow(gal.vmap, origin="lower")
         ax[0].scatter(xinds[i_ok], yinds[i_ok], color="g")
 
-    v_good = gal.vmap.flatten()[i_ok]
-    sig_good = gal.sigmap.flatten()[i_ok]
+    v_good = vmap.flatten()[i_ok]
     d_good = np.sqrt(np.square(xinds[i_ok]-fit["xcen"]) + np.square(yinds[i_ok]-fit["ycen"]))
-
 
     d_sort = np.argsort(d_good)
     v_good = np.abs(v_good[d_sort])
-    sig_good= sig_good[d_sort]
     d_good = d_good[d_sort]
 
     npoints = len(v_good)
     binsize = np.int(npoints/10)
 
     # smoothed arrays
+    # necessary even with voronoi tesselation?
     v_smooth=np.array([np.mean(v_good[i*binsize:(i+1)*binsize]) for i in range(10)])
     d_smooth=np.array([np.mean(d_good[i*binsize:(i+1)*binsize]) for i in range(10)])
 
@@ -71,7 +78,7 @@ def get_vmax_sig(gal,
 
     # sigma
     star = gal.star
-    star = gal.star[np.where((np.square(star['x']) +
+    star = star[np.where((np.square(star['x']) +
                         np.square(star['y']) +
                         np.square(star['z'])) < gal.meta.reff**2)[0]]# in kpc unit
 
@@ -79,6 +86,9 @@ def get_vmax_sig(gal,
 
     vmax = v_smooth[imax]
     if make_plot:
+        sig_good = sigmap.flatten()[i_ok]
+        sig_good= sig_good[d_sort]
+
         plt.scatter(d_good, v_good, color="r")
         plt.scatter(d_good, sig_good, color="b")
         plt.plot(d_smooth, v_smooth, color="r")

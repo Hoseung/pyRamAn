@@ -91,6 +91,7 @@ class Simplemock():
         # BC2003 is in unit of L_sun Ang-1, where L_sun = Lum_sun.
 
         starmetal = star["metal"] # Is the original array modified?
+        starmetal[starmetal > 0.04] = 0.0399999 # a few stars have higher metallicity
         if metal_lower_cut:
             # No star with metallicity lower than the lowest table.
             starmetal[starmetal < min(self.metal_points)] = min(self.metal_points) * 1.0001
@@ -98,6 +99,8 @@ class Simplemock():
         locate_metal = np.digitize(starmetal, self.metal_points)-1 # GOOD
         relevant_metals = self.metal_points[:max(locate_metal)+2]
         nmetals = len(relevant_metals)
+        #print("Metal ranges", self.metal_points, starmetal.min(), starmetal.max())
+        #print("nmetals", nmetals)
 
         # Star Age
         starage = star["time"]
@@ -144,13 +147,13 @@ class Simplemock():
         # All are array-wise calculations.
         # interpolation weight
         dl_m = (starmetal - relevant_metals[locate_metal] ) / \
-                                              (relevant_metals[locate_metal+1] - relevant_metals[locate_metal])
+                                     (relevant_metals[locate_metal+1] - relevant_metals[locate_metal])
         dr_m = (relevant_metals[locate_metal+1] - starmetal) / \
-                                              (relevant_metals[locate_metal+1] - relevant_metals[locate_metal])
+                                     (relevant_metals[locate_metal+1] - relevant_metals[locate_metal])
         dl_a = (starage - relevant_ages[locate_age] )   / \
-                                              (relevant_ages[locate_age+1] - relevant_ages[locate_age])
+                                     (relevant_ages[locate_age+1] - relevant_ages[locate_age])
         dr_a = (relevant_ages[locate_age+1] - starage ) / \
-                                              (relevant_ages[locate_age+1] - relevant_ages[locate_age])
+                                     (relevant_ages[locate_age+1] - relevant_ages[locate_age])
 
 
         # 2D linear interpolation

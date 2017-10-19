@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt 
 
 def _display_pixels(x, y, counts, pixelSize):
     """
@@ -94,7 +95,6 @@ def gen_vmap_sigmap(self,
     # 100% means that the galaxy radius is smaller than 4Reff.
     # Considering ellipticity, even 4Reff may not be enough to derive.
 
-
     if n_pseudo > 1:
         # sig in kpc unit. up to 1M particles
         # sig = 0.3kpc from Naab 2014.
@@ -155,10 +155,6 @@ def gen_vmap_sigmap(self,
     mmap = mmap / (dx*dx)
     self.mmap = mmap.reshape(nx, ny)
 
-    # Velocity and dispersion map
-    vmap = np.zeros(nx * ny, dtype=float)
-    sigmap=np.zeros(nx * ny, dtype=float)
-
     if voronoi is not None:
         noise_map = np.sqrt(count_map)
         noise_map[noise_map < 1] = 1 # minimum noise for empty pixeles
@@ -169,6 +165,7 @@ def gen_vmap_sigmap(self,
         """
         This function accepts only data on uniform grid...?
         """
+        print("Inside voronoi, plot =", voronoi["plot"])
         binNum, xNode, yNode, xBar, yBar, sn, nPixels, scale = \
             voronoi_2d_binning(xpos_regular, ypos_regular, count_map,
                              noise_map, targetSN=voronoi["targetSN"],
@@ -197,30 +194,76 @@ def gen_vmap_sigmap(self,
             sigmap_v[ibin] = self.weighted_std(vz[i_part], weights=mm[i_part])
 
             # update original map too.
-            vmap[ind] = vmap_v[ibin]
-            sigmap[ind] = sigmap_v[ibin]
+            #vmap[ind] = vmap_v[ibin]
+            #sigmap[ind] = sigmap_v[ibin]
+        self.mmap_v = mmap_v
+        self.vmap_v = vmap_v
+        self.sigmap_v = sigmap_v
 
-        lambdamap_v = vmap_v / sigmap_v
 
-        mmap_org = mmap
-        vmap_org = vmap
-        sigmap_org = sigmap
-        self.sigmap = sigmap_org.reshape(nx, ny)
-        self.vmap = vmap_org.reshape(nx,ny)
-
-        for ibin in range(len(xNode)):
-            ind = np.where(binNum == ibin)[0]
-            vmap_org[ind] = vmap_v[ibin]
-            sigmap_org[ind] = sigmap_v[ibin]
-
-        # update maps.
-        # keep oroginal mmap to draw plots
-        # Don't worry.  it's just switching pointer. No memory copy.
-        sigmap = sigmap_v
-        vmap = vmap_v # overwrite??
-        mmap = mmap_v
+        # Optional, only to draw figures easily.
+        if False:
+            self.xNode = np.tile(np.arange(nx),ny) # x = tile? or repeat?
+            self.yNode = np.repeat(np.arange(ny),nx)
+            self.sigmap = sigmap.reshape(nx, ny)
+            self.vmap = vmap.reshape(nx,ny)
+            lambdamap_v = vmap_v / sigmap_v
+         
+            mmap_org = mmap
+            vmap_org = vmap
+            sigmap_org = sigmap
+            self.sigmap = sigmap_org.reshape(nx, ny)
+            self.vmap = vmap_org.reshape(nx,ny)
+         
+            for ibin in range(len(xNode)):
+                ind = np.where(binNum == ibin)[0]
+                vmap_org[ind] = vmap_v[ibin]
+                sigmap_org[ind] = sigmap_v[ibin]
+         
+            # update maps.
+            # keep oroginal mmap to draw plots
+            # Don't worry.  it's just switching pointer. No memory copy.
+            sigmap = sigmap_v
+            vmap = vmap_v # overwrite??
+            mmap = mmap_v
+         
+            dd = np.sqrt((xNode - 0.5*npix)**2 + (yNode - 0.5*npix)**2) *\
+                 npix_per_reff
+            i_radius = np.fix(dd).astype(int)
+            new_arr = np.zeros(np.fix(max(dd)).astype(int) + 1)
+            new_cnt = np.zeros(np.fix(max(dd)).astype(int) + 1)
+            # NGP, Average
+            lambdamap_v = vmap/sigmap
+            for i, i_r in enumerate(i_radius):
+                new_arr[i_r] += lambdamap_v[i]
+                new_cnt[i_r] = new_cnt[i_r] + 1
+         
+            # npix * npix map for plots
+            for ibin in range(len(xNode)):
+                ind = np.where(binNum == ibin)[0]
+                vmap_org[ind] = vmap_v[ibin]
+                sigmap_org[ind] = sigmap_v[ibin]
+         
+            # Stellar particle density map
+        fig, axs = plt.subplots(2,2)
+        #axs[0,0].imshow(mmap_org.reshape(nx,ny),interpolation='nearest')
+        axs[0,0].scatter(xNode, yNode, s=2, c=mmap_v)
+        axs[0,1].scatter(xNode, yNode, s=2, c=vmap_v)
+        axs[1,0].scatter(xNode, yNode, s=2, c=sigmap_v)
+        #axs[0,1].imshow(vmap_org.reshape(nx,ny),interpolation='nearest')
+        #axs[1,0].imshow(sigmap_org.reshape(nx,ny),interpolation='nearest')
+        #axs[0,1].imshow(self.vmap,interpolation='nearest')
+        #axs[1,0].imshow(self.sigmap,interpolation='nearest')
+        #axs[1,1].plot(new_arr / new_cnt)
+        axs[1,1].set_ylim(0,1)
+        plt.savefig("voronoi_map_{}.png".format(self.meta.id))
+        plt.close()
 
     else:
+        # Velocity and dispersion map
+        vmap = np.zeros(nx * ny, dtype=float)
+        sigmap=np.zeros(nx * ny, dtype=float)
+
         # No Voronoi tessellation.
         for i in range(nx * ny):
             ind = np.where(indices == i)[0]
@@ -232,8 +275,8 @@ def gen_vmap_sigmap(self,
             else:
                 sigmap[i] = 0
                 vmap[i] = 0
-        self.xNode = np.tile(np.arange(nx),ny) # x = tile? or repeat?
-        self.yNode = np.repeat(np.arange(ny),nx)
+        #self.xNode = np.tile(np.arange(nx),ny) # x = tile? or repeat?
+        #self.yNode = np.repeat(np.arange(ny),nx)
         self.sigmap = sigmap.reshape(nx, ny)
         self.vmap = vmap.reshape(nx,ny)
 
@@ -260,18 +303,24 @@ def _measure_lambda(mge_par,
                     npix_per_reff,
                     rscale,
                     voronoi=False,
-                    verbose=False):
+                    do_plot=False,
+                    verbose=False,
+                    ):
+
     xcen=mge_par["xcen"]
     ycen=mge_par["ycen"]
     cos=mge_par["cos"]
     sin=mge_par["sin"]
     sma=mge_par["sma"]
     smi=mge_par["smi"]
+
     dd = np.sqrt(((xNode-xcen)*cos + (yNode-ycen)*sin)**2/sma**2 + \
                  ((yNode-ycen)*cos - (xNode-xcen)*sin)**2/smi**2) * \
                  npix_per_reff
+
     # lambda calculaed over '3'Reff.
-    points = np.zeros(round(npix_per_reff * rscale))
+    npix = round(npix_per_reff * rscale)
+    points = np.zeros(npix)
 
     if verbose: print("Reff = half light?1", sum(mmap[dd < 1.0])/ sum(mmap))
     dist1d = np.sqrt(np.square(xNode - xcen) + np.square(yNode - ycen))
@@ -279,39 +328,16 @@ def _measure_lambda(mge_par,
         #ind = np.where( (dd > i) & (dd < (i+1)))[0]
         ind = np.where(dd < (i+1))[0]
 
-        if len(ind) >  0:
-            a = sum(mmap[ind] * dist1d[ind] * abs(vmap[ind]))
+        if len(ind) > 0:
+            a = np.sum(mmap[ind] * dist1d[ind] * abs(vmap[ind]))
             if a > 0:
                 ind2 = np.where(sigmap[ind] > 0)[0]
-                b = sum(mmap[ind[ind2]] * dist1d[ind[ind2]]
+                b = np.sum(mmap[ind[ind2]] * dist1d[ind[ind2]]
                         * np.sqrt(vmap[ind[ind2]]**2 + sigmap[ind[ind2]]**2))
 
                 points[i] = a/b
+    print(points)
 
-    if voronoi:
-        dd = np.sqrt((xNode - 0.5*npix)**2 + (yNode - 0.5*npix)**2) *\
-             npix_per_reff
-        i_radius = np.fix(dd).astype(int)
-        new_arr = np.zeros(np.fix(max(dd)) + 1)
-        new_cnt = np.zeros(np.fix(max(dd)) + 1)
-        # NGP, Average
-        for i, i_r in enumerate(i_radius):
-            new_arr[i_r] = new_arr[i_r] + lambdamap_v[i]
-            new_cnt[i_r] = new_cnt[i_r] + 1
-
-    # npix * npix map for plots
-        for ibin in range(len(xNode)):
-            ind = np.where(binNum == ibin)[0]
-            vmap_org[ind] = vmap_v[ibin]
-            sigmap_org[ind] = sigmap_v[ibin]
-
-        # Stellar particle density map
-        fig, axs = plt.subplots(2,2)
-        axs[0,0].imshow(mmap_org.reshape(nx,ny),interpolation='nearest')
-        axs[0,1].imshow(vmap_org.reshape(nx,ny),interpolation='nearest')
-        axs[1,0].imshow(sigmap_org.reshape(nx,ny),interpolation='nearest')
-        axs[1,1].plot(new_arr / new_cnt)
-        axs[1,1].set_ylim(0,1)
 
     return points
 
@@ -330,11 +356,13 @@ def cal_lambda_r_eps(self,
                      rscale=3.0,
                      method='ellip',
                      verbose=False,
+                     voronoi=None,
                      galaxy_plot_dir='./',
                      save_result = True,
                      iterate_mge = False):
 
     import matplotlib.pyplot as plt
+    is_voronoi = lambda x : x is not None
 
 #
 # 2. calculate profile over radial bins.
@@ -343,18 +371,23 @@ def cal_lambda_r_eps(self,
 # mge_interpol : from iterative measruements of MGE,
 #                interpolate quantities at the half light radius.
     mmap = np.ravel(self.mmap)
-    vmap = np.ravel(self.vmap)
-    sigmap = np.ravel(self.sigmap)
-    xNode = self.xNode
-    yNode = self.yNode
-    reff = self.meta.reff
-    self.npix_per_reff = npix_per_reff
 
     nx = round(npix_per_reff * 2 * (rscale + 1))
     ny = nx
+    
+    xpos = np.tile(np.arange(nx),ny)
+    ypos = np.repeat(np.arange(ny),nx)
+        
+    #xNode = self.xNode
+    #yNode = self.yNode
+    reff = self.meta.reff
+    self.npix_per_reff = npix_per_reff
+
 
     mmap_tot = sum(mmap)
-    dist = np.sqrt(np.square(xNode - nx/2) + np.square(yNode - ny/2))
+    dist = np.sqrt(np.square(xpos- nx/2) \
+                 + np.square(ypos- ny/2))
+
     if method == 'ellip':
         from Cappellari import mge
         if iterate_mge:
@@ -388,7 +421,6 @@ def cal_lambda_r_eps(self,
 
 # Determine eps, pa, sma, xcen, ycen
             if mge_interpol:
-
 
                 self.meta.eps, self.meta.pa, self.meta.sma, self.meta.xcen, self.meta.ycen = \
                     interpol(np.array(f_light_arr), 0.5, (eps_arr, pa_arr, mjr_arr, xpos_arr, ypos_arr))
@@ -437,9 +469,18 @@ def cal_lambda_r_eps(self,
                                             fraction=frac)
                 mge_now = get_mge_out(f, frac, npix_per_reff, name)
                 self.meta.mge_result_list.append(mge_now)
-                larr = _measure_lambda(mge_now,
-                                       mmap, vmap, sigmap,
-                                       xNode, yNode,
+                if is_voronoi(voronoi):
+                    larr = _measure_lambda(mge_now,
+                                       self.mmap_v, self.vmap_v, self.sigmap_v,
+                                       self.xNode, self.yNode,
+                                       npix_per_reff,
+                                       rscale,
+                                       voronoi=True,
+                                       verbose=verbose)
+                else:
+                    larr = _measure_lambda(mge_now,
+                                       mmap, self.vmap, self.sigmap,
+                                       xpos, ypos,
                                        npix_per_reff,
                                        rscale,
                                        voronoi=False,

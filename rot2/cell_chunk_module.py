@@ -80,23 +80,27 @@ def do_work(sub_sample, nout, i_subsample,
     from galaxymodule import gal_properties
     import time
     import os
+
+    voronoi_dict=dict(targetSN=20, quiet=True, plot=False)
+    #voronoi_dict = None
     gen_vmap_sigmap_params = dict(npix_per_reff=5,
                                   rscale=3.0,
                                   n_pseudo=60,
                                   verbose=False,
-                                  voronoi=None, #voronoi_dict
+                                  voronoi=voronoi_dict,
                                   weight="luminosity")
     gen_vmap_sigmap_params2 = dict(npix_per_reff=5,
                                   rscale=3.0,
                                   n_pseudo=1,
                                   verbose=False,
-                                  voronoi=None, #voronoi_dict
+                                  voronoi=voronoi_dict, #voronoi_dict
                                   weight="luminosity")
 
     cal_lambda_params = dict(npix_per_reff=5,
                              rscale=3.0,
                              method='ellip',
                              verbose=False,
+                             voronoi=voronoi_dict,
                              iterate_mge = False,
                              save_result = True,
                              galaxy_plot_dir='./')
@@ -130,6 +134,8 @@ def do_work(sub_sample, nout, i_subsample,
                 this_gal["level"] = -9 # Overwrite level to mark CELL_ availability.
 
         if sum(sub_sample["level"] < 0) > 0:
+            print("Missing CELL fiels")
+            print(sub_sample["id"][sub_sample["level"] < 0])
             # has something to load
             xrange = [min(sub_sample["x"][sub_sample["level"] < 0] -\
                           sub_sample["r"][sub_sample["level"] < 0] * rscale),
@@ -206,20 +212,28 @@ def do_work(sub_sample, nout, i_subsample,
                     gg.cell["var2"] = gg.cell["var2"]*info.kms
                     gg.cell["var3"] = gg.cell["var3"]*info.kms
 
-                #print("Load cell")
+                print("Load cell")
             else:
                 get_cell(s.hydro.cell, kdtree, gg, s.info)
-                #print("Read from hydro")
+                print("Read from hydro")
             #gg.cell = s.hydro.cell[ind_cell_kd(s.hydro.cell, kdtree, gg, s.info)]
-            if len(gg.cell) > 1:
-                if save_cell:
-                    pickle.dump(gg.cell, open(fn_cell,"wb"))
+                if len(gg.cell) > 1:
+                    if save_cell:
+                        pickle.dump(gg.cell, open(fn_cell,"wb"))
 
                 gal_properties.get_cold_cell(gg, s.info, **gas_params)
                 gal_properties.get_gas_properties(gg, s.info)
         else:
             gg.cell = None
             # Now star and cell memberships are determined.
+
+        # Now stars and cells are ready. Correct metallicity
+        # No, I don't need cell metallicity
+        #if do_cell: 
+        #    gg.cell["var5"] *=4.08 - 0.21*s.info.zred - 0.11*s.info.zred**2
+
+        gg.star["metal"] *=4.08 - 0.21*s.info.zred - 0.11*s.info.zred**2
+
 
         # Cell needed to calcluate gas attenuation.
         # r-band luminosity to be used as weights.
@@ -299,7 +313,6 @@ def do_work(sub_sample, nout, i_subsample,
             plt.savefig(out_dir + "lam_map_{}_{}.png".format(nout, gg.meta.id), dpi=200)
             plt.close()
         
-
         # Calculate Vmax, Sig
         # get_vmax_sig uses vmap and sigmap from get_vmap_sigmap.
         # So if the maps were luminosity weighted, that also applies to the vmax and sig.

@@ -498,8 +498,8 @@ def _display_pixels(x, y, counts, pixelSize):
     """
     xmin, xmax = np.min(x), np.max(x)
     ymin, ymax = np.min(y), np.max(y)
-    nx = round((xmax - xmin)/pixelSize) + 1
-    ny = round((ymax - ymin)/pixelSize) + 1
+    nx = int(round((xmax - xmin)/pixelSize) + 1) # why not int...????
+    ny = int(round((ymax - ymin)/pixelSize) + 1)
     img = np.full((nx, ny), np.nan)  # use nan for missing data
     j = np.round((x - xmin)/pixelSize).astype(int)
     k = np.round((y - ymin)/pixelSize).astype(int)
