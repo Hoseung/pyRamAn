@@ -245,19 +245,20 @@ def gen_vmap_sigmap(self,
                 sigmap_org[ind] = sigmap_v[ibin]
          
             # Stellar particle density map
-        fig, axs = plt.subplots(2,2)
-        #axs[0,0].imshow(mmap_org.reshape(nx,ny),interpolation='nearest')
-        axs[0,0].scatter(xNode, yNode, s=2, c=mmap_v)
-        axs[0,1].scatter(xNode, yNode, s=2, c=vmap_v)
-        axs[1,0].scatter(xNode, yNode, s=2, c=sigmap_v)
-        #axs[0,1].imshow(vmap_org.reshape(nx,ny),interpolation='nearest')
-        #axs[1,0].imshow(sigmap_org.reshape(nx,ny),interpolation='nearest')
-        #axs[0,1].imshow(self.vmap,interpolation='nearest')
-        #axs[1,0].imshow(self.sigmap,interpolation='nearest')
-        #axs[1,1].plot(new_arr / new_cnt)
-        axs[1,1].set_ylim(0,1)
-        plt.savefig("voronoi_map_{}.png".format(self.meta.id))
-        plt.close()
+        if False:
+            fig, axs = plt.subplots(2,2)
+            #axs[0,0].imshow(mmap_org.reshape(nx,ny),interpolation='nearest')
+            axs[0,0].scatter(xNode, yNode, s=2, c=mmap_v)
+            axs[0,1].scatter(xNode, yNode, s=2, c=vmap_v)
+            axs[1,0].scatter(xNode, yNode, s=2, c=sigmap_v)
+            #axs[0,1].imshow(vmap_org.reshape(nx,ny),interpolation='nearest')
+            #axs[1,0].imshow(sigmap_org.reshape(nx,ny),interpolation='nearest')
+            #axs[0,1].imshow(self.vmap,interpolation='nearest')
+            #axs[1,0].imshow(self.sigmap,interpolation='nearest')
+            #axs[1,1].plot(new_arr / new_cnt)
+            axs[1,1].set_ylim(0,1)
+            plt.savefig("voronoi_map_{}.png".format(self.meta.id))
+            plt.close()
 
     else:
         # Velocity and dispersion map

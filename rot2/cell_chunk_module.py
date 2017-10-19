@@ -345,7 +345,7 @@ def do_work(sub_sample, nout, i_subsample,
 
 #########################################################
 
-def domain_decompose_cat(gcat, nbins=5):
+def domain_decompose_cat(gdata, nbins=5):
     """
         divide catalog into nbins**3 cubics.
         yield each chunk of cat.data.
@@ -353,20 +353,20 @@ def domain_decompose_cat(gcat, nbins=5):
         gcat is a partial catalog: ind != id -1
     """
     import utils.match as mtc
-    ind_all = np.floor(gcat.data["x"]*nbins).astype(int) \
-            + nbins * np.floor(gcat.data["y"]*nbins).astype(int) \
-            + nbins**2*np.floor(gcat.data["z"]*nbins).astype(int)
+    ind_all = np.floor(gdata["x"]*nbins).astype(int) \
+            + nbins * np.floor(gdata["y"]*nbins).astype(int) \
+            + nbins**2*np.floor(gdata["z"]*nbins).astype(int)
 
     ind_sort = np.argsort(ind_all)
 
-    sd = sorted_data = gcat.data[ind_sort]
+    sd = sorted_data = gdata[ind_sort]
     sorted_ind_all = ind_all[ind_sort]
 
     for i in range(nbins**3):
-        yield gcat.data[mtc.match_list_ind(gcat.data["id"], sd[np.where(sorted_ind_all == i)[0]]["id"])]
+        yield gdata[mtc.match_list_ind(gdata["id"], sd[np.where(sorted_ind_all == i)[0]]["id"])]
 
 
-def cat_only_relevant_gals(gcat, all_sample_ids, nout):
+def cat_only_relevant_gals(gdata, all_sample_ids, nout):
     import utils.match as mtc
     allgal_now = np.array(all_sample_ids[str(nout)])
-    gcat.data = gcat.data[mtc.match_list_ind(gcat.data["id"], allgal_now)]
+    gdata = gdata[mtc.match_list_ind(gdata["id"], allgal_now)]
