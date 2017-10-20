@@ -337,7 +337,7 @@ def _measure_lambda(mge_par,
                         * np.sqrt(vmap[ind[ind2]]**2 + sigmap[ind[ind2]]**2))
 
                 points[i] = a/b
-    print(points)
+    # print(points)
 
 
     return points

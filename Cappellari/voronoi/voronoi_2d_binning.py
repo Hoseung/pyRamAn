@@ -560,16 +560,16 @@ def voronoi_2d_binning(x, y, signal, noise, targetSN=50, cvt=True,
     #
     noise = noise.clip(np.min(noise[noise > 0])*1e-9)
 
-    print('Bin-accretion...')
+    #print('Bin-accretion...')
     classe, pixelsize = _accretion(x, y, signal, noise, targetSN, pixelsize, quiet)
-    print(np.max(classe), ' initial bins.')
-    print('Reassign bad bins...')
+    #print(np.max(classe), ' initial bins.')
+    #print('Reassign bad bins...')
     xNode, yNode = _reassign_bad_bins(classe, x, y)
-    print(xNode.size, ' good bins.')
+    #print(xNode.size, ' good bins.')
     if cvt:
-        print('Modified Lloyd algorithm...')
+        #print('Modified Lloyd algorithm...')
         xNode, yNode, scale, it = _cvt_equal_mass(x, y, signal, noise, xNode, yNode, quiet, wvt)
-        print(it-1, ' iterations.')
+        #print(it-1, ' iterations.')
     else:
         scale = 1.
     classe, xBar, yBar, sn, area = _compute_useful_bin_quantities(x, y, signal, noise, xNode, yNode, scale)
