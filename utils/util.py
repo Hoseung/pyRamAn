@@ -111,5 +111,5 @@ def dgyr2dnout(dt, nout_now):
 def get_last_snapshot(base='./'):
     #from glob import glob
 
-    return int(np.sort(os.listdir("./snapshots/"))[-1].split("_")[1])
+    return int(np.sort(os.listdir(base + "snapshots/"))[-1].split("_")[1])
     # fi = glob("./snapshots/" +  + "/info*.txt")

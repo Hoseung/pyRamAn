@@ -61,7 +61,7 @@ class Tree():
         from utils import util
         
         nout_fi = util.get_last_snapshot(self.wdir)
-        self.info = Info(nout=nout_fi)
+        self.info = Info(base=self.wdir,nout=nout_fi)
     
 
     def cal_time(self, info=None):
