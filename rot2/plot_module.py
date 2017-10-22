@@ -64,7 +64,7 @@ def get_lower_upper(x,y,ax,nbins=10,
             y_upper.append(yb[ybsrt[int(np.floor(len(yb)*(0.5-percentile/2)))]])
             y_lower.append(yb[ybsrt[int(np.floor(len(yb)*(0.5+percentile/2)))]])
 
-    return xpos, y_lower, y_upper
+    return xpos, np.array(y_lower), np.array(y_upper)
 
 def mean_std(x,y,ax, nbins=10, **kwargs):
     n, _ = np.histogram(x, bins=nbins)
@@ -89,6 +89,7 @@ def plot_scatter_mean_binned(ax, xx, yy,
                              do_mean_std = False,
                              do_mean_alone = False,
                              do_scatter = True,
+							 percentile = 0,
                              label=None,
 							 **scatter_args):
     if do_scatter:
@@ -117,6 +118,14 @@ def plot_scatter_mean_binned(ax, xx, yy,
 
     if do_mean_alone:
         mean_alone(xx, yy, ax, nbins=nbins, color='b', linewidth=3)
+
+    if percentile != 0:
+        fill_between_args ={"bintype":"uniform_size",
+                 "linedata":"median",
+                 "nbins":nbins, "percentile":percentile}
+        xpos, y_upper, y_lower = get_lower_upper(xx, yy, ax,  **fill_between_args)
+        ax.errorbar(xpos, 0.5*(y_lower+y_upper), [y_lower, y_upper])#, fmt="none")
+
 
     #line = ax.scatter(range(1),range(1),edgecolor='none',marker='o', facecolor="b",alpha=1.0, label=label)
     if label is not None: ax.legend()
