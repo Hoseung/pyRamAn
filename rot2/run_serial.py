@@ -439,9 +439,9 @@ def measure_density(gals, nnza_all, nnza_cell,
         print("Now ", nout)
         info = Info(base=sim_base, nout=nout)
 
-        #denm.density_D2N(gdata, info, gals, Ns=[10, 50])
-        #dt_fine = nnza_all.nnza["lbt"][i]-nnza_all.nnza["lbt"][i-1]
-        #denm.measure_P(gdata, info, gals, dt_fine, short=False)
+        denm.density_D2N(gdata, info, gals, Ns=[10, 50])
+        dt_fine = nnza_all.nnza["lbt"][i]-nnza_all.nnza["lbt"][i-1]
+        denm.measure_P(gdata, info, gals, dt_fine, short=False)
 
         # Only 63 snapshots
         if nout not in nnza_cell.nnza["nout"]:
@@ -568,7 +568,6 @@ def run(sim_base = "/media/hoseung/t3/data/HAGN/",
                      j0_merger_frac = 1.0,
                      j0_percentile = 0.8, # top 20% of j within the window.
                      lbt_min_j_decrease = 0.5)
-
 
 
     # Density measurements

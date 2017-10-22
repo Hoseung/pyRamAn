@@ -89,9 +89,10 @@ def plot_scatter_mean_binned(ax, xx, yy,
                              do_mean_std = False,
                              do_mean_alone = False,
                              do_scatter = True,
-                             label=None):
+                             label=None,
+							 **scatter_args):
     if do_scatter:
-        scatter_args = {"edgecolor":"none", "alpha":1.0}
+        #scatter_args = {"edgecolor":"none", "alpha":1.0}
         ax.scatter(xx, yy, **scatter_args, c='gray', label="isolated (H)")
 
     if do_fill_between:
