@@ -121,6 +121,11 @@ def nout_results_to_gal_serial(gals, nouts, out_base):
                         sat_data[ind]["mgas"] = np.nan
                         sat_data[ind]["mgas_cold"] = np.nan
 
+                    if hasattr(data, "Mu"):
+                        sat_data[ind]["Mu"] = data.Mu
+                        sat_data[ind]["Mg"] = data.Mg
+                        sat_data[ind]["Mr"] = data.Mr
+
         print(good, bad)
 
 
