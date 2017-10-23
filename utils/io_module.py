@@ -2,7 +2,7 @@ import struct
 import numpy as np
 _head_type = np.dtype('i4')
 
-def write_fortran(f, array, dtype="i", check=True):
+def write_fortran(f, array, dtype="I", check=True):
     """
         Note
         type 'i' meant to be int32. Can I explicitly tell?

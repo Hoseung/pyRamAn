@@ -134,7 +134,7 @@ def do_work(sub_sample, nout, i_subsample,
                 this_gal["level"] = -9 # Overwrite level to mark CELL_ availability.
 
         if sum(sub_sample["level"] < 0) > 0:
-            print("Missing CELL fiels")
+            print("Missing CELL files")
             print(sub_sample["id"][sub_sample["level"] < 0])
             # has something to load
             xrange = [min(sub_sample["x"][sub_sample["level"] < 0] -\
@@ -150,11 +150,9 @@ def do_work(sub_sample, nout, i_subsample,
                   max(sub_sample["z"][sub_sample["level"] < 0] +\
                       sub_sample["r"][sub_sample["level"] < 0] * rscale)]
 
-        #print(xrange, yrange, zrange)
             region = smp.set_region(ranges=[xrange, yrange, zrange])
 
             s.set_ranges(region["ranges"])
-        #print(s.ranges)
         # Common2
         # Hydro cell data
             t0 = time.time()
