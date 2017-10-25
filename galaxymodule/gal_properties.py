@@ -6,6 +6,13 @@ def get_gas_all(gg, info, dr=5, rmax=200, density_ratio=1e-3):
     #mgas_tot, mgas_cold, Ln_gas = get_gas_properties(gg, info)
     gg.meta.gas_results = get_gas_properties(gg, info)
 
+
+def get_axis_ratio(gg):
+    cov_mat = np.cov((gg.star["x"], gg.star["y"], gg.star["z"]))
+    eig_val_cov, eig_vec_cov = np.linalg.eig(cov_mat)
+    gg.meta.abc_eig_vec = np.sort(eig_val_cov)
+
+
 def get_cold_cell(gg, info, dr=5, rmax=200, density_ratio=1e-3, check_bound=False):
     """
         returns True if the galaxy has cold gas.
