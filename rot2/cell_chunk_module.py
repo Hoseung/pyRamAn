@@ -81,8 +81,8 @@ def do_work(sub_sample, nout, i_subsample,
     import time
     import os
 
-    voronoi_dict=dict(targetSN=20, quiet=True, plot=False)
-    #voronoi_dict = None
+    #voronoi_dict=dict(targetSN=20, quiet=True, plot=False)
+    voronoi_dict = None
     gen_vmap_sigmap_params = dict(npix_per_reff=5,
                                   rscale=3.0,
                                   n_pseudo=60,

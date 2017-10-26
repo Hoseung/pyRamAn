@@ -480,7 +480,7 @@ def cal_lambda_r_eps(self,
                                        verbose=verbose)
                 else:
                     larr = _measure_lambda(mge_now,
-                                       mmap, self.vmap, self.sigmap,
+                                       mmap.ravel(), self.vmap.ravel(), self.sigmap.ravel(),
                                        xpos, ypos,
                                        npix_per_reff,
                                        rscale,
