@@ -228,6 +228,7 @@ def density_D2N(gcdata, info, serial_results, Ns=[10,50], dist_upper=25.):
             i_neigh = i_neigh[np.isfinite(dist)]
             dist = dist[np.isfinite(dist)]
             for j, nn in enumerate(Ns):
+                tg.env["d5"][inow]=dist[5]
                 tg.env["d10"][inow]=dist[10]
                 tg.env["d50"][inow]=dist[50]
 
