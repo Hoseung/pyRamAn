@@ -473,6 +473,7 @@ def pp_halo(h, npix, rscale=1.0, region=None, ind=None, ax=None,
         print(r)
         print(xmin, ymin, xspan, yspan, npix, rscale)
 
+    print("Changed")
     if color_field is not None:
         #colors = hd[color_field][ind]
         # normalize!
@@ -487,7 +488,7 @@ def pp_halo(h, npix, rscale=1.0, region=None, ind=None, ax=None,
         if not (hasattr(ax, "clim") and keep_clim):
             ax.clim = ccc.min(), ccc.max()
 
-        #print("MinMax ccc", ccc.min(), ccc.max())
+        print("MinMax ccc", ccc.min(), ccc.max())
         kwargs.update({"colors": ccc})
     #else:
         #kwargs.update({"colors": None})
