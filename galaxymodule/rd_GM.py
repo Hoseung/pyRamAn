@@ -161,7 +161,8 @@ class Gal(Galaxy):
         self.units.cell = Units()
         self.units.header = Units()
         self.wdir = wdir
-        self.set_info(info)
+        self.info = info
+        #self.set_info(info)
         self.rscale=rscale
         if load:
             if idhal == -1:
@@ -187,13 +188,6 @@ class Gal(Galaxy):
                 setattr(self.info, name, val)
 #                print(self.info.unit_d)
 
-    #def set_info(self, info=None):
-    #    if info is None:
-    #        from load.info import Info
-    #        self.info = Info(self.nout, base=self.wdir)
-        #self._get_minimal_info(info)
-        # Most of the information are needed.
-        # No point filtering few attributes.
 
 
     def get_rgal(self):
@@ -248,8 +242,8 @@ class Gal(Galaxy):
         """
         from utils import sampling
 
-        if info is not None and not hasattr(self.info, "unit_l"):
-            self._get_minimal_info(info)
+        #if info is not None and not hasattr(self.info, "unit_l"):
+        #    self._get_minimal_info(info)
 
         if rscale is not None:
             self.rscale = rscale
