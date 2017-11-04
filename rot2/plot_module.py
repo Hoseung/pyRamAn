@@ -41,7 +41,7 @@ def get_lower_upper(x,y,ax,nbins=10,
             binned_x = np.array_split(x[np.argsort(x)], nbins)
             binned_y = np.array_split(y[np.argsort(x)], nbins)
 
-        mean, y_upper, y_lower=[], [], []
+        mean, y_upper, y_lower, y_med=[], [], [], []
         if bintype != "uniform_width":
             xpos = []
 
@@ -56,17 +56,16 @@ def get_lower_upper(x,y,ax,nbins=10,
             if bintype != "uniform_width":
                 xpos.append((min(xb) + max(xb))/2)
             if linedata == "median":
-                print("Taking median")
                 mean.append(np.median(yb))# it's actually mean.
             elif linedata == "mean":
-                print("Taking mean")
                 mean.append(np.mean(yb))
+            y_med.append(np.median(yb))	
             ybsrt = np.argsort(yb)
             #print(ybsrt, np.floor(len(yb)*(1-percentile)))
             y_upper.append(yb[ybsrt[int(np.floor(len(yb)*(0.5-percentile/2)))]])
             y_lower.append(yb[ybsrt[int(np.floor(len(yb)*(0.5+percentile/2)))]])
 
-    return xpos, np.array(y_lower), np.array(y_upper)
+    return xpos, np.array(y_lower), np.array(y_upper), np.array(y_med)
 
 def mean_std(x,y,ax, nbins=10, **kwargs):
     n, _ = np.histogram(x, bins=nbins)
@@ -104,7 +103,7 @@ def plot_scatter_mean_binned(ax, xx, yy,
         fill_between_args ={"bintype":"uniform_size",
                  "linedata":"median",
                  "nbins":nbins, "percentile":25}
-        xpos, y_lower, y_upper = get_lower_upper(xx, yy, ax,  **fill_between_args)
+        xpos, y_lower, y_upper, y_med = get_lower_upper(xx, yy, ax,  **fill_between_args)
         ax.plot(xpos, y_lower, lw=2, color="navy")
         ax.plot(xpos, y_upper, lw=2, color="navy")
         #ax.fill_between(xpos, y_lower, y_upper, color = "r", alpha=0.2)
@@ -113,12 +112,12 @@ def plot_scatter_mean_binned(ax, xx, yy,
         fill_between_args ={"bintype":"uniform_size",
                  "linedata":"median",
                  "nbins":nbins, "percentile":75}
-        xpos, y_lower, y_upper = get_lower_upper(xx, yy, ax,  **fill_between_args)
+        xpos, y_lower, y_upper, y_med = get_lower_upper(xx, yy, ax,  **fill_between_args)
         ax.plot(xpos, y_lower, lw=2, color="blue")
         ax.plot(xpos, y_upper, lw=2, color="blue")
 
     if do_mean_std:
-        mean_std(xx, yy, ax, nbins=nbins, **err_bar_args)
+        mean_std(xx, yy, ax, nbins=nbins, **std_args)
 
     if do_mean_alone:
         mean_alone(xx, yy, ax, nbins=nbins, color='b', linewidth=3)
@@ -127,8 +126,8 @@ def plot_scatter_mean_binned(ax, xx, yy,
         fill_between_args ={"bintype":"uniform_size",
                  "linedata":"median",
                  "nbins":nbins, "percentile":percentile}
-        xpos, y_upper, y_lower = get_lower_upper(xx, yy, ax,  **fill_between_args)
-        ax.errorbar(xpos, 0.5*(y_lower+y_upper), [y_lower, y_upper], **percentile_args)#, fmt="none")
+        xpos, y_upper, y_lower, y_med = get_lower_upper(xx, yy, ax,  **fill_between_args)
+        ax.errorbar(xpos, y_med, [y_lower, y_upper], **percentile_args)#, fmt="none")
 
 
     #line = ax.scatter(range(1),range(1),edgecolor='none',marker='o', facecolor="b",alpha=1.0, label=label)
