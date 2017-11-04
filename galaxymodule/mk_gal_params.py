@@ -8,6 +8,7 @@ cluster = dict(
     rmin=-1,
     Rgal_to_reff=4.0,
     method_com=1,
+    method_cov = "close_member",
     follow_bp=None,
     unit_conversion='code')
 
