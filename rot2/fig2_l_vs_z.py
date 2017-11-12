@@ -29,6 +29,7 @@ def modify_ticks1(ax, nnza, nouts, nbins = 40):
     # For a given list of nouts,
     # calculate a nice-looking set of zreds AND lookback times
     zz_target = [0.0, 0.5, 1.0, 2.0]
+    #zz_target = [0.0, 0.2, 0.3, 0.5, 1.0, 1.5, 2.0]
     # If 3 of 4 are matched, the 3 must be 0, 0.5, 1.0
     # So, later epohc should come first and be matched first.
     # If zz_target = [2.0, 1.0, 0.5, 0.0] and the nout spans

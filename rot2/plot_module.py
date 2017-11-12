@@ -59,7 +59,7 @@ def get_lower_upper(x,y,ax,nbins=10,
                 mean.append(np.median(yb))# it's actually mean.
             elif linedata == "mean":
                 mean.append(np.mean(yb))
-            y_med.append(np.median(yb))	
+            y_med.append(np.median(yb))
             ybsrt = np.argsort(yb)
             #print(ybsrt, np.floor(len(yb)*(1-percentile)))
             y_upper.append(yb[ybsrt[int(np.floor(len(yb)*(0.5-percentile/2)))]])
@@ -97,7 +97,7 @@ def plot_scatter_mean_binned(ax, xx, yy,
                              percentile_args=dict(color="orange", linewidth=3)):
     if do_scatter:
         #scatter_args = {"edgecolor":"none", "alpha":1.0}
-        ax.scatter(xx, yy, **scatter_args, label="isolated (H)")
+        ax.scatter(xx, yy, **scatter_args, label=label)
 
     if do_fill_between:
         fill_between_args ={"bintype":"uniform_size",
@@ -127,7 +127,7 @@ def plot_scatter_mean_binned(ax, xx, yy,
                  "linedata":"median",
                  "nbins":nbins, "percentile":percentile}
         xpos, y_upper, y_lower, y_med = get_lower_upper(xx, yy, ax,  **fill_between_args)
-        ax.errorbar(xpos, y_med, [y_lower, y_upper], **percentile_args)#, fmt="none")
+        ax.errorbar(xpos, y_med, [y_lower, y_upper], label=label, **percentile_args)#, fmt="none")
 
 
     #line = ax.scatter(range(1),range(1),edgecolor='none',marker='o', facecolor="b",alpha=1.0, label=label)
