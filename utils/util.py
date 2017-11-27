@@ -6,6 +6,7 @@ Created on Thu Jan 29 00:26:50 2015
 """
 import os
 import numpy as np
+from glob import glob
 
 def mkdir(dirpath):
     if not os.path.isdir(dirpath):
@@ -109,7 +110,14 @@ def dgyr2dnout(dt, nout_now):
 
 
 def get_last_snapshot(base='./'):
-    #from glob import glob
+    """
+    Some files/directories other than output_00xxx can be found under snapshots/
+    In such case, listing everything under snapshots/ and sorting and selectnig 
+    the last entry will fail (They may not even be a number.)
 
-    return int(np.sort(os.listdir(base + "snapshots/"))[-1].split("_")[1])
-    # fi = glob("./snapshots/" +  + "/info*.txt")
+    Thus, search for output_ pattern and then search for the latest one.
+    """
+
+    fi = glob(base+"snapshots/output_?????/info*.txt")
+    return int(np.sort(fi)[-1].split("info_")[1].split(".txt")[0])
+    #return int(np.sort(os.listdir(base + "snapshots/"))[-1].split("_")[1])
