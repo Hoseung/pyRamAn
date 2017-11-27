@@ -290,8 +290,8 @@ class Part(load.sim.Simbase):
             if fortran:
                 self.load_fortran(self, read_metal=read_metal, **kwargs)
             else:
-                self.load_2017(self, **kwargs)
-                #self.load_general(self, **kwargs)
+                #self.load_2017(self, **kwargs)
+                self.load_general(self, **kwargs)
 
     def get_dmo_ntot(self):
         ranges = self.ranges
@@ -978,7 +978,7 @@ class Part(load.sim.Simbase):
                 i_skip_sink += nsink_icpu
 
     def load_fortran(self, return_meta=False, read_metal=True):
-        from load import part_load
+        from load.part_load import part_load_module
         print("Loading by fortran module")
         xmi = self.ranges[0][0]
         xma = self.ranges[0][1]
@@ -987,7 +987,7 @@ class Part(load.sim.Simbase):
         zmi = self.ranges[2][0]
         zma = self.ranges[2][1]
         work_dir = self.base + '/snapshots/output_' + str(self.nout).zfill(5)
-        ndm_actual, nstar_actual, nsink_actual = part_load.count_part( \
+        ndm_actual, nstar_actual, nsink_actual = part_load_module.count_part( \
                             work_dir, xmi, xma, ymi, yma, zmi, zma, self.cpus)
         #print(ndm_actual, nstar_actual, nsink_actual)
         self.ndm = ndm_actual
@@ -1006,7 +1006,7 @@ class Part(load.sim.Simbase):
         ndm_actual = max([ndm_actual, 1])
         nstar_actual = max([nstar_actual, 1])
         read_metal = 1 #
-        star_float, star_int, dm_float, dm_int = part_load.load_part(
+        star_float, star_int, dm_float, dm_int = part_load_module.load_part(
                 nstar_actual, ndm_actual, nsink_actual,
                 work_dir, xmi, xma, ymi, yma, zmi, zma, read_metal, self.cpus)
 

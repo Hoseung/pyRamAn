@@ -2,7 +2,6 @@
 
 """
 From tree.fits file, select halos by mass cut.
-
 Created on Wed Jan 21 11:45:42 2015
 
 @author: hoseung
