@@ -290,8 +290,8 @@ class Part(load.sim.Simbase):
             if fortran:
                 self.load_fortran(self, read_metal=read_metal, **kwargs)
             else:
-                self.load_2017(self, **kwargs)
-                #self.load_general(self, **kwargs)
+                #self.load_2017(self, **kwargs)
+                self.load_general(self, **kwargs)
 
     def get_dmo_ntot(self):
         ranges = self.ranges
@@ -989,7 +989,7 @@ class Part(load.sim.Simbase):
         work_dir = self.base + '/snapshots/output_' + str(self.nout).zfill(5)
         ndm_actual, nstar_actual, nsink_actual = part_load.count_part( \
                             work_dir, xmi, xma, ymi, yma, zmi, zma, self.cpus)
-        #print(ndm_actual, nstar_actual, nsink_actual)
+        print(ndm_actual, nstar_actual, nsink_actual)
         self.ndm = ndm_actual
         self.nstar = nstar_actual
         self.nsink = nsink_actual

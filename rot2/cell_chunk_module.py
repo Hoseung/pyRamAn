@@ -171,7 +171,8 @@ def do_work(sub_sample, nout, i_subsample,
 
     # Common 5
     # Mock image generator
-    MockSED = qmc.Simplemock()#repo=dfl.dir_repo+'sed/')
+    MockSED = qmc.Simplemock(info=s.info)#repo=dfl.dir_repo+'sed/')
+    print(s.info)
     sdss_band = qmc.BandSDSS()
 
     result_sub_sample=[]
@@ -235,11 +236,11 @@ def do_work(sub_sample, nout, i_subsample,
 
         # Cell needed to calcluate gas attenuation.
         # r-band luminosity to be used as weights.
-        gg.star.Flux_u= MockSED.get_flux(star=gg.star, cell = gg.cell, filter_name='u')
+        gg.star.Flux_u= MockSED.get_flux(star=gg.star, cell = gg.cell, info=s.info, filter_name='u')
         gg.meta.Mu = qmc.get_absolute_mag(gg.star.Flux_u, band=sdss_band, bandname="u")
-        gg.star.Flux_g= MockSED.get_flux(star=gg.star, cell = gg.cell, filter_name='g')
+        gg.star.Flux_g= MockSED.get_flux(star=gg.star, cell = gg.cell, info=s.info, filter_name='g')
         gg.meta.Mg = qmc.get_absolute_mag(gg.star.Flux_g, band=sdss_band, bandname="g")
-        gg.star.Flux_r= MockSED.get_flux(star=gg.star, cell = gg.cell, filter_name='r')
+        gg.star.Flux_r= MockSED.get_flux(star=gg.star, cell = gg.cell, info=s.info, filter_name='r')
         gg.meta.Mr = qmc.get_absolute_mag(gg.star.Flux_r, band=sdss_band, bandname="r")
 
        	gg.meta.mean_age = np.average(gg.star["time"], weights=gg.star["m"])
