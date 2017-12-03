@@ -109,8 +109,8 @@ def nout_results_to_gal_serial(gals, nouts, out_base):
                             sat_data[ind]["mgas"] = data.gas_results["mgas_tot"]
                             sat_data[ind]["mgas_cold"] = data.gas_results["mgas_cold"]
                         else:
-                            sat_data[ind]["mgas"] = np.nan
-                            sat_data[ind]["mgas_cold"] = np.nan
+                            sat_data[ind]["mgas"] = 0
+                            sat_data[ind]["mgas_cold"] = 0
                     else:
                         sat_data[ind]["rgal"] = np.nan
                         sat_data[ind]["reff"] = np.nan
@@ -249,8 +249,8 @@ def sat_data_to_fine(this_gal, merger, sat_data, nnza_all,
                                                    sat_nvec_fine))
 
     ###################################################
-    fields_to_interpol_from=["mstar", "mgas", "mgas_cold", "rgal",  "reff"]
-    fields_to_interpol_to  =["mstar", "m_gas", "m_gas_cold", "rgal", "reff_s"]
+    fields_to_interpol_from=["mstar", "rgal",  "reff"] # ignore gas for the moment
+    fields_to_interpol_to  =["mstar", "rgal", "reff_s"]
 
     # Simpler(Linear) interpolations.
     # "mstar", "m_gas", "m_gas_cold", "size_s", "reff_s"

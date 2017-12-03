@@ -2,7 +2,7 @@ import numpy as np
 import pickle
 import tree
 from utils import hagn
-from rot2.serialize_module import *
+from rot2.new_serial_modules import *
 import tree.halomodule as hmo
 from rot2 import cell_chunk_module as ccm
 

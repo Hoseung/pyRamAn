@@ -115,14 +115,15 @@ def get_gas_properties(gg, info):
     vvx = "var1"
     vvy = "var2"
     vvz = "var3"
+    msun = 1.989e33
 
     # total gas mass before extracting cold gas.
-    gg.meta.gas_results["mgas_tot"] = np.sum(gg.cell[vrho]*gg.cell[vdx]**3)
+    gg.meta.gas_results["mgas_tot"] = np.sum(gg.cell[vrho]*info.unit_d * (gg.cell[vdx] * info.unit_l/info.boxtokpc)**3) / msun
 
     # Leave only cold gas and measure properties.
     has_cold_gas = get_cold_cell(gg, info)
     if has_cold_gas:
-        gg.meta.gas_results["mgas_cold"] = np.sum(gg.cell[vrho]*gg.cell[vdx]**3)
+        gg.meta.gas_results["mgas_cold"] = np.sum(gg.cell[vrho]*info.unit_d * (gg.cell[vdx] * info.unit_l/info.boxtokpc)**3) / msun
         vec_rot = np.cross(np.stack((gg.cell["x"],gg.cell["y"],gg.cell["z"])).T,
                            np.stack((gg.cell[vvx],
                                      gg.cell[vvy],

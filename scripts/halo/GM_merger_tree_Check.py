@@ -118,7 +118,7 @@ import numpy as np
 
 #alltrees = treemodule.CTree()
 wdir = './'
-is_gal = True
+is_gal = False
 
 if is_gal:
     # Galaxy tree

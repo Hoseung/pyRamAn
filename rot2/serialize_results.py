@@ -1,6 +1,6 @@
 import numpy as np
 import utils.match as mtc
-from rot2.serialize_module import smooth
+from rot2.new_serial_modules import smooth
 
 merger_props = [("nstep", '<i8'),
                 ("nout", '<i8'),
