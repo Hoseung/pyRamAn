@@ -42,8 +42,8 @@ subroutine count_part(ndm_actual, nstar_actual, nsink_actual, repository, xmin, 
   do k=1,ncpu_read
      icpu=cpu_list(k)
      call title(icpu,ncharcpu)
-	 write(ncharcpu,'I5')icpu
-     write(*,*) ncharcpu, icpu, k
+	 !write(ncharcpu,'I5')icpu
+     !write(*,*) ncharcpu, icpu, k
      nomfich=TRIM(repository)//'/part_'//TRIM(nchar)//'.out'//TRIM(ncharcpu)
      open(unit=1,file=nomfich,status='old',form='unformatted')
 !     write(*,*)'Processing file '//TRIM(nomfich)
@@ -144,9 +144,7 @@ subroutine count_part(ndm_actual, nstar_actual, nsink_actual, repository, xmin, 
 
   do k=1,ncpu_read
      icpu=cpu_list(k)
-     !call title(icpu,ncharcpu)
-	 write(ncharcpu,'(I5.5)')icpu
-     write(*,*)"AAA", ncharcpu, icpu, k
+     call title(icpu,ncharcpu)
 
      nomfich=TRIM(repository)//'/part_'//TRIM(nchar)//'.out'//TRIM(ncharcpu)
      open(unit=1,file=nomfich,status='old',form='unformatted')
