@@ -38,16 +38,12 @@ subroutine count_part(ndm_actual, nstar_actual, nsink_actual, repository, xmin, 
   nstar_actual=0
   nsink_actual=0
   ncpu_read = size(cpu_list)
-  !write(*,*) ncpu_read
-
-  !write(*,*)"cpu list fortran got"
-  !do k=1,ncpu_read
-  !   write(*,*)cpu_list(k)
-  !enddo
 
   do k=1,ncpu_read
      icpu=cpu_list(k)
      call title(icpu,ncharcpu)
+	 !write(ncharcpu,'I5')icpu
+     !write(*,*) ncharcpu, icpu, k
      nomfich=TRIM(repository)//'/part_'//TRIM(nchar)//'.out'//TRIM(ncharcpu)
      open(unit=1,file=nomfich,status='old',form='unformatted')
 !     write(*,*)'Processing file '//TRIM(nomfich)
@@ -144,9 +140,12 @@ subroutine count_part(ndm_actual, nstar_actual, nsink_actual, repository, xmin, 
 
   ncpu_read = size(cpu_list)
 
+  write(*,*)"cpu list fortran got"
+
   do k=1,ncpu_read
      icpu=cpu_list(k)
      call title(icpu,ncharcpu)
+
      nomfich=TRIM(repository)//'/part_'//TRIM(nchar)//'.out'//TRIM(ncharcpu)
      open(unit=1,file=nomfich,status='old',form='unformatted')
 !     write(*,*)'Processing file '//TRIM(nomfich)
@@ -249,7 +248,11 @@ subroutine title(n,nchar)
      nchar = '00'//nchar3
   elseif(n.ge.10)then
      write(nchar2,'(i2)') n
+     write(*,*)nchar2, "a"
      nchar = '000'//nchar2
+     write(*,*)nchar, "aa"
+	 !write(*,'(I5.5)')n
+     !write(*,*)nchar, n
   else
      write(nchar1,'(i1)') n
      nchar = '0000'//nchar1

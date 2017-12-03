@@ -4,32 +4,6 @@ Created on Mon Apr  6 11:00:31 2015
 
 halo / galaxy calss including basic data load functionality.
 
-Parameters
-----------
-nout : int
-    snapshot number
-base : str
-    work directory
-is_gal : logical
-    load galaxy if true
-return_id : logical
-    If True, load and return constituent particle id of each halo.
-return_id_list : int list
-    specify halos of which particle id is returned.
-    If return_id is True but return_id_list is None,
-    particle id of all halos are returned.
-
-
-MODIFICATIONS:
-2015. 08. 08
-    Floats are all stored as doubles even though the original data is float32.
-    If center position is stored in float32, then is used to select particles
-    inside the region, then max(x) - min(x) > 2 * region['radius'] is possible!
-
-2016.03.26
-    if return_id = True, but no return_id_list is set, then return id lists
-     of all halos by dafault.
-
 @author: hoseung
 """
 
@@ -62,6 +36,7 @@ class HaloMeta():
                  load=True, is_gal=False, return_id=False, outdir=None,
                  verbose=False):
         """
+
         Parameters
         ----------
         nout : int
@@ -73,6 +48,9 @@ class HaloMeta():
         halofinder : {"RS", "HM"}
             Full names also work. case insensitive.
 
+        return_id : logical or sequence
+            If True, load (as hcat.hal_idlists) constituent particle id of all halo.
+            If halo ids are given, load (as hcat.hal_idlists) particle ids of the given halos.
 
         Examples
         --------
@@ -108,9 +86,9 @@ class HaloMeta():
         else:
             if hasattr(return_id, "__len__"):
                 # String also has __len__, but let's just ignore such cases.
-                self.return_id_list = return_id
+                self._return_id_list = return_id
             else:
-                self.return_id_list = None # None = load all halo's ids.
+                self._return_id_list = None # None = load all halo's ids.
             self.return_id = True
 
         if outdir is None:
@@ -321,8 +299,8 @@ class Halo(HaloMeta):
             self.hal_idlists=[]
             iskip=0
             for hid, hnp in zip(self.data["id"],self.data["np"]):
-                if self.return_id_list is not None:
-                    if hnu in self.return_id_list:
+                if self._return_id_list is not None:
+                    if hnu in self._return_id_list:
                         self.idlists.append(allID[iskip:iskip+hnp])
                         self.hal_idlists.append(hid)
                 else:

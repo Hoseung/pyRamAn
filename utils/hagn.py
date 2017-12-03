@@ -41,6 +41,14 @@ class Nnza():
         self.nnza["aexp"] = nnza["aexp"]
 
     def a2b(self, vals, field_a, field_b):
+        """
+        NOTE
+        ----
+            This function works only when the given value exactly match the nnza array.
+            I need to add a functionality to find the closest vaue and return interpolated answer.
+            Even interpolated nout/nstep are useful if nout/nstep serve as xtick positions, for example.
+    
+        """
         if not (field_a in self.nnza.dtype.names  and  field_b in self.nnza.dtype.names):
             raise ValueError("One or both of {} {} not found".format(field_a, field_b))
         if isinstance(vals, np.integer):

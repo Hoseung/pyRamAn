@@ -13,11 +13,11 @@ dtype_finedata = [('nstep', '<i4'),
                   ('vel', '<f8', (3,)),
                   ('rgal', '<f8'),
                   ('cvel', '<f8'),
-                  ('P_tidal', '<f8'),
-                  ("P_tidal_h", "<f8"),
-                  ('d5', '<f8'),
-                  ('d10', '<f8'),
-                  ('d50', '<f8'),
+                  #('P_tidal', '<f8'),
+                  #("P_tidal_h", "<f8"),
+                  #('d5', '<f8'),
+                  #('d10', '<f8'),
+                  #('d50', '<f8'),
                   ("mgas", "<f8"),
                   ("mgas_cold", "<f8"),
                   ("reff", "<f8"),
@@ -239,12 +239,15 @@ def add_main_result(self, ss):
     self.measurements["vel"][il,0] = ss.vxc
     self.measurements["vel"][il,1] = ss.vyc
     self.measurements["vel"][il,2] = ss.vzc
-    self.measurements["lambda_r"][il] = data.nout
+    #self.measurements["lambda_r"][il] = data.nout
+
+    if hasattr(ss, "mge_result_list"):
+        self.measurements["eps"][ii] = ss.mge_result_list[0]["eps"]
 
     if hasattr(ss, "gas_results"):
-        self.measurements["mgas"] = ss.gas_results["mgas_tot"]
-        self.measurements["mgas_col"] = ss.gas_results["mgas_cold"]
-        self.measurements["lgas"]= ss.gas_results["Ln_gas"]
+        self.measurements["mgas"][ii] = ss.gas_results["mgas_tot"]
+        self.measurements["mgas_col"][ii] = ss.gas_results["mgas_cold"]
+        self.measurements["lgas"][ii]= ss.gas_results["Ln_gas"]
     if ss.lvec is not None:
         # Todo
         # suppress nvec being nan when measuring it from stars.

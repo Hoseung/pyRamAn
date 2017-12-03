@@ -29,6 +29,7 @@ def modify_ticks1(ax, nnza, nouts, nbins = 40):
     # For a given list of nouts,
     # calculate a nice-looking set of zreds AND lookback times
     zz_target = [0.0, 0.5, 1.0, 2.0]
+    #zz_target = [0.0, 0.2, 0.3, 0.5, 1.0, 1.5, 2.0]
     # If 3 of 4 are matched, the 3 must be 0, 0.5, 1.0
     # So, later epohc should come first and be matched first.
     # If zz_target = [2.0, 1.0, 0.5, 0.0] and the nout spans
@@ -118,7 +119,6 @@ def plot_lambda_evol(alldata, nouts,
                      add_errorbar = True,
                      fname=None,
                      cmap ="jet",
-                     fine=True,
                      nhexbin=45,
                      nout_max=782):
     """
@@ -161,15 +161,8 @@ def plot_lambda_evol(alldata, nouts,
     elif data_type == "coarse":
         lambda_evol_all = np.zeros([ngals_tot, nnouts])
         for igal, gal in enumerate(alldata):
-            if len(gal.data) == 0:
-                continue
-            for gg in gal.data:
-                try:
-                    nstep = gg.nstep
-                    lambda_evol_all[igal][nstep_max - nstep] = gg.lambda_r[0]
-                    #print("Good")
-                except:
-                    pass
+            lambda_evol_all[igal][:] = gal.main_data["lambda_r"][:nnouts]
+
     elif data_type == "array":
         lambda_evol_all = alldata["lambda_r"]
 
@@ -256,7 +249,6 @@ def plot_lambda_evol(alldata, nouts,
                 all_yys.extend(yy[idx])
                 all_zzs.extend(zz[idx])
 
-
                 #patches.append(Circle((xx[ind_ok], yy), 60,
                 #                color=cmap.zz,
                 #                facecolor='none'))
@@ -269,8 +261,7 @@ def plot_lambda_evol(alldata, nouts,
                 #          rasterized=True)
 
             print(nout, end='\r')
-
-        ax.scatter(all_xxs, all_yys, c=all_zzs, s=60,
+            ax.scatter(all_xxs, all_yys, c=all_zzs, s=80,
                   edgecolor='',
                   cmap=cmap,
                   rasterized=True)
@@ -280,8 +271,6 @@ def plot_lambda_evol(alldata, nouts,
         #p.set_array(np.array(colors))
         #ax.add_collection()
 
-        #ax.set_rasterization_zorder(-10)
-        #ax.set_rasterized(True)
         lambda_range=[0.01, 0.8]
         yticks_ok=[0.0, 0.2, 0.4, 0.6, 0.8]
         ax.set_ylim([-0.01, 0.9])
@@ -300,6 +289,6 @@ def plot_lambda_evol(alldata, nouts,
         plt.tight_layout()
         plt.savefig(fname, dpi=200, rasterized=True)
     else:
-        print("FNAME", fname)
+        print("\n FNAME", fname)
 
     #return im

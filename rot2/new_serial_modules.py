@@ -1,14 +1,14 @@
 import numpy as np
 import utils.match as mtc
 from scipy.signal import savgol_filter
-from scipy.interpolate import InterpolatedUnivariateSpline
+from scipy.interpolate import InterpolatedUnivariateSpline, interp1d, Akima1DInterpolator
 import matplotlib.pyplot as plt
 
 def add_main(md, data, ind):
     md[ind]["mstar"] = data.mstar
     md[ind]["pos"] = (data.xc, data.yc, data.zc)
     md[ind]["vel"] =(data.vxc, data.vyc, data.vzc)
-    if hasattr(data, "mge_result_lilst"):
+    if hasattr(data, "mge_result_list"):
         md[ind]["eps"] = data.mge_result_list[0]["eps"]
     try:
         md[ind]["lambda_r"] = data.lambda_r[0]
@@ -54,6 +54,15 @@ def interp(x1, y1, x2, too_many_nan_frac=0.3):
         raise ValueError("Too many nans in the array during interpolation")
     f = InterpolatedUnivariateSpline(x1[~w],y1[~w])#, w=~w[::-1])
     return f(x2)
+
+
+def interp_akima(x1, y1, x2, too_many_nan_frac=0.3):
+    w = np.isnan(y1).astype(bool)# * (y1 == 0.0)
+    if np.sum(w) > 0.3* len(x1):
+        raise ValueError("Too many nans in the array during interpolation")
+    f = Akima1DInterpolator(x1[~w], y1[~w])
+    return f(x2)
+
 
 def interp_inv(x1, y1, x2, too_many_nan_frac=0.3):
     """
@@ -219,11 +228,13 @@ def get_main_data_fine(tg,
                                     win_size, pol_deg)
     newarr["sfr_area"] = savgol_filter(interp(md["lbt"],  md["sfr_area"], mt["lbt"]),
                                     win_size, pol_deg)
-
-    newarr["eps"]  = savgol_filter(interp(md["lbt"],  md["eps"], mt["lbt"]),
-                                    win_size, pol_deg)
-    newarr["lambda_r"] = savgol_filter(interp(md["lbt"],  md["lambda_r"], mt["lbt"]),
-                                    win_size, pol_deg)
+    print("interp_akima")
+    newarr["eps"] = interp_akima(md["lbt"],  md["eps"], mt["lbt"])
+                    #savgol_filter(interp(md["lbt"],  md["eps"], mt["lbt"]),
+                    #                win_size, pol_deg)
+    newarr["lambda_r"] = interp_akima(md["lbt"],  md["lambda_r"], mt["lbt"])
+        #savgol_filter(interp(md["lbt"],  md["lambda_r"], mt["lbt"]),
+                         #           win_size, pol_deg)
     newarr["vsig"]  = savgol_filter(interp(md["lbt"],  md["vsig"], mt["lbt"]),
                                     win_size, pol_deg)
 
@@ -238,7 +249,8 @@ def get_main_data_fine(tg,
 
 def main_data_to_tree(tg,
                       win_size=15,
-                      pol_deg=2):
+                      pol_deg=2,
+                      akima=False):
 
     md = tg.main_data
     mt = tg.finedata
@@ -266,11 +278,14 @@ def main_data_to_tree(tg,
                                     win_size, pol_deg)
     mt["sfr_area"][ind] = savgol_filter(interp(md["lbt"],  md["sfr_area"], lbt_new),
                                     win_size, pol_deg)
-
-    mt["eps"][ind]  = savgol_filter(interp(md["lbt"],  md["eps"], lbt_new),
-                                    win_size, pol_deg)
-    mt["lambda_r"][ind] = savgol_filter(interp(md["lbt"],  md["lambda_r"], lbt_new),
-                                    win_size, pol_deg)
+    if akima:
+        mt["eps"][ind]  = interp_akima(md["lbt"],  md["eps"], lbt_new)
+        mt["lambda_r"][ind] = interp_akima(md["lbt"],  md["lambda_r"], lbt_new)
+    else:
+        mt["eps"][ind]  = savgol_filter(interp(md["lbt"],  md["eps"], lbt_new),
+                                        win_size, pol_deg)
+        mt["lambda_r"][ind] = savgol_filter(interp(md["lbt"],  md["lambda_r"], lbt_new),
+                                        win_size, pol_deg)
     mt["vsig"][ind] = savgol_filter(interp(md["lbt"],  md["vsig"], lbt_new),
                                     win_size, pol_deg)
 
