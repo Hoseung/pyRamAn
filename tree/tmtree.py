@@ -267,6 +267,70 @@ class Tree():
         # idx, id, bushID, st, hosts(5), nprgs, np(if not big_run)
         # m, macc, xp(3), vp(3), lp(3), abc(4), energy(3), spin, virial(4), rho(2)
 
+
+    def get_best_matched_desc(pids_now, gids, nout_nextt):
+        gcat_with_pids = halomodule.Halo(nout_next, return_id=gids, is_gal=True)
+        n_matched=[]
+        for i, pids in enumerate(gcat_with_pids.idlists):
+            # pids = most_bound_partcles(pids)
+            n_machted.append(np.len(np.intersect1d(pids, pids_now)))
+
+        return np.argmax(n_matched), gcat_with_pids.idlists[np.argmax(n_matcehd)]
+
+
+
+    def extract_main_tree_reverse(self, idx):
+        """
+        Extracts main progenitors from a TreeMaker tree.
+
+
+        example
+        -------
+        >>> tt = tmtree.Tree("tree.dat")
+        >>> atree = tt.extract_main_tree(12345)
+
+        TODO
+        ----
+        It works, but the try - except clause is error-prone.
+        Explicitly check the end of progenitor tree and make the function more predictable.
+
+        """
+
+        t = self.tree
+        fatherIDx = self.fatherIDx
+        fatherMass = self.fatherMass
+
+        t_now = t[idx]
+        nstep = t_now["nstep"]
+        nout_now = self.nnza.step2out(int(nstep))
+        atree = np.zeros(nstep + 1, dtype=t.dtype)
+
+        atree[0]=t_now
+        nstep_max = t[-1]["nstep"]
+        if nstep == nstep_max:
+            return
+
+        pids_now = halomodule.Halo(nout_now, return_id=t_now, is_gal=True)[0]
+        for i in range(1, nstep_max - nstep):
+            try:
+                nstep = t_now["nstep"]
+                t_next = t[t["nstep"] == nstep+1]
+                f_ind_first, f_ind_last = t_next["f_ind"][0], t_next["f_ind"][-1]+t_next["nprgs"]
+                ind_matched = np.where(fatherIDx[f_ind_first:f_ind_last] == idx)[0]
+                ind_next_step = np.searchsorted(np.cumsum(t_next["nprgs"]), ind_matched)
+                all_desc = t_next[ind_next_step]
+                i_best, pids_now = get_best_matched_desc(pids_now, all_desc["id"], nout_next = self.nnza.step2out(nstep+1))
+                idx = all_desc["idx"][i_best]
+                t_now = t[idx]
+
+            except:
+                break
+            atree[i]=t_now
+
+        return np.copy(atree[:i][::-1])
+
+
+
     def extract_direct_full_tree(self, idx, return_id=False):
         """
         Extracts main progenitors from a TreeMaker tree.
