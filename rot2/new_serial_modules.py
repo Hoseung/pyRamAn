@@ -11,7 +11,7 @@ def add_main(md, data, ind):
     if hasattr(data, "mge_result_list"):
         md[ind]["eps"] = data.mge_result_list[0]["eps"]
     try:
-        md[ind]["lambda_r"] = data.lambda_r[0]
+        md[ind]["lambda_r"] = data.lambda_result_list[0][4]
     except:
         md[ind]["lambda_r"] = data.lambda_r
 

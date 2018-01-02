@@ -989,7 +989,7 @@ class Part(load.sim.Simbase):
         work_dir = self.base + '/snapshots/output_' + str(self.nout).zfill(5)
         ndm_actual, nstar_actual, nsink_actual = part_load_module.count_part( \
                             work_dir, xmi, xma, ymi, yma, zmi, zma, self.cpus)
-        #print(ndm_actual, nstar_actual, nsink_actual)
+        print(ndm_actual, nstar_actual, nsink_actual)
         self.ndm = ndm_actual
         self.nstar = nstar_actual
         self.nsink = nsink_actual

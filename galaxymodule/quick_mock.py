@@ -38,10 +38,12 @@ class Simplemock():
     def __init__(self, repo="/home/hoseung/Work/pyclusterevol/repo/sed/",
                  filter_system="SDSS",
                  sed_model="bc03",
+                 info=None,
                  load=True):
         self.filter_system = filter_system
         self.repo = repo
         self.sed_model = sed_model
+        self.info = info
         if load is True:
             self.load_filters()
             self.load_SED_wavelength()
@@ -82,7 +84,7 @@ class Simplemock():
 
     def get_flux(self, star,
                  cell=None,
-                 info=None,
+#                 info=None,
                  metal_lower_cut = True,
                  filter_name='r'):
         ### star data ########################################################
@@ -172,10 +174,16 @@ class Simplemock():
 
         # Need to multiply stellar mass
 
-        if cell is None or info is None:
+        if cell is None or self.info is None or len(cell) == 0:
             return np.sum(Flux, axis=1) / np.sum(div) * Lum_sun * star["m"]
         else:
-            colden = get_star_colden(star, cell) *info.unit_nH *info.unit_l / info.boxtokpc #* 1e3
+            #print(len(cell))
+            colden = get_star_colden(star, cell) *self.info.unit_nH *self.info.unit_l / self.info.boxtokpc #* 1e3
+            try:
+                if colden == -1:
+                    return np.sum(Flux, axis=1) / np.sum(div) * Lum_sun * star["m"]
+            except:
+                pass
             #lams = np.linspace(1e3,1e4,1e3) # in Angstrom
             waven = wavelength[:-1] * 1e-4 # in 1e-6 m
 
@@ -187,7 +195,11 @@ class Simplemock():
             # waven = N_wavelengths array
             # tau = N_wave X N_star
             # Flux = N_star X N_wave  ... (may be the other way around.)
+            #print("tau", tau)
             F_ext= [ff*np.power(10,(-1*tt)) for ff, tt in zip(Flux, tau.T)]
+
+            #print("before ext", np.sum(Flux, axis=1))
+            #print("After ext", np.sum(F_ext, axis=1))
 
             return np.sum(F_ext, axis=1) / np.sum(div) * Lum_sun * star["m"]
 
@@ -377,15 +389,18 @@ def get_star_colden(star, cell):
 
     ddx_h = cell["dx"] * 0.5
 
-    xl = cell["x"] - ddx_h
-    xr = cell["x"] + ddx_h
-    yl = cell["y"] - ddx_h
-    yr = cell["y"] + ddx_h
-    zr = cell["z"] + ddx_h
+    #xl = cell["x"] - ddx_h
+    #xr = cell["x"] + ddx_h
+    #yl = cell["y"] - ddx_h
+    #yr = cell["y"] + ddx_h
+    #zr = cell["z"] + ddx_h
+    sub_cell = cell[((cell["x"]+ddx_h) > star["x"].min()) * (cell["x"]-ddx_h < star["x"].max()) *\
+                    ((cell["y"]+ddx_h) > star["y"].min()) * (cell["y"]-ddx_h < star["y"].max()) *\
+                    ((cell["z"]+ddx_h) < star["z"].max())]
 
-    sub_cell = cell[(xr > star["x"].min()) * (xl < star["x"].max()) *\
-                    (yr > star["y"].min()) * (yl < star["y"].max()) *\
-                    (zr < star["y"].max())]
+    #print("len subcell", len(sub_cell))
+    if len(sub_cell) < 1:
+        return -1
 
     ddx_h = sub_cell["dx"] * 0.5
     xl = sub_cell["x"] - ddx_h
@@ -422,18 +437,32 @@ def get_star_colden(star, cell):
 
     # stars grouped in each lum map.
     sorted_star = star[i_star_sort]
-    sorted_flux = star.Flux_r[i_star_sort]
+    #sorted_flux = sorted_star["Flux_r"]#[i_star_sort]
     colden_star = np.zeros(nstar)
+
+    #print('len star', len(i_star))
+    #print("len cell", len(sub_cell))
+    #print("minx cell", min(xl))
+    #print("maxx cell", max(xr))
+    #print("miny cell", min(yl))
+    #print("maxy cell", max(yr))
 
     for i in range(len(i_star)-1):
         stars_here = sorted_star[i_star[i]:i_star[i+1]]
         jx, jy = ix[i_star_sort[i_star[i]]], iy[i_star_sort[i_star[i]]]
+   #     print(jx, jy)
+   #     print(h[1][jx], h[2][jy])
         cells_here = sub_cell[ (xr >= h[1][jx]) * (xl <= h[1][jx]) *\
                                (yr >= h[2][jy]) * (yl <= h[2][jy]) ]
-        # column density for each star.
-        i_star_z = np.searchsorted(cells_here["z"]+cells_here["dx"], stars_here["z"])
-        i_star_z[i_star_z >= len(cells_here)] = len(cells_here)-1
-        colden_star[i_star[i]:i_star[i+1]] = np.cumsum(cells_here["var0"]*cells_here["dx"])[i_star_z]
+   #     print(len(cells_here), "cells here")
+        if len(cells_here) == 0:
+            # at the edge
+            colden_star[i_star[i]:i_star[i+1]] = 0
+        else:
+            # column density for each star.
+            i_star_z = np.searchsorted(cells_here["z"]+cells_here["dx"], stars_here["z"])
+            i_star_z[i_star_z >= len(cells_here)] = len(cells_here)-1
+            colden_star[i_star[i]:i_star[i+1]] = np.cumsum(cells_here["var0"]*cells_here["dx"])[i_star_z]
 
     return colden_star
 

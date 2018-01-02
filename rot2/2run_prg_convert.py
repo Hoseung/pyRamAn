@@ -5,19 +5,27 @@ import tree.halomodule as hmo
 from glob import glob
 from utils import hagn
 
-def all_id_to_dict(nnza, adp_dir="./all_trees/"):
+def all_id_to_dict(nnza, fid_list=None, adp_dir="./all_trees/"):
     nsteps=[]
     ids=[]
     idxs=[]
+    #if fid_list is None:
     all_files = glob(adp_dir+"*_adp.pickle")
     for fn in all_files:
         adp = pickle.load(open(fn, "rb"))
+        if fid_list is not None:
+            print(adp[0][5]["id"])
+            if not adp[0][5]["id"] in fid_list:
+                continue
         for this_sats in adp:
             for sat in this_sats:
                 nsteps.extend(sat["nstep"])
                 ids.extend(sat["id"])
                 idxs.extend(sat["idx"])
 
+    print(ids)
+    print(idxs)
+    print(len(ids), len(idxs))
     data = np.column_stack((nsteps, ids, idxs))#, dtype=[("nstep", "<i8"), ("id", "<i8"),("idx", "<i8")])
     data_sorted = data[np.argsort(data[:,0])]
 
@@ -51,7 +59,8 @@ if __name__=="__main__":
     # Load all IDx/IDxall_direct_prgs (and IDs)
     # and gather per each step.
     #all_sample_ids, all_sample_idxs=all_id_to_dict(all_idxs, nnza, prg_dir + "pidxs/")
-    all_sample_ids, all_sample_idxs=all_id_to_dict(nnza, adp_dir=prg_dir)
-    pickle.dump(all_sample_ids, open(prg_dir + "all_sample_ids.pickle","wb"))
-    pickle.dump(all_sample_idxs, open(prg_dir + "all_sample_idxs.pickle","wb"))
+    etg_fid = np.genfromtxt("RedGals.txt", dtype=int)
+    all_sample_ids, all_sample_idxs=all_id_to_dict(nnza, fid_list = etg_fid, adp_dir=prg_dir)
+    pickle.dump(all_sample_ids, open(prg_dir + "etg_sample_ids.pickle","wb"))
+    pickle.dump(all_sample_idxs, open(prg_dir + "etg_sample_idxs.pickle","wb"))
 
