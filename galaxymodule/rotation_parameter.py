@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt 
+from matplotlib.colors import LogNorm
 
 def _display_pixels(x, y, counts, pixelSize):
     """
@@ -28,6 +29,7 @@ def gen_vmap_sigmap(self,
                     n_pseudo=1,
                     voronoi=None,
                     verbose=False,
+                    plot_map=False,
                     weight="mass"):
     """
     generates mass, velocity, sigma map from stellar particles.
@@ -127,7 +129,6 @@ def gen_vmap_sigmap(self,
     if verbose: print(("\n" "Calculating rotation parameter using {} particles "
     "inside {:.3f}kpc, or {}Reff".format(len(ind), r_img_kpc, rscale + 1)))
 
-
     # using NGP charge assignment
     # fix center explicitly.
     # 0.5 * (min + max) != center
@@ -173,6 +174,7 @@ def gen_vmap_sigmap(self,
 
         self.xNode = xNode
         self.yNode = yNode
+        self.binNum = binNum
         mmap_v = np.zeros(len(xNode))
         vmap_v = np.zeros(len(xNode)) # Not actually maps, but 1-D arrays.
         sigmap_v = np.zeros(len(xNode))
@@ -201,58 +203,24 @@ def gen_vmap_sigmap(self,
         self.sigmap_v = sigmap_v
 
 
-        # Optional, only to draw figures easily.
-        if False:
-            self.xNode = np.tile(np.arange(nx),ny) # x = tile? or repeat?
-            self.yNode = np.repeat(np.arange(ny),nx)
-            self.sigmap = sigmap.reshape(nx, ny)
-            self.vmap = vmap.reshape(nx,ny)
-            lambdamap_v = vmap_v / sigmap_v
-         
-            mmap_org = mmap
-            vmap_org = vmap
-            sigmap_org = sigmap
-            self.sigmap = sigmap_org.reshape(nx, ny)
-            self.vmap = vmap_org.reshape(nx,ny)
-         
-            for ibin in range(len(xNode)):
-                ind = np.where(binNum == ibin)[0]
-                vmap_org[ind] = vmap_v[ibin]
-                sigmap_org[ind] = sigmap_v[ibin]
-         
-            # update maps.
-            # keep oroginal mmap to draw plots
-            # Don't worry.  it's just switching pointer. No memory copy.
-            sigmap = sigmap_v
-            vmap = vmap_v # overwrite??
-            mmap = mmap_v
-         
-            dd = np.sqrt((xNode - 0.5*npix)**2 + (yNode - 0.5*npix)**2) *\
-                 npix_per_reff
-            i_radius = np.fix(dd).astype(int)
-            new_arr = np.zeros(np.fix(max(dd)).astype(int) + 1)
-            new_cnt = np.zeros(np.fix(max(dd)).astype(int) + 1)
-            # NGP, Average
-            lambdamap_v = vmap/sigmap
-            for i, i_r in enumerate(i_radius):
-                new_arr[i_r] += lambdamap_v[i]
-                new_cnt[i_r] = new_cnt[i_r] + 1
-         
+        if plot_map:  
+
+            vmap_plot = np.empty_like(count_map).ravel()
+            sigmap_plot = np.empty_like(count_map).ravel()
             # npix * npix map for plots
             for ibin in range(len(xNode)):
                 ind = np.where(binNum == ibin)[0]
-                vmap_org[ind] = vmap_v[ibin]
-                sigmap_org[ind] = sigmap_v[ibin]
-         
+                vmap_plot[ind] = vmap_v[ibin]
+                sigmap_plot[ind] = sigmap_v[ibin]
             # Stellar particle density map
-        if False:
+
             fig, axs = plt.subplots(2,2)
-            #axs[0,0].imshow(mmap_org.reshape(nx,ny),interpolation='nearest')
-            axs[0,0].scatter(xNode, yNode, s=2, c=mmap_v)
-            axs[0,1].scatter(xNode, yNode, s=2, c=vmap_v)
-            axs[1,0].scatter(xNode, yNode, s=2, c=sigmap_v)
-            #axs[0,1].imshow(vmap_org.reshape(nx,ny),interpolation='nearest')
-            #axs[1,0].imshow(sigmap_org.reshape(nx,ny),interpolation='nearest')
+            axs[0,0].imshow(mmap.reshape(nx,ny),interpolation='nearest', norm=LogNorm())
+            #axs[0,0].scatter(xNode, yNode, s=2, c=mmap_v)
+            #axs[0,1].scatter(xNode, yNode, s=2, c=vmap_v)
+            #axs[1,0].scatter(xNode, yNode, s=2, c=sigmap_v)
+            axs[0,1].imshow(vmap_plot.reshape(nx,ny),interpolation='nearest')
+            axs[1,0].imshow(sigmap_plot.reshape(nx,ny),interpolation='nearest')
             #axs[0,1].imshow(self.vmap,interpolation='nearest')
             #axs[1,0].imshow(self.sigmap,interpolation='nearest')
             #axs[1,1].plot(new_arr / new_cnt)
@@ -325,6 +293,7 @@ def _measure_lambda(mge_par,
 
     if verbose: print("Reff = half light?1", sum(mmap[dd < 1.0])/ sum(mmap))
     dist1d = np.sqrt(np.square(xNode - xcen) + np.square(yNode - ycen))
+
     for i in range(len(points)):
         #ind = np.where( (dd > i) & (dd < (i+1)))[0]
         ind = np.where(dd < (i+1))[0]
@@ -360,6 +329,7 @@ def cal_lambda_r_eps(self,
                      voronoi=None,
                      galaxy_plot_dir='./',
                      save_result = True,
+                     recenter_v=True,
                      iterate_mge = False):
 
     import matplotlib.pyplot as plt
@@ -469,7 +439,18 @@ def cal_lambda_r_eps(self,
                                             mask_shade=False,
                                             fraction=frac)
                 mge_now = get_mge_out(f, frac, npix_per_reff, name)
+                # recenter velocity
+                if recenter_v:
+                    xcen=mge_now["xcen"]
+                    ycen=mge_now["ycen"]
+                    dist1d = np.sqrt(np.square(self.xNode - xcen) + np.square(self.yNode - ycen))
+                    i_very_cen = np.where(dist1d < 1.5)[0] # within 0.2 Reff
+                    #print("{:1f} % are very close to the center".format(100*len(i_very_cen)/len(dist1d)))
+                    new_vc = np.mean(self.vmap_v[i_very_cen])
+                    self.vmap_v = self.vmap_v - new_vc
+    
                 self.meta.mge_result_list.append(mge_now)
+
                 if is_voronoi(voronoi):
                     larr = _measure_lambda(mge_now,
                                        self.mmap_v, self.vmap_v, self.sigmap_v,
