@@ -300,7 +300,7 @@ class Halo(HaloMeta):
             iskip=0
             for hid, hnp in zip(self.data["id"],self.data["np"]):
                 if self._return_id_list is not None:
-                    if hnu in self._return_id_list:
+                    if hid in self._return_id_list:
                         self.idlists.append(allID[iskip:iskip+hnp])
                         self.hal_idlists.append(hid)
                 else:
