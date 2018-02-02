@@ -17,40 +17,42 @@ subroutine count_tree(fn, n_halos_all, flist_index, slist_index, nsteps, big_run
     read(1)nb_of_halos(1:nsteps),nb_of_subhalos(1:nsteps)
 
     n_halos_all = sum(nb_of_halos) + sum(nb_of_subhalos)
-    read(1)
-    read(1)
-    read(1)
+    read(1)!aexp_arr(1:nsteps)
+    read(1)!omega_t_arr(1:nsteps)
+    read(1)!age_univ_arr(1:nsteps)
     flist_index=0
     slist_index=0
     do i=1,nsteps
         nhals_now=nb_of_halos(i)+nb_of_subhalos(i)
         do j=1,nhals_now
-            read(1)
-            read(1)
-            read(1)
-            read(1)!3
-            read(1)
-            read(1)
-            read(1)!6
-            read(1)!7
-            read(1)!8
-            read(1)!9
-            read(1)!10
-            read(1)
-            read(1)nfathers
+
+            read(1)!id_tmp!i_arr(idx,2) !id!id
+            read(1)!i_arr(idx,3) !bushID
+            read(1)!i_arr(idx,4) !st
+            read(1)!i_arr(idx,5:9) ! hosts
+            read(1)!f_arr(idx,1) ! m
+            read(1)!macc ! macc alone is double
+            read(1)!f_arr(idx,3:5)!xp
+            read(1)!f_arr(idx,6:8)!vp
+            read(1)!f_arr(idx,9:11)!lp
+            read(1)!f_arr(idx,12:15)!abc
+            read(1)!f_arr(idx,16:18)!energy
+            read(1)!f_arr(idx,19)!spin
+            read(1)nfathers!nfathers
             flist_index = flist_index + nfathers
 
-            read(1)
-            read(1)
+            read(1)!Father ID
+            read(1)!Father Mass
             read(1)nsons
             if (nsons .gt. 0) then
-                read(1)
+                read(1)!id_tmp!son ID
+                !write(*,*)id_tmp
             endif
             slist_index = slist_index + nsons
-            read(1)
-            read(1)
+            read(1)! (r,m,t)_vir, c_vel
+            read(1)! profile
             if (.not. big_run) then
-                read(1)
+                read(1)!id_tmp! particle ID
             endif
 
         enddo
@@ -81,10 +83,10 @@ subroutine load_tree(fn, fatherID, fatherIDx, sonID, fatherMass, &
     ! +1 so that in python the array content start from index 1.
     integer, dimension(1:n_all_fathers+1), INTENT(OUT)::fatherID, fatherIDx
     integer, dimension(1:n_all_sons), INTENT(OUT)::sonID
-    real(KIND=4), dimension(1:n_all_fathers), INTENT(OUT) ::fatherMass
+    real(KIND=8), dimension(1:n_all_fathers), INTENT(OUT) ::fatherMass
     integer(KIND=4), dimension(1:n_halos_all,1:15), INTENT(OUT) ::i_arr
-    real(KIND=4), dimension(1:n_halos_all,1:25), INTENT(OUT) ::f_arr
-    real(KIND=4), dimension(1:nsteps), INTENT(OUT) ::aexp_arr, omega_t_arr, age_univ_arr
+    real(KIND=8), dimension(1:n_halos_all,1:25), INTENT(OUT) ::f_arr
+    real(KIND=8), dimension(1:nsteps), INTENT(OUT) ::aexp_arr, omega_t_arr, age_univ_arr
 
     integer::n_fathers_max
 

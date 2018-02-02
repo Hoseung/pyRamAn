@@ -140,12 +140,24 @@ def get_sfr_all(gg, sfr_dts=0.1,
                 hist_dt=0.1, hist_tmin=0, hist_tmax=None):
     h = get_age_hist(gg, dt=hist_dt, tmin=hist_tmin, tmax=hist_tmax)
     sfrs = get_sfr(gg, sfr_dts, age_hist=h, dt_age_hist=hist_dt)
-    area = get_galaxy_area(gg)
+    if hasattr(gg, "mmap"):
+        area = get_galaxy_area(gg)
+    else:
+        area = np.pi * gg.rgal**2
 
+    if not hasattr(gg.meta, "sfr_results"):
+        gg.meta.sfr_results={"hist_dt":None,
+                             "hist_tmin":None,
+                             "hist_tmax":None,
+                             "hist":None,
+                             "sfr_dts":None,
+                             "sfrs":None,
+                             "area":None}
+ 
     gg.meta.sfr_results["sfr_dts"]=sfr_dts
-    gg.meta.sfr_results["sfrs"]=sfrs/area
+    gg.meta.sfr_results["sfrs"]=sfrs
     gg.meta.sfr_results["area"]=area
-    gg.meta.sfr_results["hist"]=h/area
+    gg.meta.sfr_results["hist"]=h
     gg.meta.sfr_results["hist_dt"]=hist_dt
     gg.meta.sfr_results["hist_tmin"]=hist_tmin
     gg.meta.sfr_results["hist_tmax"]=hist_tmax
@@ -207,10 +219,10 @@ def get_sfr(gg, dts, age_hist=None, dt_age_hist=None):
             return np.sum(age_hist[:int(dt/dt_age_hist)])
 
 
-def get_galaxy_area(gg):
+def get_galaxy_area(gg, npix_per_reff = 5):
     """
         Returns the area coverd by stellar particles based on the gal.mmap.
     """
     #gg.npix_per_reff = 5
-    dx = gg.rgal / gg.npix_per_reff # right?
+    dx = gg.rgal / npix_per_reff # right?
     return dx*dx*sum(gg.mmap.ravel() > 0)

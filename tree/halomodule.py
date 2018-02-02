@@ -32,8 +32,8 @@ class HaloMeta():
 
 
     """
-    def __init__(self, fn=None, nout=None, base='./', info=None, halofinder='HM',
-                 load=True, is_gal=False, return_id=False, outdir=None,
+    def __init__(self, nout=None, base='./', info=None, halofinder='HM',
+                 load=True, is_gal=False, return_id=False, outdir=None, fn=None, 
                  verbose=False):
         """
 
