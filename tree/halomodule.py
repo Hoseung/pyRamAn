@@ -11,6 +11,7 @@ from tree import rd_hal as rd_halo
 import numpy as np
 from utils.io_module import read_fortran, skip_fortran
 from load.info import Info
+import struct
 class HaloMeta():
     """
     HaloMeta class.
@@ -33,8 +34,8 @@ class HaloMeta():
 
     """
     def __init__(self, nout=None, base='./', info=None, halofinder='HM',
-                 load=True, is_gal=False, return_id=False, outdir=None, fn=None, 
-                 verbose=False):
+                 load=True, is_gal=False, return_id=False, outdir=None, fn=None,
+                 verbose=False, double=False, pure=False):
         """
 
         Parameters
@@ -65,6 +66,8 @@ class HaloMeta():
         self.fn = fn
         self.nout = nout
         self.verbose = verbose
+        self.double = double
+        self.pure = pure
         self.base = base
         self.info = None
         self.set_info(info=info)
@@ -181,12 +184,17 @@ class Halo(HaloMeta):
         else:
             self.data = data
 
-    def load(self, nout=None, base=None, info=None):
+    def load(self, nout=None, base=None, info=None, pure=None, double=None):
         """
         There are nout, base keywords.
         But self.nout and self.base are already available.
         Determine the priority among them.
         """
+        if double is None:
+            double = self.double
+        if pure is None:
+            pure = self.pure
+
         if self.fn is None:
             self._check_params()
         if self.halofinder is 'Rockstar':
@@ -208,10 +216,11 @@ class Halo(HaloMeta):
                     self.fn = base + self.gal_find_dir + 'gal/tree_bricks' + snout
                 else:
                     self.fn = base + self.dm_find_dir + 'DM/tree_bricks' + snout
-                    #print(fn)
+            print(self.fn)
             if self.verbose:
                 print("Loading file:", self.fn)
-            self.load_hm(self.fn)
+            print("Loading...", double, pure)
+            self.load_hm(self.fn, double=double, pure=pure)
             if self.info is None:
                 info = Info(base = self.base, nout = self.nout, load=True)
                 self.set_info(info)
@@ -220,30 +229,46 @@ class Halo(HaloMeta):
         else:
             print("Not converting unit!")
 
-    def load_hm(self, fn):
-        #try:
-        if True:
-            dtype_halo = [('np', '<i4'), ('id', '<i4'), ('level', '<i4'),
-                          ('host', '<i4'), ('sub', '<i4'), ('nsub', '<i4'),
-                          ('nextsub', '<i4'),
-                          ('m', '<f4'), ('mvir', '<f4'),
-                          ('r', '<f4'), ('rvir', '<f4'),
-                          ('tvir', '<f4'), ('cvel', '<f4'),
-                          ('x', '<f4'), ('y', '<f4'), ('z', '<f4'),
-                          ('vx', '<f4'), ('vy', '<f4'), ('vz', '<f4'),
-                          ('ax', '<f4'), ('ay', '<f4'), ('az', '<f4'),
-                          ('sp', '<f4'), ('idx', '<i4'),
-                          ('p_rho', '<f4'),('p_c', '<f4'),
-                          ('energy', '<f8', (3,)), ('radius', '<f8', (4,))]
+    def load_hm(self, fn, double=None, pure=None):
+        if double == None:
+            double = self.double
+        if pure == None:
+            pure = self.pure
 
-            if self.is_gal:
-                dtype_halo += [('sig', '<f4'), ('sigbulge', '<f4'),
-                               ('mbulge', '<f4'), ('hosthalo', '<i4'),
-                               ('g_nbin', '<i4'), ('g_rr', '<f4', (100,)),
-                               ('g_rho', '<f4', (100,))]
+        if double:
+            dtype_float = "<f8"
+        else:
+            dtype_float = "<f4"
+
+        dtype_halo = [('np', '<i4'), ('id', '<i4'), ('level', '<i4'),
+                      ('host', '<i4'), ('sub', '<i4'), ('nsub', '<i4'),
+                      ('nextsub', '<i4'),
+                      ('m', dtype_float), ('mvir', dtype_float),
+                      ('r', dtype_float), ('rvir', dtype_float),
+                      ('tvir', dtype_float), ('cvel', dtype_float),
+                      ('x', dtype_float), ('y', dtype_float), ('z', dtype_float),
+                      ('vx', dtype_float), ('vy', dtype_float), ('vz', dtype_float),
+                      ('ax', dtype_float), ('ay', dtype_float), ('az', dtype_float),
+                      ('sp', dtype_float), ('idx', '<i4'),
+                      ('p_rho', dtype_float),('p_c', dtype_float),
+                      ('energy', '<f8', (3,)), ('abc', '<f8', (3,))]
+
+        if self.is_gal:
+            dtype_halo += [('sig', dtype_float), ('sigbulge', dtype_float),
+                           ('mbulge', dtype_float), ('hosthalo', '<i4'),
+                           ('g_nbin', '<i4'), ('g_rr', dtype_float, (100,)),
+                           ('g_rho', dtype_float, (100,))]
 
 
-            f = open(fn, "rb")
+        f = open(fn, "rb")
+        if pure:
+            brick_data = f.read()
+            offset, halnum, subnum = load_header(brick_data, double=double)
+            self.data = np.zeros(halnum+subnum, dtype=dtype_halo)
+            for i in range(halnum+subnum):
+                offset = load_a_halo(brick_data, offset, self.data[i], is_gal=self.is_gal, double=double)
+            f.close()
+        else:
             self.nbodies = read_fortran(f, np.dtype('i4'), 1)[0]
             f.close()
             #self.nbodies = rd_halo.read_nbodies(fn.encode())
@@ -291,8 +316,6 @@ class Halo(HaloMeta):
                 self.data['g_nbin'] = temp[21]
                 self.data['g_rr'] = temp[22].reshape(ntot,100)
                 self.data['g_rho']= temp[23].reshape(ntot,100)
-        else:
-            print("Something wrong")
 
         if self.return_id:
             self.idlists=[]
@@ -447,3 +470,88 @@ class Halo(HaloMeta):
             self.nhalo = len(ind)
         except:
             self.nhalo = len([ind])
+
+
+
+
+
+def load_header(brick_data, double=False):
+    offset = 4
+    if double:
+        nbytes = 8
+        dtype_float="d"
+    else:
+        nbytes = 4
+        dtype_float="f"
+
+    nbodies = struct.unpack("i", brick_data[4:8])[0]
+    offset += 12
+    massp = struct.unpack(dtype_float, brick_data[offset:offset+nbytes])[0]
+    offset += 8 + nbytes
+    aexp = struct.unpack(dtype_float, brick_data[offset:offset+nbytes])[0]
+    offset += 8 + nbytes
+    omegat = struct.unpack(dtype_float, brick_data[offset:offset+nbytes])[0]
+    offset += 8 + nbytes
+    age = struct.unpack(dtype_float, brick_data[offset:offset+nbytes])[0]
+    offset += 8 + nbytes
+    halnum = struct.unpack("i", brick_data[offset:offset+4])[0]
+    subnum = struct.unpack("i", brick_data[offset+4:offset+8])[0]
+    return offset+16, halnum, subnum
+
+
+
+
+def load_a_halo(brick_data, offset, dd, is_gal=True, double=False):
+    if double:
+        nbytes = 8
+        dtype_float="d"
+    else:
+        nbytes = 4
+        dtype_float="f"
+
+    npart = struct.unpack("i", brick_data[offset:offset+4])[0]
+    dd["np"]=npart
+    offset += 12  # 12 = 4 + 8
+    ids = struct.unpack_from("<{}i".format(npart), brick_data[offset:offset+4*npart])
+    offset += 4*npart + 8
+    dd["id"] = struct.unpack("i", brick_data[offset:offset+4])[0]
+    #offset += 12
+    #dd["nstep"] = struct.unpack("i", brick_data[offset:offset+4])[0]
+    offset += 24
+    dd["level"],dd["host"],dd["sub"],dd["nsub"],dd["nextsub"]\
+    = struct.unpack_from("<5i", brick_data[offset:offset+20])
+    offset += 28
+    dd["m"] = struct.unpack(dtype_float, brick_data[offset:offset+nbytes])[0]
+    offset += 8 + nbytes
+    dd["x"],dd["y"],dd["z"] = struct.unpack_from("<3"+dtype_float, brick_data[offset:offset+3*nbytes])
+    offset += 8 + 3*nbytes
+    dd["vx"],dd["vy"],dd["vz"] = struct.unpack_from("<3"+dtype_float, brick_data[offset:offset+3*nbytes])
+    offset += 8 + 3*nbytes
+    dd["ax"],dd["ay"],dd["az"] = struct.unpack_from("<3"+dtype_float, brick_data[offset:offset+3*nbytes])
+    offset += 8 + 3*nbytes
+    radius= struct.unpack_from("<4"+dtype_float, brick_data[offset:offset+4*nbytes])
+    dd["r"],dd["abc"] = radius[0], radius[1:]
+    offset += 8 + 4*nbytes
+    dd["energy"] = struct.unpack_from("<3"+dtype_float, brick_data[offset:offset+3*nbytes])
+    offset += 8 + 3*nbytes
+    dd["sp"] = struct.unpack(dtype_float, brick_data[offset:offset+nbytes])[0]
+    offset += 8 + nbytes
+    if is_gal:
+        dd["sig"], dd["sigbulge"], dd["mbulge"]\
+        = struct.unpack_from("<3"+dtype_float, brick_data[offset:offset+3*nbytes])
+        offset += 8+ 3*nbytes
+    dd["mvir"],dd["rvir"],dd["tvir"],dd["cvel"]\
+    = struct.unpack_from("<4"+dtype_float, brick_data[offset:offset+4*nbytes])
+    offset += 8+4*nbytes
+    dd["p_rho"],dd["p_c"] = struct.unpack_from("<2"+dtype_float, brick_data[offset:offset+2*nbytes])
+    offset += 8+2*nbytes
+    if is_gal:
+        g_nbin = struct.unpack("i", brick_data[offset:offset+4])[0]
+        dd["g_nbin"]=g_nbin
+        offset += 12
+        dd["g_rr"] = struct.unpack_from("<{}".format(g_nbin)+dtype_float, brick_data[offset:offset+g_nbin*nbytes])
+        offset += 8 + g_nbin*nbytes
+        dd["g_rho"] = struct.unpack_from("<{}".format(g_nbin)+dtype_float, brick_data[offset:offset+g_nbin*nbytes])
+        offset += 8 + g_nbin*nbytes
+
+    return offset
