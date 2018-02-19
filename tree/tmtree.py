@@ -11,6 +11,7 @@ from utils.io_module import read_fortran, skip_fortran
 from utils.hagn import Nnza
 from utils import cosmology
 import os
+from tree import halomodule
 
 class Tree():
     def __init__(self, fn=None,
@@ -44,7 +45,7 @@ class Tree():
         if fn is None:
             self.get_fn()
         if load:
-            self.load(nout_now=nout_now)
+            self.load(nout_now=nout_now, BIG_RUN=BIG_RUN)
         # Load nnza()
         try:
             self.nnza = Nnza(fname=self.fn.split("tree.dat")[0]+"nout_nstep_zred_aexp.txt")
@@ -188,7 +189,10 @@ class Tree():
             return
         from tree import cnt_tree
 
+        print("BIG_RUN", BIG_RUN)
         self.n_all_halos, self.n_all_fathers, self.n_all_sons, self.nsteps = cnt_tree.count_tree(self.fn, int(BIG_RUN))
+
+        #print(self.n_all_halos, self.n_all_fathers, self.n_all_sons, self.nsteps)
         self.fatherID, self.fatherIDx, self.sonIDx, \
         self.fatherMass, i_arr, f_arr, \
         self.aexps, self.omega_ts, self.age_univs = \
@@ -220,6 +224,8 @@ class Tree():
                       ('f_ind', '<i4'),
                       ('nsons', '<i4'),
                       ('s_ind', '<i4')]
+        if not BIG_RUN:
+            dtype_tree.append(("np", '<i4'))
 
         tt = np.recarray(self.n_all_halos +1, dtype = dtype_tree)
         self.tree = tt
@@ -253,7 +259,8 @@ class Tree():
         tt["nextsub"][1:] = i_arr[:,8]
         tt["nprgs"][1:] = i_arr[:,9]
         if nout_now is not None:
-            tt["nstep"][1:] = i_arr[:,10] + (nout_now - max(tt["nstep"]))
+            tt["nstep"][1:] = i_arr[:,10]
+            #tt["nstep"][1:] += (nout_now - max(tt["nstep"]))
         else:
             tt["nstep"][1:] = i_arr[:,10]
         if not BIG_RUN:
@@ -263,9 +270,71 @@ class Tree():
         tt["s_ind"][1:] = i_arr[:,14] -1 #
 
         #return
-
         # idx, id, bushID, st, hosts(5), nprgs, np(if not big_run)
         # m, macc, xp(3), vp(3), lp(3), abc(4), energy(3), spin, virial(4), rho(2)
+
+
+    def get_best_matched_desc(pids_now, gids, nout_next):
+        gcat_with_pids = halomodule.Halo(nout=nout_next, return_id=gids, is_gal=True)
+        n_matched=[]
+        for i, pids in enumerate(gcat_with_pids.idlists):
+            # pids = most_bound_partcles(pids)
+            n_machted.append(np.len(np.intersect1d(pids, pids_now)))
+
+        return np.argmax(n_matched), gcat_with_pids.idlists[np.argmax(n_matcehd)]
+
+
+    def extract_main_tree_reverse(self, idx):
+        """
+        Extracts main progenitors from a TreeMaker tree.
+
+
+        example
+        -------
+        >>> tt = tmtree.Tree("tree.dat")
+        >>> atree = tt.extract_main_tree(12345)
+
+        TODO
+        ----
+        It works, but the try - except clause is error-prone.
+        Explicitly check the end of progenitor tree and make the function more predictable.
+
+        """
+
+        t = self.tree
+        fatherIDx = self.fatherIDx
+        fatherMass = self.fatherMass
+
+        t_now = t[idx]
+        nstep = t_now["nstep"]
+        nout_now = self.nnza.step2out(int(nstep))
+        atree = np.zeros(nstep + 1, dtype=t.dtype)
+
+        atree[0]=t_now
+        nstep_max = t[-1]["nstep"]
+        if nstep == nstep_max:
+            return
+
+        pids_now = halomodule.Halo(nout=nout_now, return_id=t_now, is_gal=True)[0]
+        for i in range(1, nstep_max - nstep):
+            try:
+                nstep = t_now["nstep"]
+                t_next = t[t["nstep"] == nstep+1]
+                f_ind_first, f_ind_last = t_next["f_ind"][0], t_next["f_ind"][-1]+t_next["nprgs"]
+                ind_matched = np.where(fatherIDx[f_ind_first:f_ind_last] == idx)[0]
+                ind_next_step = np.searchsorted(np.cumsum(t_next["nprgs"]), ind_matched)
+                all_desc = t_next[ind_next_step]
+                i_best, pids_now = get_best_matched_desc(pids_now, all_desc["id"], nout_next = self.nnza.step2out(nstep+1))
+                idx = all_desc["idx"][i_best]
+                t_now = t[idx]
+
+            except:
+                break
+            atree[i]=t_now
+
+        return np.copy(atree[:i][::-1])
+
+
 
     def extract_direct_full_tree(self, idx, return_id=False):
         """
@@ -306,8 +375,9 @@ class Tree():
                     if len(idx_father) > 0:
                         idx_prgs_alltime.append(list(idx_father[idx_father>0]))
                         id_prgs_alltime.append(list(id_father[id_father>0]))
-                        mass_father = fatherMass[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]]
-                        idx = idx_father[np.argmax(mass_father)]
+                        mass_father_transfer = fatherMass[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]]
+                        mass_father = t[idx_father[idx_father>0]]["m"]
+                        idx = idx_father[np.argmax(mass_father_transfer/mass_father)]
                         if idx < 1:
                             break
                         t_father=t[idx]
@@ -324,8 +394,9 @@ class Tree():
                     idx_father = fatherIDx[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]]# -1
                     if len(idx_father) > 0:
                         idx_prgs_alltime.append(list(idx_father[idx_father>0]))
-                        mass_father = fatherMass[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]]
-                        idx = idx_father[np.argmax(mass_father)]
+                        mass_father_transfer = fatherMass[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]]
+                        mass_father = t[idx_father[idx_father>0]]["m"]
+                        idx = idx_father[np.argmax(mass_father_transfer/mass_father * (np.abs(np.log10(mass_father/t[idx]["m"])) < 0.2).astype(int))]
                         if idx < 1:
                             break
                         t_father=t[idx]
@@ -529,3 +600,119 @@ def check_tree_complete(tree, nout_fi, nout_ini, halo_list):
         complete_list[i] = complete
 
     return complete_list, idlist[complete_list]
+
+
+
+
+def check_tree_fig(tt, idx):
+    import matplotlib.pyplot as plt
+    aexp = tt.nnza.nnza["aexp"]
+    atree = extract_direct_full_tree(tt,idx)[0] 
+    fig, axs = plt.subplots(2,2)
+    axs=axs.ravel()
+
+    i_ok = np.where(atree["m"] > 0)[0]
+    axs[0].scatter(atree["xp"][i_ok,0]/aexp[i_ok], atree["xp"][i_ok,1]/aexp[i_ok], c=atree["nstep"][i_ok])
+    axs[1].scatter(atree["nstep"][i_ok],np.log10(atree["m"][i_ok]), c=atree["nstep"][i_ok])
+    axs[2].scatter(atree["vp"][i_ok,0], atree["vp"][i_ok,1], c=atree["nstep"][i_ok])
+
+    axs[0].set_xlabel("pos x")
+    axs[0].set_ylabel("pos y")
+    axs[1].set_xlabel("nstep")
+    axs[1].set_ylabel("log(m*)")
+    axs[2].set_xlabel("vel x")
+    axs[2].set_ylabel("vel y")
+
+    plt.savefig("tree_{}.png".format(idx))
+    plt.close()
+
+def extract_direct_full_tree(self, idx, return_id=False):
+    """
+    Extracts main progenitors from a TreeMaker tree.
+
+    example
+    -------
+    >>> tt = tmtree.Tree("tree.dat")
+    >>> atree = tt.extract_main_tree(12345)
+
+    TODO
+    ----
+    It works, but the try - except clause is error-prone.
+    Explicitly check the end of progenitor tree and make the function more predictable.
+
+    """
+
+    t = self.tree
+    if return_id:
+        fatherID = self.fatherID
+    fatherIDx = self.fatherIDx
+    fatherMass = self.fatherMass
+
+    t_now = t[idx]
+    nstep = t_now["nstep"]
+    nouts = [nstep]
+    atree = np.zeros(nstep + 1, dtype=t.dtype)
+    atree[0] = t_now
+
+    idx_prgs_alltime = [[idx]]
+
+    if return_id:
+        id_prgs_alltime = [[t[idx]["id"]]]
+        for i in range(1, nstep + 1):
+            id_father  =  fatherID[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]]# -1
+            try:
+                idx_father = fatherIDx[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]]# -1
+                if len(idx_father) > 0:
+                    idx_prgs_alltime.append(list(idx_father[idx_father>0]))
+                    id_prgs_alltime.append(list(id_father[id_father>0]))
+                    mass_father_transfer = fatherMass[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]]
+                    mass_father = t[idx_father[idx_father>0]]["m"]
+                    idx = idx_father[np.argmax(mass_father_transfer/mass_father)]
+                    if idx < 1:
+                        break
+                    t_father=t[idx]
+                    atree[i]=t_father
+                    nouts.append(nstep)
+                else:
+                    break
+            except:
+                break
+        return atree, idx_prgs_alltime, id_prgs_alltime
+    else:
+        m_now = t["m"][idx]
+        for i in range(1, nstep + 1):
+            print("\n step {}".format(i))
+            print("m_now = ", np.log10(m_now))
+            if True:
+                idx_father = fatherIDx[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]]# -1
+                if len(idx_father) > 0:
+                    idx_prgs_alltime.append(list(idx_father[idx_father>0]))
+                    idx_ok = idx_father>0
+                    mass_father_transfer = fatherMass[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]][idx_ok]*m_now
+                    print("mass_father_transfer", mass_father_transfer)
+                    mass_father = t[idx_father[idx_ok]]["m"]
+                    mass_ratio = mass_father_transfer/mass_father
+                    #is_ok_mass = np.abs(np.log10(mass_father_transfer/t[idx]["m"])-2) < 0.2
+                    is_ok_mass = np.abs(np.log10(mass_ratio)-2) < 0.2
+                    print("mass_ratio", mass_ratio)
+                    print("ok_mass", is_ok_mass)
+                    print("product",mass_ratio * is_ok_mass)
+                    if sum(is_ok_mass) == 0:
+                        break
+                    idx = idx_father[np.argmax(mass_ratio * is_ok_mass)]
+                    print(np.argmax(mass_ratio * is_ok_mass), idx)
+                    if idx < 1:
+                        break
+                    t_father=t[idx]
+                    atree[i]=t_father
+                    nouts.append(nstep)
+                    m_now = 10**np.mean(np.log10(atree["m"][:i]))
+                    print(atree["m"])
+                else:
+                    print("break 2")
+                    break
+            else:
+                print("break 3")
+                break
+
+        return atree, idx_prgs_alltime

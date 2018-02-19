@@ -123,9 +123,9 @@ def match_halo_gal(ids, gcdata, hcdata, masscut=None):
     hkdt = cKDTree(np.stack((hdata["x"], hdata["y"], hdata["z"]),axis=1))
     gkdt = cKDTree(np.stack((gdata["x"], gdata["y"], gdata["z"]),axis=1))
 
-    direct_halos = find_direct_halo(gdata, hdata, hkdt, n_match=50)
-    halos = find_top_host_halo(gdata, hdata, hkdt, n_match=50)
-    halos2 = find_top_host_halo(gdata, hdata, hkdt, n_match=50, rscale=2.0)
+    direct_halos = find_direct_halo(gdata, hdata, hkdt, n_match=500)
+    halos = find_top_host_halo(gdata, hdata, hkdt, n_match=2000)
+    halos2 = find_top_host_halo(gdata, hdata, hkdt, n_match=3000, rscale=2.0)
 
     return direct_halos, halos, halos2
 
@@ -164,8 +164,8 @@ def density_halo_mass(ids, gcat, hcat, masscut = 1e10):
     hkdt = cKDTree(np.stack((hdata["x"], hdata["y"], hdata["z"]),axis=1))
 
     # !!!!!! find_direct_halo sorts galaxy order. check for consistency.
-    direct_halos = find_direct_halo(gdata, hdata, hkdt, n_match=50)
-    halos = find_top_host_halo(gdata, hdata, hkdt, n_match=50)
+    direct_halos = find_direct_halo(gdata, hdata, hkdt, n_match=1000)
+    halos = find_top_host_halo(gdata, hdata, hkdt, n_match=1000)
 
     return direct_halos["mvir"], halos["mvir"]
 
@@ -207,7 +207,7 @@ def density_D2N(gcdata, info, serial_results, Ns=[10,50], dist_upper=25.):
     nout = info.nout
     pb = info.pboxsize
 
-    n_match = max(Ns) + 1 # 0 == itself.
+    n_match = 2 * max(Ns) + 1 # 0 == itself.
 
     # All galaxies.
     gdata = gcdata[gcdata["m"] >= 1e10]
@@ -242,7 +242,7 @@ def find_top_host_halo_old(gdata, hdata, hkdt, n_match=50, rscale=1.0):
     """
     matched_halo = np.zeros(len(gdata), dtype=hdata.dtype)
     for i, thisgal in enumerate(gdata[np.argsort(gdata["m"])[::-1]]):
-        dist, i_neigh = get_kd_matches(hkdt, thisgal, n_match=n_match, dist_upper=0.2)
+        dist, i_neigh = get_kd_matches(hkdt, thisgal, n_match=n_match, dist_upper=0.1)
         touching = dist < (hdata[i_neigh]["r"] + thisgal["r"]) * rscale
         neighbor_h = hdata[i_neigh][touching]
 
@@ -291,7 +291,7 @@ def density_D2N_old(gcdata, IDs, Ns=[5,10], dist_upper=15./100.):
 
 def measure_P(gdata, info, serial_results, dt,
                                 dist_upper = 3.0,
-                                n_match=100, short=False):
+                                n_match=1000, short=False):
     """
 
         Dist upper in Mpc.

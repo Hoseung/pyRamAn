@@ -109,8 +109,8 @@ def nout_results_to_gal_serial(gals, nouts, out_base):
                             sat_data[ind]["mgas"] = data.gas_results["mgas_tot"]
                             sat_data[ind]["mgas_cold"] = data.gas_results["mgas_cold"]
                         else:
-                            sat_data[ind]["mgas"] = np.nan
-                            sat_data[ind]["mgas_cold"] = np.nan
+                            sat_data[ind]["mgas"] = 0
+                            sat_data[ind]["mgas_cold"] = 0
                     else:
                         sat_data[ind]["rgal"] = np.nan
                         sat_data[ind]["reff"] = np.nan
@@ -249,8 +249,8 @@ def sat_data_to_fine(this_gal, merger, sat_data, nnza_all,
                                                    sat_nvec_fine))
 
     ###################################################
-    fields_to_interpol_from=["mstar", "mgas", "mgas_cold", "rgal",  "reff"]
-    fields_to_interpol_to  =["mstar", "m_gas", "m_gas_cold", "rgal", "reff_s"]
+    fields_to_interpol_from=["mstar", "rgal",  "reff"] # ignore gas for the moment
+    fields_to_interpol_to  =["mstar", "rgal", "reff_s"]
 
     # Simpler(Linear) interpolations.
     # "mstar", "m_gas", "m_gas_cold", "size_s", "reff_s"
@@ -270,7 +270,7 @@ def sat_data_to_fine(this_gal, merger, sat_data, nnza_all,
                                                  new_lbt,
                                                  normalize=False)).T
     merger["spinmag"][i_nn]=np.sqrt(np.einsum("...i,...i", lvec_fine, lvec_fine))
-    
+
     return True # good = True
 
 
@@ -479,7 +479,6 @@ def cal_merger_props(gals, nouts_all,
             tg.merger_meta["dj"].append(j_orbit_mag[i_merger_ini] - j_orbit_mag[i_merger_end])
             
         #plt.savefig("merger_pos_test_{}_{}.png".format(igal, tg.fidx))
-        
         # Loop is done. Remove unnecessary mergers.
         # Should remove from larger index.
         for i_bad in np.sort(bad_mergers)[::-1]:
@@ -490,41 +489,25 @@ def cal_merger_props(gals, nouts_all,
 
         #main_d_lambda = tg.finedata["lambda_r"][:-1] - tg.finedata["lambda_r"][1:]
         all_weights = np.zeros(len(nouts_all) + 20) # Why 20?
-        #n_major_arr = np.zeros(len(tg.finedata))
-        #n_minor_arr = np.zeros(len(tg.finedata))
 
-        #tg.n_major=0
-        #tg.n_minor=0
-
-        #for merger in tg.mergers:
-        #    #if hasattr(merger, "i_ini"):
-        #    for ini, end, mratio in zip(merger.i_ini, merger.i_end, merger.m_ratio):
-        #        #print(ini, end)
-        #        all_weights[end:ini+1] += mratio
-        #        if mratio > mratio_Major:
-        #            n_major_arr[end:ini+1] += 1
-        #            tg.n_major+=1
-        #        elif mratio > mratio_minor:
-        #            n_minor_arr[end:ini+1] += 1
-        #            tg.n_minor+=1
-
-        # Merger history types.
-        #tg.n_major_arr=n_major_arr
-        #tg.n_minor_arr=n_minor_arr
-
+        # last measurements should not be 0 or nan.
+        tg.finedata["lambda_r"][:6] = tg.finedata["lambda_r"][5]
 
         # A window to take the mean of delta lambda?
         # Not needed, I've already smoothed the values.     
         mm = tg.merger_meta
         if len(mm["i_ini"]) > 0:
             # Compute allweights first
+            #print(mm["i_ini"], mm["i_end"], mm["m_ratio"])
             for ini, end, mr in zip(mm["i_ini"], mm["i_end"], mm["m_ratio"]):
+                #print(ini, end, mr)
                 for i_ini, i_end, mratio in zip(ini, end, mr):
                     all_weights[i_end:i_ini] += mratio
 
             for ini, end, mr, tdj in zip(mm["i_ini"], mm["i_end"], mm["m_ratio"], mm["dj"]):
                 for i_ini, i_end, mratio, thisdj in zip(ini, end, mr, tdj):
-                    thisdl = tg.finedata["lambda_r"][i_end:i_ini] - tg.finedata["lambda_r"][i_end+1:i_ini+1]
+                    thisdl = tg.finedata["lambda_r"][i_end:i_ini] - tg.finedata["lambda_r"][i_end+1:i_ini+1]                   
+                    #thisdl = np.mean(tg.finedata["lambda_r"][i_end-1:i_end+2]) - np.mean(tg.finedata["lambda_r"][i_ini-1:i_ini+2])
                     thismr = mratio/all_weights[i_end:i_ini]
                     mm["m_ratio_ratio"].append(thismr)
                     mm["dl"].append(np.sum(thisdl * thismr))
