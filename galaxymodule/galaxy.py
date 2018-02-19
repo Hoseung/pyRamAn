@@ -1027,7 +1027,7 @@ class Galaxy():
 
 
 def plot_gal(self, npix=200, fn_save=None, ioff=True,
-             do9plots = False, i_lambda=0, representative="1Reff", **kwargs):
+             do9plots = False, i_lambda=0, **kwargs):
     """
         parameters
         ----------
