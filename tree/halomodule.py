@@ -182,11 +182,7 @@ class Halo(HaloMeta):
         else:
             self.data = data
 
-<<<<<<< Updated upstream
     def load(self, nout=None, base=None, info=None, pure=None, double=None):
-=======
-    def load(self, nout=None, base=None, info=None, pure=False):
->>>>>>> Stashed changes
         """
         There are nout, base keywords.
         But self.nout and self.base are already available.
@@ -222,12 +218,8 @@ class Halo(HaloMeta):
             print(self.fn)
             if self.verbose:
                 print("Loading file:", self.fn)
-<<<<<<< Updated upstream
             print("Loading...", double, pure)
             self.load_hm(self.fn, double=double, pure=pure)
-=======
-            self.load_hm(self.fn, pure=pure)
->>>>>>> Stashed changes
             if self.info is None:
                 info = Info(base = self.base, nout = self.nout, load=True)
                 self.set_info(info)
@@ -236,25 +228,17 @@ class Halo(HaloMeta):
         else:
             print("Not converting unit!")
 
-<<<<<<< Updated upstream
     def load_hm(self, fn, double=None, pure=None):
         if double == None:
             double = self.double
         if pure == None:
             pure = self.pure
 
-=======
-    def load_hm(self, fn, pure=False, double=False):
-        #if True:
->>>>>>> Stashed changes
         if double:
             dtype_float = "<f8"
         else:
             dtype_float = "<f4"
-<<<<<<< Updated upstream
 
-=======
->>>>>>> Stashed changes
         dtype_halo = [('np', '<i4'), ('id', '<i4'), ('level', '<i4'),
                       ('host', '<i4'), ('sub', '<i4'), ('nsub', '<i4'),
                       ('nextsub', '<i4'),
@@ -266,11 +250,7 @@ class Halo(HaloMeta):
                       ('ax', dtype_float), ('ay', dtype_float), ('az', dtype_float),
                       ('sp', dtype_float), ('idx', '<i4'),
                       ('p_rho', dtype_float),('p_c', dtype_float),
-<<<<<<< Updated upstream
                       ('energy', '<f8', (3,)), ('abc', '<f8', (3,))]
-=======
-                      ('energy', '<f8', (3,)), ('radius', '<f8', (4,))]
->>>>>>> Stashed changes
 
         if self.is_gal:
             dtype_halo += [('sig', dtype_float), ('sigbulge', dtype_float),
@@ -278,7 +258,6 @@ class Halo(HaloMeta):
                            ('g_nbin', '<i4'), ('g_rr', dtype_float, (100,)),
                            ('g_rho', dtype_float, (100,))]
 
-<<<<<<< Updated upstream
 
         f = open(fn, "rb")
         if pure:
@@ -289,12 +268,6 @@ class Halo(HaloMeta):
                 offset = load_a_halo(brick_data, offset, self.data[i], is_gal=self.is_gal, double=double)
             f.close()
         else:
-=======
-        if not pure:
-            from tree import rd_hal as rd_halo
-            from utils.io_module import read_fortran, skip_fortran
-            f = open(fn, "rb")
->>>>>>> Stashed changes
             self.nbodies = read_fortran(f, np.dtype('i4'), 1)[0]
             f.close()
             #self.nbodies = rd_halo.read_nbodies(fn.encode())
@@ -342,13 +315,6 @@ class Halo(HaloMeta):
                 self.data['g_nbin'] = temp[21]
                 self.data['g_rr'] = temp[22].reshape(ntot,100)
                 self.data['g_rho']= temp[23].reshape(ntot,100)
-<<<<<<< Updated upstream
-=======
-        else:
-            import rd_hal_pure
-            print("Using pure Python")
-
->>>>>>> Stashed changes
 
         if self.return_id:
             self.idlists=[]

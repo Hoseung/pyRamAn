@@ -1106,24 +1106,27 @@ def plot_gal(self, npix=200, fn_save=None, ioff=True,
     ax.set_yticklabels(yticks)
 
 # Lambda_r plot
-    ll = self.meta.lambda_result_list[i_lambda]
-    if ll is not None:
-        ax = axs[0,1]
-        ax.plot(ll) # ~ 1 * Reff
-        ax.set_title(r"$\lambda _{R}$")
-        ax.text(0.5 * len(ll), 0.8, "{:.2e}".format(self.meta.mstar) + r"$M_{\odot}$")
-        ax.set_ylim(bottom=0, top=1)
-        ax.set_xlabel("["+ r'$R/R_{eff}$'+"]")
-
-        unit = len(ll)/self.meta.rscale_lambda # number of points per 1Reff
-        xticks = [0, 0.5*unit]
-        reffs=[0, 0.5]
-        for i in range(int(self.meta.rscale_lambda)): # If lambda_r is calculated furthrer -
-            xticks.append(unit * (i+1))
-            reffs.append((i+1))
-        ax.set_xticks(xticks)
-        xticks_label = ["{:.1f}".format(rf) for rf in reffs]
-        ax.set_xticklabels(xticks_label)
+    try:
+        ll = self.meta.lambda_result_list[i_lambda]
+        if ll is not None:
+            ax = axs[0,1]
+            ax.plot(ll) # ~ 1 * Reff
+            ax.set_title(r"$\lambda _{R}$")
+            ax.text(0.5 * len(ll), 0.8, "{:.2e}".format(self.meta.mstar) + r"$M_{\odot}$")
+            ax.set_ylim(bottom=0, top=1)
+            ax.set_xlabel("["+ r'$R/R_{eff}$'+"]")
+ 
+            unit = len(ll)/self.meta.rscale_lambda # number of points per 1Reff
+            xticks = [0, 0.5*unit]
+            reffs=[0, 0.5]
+            for i in range(int(self.meta.rscale_lambda)): # If lambda_r is calculated furthrer -
+                xticks.append(unit * (i+1))
+                reffs.append((i+1))
+            ax.set_xticks(xticks)
+            xticks_label = ["{:.1f}".format(rf) for rf in reffs]
+            ax.set_xticklabels(xticks_label)
+    except:
+        pass
 
 # sigma map
     if hasattr(self, "sigmap"):
@@ -1146,7 +1149,7 @@ def plot_gal(self, npix=200, fn_save=None, ioff=True,
 #        ax.locator_params(tight=True, nbins=5)
 
 # velocity map
-    if self.vmap is not None:
+    if hasattr(self,"vmap") and self.vmap is not None:
         l_range = self.meta.reff * self.meta.rscale_lambda
         ax = axs[1,1]
         im = ax.imshow(self.vmap, vmin=-100, vmax = 100, cmap='RdBu')

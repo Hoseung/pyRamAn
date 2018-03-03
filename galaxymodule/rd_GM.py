@@ -162,6 +162,7 @@ class Gal(Galaxy):
         self.units.header = Units()
         self.wdir = wdir
         self.info = info
+        self.debug=False
         #self.set_info(info)
         self.rscale=rscale
         if load:
