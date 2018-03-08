@@ -50,7 +50,7 @@ class Simbase():
 
     def set_ranges(self, ranges=[[0, 1], [0, 1], [0, 1]]):
         if ranges is not None:
-            nr = np.asarray(ranges)
+            nr = np.asarray(ranges) # Now it is a class, not a list of list, or ,.. 
             if not(nr.shape[0] == 3 and nr.shape[1] == 2):
                 # Because actual operation on the given input(ranges)
                 # does not take place soon, it's not a good place to use

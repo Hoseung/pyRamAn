@@ -138,6 +138,7 @@ class Hydro(Simbase):
         verbose : bool, optional
 
         """
+        print("[hydro.amr2cell], self.cpus   - 0", self.cpus)
         if nvarh is None:
             if self.header.nvarh is None:
                 nvarh = self.header.nvarh_org
@@ -149,24 +150,31 @@ class Hydro(Simbase):
         if lmax is None:
             lmax = nlevelmax
 
-        if verbose: print(' >>> working resolution (lmax) =', lmax)
+        if verbose: print('[hydro.amr2cell] >>> working resolution (lmax) =', lmax)
 
         if ranges is not None: self.set_ranges(ranges=ranges)
+        print("[hydro.amr2cell], self.cpus   - 1", self.cpus)
         # Set ranges
+        print("[hydro.amr2cell], self.ranges - 1", self.ranges)
         xmi, xma = self.ranges[0]
         ymi, yma = self.ranges[1]
         zmi, zma = self.ranges[2]
+        print("[hydro.amr2cell], self.ranges[0]", self.ranges[0])
+        print("[hydro.amr2cell], self.ranges[1]", self.ranges[1])
+        print("[hydro.amr2cell], self.ranges[2]", self.ranges[2])
 
         work_dir = self.info.base + '/' + self.out_dir + 'output_' + str(self.info.nout).zfill(5)
         if verbose:
-            print("[hydro.amr2cell] Ranges", xmi, xma, ymi, yma, zmi,zma)
+            print("[hydro.amr2cell] Ranges", xmi, xma, ymi, yma)
+            print("[hydro.amr2cell] Ranges", xmi, xma, zmi,zma)
             print("[hydro.amr2cell] cpus", self.cpus)
 
         from load import a2c
+        if verbose: print("[hydro.amr2cell] before a2c_count..  lmax =", lmax)
         out = a2c.a2c_count(work_dir, xmi, xma, ymi, yma, zmi, zma, lmax, self.cpus)
         if verbose: print("[hydro.amr2ell] a2c_count done")
-        if verbose: print("ranges", xmi, xma, ymi, yma, zmi, zma)
-
+        if verbose: print("[hydro.amr2cell]ranges", xmi, xma, ymi, yma, zmi, zma)
+        #return
         if return_meta:
             return (out[0], work_dir, xmi, xma, ymi, yma, zmi, zma, lmax)
         else:
@@ -194,7 +202,7 @@ class Hydro(Simbase):
             self.cell["ref"] = cell[4]
 
 
-    def amr2cell_old(self, lmax=None, icpu=0, verbose=False):
+    def amr2cell_py(self, lmax=None, icpu=0, verbose=False):
         """
         Reads AMR and HYDRO and output hydro variables in particle-like data format.
         Works ok.
@@ -203,7 +211,7 @@ class Hydro(Simbase):
         """
         import numpy as np
         import load
-        from load.utils import read_fortran, skip_fortran
+        from utils.io_module import read_fortran, skip_fortran
         # if both amr and hydro does not exist, create.
         #################
         cpus = self.cpus
@@ -267,7 +275,6 @@ class Hydro(Simbase):
             # for ilevel
             #   for icpu
             # Open Hydro file and skip header
-
             fhydro = open(self._fnbase + str(icpu).zfill(5), "rb")
             self._read_hydro_header(fhydro)
 
