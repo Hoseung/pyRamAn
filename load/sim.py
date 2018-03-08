@@ -110,7 +110,6 @@ class Simbase():
             lmax
         except:
             lmax = nlevelmax
-#        print(' >>> working resolution (lmax) =', lmax)
 
         xxmin = ranges[0][0]
         xxmax = ranges[0][1]
@@ -121,6 +120,7 @@ class Simbase():
 
         dmax = max([xxmax-xxmin, yymax-yymin, zzmax-zzmin])
 #        lmin = lmax # sometimes even smallest dx is larger than the region size.
+        lmin = info.lmin # default value. But, which value should I pick?
         for ilevel in range(1, lmax):
             dx = 0.5**ilevel
             if (dx < dmax):
