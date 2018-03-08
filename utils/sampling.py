@@ -9,7 +9,7 @@ Routines used in sampling tasks
 """
 import numpy as np
 class Region():
-    def __init__(self):
+    def __init__(self, **region):
         self._xc = 0.5
         self._yc = 0.5
         self._zc = 0.5
@@ -19,6 +19,7 @@ class Region():
         self._centers = [0.5, 0.5, 0.5]
         self._radius = 0.5
         self._ranges = [[0,1]]*3
+        self.set_region(**region)
 
     @property
     def xc(self):
@@ -125,7 +126,11 @@ class Region():
             and calculate the others.
             returns a dict (or defaultdict).
 
+            The priority goes as:
+            xr,yr,zr >= ranges >= centers + radius >= xr,yr,zr + radius
+
             example
+            -------
             >>> r1 = set_region(yr=[0.45,0.733])
             >>> r2 = set_region(xc=0.7, radius=0.2)
             >>> r3 = set_region(abc=123)
@@ -133,12 +138,18 @@ class Region():
             >>> r4 = set_region(*c)
 
             To do
+            -----
             1. Allow mix of xc and xr arguments.
                as xr requires more effort, xr overwrites xc.
             2. Accept both "center" and "centers"
                Also, both "range" and "ranges"
-        """
+            3. Thanks to the "properties" update, less manual calculation is
+               required by set_region. Minimize them.
 
+            Notes
+            -----
+            It is simplist to supply ranges to update the values.
+        """
         xxr = any([i in region for i in ["xr", "yr", "zr"]])
         xxc = any([i in region for i in ["xc", "yc", "zc"]])
         xrd = "radius" in region
@@ -163,15 +174,7 @@ class Region():
             except:
                 zr = [0,1]
             # calculate the rest
-            ranges = [xr, yr, zr]
-            centers= [sum(xr)*0.5, sum(yr)*0.5, sum(zr)*0.5]
-            xc,yc,zc = centers
-            radius = max([ranges[0][1]-ranges[0][0],
-                        ranges[1][1]-ranges[1][0],
-                        ranges[2][1]-ranges[2][0]])
-
-    # Later..
-    # region = {"rangse": range, "centers":centers,...)
+            self.ranges = [xr, yr, zr]
         elif xxc:
             try:
                 xc = region["xc"]
@@ -190,20 +193,14 @@ class Region():
             except:
                 radius = 0.5
             # calculate the rest
-            ranges=[[xc - radius, xc + radius],
-                    [yc - radius, yc + radius],
-                    [zc - radius, zc + radius]]
-            xr, yr, zr = ranges
-            centers=[xc, yc, zc]
+            # No need to update others with radius.
+            self._radius = radius
+            self.xc = xc
+            self.yc = yc
+            self.zc = zc
 
         elif xrans:
-            ranges = region["ranges"]
-            xr, yr, zr = ranges[0], ranges[1], ranges[2]
-            centers=[sum(xr)*0.5, sum(yr)*0.5, sum(zr)*0.5]
-            xc, yc, zc = centers
-            radius=max([ranges[0][1]-ranges[0][0],
-                        ranges[1][1]-ranges[1][0],
-                        ranges[2][1]-ranges[2][0]])
+            self.ranges = region["ranges"]
 
         elif xcens:
             centers = region["centers"]
@@ -212,29 +209,14 @@ class Region():
                 radius = region["radius"]
             except:
                 radius = 0.5
-            xr = [xc - radius, xc + radius]
-            yr = [yc - radius, yc + radius]
-            zr = [zc - radius, zc + radius]
-            ranges=[xr, yr, zr]
+            self.ranges = [[xc - radius, xc + radius],
+                           [yc - radius, yc + radius],
+                           [zc - radius, zc + radius]]
         elif xrd:
-            return set_region(xc=0.5, yc=0.5, zc=0.5, radius = region["radius"])
+            self.ranges=[[0.5-region["radius"],0.5+region["radius"]]]*3
         else:
-            return set_region(xc=0.5, yc=0.5, zc=0.5, radius = 0.5)
+            self.ranges = [[0,1]]*3
 
-        self.ranges = ranges # ranges has all necessary information.
-        #self._centers = centers
-        #self._radius = radius
-        #self._xr = xr
-        #self._yr = yr
-        #self._zr = zr
-        #self._xc = xc
-        #self._yc = yc
-        #self._zc = zc
-
-        #return {"ranges":ranges, "centers":centers,
-        #        "xr":xr, "yr":yr, "zr":zr,
-        #        "xc":xc, "yc":yc, "zc":zc,
-        #        "radius":radius}
 
     def region_from_halo(self, halo, ind=None, rscale = 1.0):
         if ind is None:

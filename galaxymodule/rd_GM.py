@@ -241,7 +241,7 @@ class Gal(Galaxy):
         >>> hmo.Halo().data.dtype
         >>> dtype((numpy.record, [('np', '<i4'), ('id', '<i4'), ('level', '<i4'), ('host', '<i4'), ('sub', '<i4'), ('nsub', '<i4'), ('nextsub', '<i4'), ('m', '<f4'), ('mvir', '<f4'), ('r', '<f4'), ('rvir', '<f4'), ('tvir', '<f4'), ('cvel', '<f4'), ('x', '<f4'), ('y', '<f4'), ('z', '<f4'), ('vx', '<f4'), ('vy', '<f4'), ('vz', '<f4'), ('ax', '<f4'), ('ay', '<f4'), ('az', '<f4'), ('sp', '<f4'), ('idx', '<i4'), ('p_rho', '<f4'), ('p_c', '<f4'), ('energy', '<f8', (3,)), ('radius', '<f8', (4,))]))
         """
-        from utils import sampling
+        from utils.sampling import Region
 
         #if info is not None and not hasattr(self.info, "unit_l"):
         #    self._get_minimal_info(info)
@@ -257,8 +257,10 @@ class Gal(Galaxy):
                 if self.info is not None:
                     self.center_code = self.header['xg'] / self.info.pboxsize + 0.5
                     self.get_rgal()
-                    self.region = sampling.set_region(centers=self.center_code,
+                    self.region = Region(centers=self.center_code,
                                                   radius=self.rscale * self.rgal)
+                    #self.region = sampling.set_region(centers=self.center_code,
+                    #                              radius=self.rscale * self.rgal)
             elif type_star == "raw":
             # load catalog
                 import tree.halomodule as hmo
@@ -278,8 +280,9 @@ class Gal(Galaxy):
                 if radius is None:
                     radius = self.rgal
 
-                self.region = sampling.set_region(centers=self.header["xg"],
+                self.region = Region(centers=self.header["xg"],
                                                   radius=self.rscale * radius)
+
                 from load.part import Part
                 pp = Part(info=self.info, ptypes=['star id pos vel time metal'],
                           region=self.region, load=True)
