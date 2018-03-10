@@ -15,9 +15,9 @@ def angular_momentum_shell(cells, bins = None,
         vec_rot = np.cross(np.stack((cells["x"],
                                      cells["y"],
                                      cells["z"])).T,
-                           np.stack((cells["var1"],
-                                     cells["var2"],
-                                     cells["var3"])).T)
+                           np.stack((cells["vx"],
+                                     cells["vy"],
+                                     cells["vz"])).T)
 
         return (vec_rot.T * (cell_vec["dx"]**3 * cell_vec["var0"])).sum(axis=1)
     else:
@@ -28,15 +28,15 @@ def angular_momentum_shell(cells, bins = None,
         for i in range(len(bins-1)):
             cell_vec = close_cell[(ds[i] < dd) * (dd < ds[i+1])]
             #print(len(cell_vec), len(close_cell))
-            Mean_v = (cells["var1"].mean(),
-                      cells["var2"].mean(),
-                      cells["var3"].mean())
+            Mean_v = (cells["vx"].mean(),
+                      cells["vy"].mean(),
+                      cells["vz"].mean())
             vec_rot = np.cross(np.stack((cells["x"],
                                          cells["y"],
                                          cells["z"])).T,
-                               np.stack((cells["var1"],
-                                         cells["var2"],
-                                         cells["var3"])).T)
-                                             
+                               np.stack((cells["vx"],
+                                         cells["vy"],
+                                         cells["vz"])).T)
+
             Lns.append((vec_rot.T * (cells["dx"]**3 * cells["var0"])).sum(axis=1))
         return bins, Lns

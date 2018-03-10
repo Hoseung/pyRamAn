@@ -43,9 +43,9 @@ def get_cell(allcell, kdtree, gg, info):
         gg.cell["x"] = (gg.cell["x"]-gg.center_code[0])*info.boxtokpc
         gg.cell["y"] = (gg.cell["y"]-gg.center_code[1])*info.boxtokpc
         gg.cell["z"] = (gg.cell["z"]-gg.center_code[2])*info.boxtokpc
-        gg.cell["var1"] = gg.cell["var1"]*info.kms
-        gg.cell["var2"] = gg.cell["var2"]*info.kms
-        gg.cell["var3"] = gg.cell["var3"]*info.kms
+        gg.cell["vx"] = gg.cell["vx"]*info.kms
+        gg.cell["vy"] = gg.cell["vy"]*info.kms
+        gg.cell["vz"] = gg.cell["vz"]*info.kms
         gg.cell["dx"] *= info.boxtokpc
 
 
@@ -76,7 +76,7 @@ def do_work(sub_sample, nout, i_subsample,
     from load.sim import Sim
     from galaxymodule import vmax_sig
     import pickle
-    import galaxymodule.quick_mock as qmc     
+    import galaxymodule.quick_mock as qmc
     from galaxymodule import gal_properties
     import time
     import os
@@ -105,7 +105,7 @@ def do_work(sub_sample, nout, i_subsample,
                              save_result = True,
                              galaxy_plot_dir='./')
 
-    
+
     sfr_params = dict(hist_dt=0.1,
                       hist_tmin=0,
                       hist_tmax=None,
@@ -206,10 +206,10 @@ def do_work(sub_sample, nout, i_subsample,
             if gcat_this["level"] ==1234:
                 gg.cell = pickle.load(open(fn_cell, "rb"))
                 # Temporary fix for early CELLS
-                if gg.cell["var1"].ptp() < 10:
-                    gg.cell["var1"] = gg.cell["var1"]*info.kms
-                    gg.cell["var2"] = gg.cell["var2"]*info.kms
-                    gg.cell["var3"] = gg.cell["var3"]*info.kms
+                if gg.cell["vx"].ptp() < 10:
+                    gg.cell["vx"] = gg.cell["vx"]*info.kms
+                    gg.cell["vy"] = gg.cell["vy"]*info.kms
+                    gg.cell["vz"] = gg.cell["vz"]*info.kms
 
                 print("Load cell")
             else:
@@ -228,7 +228,7 @@ def do_work(sub_sample, nout, i_subsample,
 
         # Now stars and cells are ready. Correct metallicity
         # No, I don't need cell metallicity
-        #if do_cell: 
+        #if do_cell:
         #    gg.cell["var5"] *=4.08 - 0.21*s.info.zred - 0.11*s.info.zred**2
 
         gg.star["metal"] *=4.08 - 0.21*s.info.zred - 0.11*s.info.zred**2
@@ -294,7 +294,7 @@ def do_work(sub_sample, nout, i_subsample,
             axs[1,0].set_yticks(np.linspace(0,40,5))
             yticks = ["{:.1f}".format(y) for y in np.linspace(-gg.meta.rgal, gg.meta.rgal, num=5)]
             axs[1,0].set_yticklabels(yticks)
-            
+
             axs[0,0].set_xlabel(r"R/R$_{eff}$")
             axs[0,1].set_xlabel(r"R/R$_{eff}$")
             axs[1,0].set_xlabel(r"R/R$_{eff}$")
@@ -311,16 +311,16 @@ def do_work(sub_sample, nout, i_subsample,
             plt.tight_layout()
             plt.savefig(out_dir + "lam_map_{}_{}.png".format(nout, gg.meta.id), dpi=200)
             plt.close()
-        
+
         # Calculate Vmax, Sig
         # get_vmax_sig uses vmap and sigmap from get_vmap_sigmap.
         # So if the maps were luminosity weighted, that also applies to the vmax and sig.
         vmax_sig.get_vmax_sig(gg, gg.meta.vsig_results, make_plot=False, out_dir=out_dir)
 
         # B/T?
-        # Could be done after 
+        # Could be done after
         if False:
-            gal.reorient() 
+            gal.reorient()
             gal.cal_b2t(ptype='star', disk_criterion="Scannapieco2009",bound_only=False)
             # once again with edge-on?
             gg.meta.vsig_results_edge={"Vmax":None, "sigma":None, "V_sig":None}

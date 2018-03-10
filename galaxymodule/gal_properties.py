@@ -112,9 +112,9 @@ def get_gas_properties(gg, info):
     """
     vrho = "var0"
     vdx = "dx"
-    vvx = "var1"
-    vvy = "var2"
-    vvz = "var3"
+    vvx = "vx"
+    vvy = "vy"
+    vvz = "vz"
     msun = 1.989e33
 
     # total gas mass before extracting cold gas.
@@ -153,7 +153,7 @@ def get_sfr_all(gg, sfr_dts=0.1,
                              "sfr_dts":None,
                              "sfrs":None,
                              "area":None}
- 
+
     gg.meta.sfr_results["sfr_dts"]=sfr_dts
     gg.meta.sfr_results["sfrs"]=sfrs
     gg.meta.sfr_results["area"]=area
