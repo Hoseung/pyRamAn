@@ -145,11 +145,6 @@ subroutine count_part(ndm_actual, nstar_actual, nsink_actual, repository, xmin, 
   do k=1,ncpu_read
      icpu=cpu_list(k)
      call title(icpu,ncharcpu)
-<<<<<<< Updated upstream
-=======
-	 !write(ncharcpu,'(I5.5)')icpu
-     !write(*,*)"AAA", ncharcpu, icpu, k
->>>>>>> Stashed changes
 
      nomfich=TRIM(repository)//'/part_'//TRIM(nchar)//'.out'//TRIM(ncharcpu)
      open(unit=1,file=nomfich,status='old',form='unformatted')

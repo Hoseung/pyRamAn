@@ -13,10 +13,7 @@ import struct
 class HaloMeta():
     """
     HaloMeta class.
-
-
     all except halofinder output.
-
 
     Attributes
     ----------
@@ -268,10 +265,16 @@ class Halo(HaloMeta):
                 offset = load_a_halo(brick_data, offset, self.data[i], is_gal=self.is_gal, double=double)
             f.close()
         else:
+            from utils.io_module import read_fortran
+            import rd_hal
+
             self.nbodies = read_fortran(f, np.dtype('i4'), 1)[0]
             f.close()
             #self.nbodies = rd_halo.read_nbodies(fn.encode())
-            temp = rd_halo.read_file(fn.encode(), self.nbodies, int(self.is_gal))# as a byte str.
+            if double:
+                temp = rd_hal.read_file_double(fn.encode(), self.nbodies, int(self.is_gal))# as a byte str.
+            else:
+                temp = rd_hal.read_file(fn.encode(), self.nbodies, int(self.is_gal))# as a byte str.
 
             allID, __, self.halnum, self.subnum,\
                 self.massp, self.aexp, self.omegat, self.age = temp[0:8]

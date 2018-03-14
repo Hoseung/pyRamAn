@@ -25,6 +25,7 @@ subroutine count_tree(fn, n_halos_all, flist_index, slist_index, nsteps, big_run
     do i=1,nsteps
         nhals_now=nb_of_halos(i)+nb_of_subhalos(i)
         do j=1,nhals_now
+
             read(1)!id_tmp!i_arr(idx,2) !id!id
             read(1)!i_arr(idx,3) !bushID
             read(1)!i_arr(idx,4) !st
@@ -82,10 +83,10 @@ subroutine load_tree(fn, fatherID, fatherIDx, sonID, fatherMass, &
     ! +1 so that in python the array content start from index 1.
     integer, dimension(1:n_all_fathers+1), INTENT(OUT)::fatherID, fatherIDx
     integer, dimension(1:n_all_sons), INTENT(OUT)::sonID
-    real(KIND=4), dimension(1:n_all_fathers), INTENT(OUT) ::fatherMass
+    real(KIND=8), dimension(1:n_all_fathers), INTENT(OUT) ::fatherMass
     integer(KIND=4), dimension(1:n_halos_all,1:15), INTENT(OUT) ::i_arr
-    real(KIND=4), dimension(1:n_halos_all,1:25), INTENT(OUT) ::f_arr
-    real(KIND=4), dimension(1:nsteps), INTENT(OUT) ::aexp_arr, omega_t_arr, age_univ_arr
+    real(KIND=8), dimension(1:n_halos_all,1:25), INTENT(OUT) ::f_arr
+    real(KIND=8), dimension(1:nsteps), INTENT(OUT) ::aexp_arr, omega_t_arr, age_univ_arr
 
     integer::n_fathers_max
 
@@ -165,7 +166,7 @@ subroutine load_tree(fn, fatherID, fatherIDx, sonID, fatherMass, &
             read(1)f_arr(idx,20:23) ! virial
             read(1)f_arr(idx,24:25) ! rho
             if (.not. big_run) then
-                read(1)!i_arr(idx,12) ! np
+                read(1)i_arr(idx,12) ! np
             endif
             idx = idx +1
         enddo

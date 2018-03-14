@@ -17,18 +17,19 @@ def get_vmax_sig(gal,
                  vsig_results,
                  make_plot=False,
                  nreff=2.0,
+                 img_size = 40,
+                 n_pseudo = 30,
+                 npix_per_reff = 5,
                  out_dir="./"):
 
     # get points near the major axis line
-    n_pseudo = 30
-    img_size = 40
-    npix_per_reff = 5
+
 
     if not hasattr(gal.meta, "mge_result_list"):
         lambdas = cal_lambda_r_eps(gal, save_result=False, n_pseudo=n_pseudo,
                                    npix_per_reff=npix_per_reff)
 
-    
+
     if hasattr(gal, "vmap_v"):
         v_good = gal.vmap_v
         xinds = gal.xNode

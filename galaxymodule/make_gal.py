@@ -1,4 +1,5 @@
 import numpy as np
+from utils.sampling import Region
 
 def mk_gal(gal,
             save=False,
@@ -134,7 +135,7 @@ def mk_gal(gal,
 
     dd = (np.square(star['x']) +
           np.square(star['y']) +
-          np.square(star['z'])) 
+          np.square(star['z']))
 
     if method_cov=="close_member":
         i_close = np.argsort(dd)[:int(len(star))] # half close members
@@ -187,11 +188,11 @@ def mk_gal(gal,
     rgal_tmp = gal.meta.Rgal_to_reff *gal.meta.reff
 
     #print(".........", gal.star['m'][100:120], gal.mstar)
-    import utils.sampling as smp
-    gal.region = smp.set_region(xc=gal.meta.xc,
-                                yc=gal.meta.yc,
-                                zc=gal.meta.zc,
-                                radius = gal.meta.rgal)
+
+    gal.region = Region(xc=gal.meta.xc,
+                        yc=gal.meta.yc,
+                        zc=gal.meta.zc,
+                        radius = gal.meta.rgal)
 
     if gal.debug:
         print('[galaxy.Galaxy.mk_gal] meta.v[x,y,z]c',

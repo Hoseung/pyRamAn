@@ -6,11 +6,12 @@ class Simplemock():
     Example
     >>> from general import defaults
     >>> import quick_mock
+    >>> import galaxymodule
     >>> dfl = defaults.Default()
     >>> nout = 312#782 # 312
     >>> s = load.sim.Sim(nout=nout)
     >>> gcat = tree.halomodule.Halo(nout=nout, is_gal=True)
-    >>> gg = load.rd_GM.Gal(nout, catalog=gcat.data[21].copy(), info=s.info)
+    >>> gg = galaxymodule.rd_GM.Gal(nout, catalog=gcat.data[21].copy(), info=s.info)
     >>> gg.debug=False
     >>> make_gal.mk_gal(gg)
     >>> from galaxymodule import quick_mock as qmc
