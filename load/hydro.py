@@ -153,15 +153,15 @@ class Hydro(Simbase):
         if verbose: print('[hydro.amr2cell] >>> working resolution (lmax) =', lmax)
 
         if ranges is not None: self.set_ranges(ranges=ranges)
-        print("[hydro.amr2cell], self.cpus   - 1", self.cpus)
+        #print("[hydro.amr2cell], self.cpus   - 1", self.cpus)
         # Set ranges
-        print("[hydro.amr2cell], self.ranges - 1", self.ranges)
+        #print("[hydro.amr2cell], self.ranges - 1", self.ranges)
         xmi, xma = self.ranges[0]
         ymi, yma = self.ranges[1]
         zmi, zma = self.ranges[2]
-        print("[hydro.amr2cell], self.ranges[0]", self.ranges[0])
-        print("[hydro.amr2cell], self.ranges[1]", self.ranges[1])
-        print("[hydro.amr2cell], self.ranges[2]", self.ranges[2])
+        #print("[hydro.amr2cell], self.ranges[0]", self.ranges[0])
+        #print("[hydro.amr2cell], self.ranges[1]", self.ranges[1])
+        #print("[hydro.amr2cell], self.ranges[2]", self.ranges[2])
 
         work_dir = self.info.base + '/' + self.out_dir + 'output_' + str(self.info.nout).zfill(5)
         if verbose:

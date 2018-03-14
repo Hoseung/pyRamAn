@@ -192,7 +192,7 @@ class Tree():
         print("BIG_RUN", BIG_RUN)
         self.n_all_halos, self.n_all_fathers, self.n_all_sons, self.nsteps = cnt_tree.count_tree(self.fn, int(BIG_RUN))
 
-        #print(self.n_all_halos, self.n_all_fathers, self.n_all_sons, self.nsteps)
+        print(self.n_all_halos, self.n_all_fathers, self.n_all_sons, self.nsteps)
         self.fatherID, self.fatherIDx, self.sonIDx, \
         self.fatherMass, i_arr, f_arr, \
         self.aexps, self.omega_ts, self.age_univs = \

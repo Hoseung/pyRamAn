@@ -12,6 +12,8 @@ def add_main(md, data, ind):
         md[ind]["eps"] = data.mge_result_list[0]["eps"]
     try:
         md[ind]["lambda_r"] = data.lambda_result_list[0][4]
+        md[ind]["lambda_r2"] = data.lambda_result_list[0][9]
+        md[ind]["lambda_r3"] = data.lambda_result_list[0][14]
     except:
         md[ind]["lambda_r"] = data.lambda_r
 
