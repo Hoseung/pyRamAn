@@ -77,12 +77,12 @@ def part2den(part, info, region=None, proj='z', npix=800, ptype=None,
                                 zr=[part['z'].min() + offset[2], part['z'].max() + offset[2]])
         ind_ok = np.arange(len(part['x']))
     else:
-        ind_ok = np.where((part["x"] > region["xr"][0] - offset[0])
-                        & (part["x"] < region["xr"][1] - offset[0])
-                        & (part["y"] > region["yr"][0] - offset[1])
-                        & (part["y"] < region["yr"][1] - offset[1])
-                        & (part["z"] > region["zr"][0] - offset[2])
-                        & (part["z"] < region["zr"][1] - offset[2]))
+        ind_ok = np.where((part["x"] > region.xr[0] - offset[0])
+                        & (part["x"] < region.xr[1] - offset[0])
+                        & (part["y"] > region.yr[0] - offset[1])
+                        & (part["y"] < region.yr[1] - offset[1])
+                        & (part["z"] > region.zr[0] - offset[2])
+                        & (part["z"] < region.zr[1] - offset[2]))
 
     if len(ind_ok) > 0:
         img = img_obj.MapImg(info=info, proj=proj, npix=npix, ptype=ptype)
@@ -137,13 +137,13 @@ def den2d(x, y, z, m, npix, region=None, proj='z',
 
 #   range = in data unit.   # prange = in physical unit
     if region is not None:
-        lbox = 2.0 * region['radius']
+        lbox = 2.0 * region.radius
 
         buffer = 0.0001 * lbox
 
-        ind_ok = np.where((x > region["xr"][0] + buffer) & (x < region["xr"][1] - buffer) &
-                          (y > region["yr"][0] + buffer) & (y < region["yr"][1] - buffer) &
-                          (z > region["zr"][0] + buffer) & (z < region["zr"][1] - buffer))[0]
+        ind_ok = np.where((x > region.xr[0] + buffer) & (x < region.xr[1] - buffer) &
+                          (y > region.yr[0] + buffer) & (y < region.yr[1] - buffer) &
+                          (z > region.zr[0] + buffer) & (z < region.zr[1] - buffer))[0]
 
         print(len(ind_ok))
         if len(ind_ok) < 10:
@@ -328,6 +328,11 @@ def pp_halo(h, npix, rscale=1.0, region=None, ind=None, ax=None,
     1. Region does NOT modify x,y labels.
        better to modify labels outside.
     2. Unless only halos are being plotted, it is better to pass a region.
+
+    TODO
+    ----
+    Convert length unit into a specific unit so that halos and trees can be overplotted.
+    But, what about tree being dependant on the expansion factor? 
     """
 
     import matplotlib.pyplot as plt
@@ -343,7 +348,7 @@ def pp_halo(h, npix, rscale=1.0, region=None, ind=None, ax=None,
             self.yrange=None
             pass
 
-	# h can be either a halo.data or just a halo.
+	# h can be either a halo.data, a halo instance, or a tree array.
     try:
         try:
             h.data['x']
@@ -353,7 +358,7 @@ def pp_halo(h, npix, rscale=1.0, region=None, ind=None, ax=None,
     except:
         hd = h
 
-    # both x and xc is fine.
+    # both x and xc are fine.
     posname=0
     try:
         hd["x"]
@@ -384,6 +389,8 @@ def pp_halo(h, npix, rscale=1.0, region=None, ind=None, ax=None,
             # no new region is explicitly given, use the region
             # from the ax IF the projection is the same.
             region = ax.pp_hal_meta.region
+        else:
+            print("ax has region, but a new region is given")
 
     if ind is None:
         if region is None:
@@ -401,29 +408,26 @@ def pp_halo(h, npix, rscale=1.0, region=None, ind=None, ax=None,
             zspan= zmax - zmin
 
         else:
-            #print("Region is NOT none")
-
             # If reion is given, only plot halos inside the region.
             # The size of region is retained.
             # image area does not shrink to fit only valid halos.
-
-            ind = np.where( (hd[xn] > region[xrn][0]) &
-                            (hd[xn] < region[xrn][1]) &
-                            (hd[yn] > region[yrn][0]) &
-                            (hd[yn] < region[yrn][1]) &
-                            (hd[zn] > region[zrn][0]) &
-                            (hd[zn] < region[zrn][1]))[0]
-
+            ind = np.where( (hd[xn] > getattr(region,xrn)[0]) &
+                            (hd[xn] < getattr(region,xrn)[1]) &
+                            (hd[yn] > getattr(region,yrn)[0]) &
+                            (hd[yn] < getattr(region,yrn)[1]) &
+                            (hd[zn] > getattr(region,zrn)[0]) &
+                            (hd[zn] < getattr(region,zrn)[1]))[0]
+            #print("number of new halos to plot", ind)
             # Make iterable
             if ind is 0:
                 hd = np.array([hd])
 
-            xmin = region[xrn][0]
-            ymin = region[yrn][0]
-            zmin = region[zrn][0]
-            xspan = np.ptp(region[xrn])
-            yspan = np.ptp(region[yrn])
-            zspan = np.ptp(region[zrn])
+            xmin = getattr(region,xrn)[0]
+            ymin = getattr(region,yrn)[0]
+            zmin = getattr(region,zrn)[0]
+            xspan = np.ptp(getattr(region,xrn))
+            yspan = np.ptp(getattr(region,yrn))
+            zspan = np.ptp(getattr(region,zrn))
 
     else:
         # if ind is a boolean array, convert it to an index array.
@@ -445,26 +449,25 @@ def pp_halo(h, npix, rscale=1.0, region=None, ind=None, ax=None,
             zspan= zmax - zmin
 
         else:
-            xmin = region[xrn][0]
-            ymin = region[yrn][0]
-            zmin = region[zrn][0]
-            xspan = np.ptp(region[xrn])
-            yspan = np.ptp(region[yrn])
-            zspan = np.ptp(region[zrn])
+            xmin = getattr(region,xrn)[0]
+            ymin = getattr(region,yrn)[0]
+            zmin = getattr(region,zrn)[0]
+            xspan = np.ptp(getattr(region,xrn))
+            yspan = np.ptp(getattr(region,yrn))
+            zspan = np.ptp(getattr(region,zrn))
 
 
     if ax.pp_hal_meta.region is None:
         import utils.sampling as smp
         # Keep a physical region so that I can plot multiple set of halos
         # in a ax consistently.
-        ax.pp_hal_meta.region = smp.set_region(**{xrn:(xmin, xmin+xspan),
-                                                  yrn:(ymin, ymin+yspan),
-                                                  zrn:(zmin, zmin+zspan)})
+        ax.pp_hal_meta.region = smp.Region(**{xrn:(xmin, xmin+xspan),
+                                              yrn:(ymin, ymin+yspan),
+                                              zrn:(zmin, zmin+zspan)})
 
     x = (hd[ind][xn] - xmin) / xspan * npix
     y = (hd[ind][yn] - ymin) / yspan * npix
     r =  hd[radius][ind]/xspan * npix * rscale # Assuing xspan == yspan
-
 
     if verbose:
         print("# of halos to plot:", len(ind))
@@ -473,7 +476,6 @@ def pp_halo(h, npix, rscale=1.0, region=None, ind=None, ax=None,
         print(r)
         print(xmin, ymin, xspan, yspan, npix, rscale)
 
-    print("Changed")
     if color_field is not None:
         #colors = hd[color_field][ind]
         # normalize!
@@ -739,8 +741,8 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
 
     if (xmin is None) & (xmax is None) & (ymin is None) & (ymax is None):
         if region is not None:
-            xmi0, xma0 = region[dim1r][0], region[dim1r][1]
-            ymi0, yma0 = region[dim2r][0], region[dim2r][1]
+            xmi0, xma0 = getattr(egion,dim1r)#[0], region[dim1r][1]
+            ymi0, yma0 = getattr(egion,dim2r)#region[dim2r][0], region[dim2r][1]
         else:
             xmi0, xma0, ymi0, yma0 = min(x), max(x), min(y), max(y)
     if xmi0 is None:

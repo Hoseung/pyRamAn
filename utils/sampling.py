@@ -194,11 +194,10 @@ class Region():
                 radius = 0.5
             # calculate the rest
             # No need to update others with radius.
-            self._radius = radius
+            self.radius = radius
             self.xc = xc
             self.yc = yc
             self.zc = zc
-
         elif xrans:
             self.ranges = region["ranges"]
 
