@@ -39,6 +39,7 @@ class Tree():
         self.age_univs = None
         self.nsteps = None
         self.info = info
+        self.verbose=False
         if self.info is None and load_info:
             self.load_info()
 
@@ -54,29 +55,28 @@ class Tree():
                 self.cal_nnza()
                 self.nnza = Nnza(fname=self.fn.split("tree.dat")[0]+"nout_nstep_zred_aexp.txt")
             except:
-                print("Can not load nnza")
+                print("[warning] Can not load nnza")
 
     def load_info(self):
         from load.info import Info
         from utils import util
-        
+
         nout_fi = util.get_last_snapshot(self.wdir)
         self.info = Info(base=self.wdir,nout=nout_fi)
-    
 
     def cal_time(self, info=None):
         """
             Calculate look back time and update nnza["lbt"].
-            Assuems now = the end of tree. 
+            Assuems now = the end of tree.
             If the last step is at z=1, then lbt=0Gyr and z=0.
         """
         if not hasattr(self, "nnza"):
             print("No nnza attribute found, Can't proceed")
             return
-            
+
         if info is None:
            info = self.info
-    
+
         if info is None:
             self.load_info()
 
@@ -143,12 +143,6 @@ class Tree():
         #            return
         self.tree, self.fatherID, self.fatherIDx, self.fatherMass, self.sonIDx = np.load(self.dump_files["data"])
 
-
-        #fn = self.wdir + suffix + "tree_meta_" + ["hal","gal"][self.is_gal]
-        #if not fn.endswith(".pickle"):
-        #    fn += ".pickle"
-
-
     def set_fn(self,fn):
         self.fn = fn
 
@@ -159,8 +153,12 @@ class Tree():
         if not self.is_gal:
             dir_mid = "halo/DM/"
         fn = self.wdir + dir_mid + "tree.dat"
+
         if isfile(fn):
             self.set_fn(fn)
+        elif isfile(self.set_fn(fn = self.wdir + dir_mid.split("/")[0] + "/" + "tree.dat")):
+            self.set_fn(fn = self.wdir + dir_mid.split("/")[0] + "/" + "tree.dat")
+            print("tree.dat found in another location", self.fn)
         else:
             self.set_fn(None)
             print(fn, "is not found")
@@ -176,7 +174,7 @@ class Tree():
                 The first treebrick in the tree is usually between
                 a few to a few tens snapshot.
                 **
-                nout - nstep relation is no more that simple due to missing nouts when building trees. 
+                nout - nstep relation is no more that simple due to missing nouts when building trees.
                     Thus it is better to keep a nout-nstep-zred-aexp(-lbt) matching list, which is hagn.Nnza().
 
             BIG_RUN : logical
@@ -192,7 +190,8 @@ class Tree():
         print("BIG_RUN", BIG_RUN)
         self.n_all_halos, self.n_all_fathers, self.n_all_sons, self.nsteps = cnt_tree.count_tree(self.fn, int(BIG_RUN))
 
-        print(self.n_all_halos, self.n_all_fathers, self.n_all_sons, self.nsteps)
+        if self.verbose:
+            print(self.n_all_halos, self.n_all_fathers, self.n_all_sons, self.nsteps)
         self.fatherID, self.fatherIDx, self.sonIDx, \
         self.fatherMass, i_arr, f_arr, \
         self.aexps, self.omega_ts, self.age_univs = \
@@ -201,8 +200,11 @@ class Tree():
 
         self.fatherIDx -=1
         # zred is omitted to reduce memory usage
-        dtype_tree = [('nstep', '<i4'), ('id', '<i4'), ('m', '<f8'),
-                      ('macc', '<f8'), ('nsub', '<i4'),
+        dtype_tree = [('nstep', '<i4'),
+                      ('id', '<i4'),
+                      ('m', '<f8'),
+                      ('macc', '<f8'),
+                      ('nsub', '<i4'),
                       ('xp', '<f8', (3,)),
                       ('vp', '<f8', (3,)),
                       ('lp', '<f8', (3,)),
@@ -226,6 +228,28 @@ class Tree():
                       ('s_ind', '<i4')]
         if not BIG_RUN:
             dtype_tree.append(("np", '<i4'))
+
+        if True:
+            """
+            This allows multiple ways of accessing fields.
+
+            tree["x"] is equivalent with tree["pos"][:,0]
+            tree["vx"] is equivalent with tree["vel"][:,0]
+
+            Doing this requires an optional parameter "offset" to be given,
+            which is calculated as offset+ad[3].
+            """
+            add_dtype = [("x", "f8", 1, 0, "xp"),
+                         ("y", "f8", 1, 8, "xp"),
+                         ("z", "f8", 1, 16, "xp"),
+                         ("vx", "f8", 1, 0, "vp"),
+                         ("vy", "f8", 1, 8, "vp"),
+                         ("vz", "f8", 1, 16, "vp")]
+            dt = np.dtype(dtype_tree)
+            dtype_tree =dict(dt.fields)
+            for ad in add_dtype:
+                offset = dt.fields.get(ad[4])[1]
+                dtype_tree.update({ad[0]: ((ad[1], ad[2]), offset+ad[3])})
 
         tt = np.recarray(self.n_all_halos +1, dtype = dtype_tree)
         self.tree = tt
@@ -528,7 +552,7 @@ class Tree():
             #return
         f_tree_input = fdir + "input_TreeMaker.dat"
         if not os.path.isfile(f_tree_input):
-            print("{} doest not exsit".format(f_tree_input))
+            print("[warning] {} doest not exist".format(f_tree_input))
             #return
 
         with open(f_tree_input, "r") as f:
@@ -607,7 +631,7 @@ def check_tree_complete(tree, nout_fi, nout_ini, halo_list):
 def check_tree_fig(tt, idx):
     import matplotlib.pyplot as plt
     aexp = tt.nnza.nnza["aexp"]
-    atree = extract_direct_full_tree(tt,idx)[0] 
+    atree = extract_direct_full_tree(tt,idx)[0]
     fig, axs = plt.subplots(2,2)
     axs=axs.ravel()
 
