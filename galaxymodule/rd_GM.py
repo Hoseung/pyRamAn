@@ -595,14 +595,16 @@ def rd_gm_dm_file(fname, long=True):
                              ('npart', 'i4')])
 
     # variable type
-    dtype_data=[('x', '<f8'),
-                ('y', '<f8'),
-                ('z', '<f8'),
-                ('vx', '<f8'),
-                ('vy', '<f8'),
-                ('vz', '<f8'),
-               ('id', '<i4'),
-               ('m', '<f8')]
+    dtype_data = {'pos': (('<f8', (3,)), 0),
+                  'x': (('<f8', 1), 0),
+                  'y': (('<f8', 1), 8),
+                  'z': (('<f8', 1), 16),
+                 'id': (('<i8', 1), 24),
+                  'm': (('<f8', 1), 32),
+                'vel': (('<f8', (3,)), 40),
+                 'vx': (('<f8', 1), 40),
+                 'vy': (('<f8', 1), 48),
+                 'vz': (('<f8', 1), 56)}
 
     with open(fname, "rb") as f:
         header = read_header(f, dtype=dtype_header)
@@ -636,19 +638,23 @@ def rd_gm_star_file(fname, metal=True, nchem=0, long=True):
                              ('npart', 'i4')])
 
     # variable type
-    dtype_data=[('x', '<f8'),
-                ('y', '<f8'),
-                ('z', '<f8'),
-                ('vx', '<f8'),
-                ('vy', '<f8'),
-                ('vz', '<f8'),
-                ('id', '<i4'),
-                ('m', '<f8'),
-                ('time', '<f8')]
+    dtype_data = {'pos': (('<f8', (3,)), 0),
+                    'x': (('<f8', 1), 0),
+                    'y': (('<f8', 1), 8),
+                    'z': (('<f8', 1), 16),
+                   'id': (('<i8', 1), 24),
+                    'm': (('<f8', 1), 32),
+                  'vel': (('<f8', (3,)), 40),
+                   'vx': (('<f8', 1), 40),
+                   'vy': (('<f8', 1), 48),
+                   'vz': (('<f8', 1), 56),
+                 'time': (('<f8', 1), 72)}
+    d_off = 72
     if metal:
-        dtype_data.append(('metal', '<f8'))
+        dtype_data.update({'metal': (('<f8', 1), d_off+8)})
+        d_off +=8
         if nchem > 0:
-            dtype_data.append(('cp', '<f8', (nchem,)))
+            dtype_data.update({'cp': (('<f8', (nchem,)), d_off+8)})
 
     with open(fname, "rb") as f:
         header = read_header(f, dtype=dtype_header)
@@ -693,7 +699,7 @@ def rd_cell(nout, idgal, wdir="./", metal=True, nchem=0,
             return rd_gm_cell_file(nout, idgal, fname, metal=metal, nchem=nchem)
 
 
-def rd_gm_cell_file(nout, idgal, fname, metal=True, nchem=0):
+def rd_gm_cell_file(nout, idgal, fname, metal=True, cpu=False, ref=False, nchem=0):
     """
     Read GalaxyMaker format cell dump data into Recarray.
     No unit conversion performed.
@@ -702,6 +708,31 @@ def rd_gm_cell_file(nout, idgal, fname, metal=True, nchem=0):
     -----
     Cell may have 'cpu' field. take care of this.
     """
+    dtype_cell = {'pos': (('<f8', (3,)), 0),
+                    'x': (('<f8', 1), 0),
+                    'y': (('<f8', 1), 8),
+                    'z': (('<f8', 1), 16),
+                   'dx': (('<f8', 1), 24),
+                 'var0': (('<f8', 1), 32),
+                  'rho': (('<f8', 1), 32),
+                  'vel': (('<f8', (3,)), 40),
+                   'vx': (('<f8', 1), 40),
+                   'vy': (('<f8', 1), 48),
+                   'vz': (('<f8', 1), 56),
+                 'var1': (('<f8', 1), 40),
+                 'var2': (('<f8', 1), 48),
+                 'var3': (('<f8', 1), 56),
+                 'var4': (('<f8', 1), 64),
+                 'temp': (('<f8', 1), 64),
+                 'var5': (('<f8', 1), 72),
+                'metal': (('<f8', 1), 72)}
+    dt_off = 72
+    if cpu:
+        dtype_cell.update({'cpu': (('<f8',1),dt_off+8)})
+        dt_off += 8
+    if ref:
+        dtype_cell.update({'ref': (('bool',1),dt_off+8)})
+
     import  utils.io_module as io
     with open(fname, 'rb') as f:
         nout0 = io.read_fortran(f, dtype=np.int32, check=False)[0]
@@ -710,10 +741,8 @@ def rd_gm_cell_file(nout, idgal, fname, metal=True, nchem=0):
 #        assert idgal == gid, "given idgal ({}) and loaded idgal ({}) do not match".format(idgal, gid)
 
         ncell = io.read_fortran(f, dtype=np.int32, check=False)[0]
-        cell = np.zeros(ncell, dtype=[('x', '<f8'),('y', '<f8'),('z', '<f8'),
-                                     ('dx', '<f8'),('var0', '<f8'),('var1', '<f8'),
-                                     ('var2', '<f8'),('var3', '<f8'),('var4', '<f8'),
-                                     ('var5', '<f8')])
+
+        cell = np.zeros(ncell, dtype=dtype_cell)
         cell['x']  = io.read_fortran(f, dtype=np.float64, n=ncell)
         cell['y']  = io.read_fortran(f, dtype=np.float64, n=ncell)
         cell['z']  = io.read_fortran(f, dtype=np.float64, n=ncell)
