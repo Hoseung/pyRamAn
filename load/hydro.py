@@ -181,13 +181,33 @@ class Hydro(Simbase):
             cell = a2c.a2c_load(work_dir, xmi, xma, ymi, yma, zmi, zma,\
                                 lmax, out[0], nvarh+2, self.cpus)
             # nvarh + 2 because fortran counts from 1, and nvarh=5 means 0,1,2,3,4,5.
-            dtype_cell = [('x', '<f8'), ('y', '<f8'), ('z', '<f8'), ('dx', '<f8')]
+            #dtype_cell = [('x', '<f8'), ('y', '<f8'), ('z', '<f8'), ('dx', '<f8')]
+            dtype_cell = {'pos': (('<f8', (3,)), 0),
+                            'x': (('<f8', 1), 0),
+                            'y': (('<f8', 1), 8),
+                            'z': (('<f8', 1), 16),
+                           'dx': (('<f8', 1), 24),
+                         'var0': (('<f8', 1), 32),
+                          'rho': (('<f8', 1), 32),
+                          'vel': (('<f8', (3,)), 40),
+                           'vx': (('<f8', 1), 40),
+                           'vy': (('<f8', 1), 48),
+                           'vz': (('<f8', 1), 56),
+                         'var1': (('<f8', 1), 40),
+                         'var2': (('<f8', 1), 48),
+                         'var3': (('<f8', 1), 56),
+                         'var4': (('<f8', 1), 64),
+                         'temp': (('<f8', 1), 64),
+                         'var5': (('<f8', 1), 72),
+                        'metal': (('<f8', 1), 72)}
+            dt_off = 72
             if cpu:
-                dtype_cell.append(('cpu', '<f8'))
+                dtype_cell.update({'cpu': (('<f8',1),dt_off+8)})
+                dt_off += 8
             if ref:
-                dtype_cell.append(('ref', 'bool'))
-            for i in range(nvarh):
-                dtype_cell.append( ('var' + str(i), '<f8'))
+                dtype_cell.update({'ref': (('bool',1),dt_off+8)})
+            #for i in range(nvarh):
+            #    dtype_cell.append( ('var' + str(i), '<f8'))
 
         self.cell = np.zeros(len(cell[1]), dtype=dtype_cell)
         self.cell['x'] = cell[0][:,0]
@@ -406,9 +426,27 @@ class Hydro(Simbase):
             famr.close()
             fhydro.close()
 
-        dtype_cell = [('x', '<f8'), ('y', '<f8'), ('z', '<f8'),('dx', '<f8'),
-                      ('var0', '<f8'), ('var1', '<f8'), ('var2', '<f8'),
-                        ('var3', '<f8'), ('var4', '<f8'), ('var5', '<f8')]
+        dtype_cell = {'pos': (('<f8', (3,)), 0),
+                        'x': (('<f8', 1), 0),
+                        'y': (('<f8', 1), 8),
+                        'z': (('<f8', 1), 16),
+                       'dx': (('<f8', 1), 24),
+                     'var0': (('<f8', 1), 32),
+                      'rho': (('<f8', 1), 32),
+                      'vel': (('<f8', (3,)), 40),
+                       'vx': (('<f8', 1), 40),
+                       'vy': (('<f8', 1), 48),
+                       'vz': (('<f8', 1), 56),
+                     'var1': (('<f8', 1), 40),
+                     'var2': (('<f8', 1), 48),
+                     'var3': (('<f8', 1), 56),
+                     'var4': (('<f8', 1), 64),
+                     'temp': (('<f8', 1), 64),
+                     'var5': (('<f8', 1), 72),
+                    'metal': (('<f8', 1), 72)}
+        #[('x', '<f8'), ('y', '<f8'), ('z', '<f8'),('dx', '<f8'),
+        #              ('var0', '<f8'), ('var1', '<f8'), ('var2', '<f8'),
+        #                ('var3', '<f8'), ('var4', '<f8'), ('var5', '<f8')]
 
         self.cell = np.rec.fromarrays([xt[:nend], yt[:nend], zt[:nend], dxt[:nend],
                                        vart[0][:nend], vart[1][:nend], vart[2][:nend],
