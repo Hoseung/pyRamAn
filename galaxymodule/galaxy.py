@@ -96,7 +96,6 @@ class Meta():
                 print(name, ":", q)
 
 
-
 class Galaxy():
     """
         Maybe.. this class is growing too heavy...?
@@ -105,7 +104,6 @@ class Galaxy():
     def __init__(self, info=None, halo=None,
                  catalog=None, convert_cat=True):
         self.meta = Meta()
-        #if info is not None:
         self.set_info(info)
         self.set_catalog(np.copy(catalog), convert_cat)
         self._has_star=False
@@ -632,7 +630,7 @@ class Galaxy():
 
         Notes
         -----
-            By default, stellar particles by default.
+            Use stellar particles by default.
 
         Examples
         --------
@@ -644,7 +642,7 @@ class Galaxy():
         ----------
 
         """
-        if not hasattr(self, 'nvec'):
+        if not hasattr(self.meta, 'nvec'):
             """
                 fix : nvec w.r.t what?, and what is re-oriented?
             """
@@ -667,19 +665,8 @@ class Galaxy():
         for target in pops:
             pop = getattr(self, target)
             RM = self.rotation_matrix
-            new_x = np.matmul(RM, np.vstack((pop['x'], pop['y'], pop['z'])))
-            new_v = np.matmul(RM, np.vstack((pop['vx'], pop['vy'], pop['vz'])))
-
-            pop['x'] = new_x[0,:]
-            pop['y'] = new_x[1,:]
-            pop['z'] = new_x[2,:]
-
-            pop['vx'] = new_v[0,:]
-            pop['vy'] = new_v[1,:]
-            pop['vz'] = new_v[2,:]
-
-#            print("Error in reorient, couldn't update pos and vel")
-#            continue
+            pop["pos"] = np.matmul(RM, pop["pos"])# (pop['x'], pop['y'], pop['z'])))
+            pop["vel"] = np.matmul(RM, pop["vel"])#, pop['vy'], pop['vz'])))
 
     def cal_norm_vec(self, pop_nvec=['star'], dest=[0., 0., 1], bound_percentile=50):
         """
@@ -716,51 +703,32 @@ class Galaxy():
             #nelements += len(pop['x'])
 
         if bound_percentile < 100:
-            vx = self.star['vx']
-            vy = self.star['vy']
-            vz = self.star['vz']
-            vdiff = np.sqrt(np.square(vx) + np.square(vy) + np.square(vz))
+            vdiff = np.sqrt(np.square(self.star["vel"]))
 
             i_bound_50 = np.argsort(vdiff)[:max([1, 0.01 * bound_percentile]) * len(vdiff)]
 
             #pop = getattr(self, target)
             #nn = len(pop['x'])
-            x = self.star['x'][i_bound_50]
-            y = self.star['y'][i_bound_50]
-            z = self.star['z'][i_bound_50]
-            vx = vx[i_bound_50]
-            vy = vy[i_bound_50]
-            vz = vz[i_bound_50]
+            pos = self.star['pos'][i_bound_50]
+            vel = self.star["vel"][i_bound_50]
 
         else:
             """
                 all species are taken into account.
             """
             nelements = sum(self.bound_ptcl)
-            x = np.zeros(nelements)
-            y = np.zeros(nelements)
-            z = np.zeros(nelements)
-            vx = np.zeros(nelements)
-            vy = np.zeros(nelements)
-            vz = np.zeros(nelements)
+            pos = np.zeros(nelements,3)
+            vel = np.zeros(nelements,3)
             iskip = 0
             for target in pop_nvec:
                 pop = getattr(self, target)
                 nn = len(pop['x'])
-                x[iskip:iskip + nn] = pop['x'][self.bound_ptcl]
-                y[iskip:iskip + nn] = pop['y'][self.bound_ptcl]
-                z[iskip:iskip + nn] = pop['z'][self.bound_ptcl]
-                vx[iskip:iskip + nn] = pop['vx'][self.bound_ptcl]
-                vy[iskip:iskip + nn] = pop['vy'][self.bound_ptcl]
-                vz[iskip:iskip + nn] = pop['vz'][self.bound_ptcl]
+                pos[iskip:iskip + nn] = pop['pos'][self.bound_ptcl]
+                vel[iskip:iskip + nn] = pop['vel'][self.bound_ptcl]
                 iskip += nn
 
-        lx = sum(y*vz - z*vy) # normalized; *m is omitted.
-        ly = sum(z*vx - x*vz)
-        lz = sum(x*vy - y*vx)
-        self.meta.lvec = np.array([lx, ly, lz])
-        self.meta.nvec = self.meta.lvec/np.sqrt(lx**2 + ly**2 + lz**2)
-#        self.cal_rotation_matrix(dest=dest)
+        self.meta.lvec = np.sum(np.cross(pos,vel), axis=0)
+        self.meta.nvec = self.meta.lvec/np.linalg.norm(self.meta.lvec)
         return self.meta.nvec
 
     def _get_rotation_matrix(self, axis, theta):
@@ -1115,7 +1083,7 @@ def plot_gal(self, npix=200, fn_save=None, ioff=True,
             ax.text(0.5 * len(ll), 0.8, "{:.2e}".format(self.meta.mstar) + r"$M_{\odot}$")
             ax.set_ylim(bottom=0, top=1)
             ax.set_xlabel("["+ r'$R/R_{eff}$'+"]")
- 
+
             unit = len(ll)/self.meta.rscale_lambda # number of points per 1Reff
             xticks = [0, 0.5*unit]
             reffs=[0, 0.5]
