@@ -739,12 +739,12 @@ class Galaxy():
         https://en.wikipedia.org/wiki/Euler%E2%80%93Rodrigues_formula
         """
 
-        import math
+        #import math
         axis = np.asarray(axis)
         theta = np.asarray(theta)
-        axis = axis/math.sqrt(np.dot(axis, axis))
-        a = math.cos(theta/2)
-        b, c, d = -axis*math.sin(theta/2)
+        axis = axis/np.sqrt(np.dot(axis, axis))
+        a = np.cos(theta/2)
+        b, c, d = -axis*np.sin(theta/2)
         aa, bb, cc, dd = a*a, b*b, c*c, d*d
         bc, ad, ac, ab, bd, cd = b*c, a*d, a*c, a*b, b*d, c*d
         return np.array([[aa+bb-cc-dd, 2*(bc+ad), 2*(bd-ac)],
@@ -782,9 +782,8 @@ class Galaxy():
         r_axis = np.cross(nvec, dest)
         angle = math.acos(np.dot(nvec, dest))
 
-        RM = self._get_rotation_matrix(r_axis, angle)
-        self.rotation_matrix = RM
-        return RM
+        self.rotation_matrix = self._get_rotation_matrix(r_axis, angle)
+        return self.rotation_matrix
 
     def _follow_bp(self, bp):
         """
@@ -810,15 +809,9 @@ class Galaxy():
         m_g = gas_mass(self.cell, self.info)
         m_d = self.dm['m']# * info.msun
 
-        r_s = np.sqrt(np.square(self.star['x'])
-                    + np.square(self.star['y'])
-                    + np.square(self.star['z']))
-        r_g = np.sqrt(np.square(self.cell['x'])
-                    + np.square(self.cell['y'])
-                    + np.square(self.cell['z']))
-        r_d = np.sqrt(np.square(self.dm['x'])
-                    + np.square(self.dm['y'])
-                    + np.square(self.dm['z']))
+        r_s = np.sqrt(np.sum(np.square(self.star["pos"]), axis=1))
+        r_g = np.sqrt(np.sum(np.square(self.cel["pos"]), axis=1))
+        r_d = np.sqrt(np.sum(np.square(self.dm["pos"]), axis=1))
 
         m_all = np.concatenate((m_s, m_g, m_d))
         r_all = np.concatenate((r_s, r_g, r_d))
@@ -830,11 +823,7 @@ class Galaxy():
 
         v_bound = np.sqrt(2*G*m_enc[i_star] * msun_to_kg/ (r_s * kpc_to_m)) * 1e-3
 
-        vx = self.star['vx']
-        vy = self.star['vy']
-        vz = self.star['vz']
-
-        vdiff = np.sqrt(np.square(vx) + np.square(vy) + np.square(vz))
+        vdiff = np.sqrt(np.sum(np.square(self.star["vel"]), axis=1))
 
         self.bound_ptcl = vdiff < v_bound
 
@@ -911,7 +900,6 @@ class Galaxy():
         # Calculating boundness requires total mass inside a radius.
         # -> DM, Cell are also needed.
         #part = getattr(self, ptype)
-
         m_d = self.dm['m']# * info.msun
 
         if hasattr(self, "cell"):
@@ -920,23 +908,15 @@ class Galaxy():
         else:
             m_all = np.concatenate((self.star['m'], m_d))
 
-
-        r_s = np.sqrt(np.square(self.star['x'])
-                    + np.square(self.star['y'])
-                    + np.square(self.star['z']))
+        r_s = np.sqrt(np.sum(np.square(self.star["pos"]), axis=1))
+        r_d = np.sqrt(np.sum(np.square(self.dm["pos"]), axis=1))
 
         if hasattr(self, "cell"):
-            r_g = np.sqrt(np.square(self.cell['x'])
-                    + np.square(self.cell['y'])
-                    + np.square(self.cell['z']))
-        r_d = np.sqrt(np.square(self.dm['x'])
-                    + np.square(self.dm['y'])
-                    + np.square(self.dm['z']))
-
-        if hasattr(self, "cell"):
+            r_g = np.sqrt(np.sum(np.square(self.cel["pos"]), axis=1))
             r_all = np.concatenate((r_s, r_g, r_d))
         else:
             r_all = np.concatenate((r_s, r_d))
+
         i_sorted = np.argsort(r_all)
         m_enc = np.cumsum(m_all[i_sorted])
 
@@ -983,10 +963,10 @@ class Galaxy():
             return np.histogram(ellipticity, range=[-2,2], bins=20)
 
 
-
     def cal_trivia(self):
         self.meta.mstar = sum(self.star['m'])
         self.meta.vcen = self.get_vcen()
+
 
     def save_gal_pickle(self):
         import pickle
@@ -1141,8 +1121,6 @@ def plot_gal(self, npix=200, fn_save=None, ioff=True,
                     for y in np.linspace(-self.meta.reff*self.meta.rscale_lambda,
                                          self.meta.reff*self.meta.rscale_lambda, num=5)]
         ax.set_yticklabels(yticks)
-
-#        ax.locator_params(tight=True, nbins=5)
 
     if do9plots:
 # position and velocity histograms
