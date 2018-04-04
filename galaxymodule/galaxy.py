@@ -38,7 +38,6 @@ def convert_catalog(catalog, pboxsize, unit="code"):
     Default unit = code unit.
     (tree.halomodule converts units to code units on reading catalogs)
     """
-
     catalog['x'] = (catalog['x'] -0.5) * pboxsize
     catalog['y'] = (catalog['y'] -0.5) * pboxsize
     catalog['z'] = (catalog['z'] -0.5) * pboxsize
@@ -48,12 +47,6 @@ def convert_catalog(catalog, pboxsize, unit="code"):
 
 class Meta():
     def __init__(self):
-        self.xc = 0.0
-        self.yc = 0.0
-        self.zc = 0.0
-        self.vxc = 0.0
-        self.vyc = 0.0
-        self.vzc = 0.0
         self.reff = 0.0
         self.mstar = 0.0
         self.nstar = 0
@@ -72,6 +65,64 @@ class Meta():
         self.nvec=None
         self.lvec=None
         self.debug=False
+
+    # System position
+    @property
+    def xc(self):
+        return self._xc
+    @xc.setter
+    def xc(self, val):
+        self._xc = val
+
+    @property
+    def yc(self):
+        return self._yc
+    @yc.setter
+    def yc(self, val):
+        self._yc = val
+
+    @property
+    def zc(self):
+        return self._zc
+    @zc.setter
+    def zc(self, val):
+        self._zc = val
+
+    @property
+    def pos(self):
+        return (self._xc, self._yc, self._zc)
+    @pos.setter
+    def pos(self, val):
+        self._xc, self._yc, self._zc  = val
+
+    # System Velcity
+    @property
+    def vxc(self):
+        return self._vxc
+    @vxc.setter
+    def vxc(self, val):
+        self._vxc = val
+
+    @property
+    def vyc(self):
+        return self._vyc
+    @vyc.setter
+    def vyc(self, val):
+        self._vyc = val
+
+    @property
+    def vzc(self):
+        return self._vzc
+    @vzc.setter
+    def vzc(self, val):
+        self._vzc = val
+
+    @property
+    def vel(self):
+        return (self._vxc, self._vyc, self._vzc)
+    @vel.setter
+    def vel(self, val):
+        self._vxc, self._vyc, self._vzc  = val
 
     def show_summary(self):
         """
@@ -144,16 +195,12 @@ class Galaxy():
             convert_catalog(self.gcat, self.info.pboxsize)
         if catalog is not None:
             self.meta.id = int(catalog['id'])
-            self.meta.xc = catalog["x"]
-            self.meta.yc = catalog["y"]
-            self.meta.zc = catalog["z"]
+            self.meta.xc = float(catalog["x"])
+            self.meta.yc = float(catalog["y"])
+            self.meta.zc = float(catalog["z"])
 
-    def set_ptypes(self, pt=None):
-        pass
 
     def physical_print(self, x):
-        # If length,
-
         print([i * self.info.pboxsize * 100 for i in list(x)])
 
 
@@ -162,13 +209,9 @@ class Galaxy():
             convert meta data into convenient unit.
         """
         if unit_conversion == "code":
-            self.meta.xc *= self.info.pboxsize*1000
-            self.meta.yc *= self.info.pboxsize*1000
-            self.meta.zc *= self.info.pboxsize*1000
+            self.pos *= self.info.pboxsize*1000
         elif unit_conversion == "GM":
-            self.meta.xc *= self.info.pboxsize
-            self.meta.yc *= self.info.pboxsize
-            self.meta.zc *= self.info.pboxsize
+            self.pos *= self.info.pboxsize
         else:
             print("[galaxy._convert_unit_meta] Unknown unit_conversion option")
 
@@ -179,36 +222,25 @@ class Galaxy():
             return
 
         data = getattr(self, pop)
-        print("vcx before", self.meta.vxc)
         vxc_before = self.meta.vxc
-        self.meta.vxc = np.median(data["vx"]) * self.info.kms
-        self.meta.vyc = np.median(data["vy"]) * self.info.kms
-        self.meta.vzc = np.median(data["vz"]) * self.info.kms
+        self.meta.vel = np.median(data["vel"], axis=0) * self.info.kms
         # Unit conversion
         if unit_conversion == "code":
             if "x" in data.dtype.names:
-                data['x'] = (data['x'] - self.meta.xc) * self.info.pboxsize*1000
-                data['y'] = (data['y'] - self.meta.yc) * self.info.pboxsize*1000
-                data['z'] = (data['z'] - self.meta.zc) * self.info.pboxsize*1000
+                data["pos"] = (data["pos"] - self.meta.pos) * self.info.pboxsize*1000
             if 'm' in data.dtype.names:
                 data['m'] = data['m'] * self.info.msun
             if "vx" in data.dtype.names:
                 print("vcx after", self.meta.vxc)
                 print("vcx diff", self.meta.vxc - vxc_before)
-                data['vx'] = data['vx'] * self.info.kms - self.meta.vxc
-                data['vy'] = data['vy'] * self.info.kms - self.meta.vyc
-                data['vz'] = data['vz'] * self.info.kms - self.meta.vzc
+                data['vel'] = data['vel'] * self.info.kms - self.meta.vel
         elif unit_conversion == "GM":
             if "x" in data.dtype.names:
-                data['x'] = (data['x'] - (self.meta.xc - 0.5) * self.info.pboxsize)*1e3
-                data['y'] = (data['y'] - (self.meta.yc - 0.5) * self.info.pboxsize)*1e3
-                data['z'] = (data['z'] - (self.meta.zc - 0.5) * self.info.pboxsize)*1e3
+                data['pos'] = (data['pos'] - (self.meta.pos - 0.5) * self.info.pboxsize)*1e3
             if 'm' in data.dtype.names:
                 data['m'] = data['m'] * 1e11 # in Msun.
             if "vx" in data.dtype.names:
-                data['vx'] -= self.meta.vxc
-                data['vy'] -= self.meta.vyc
-                data['vz'] -= self.meta.vzc
+                data['vel'] -= self.meta.vel
 
     def _add_dm(self, dm, idm):
         ndm_tot = len(idm)
@@ -221,35 +253,28 @@ class Galaxy():
             elif unit_conversion == "GM":
                 self.dm['m'] = dm['m'][idm] * 1e11
 
-        if 'x' in dm.dtype.names:
-            self.dm['x'] = dm['x'][idm]
-            self.dm['y'] = dm['y'][idm]
-            self.dm['z'] = dm['z'][idm]
-
-        if 'vel' in dm.dtype.names:
-            self.dm['vx'] = dm['vx'][idm]
-            self.dm['vy'] = dm['vy'][idm]
-            self.dm['vz'] = dm['vz'][idm]
+        if 'x' in dm.dtype.names: self.dm['pos'] = dm['pos'][idm]
+        if 'vel' in dm.dtype.names: self.dm['vel'] = dm['vel'][idm]
 
         if verbose: print("DM data stored")
 
-    def _add_cell(self, cell, icell):
-        ncell_tot = len(icell)
-        dtype_cell = [('x', '<f8',),('y', '<f8',),('z', '<f8',), ('dx', '<f8'),
-                      ('rho', '<f8'), ('vx', '<f8' ), ('vy', '<f8' ), ('vz', '<f8' ),
-                      ('temp', '<f8'), ('metal', '<f8')]
-
-        self.cell = np.recarray(ncell_tot, dtype=dtype_cell)
-        self.cell['x'] = cell['x'][icell]
-        self.cell['y'] = cell['y'][icell]
-        self.cell['z'] = cell['z'][icell]
-        self.cell['dx'] = cell['dx'][icell]
-        self.cell['rho'] = cell['var0'][icell]
-        self.cell['vx'] = cell['var1'][icell]
-        self.cell['vy'] = cell['var2'][icell]
-        self.cell['vz'] = cell['var3'][icell]
-        self.cell['temp'] = cell['var4'][icell]
-        self.cell['metal'] = cell['var5'][icell]
+    #def _add_cell(self, cell, icell):
+    #    ncell_tot = len(icell)
+    #    dtype_cell = [('x', '<f8',),('y', '<f8',),('z', '<f8',), ('dx', '<f8'),
+    #                  ('rho', '<f8'), ('vx', '<f8' ), ('vy', '<f8' ), ('vz', '<f8' ),
+    #                  ('temp', '<f8'), ('metal', '<f8')]
+    #
+    #    self.cell = np.recarray(ncell_tot, dtype=dtype_cell)
+    #    self.cell['x'] = cell['x'][icell]
+    #    self.cell['y'] = cell['y'][icell]
+    #    self.cell['z'] = cell['z'][icell]
+    #    self.cell['dx'] = cell['dx'][icell]
+    #    self.cell['rho'] = cell['var0'][icell]
+    #    self.cell['vx'] = cell['var1'][icell]
+    #    self.cell['vy'] = cell['var2'][icell]
+    #    self.cell['vz'] = cell['var3'][icell]
+    #    self.cell['temp'] = cell['var4'][icell]
+    #    self.cell['metal'] = cell['var5'][icell]
 
 
     def reff_main_gal(self, x, y, z):
@@ -453,7 +478,6 @@ class Galaxy():
             y = (y - ymin)/ptp * npix
             z = (z - zmin)/ptp * npix
 
-#            print(x.min(),x.max(),y.min(),y.max(),z.min(),z.max())
             field = assign.cic(m, x, npix,
                                y, npix, z,
                                npix, wraparound=True,
@@ -564,7 +588,6 @@ class Galaxy():
 
     def cal_mgas(self):
         #msun = 1.98892e33 # solar mass in gram.
-        #kpc_in_cm = 3.086e21
         self.meta.mgas = sum(self.cell['rho'] * self.cell['dx']**3) * self.info.punit_m
         # [g/cm^3] * [cm^3] / [g/msun] = [msun]
 
@@ -665,8 +688,8 @@ class Galaxy():
         for target in pops:
             pop = getattr(self, target)
             RM = self.rotation_matrix
-            pop["pos"] = np.matmul(RM, pop["pos"])# (pop['x'], pop['y'], pop['z'])))
-            pop["vel"] = np.matmul(RM, pop["vel"])#, pop['vy'], pop['vz'])))
+            pop["pos"] = np.matmul(pop["pos"], RM.T)# (pop['x'], pop['y'], pop['z'])))
+            pop["vel"] = np.matmul(pop["vel"], RM.T)#, pop['vy'], pop['vz'])))
 
     def cal_norm_vec(self, pop_nvec=['star'], dest=[0., 0., 1], bound_percentile=50):
         """
@@ -703,7 +726,7 @@ class Galaxy():
             #nelements += len(pop['x'])
 
         if bound_percentile < 100:
-            vdiff = np.sqrt(np.square(self.star["vel"]))
+            vdiff = np.sqrt(np.sum(np.square(self.star["vel"]), axis=1))
 
             i_bound_50 = np.argsort(vdiff)[:max([1, 0.01 * bound_percentile]) * len(vdiff)]
 
@@ -779,6 +802,7 @@ class Galaxy():
         if lag.norm(dest) != 1.0:
             dest = dest / lag.norm(dest)
 
+        print(nvec, dest)
         r_axis = np.cross(nvec, dest)
         angle = math.acos(np.dot(nvec, dest))
 
@@ -972,231 +996,3 @@ class Galaxy():
         import pickle
         with open(str(self.meta.id).zfill(6) + 'gal.pickle', 'wb') as f:
             pickle.dump(self, f, pickle.HIGHEST_PROTOCOL)
-
-
-def plot_gal(self, npix=200, fn_save=None, ioff=True,
-             do9plots = False, i_lambda=0, **kwargs):
-    """
-        parameters
-        ----------
-        i_lambda: int
-            index of gal.meta.lambda_result_list to be plotted as lambda profile.
-
-    """
-
-    import matplotlib.pyplot as plt
-    from matplotlib import ticker
-    from draw import pp
-    from matplotlib.colors import LogNorm
-
-    if ioff:
-        plt.ioff()
-
-    def fmt(x, pos):
-        a, b = '{:.2e}'.format(x).split('e')
-        b = int(b)
-        return r'${} \times 10^{{{}}}$'.format(a, b)
-
-
-    def _close_to(values, v_ref):
-        """
-            returns the index of the value which is close to the v_ref.
-        """
-        ind = 0
-        good=values[ind]
-        for i, vv in enumerate(values):
-            if abs(vv - v_ref) < good:
-                good = vv
-                ind = i
-
-        return ind
-
-    rgal_to_reff = self.meta.Rgal_to_reff
-
-    if do9plots:
-        fig, axs = plt.subplots(3,3)
-        fig.set_size_inches(12,9) # 9 plots
-    else:
-        fig, axs = plt.subplots(2,2)
-
-    try:
-        fig.suptitle("ID: {}    z: {:2f}".format(str(self.meta.id).zfill(5), self.info.zred))
-    except:
-        fig.suptitle("ID: {}    z: not available".format(str(self.meta.id).zfill(5)))
-
-# Stellar particle density map
-    ax = axs[0,0]
-    """
-        1st plot. - Stellar density map.
-
-    """
-    # if hist=True, use histogram instead of custom CIC.
-    img = pp.part2den(self.star, self.info, npix=npix, hist=True)
-    im = ax.imshow(img.data, cmap=plt.get_cmap('brg'),
-                   norm=LogNorm(vmin=1e6))
-#        _,_,_,im = ax.hist2d( self.star['x'], self.star['y'], norm=LogNorm(), bins=npix)
-    fig.colorbar(im, ax=ax)
-
-    ax.set_xlabel("["+ r'$R/R_{eff}$'+"]")
-#   Todo:
-#   If rgal_to_reff is not too large, say 10. xticks are too dense.
-#   If 8, or 9 is given, use 4, if 10, use 5, and so on..
-#   Utilize _close_to function.
-
-    ax.set_xticks(np.linspace(0, npix, rgal_to_reff))
-    xticks = np.linspace(-rgal_to_reff, rgal_to_reff, rgal_to_reff)
-    ax.set_xticklabels(["{:.1f}".format(xx) for xx in xticks])
-
-    ax.set_ylabel("[kpc]")
-    ax.set_yticks(np.linspace(0,npix, 5))
-    yticks = ["{:.2f}".format(y) \
-                for y in np.linspace(-self.meta.rgal, self.meta.rgal, num=5)]
-    ax.set_yticklabels(yticks)
-
-# Lambda_r plot
-    try:
-        ll = self.meta.lambda_result_list[i_lambda]
-        if ll is not None:
-            ax = axs[0,1]
-            ax.plot(ll) # ~ 1 * Reff
-            ax.set_title(r"$\lambda _{R}$")
-            ax.text(0.5 * len(ll), 0.8, "{:.2e}".format(self.meta.mstar) + r"$M_{\odot}$")
-            ax.set_ylim(bottom=0, top=1)
-            ax.set_xlabel("["+ r'$R/R_{eff}$'+"]")
-
-            unit = len(ll)/self.meta.rscale_lambda # number of points per 1Reff
-            xticks = [0, 0.5*unit]
-            reffs=[0, 0.5]
-            for i in range(int(self.meta.rscale_lambda)): # If lambda_r is calculated furthrer -
-                xticks.append(unit * (i+1))
-                reffs.append((i+1))
-            ax.set_xticks(xticks)
-            xticks_label = ["{:.1f}".format(rf) for rf in reffs]
-            ax.set_xticklabels(xticks_label)
-    except:
-        pass
-
-# sigma map
-    if hasattr(self, "sigmap"):
-        l_range = self.meta.reff * self.meta.rscale_lambda
-        ax = axs[1,0]
-        im = ax.imshow(self.sigmap, vmin=0, vmax = 200, cmap=plt.get_cmap('brg'))
-        cb = plt.colorbar(im, ax=ax, label=r'$km s^{-1}$') # needs a mappable object.
-        tick_locator = ticker.MaxNLocator(nbins=3)
-        cb.locator = tick_locator
-        cb.update_ticks()
-        ax.set_title(r"$\sigma$ map")
-        ax.set_xlabel("["+ r'$R/R_{eff}$'+"]")
-        ax.set_xticks(np.linspace(0, len(self.mmap), num=3))
-        ax.set_xticklabels([str(-1*self.meta.rscale_lambda),"0", str(self.meta.rscale_lambda)])
-        ax.set_ylabel("[kpc]")
-        ax.set_yticks(np.linspace(0, len(self.mmap), num=5))
-        yticks = ["{:.2f}".format(y) \
-                    for y in np.linspace(-l_range, l_range, num=5)]
-        ax.set_yticklabels(yticks)
-#        ax.locator_params(tight=True, nbins=5)
-
-# velocity map
-    if hasattr(self,"vmap") and self.vmap is not None:
-        l_range = self.meta.reff * self.meta.rscale_lambda
-        ax = axs[1,1]
-        im = ax.imshow(self.vmap, vmin=-100, vmax = 100, cmap='RdBu')
-#        ax.tick_params(
-#            which='both',      # both major and minor ticks are affected
-#            bottom='off',      # ticks along the bottom edge are off
-#            top='off',         # ticks along the top edge are off
-#            labelbottom='off')
-        cb = plt.colorbar(im, ax=ax, label=r'$km s^{-1}$') # needs a mappable object.
-        tick_locator = ticker.MaxNLocator(nbins=3)
-        cb.locator = tick_locator
-        cb.update_ticks()
-        im.set_cmap('RdYlBu')
-        ax.set_title("velocity map")
-        ax.set_xlabel("["+ r'$R/R_{eff}$'+"]")
-        ax.set_xticks(np.linspace(0, len(self.mmap), num=3))
-        ax.set_xticklabels([str(-1*self.meta.rscale_lambda),"0", str(self.meta.rscale_lambda)])
-        ax.set_ylabel("[kpc]")
-        ax.set_yticks(np.linspace(0, len(self.mmap), num=5))
-        yticks = ["{:.2f}".format(y) \
-                    for y in np.linspace(-self.meta.reff*self.meta.rscale_lambda,
-                                         self.meta.reff*self.meta.rscale_lambda, num=5)]
-        ax.set_yticklabels(yticks)
-
-    if do9plots:
-# position and velocity histograms
-        ax = axs[0,2]
-        ax.hist(self.star['x'])
-        ax.set_title("X pos")
-        ax.locator_params(tight=True, nbins=5)
-
-        ax = axs[1,2]
-        ax.hist(self.star['y'])
-        ax.set_title("Y pos")
-        ax.locator_params(tight=True, nbins=5)
-
-        ax = axs[2,0]
-        ax.hist(self.star['vx'])
-        ax.set_title("X vel")
-        ax.locator_params(tight=True, nbins=5)
-
-        ax = axs[2,1]
-        ax.hist(self.star['vy'])
-        ax.set_title("Y vel")
-        ax.locator_params(tight=True, nbins=5)
-
-    plt.tight_layout()
-    if fn_save is None:
-        fn_save = "galaxy_plot" + str(self.meta.id).zfill(5) + ".png"
-
-    plt.savefig(fn_save, dpi=100)
-    plt.close()
-
-def save_gal(self, base='./'):
-
-    def get_metadata(clazz):
-        """
-            Out of all attributes of a galaxy instance, leave only data.
-        """
-        return {name: attr for name, attr in clazz.__dict__.items()
-                if not name.startswith("__")
-                and not callable(attr)
-                and not type(attr) is staticmethod}
-
-    def get_metadata2(adict):
-        return {name: attr for name, attr in adict.items()
-                if not isinstance(attr, (np.ndarray, np.recarray, dict, list))}
-
-
-    import h5py as hdf
-    # Save data into a hdf5 file
-    outfile = hdf.File(base + str(self.meta.id).zfill(6) + '_gal.hdf5',
-                       'w', libver='latest')
-
-    # Store metadata in HDF5 attributes
-    attrs = get_metadata(self)
-    attrs = get_metadata2(attrs)
-    for name, atr in attrs.items():
-        if atr != None:
-            outfile.attrs.create(name, atr)
-        #outfile.attrs[name] = atr
-
-    # Store data under /selfaxy with direct assignment
-    if hasattr(self, 'star'):
-        #print("Saving star")
-        star = outfile.create_group("star")
-        for field in self.star.dtype.names:
-            star.create_dataset(field, data=self.star[field])
-
-    if hasattr(self, 'dm'):
-        #print("Saving DM")
-        dm = outfile.create_group("dm")
-        for field in self.dm.dtype.names:
-            dm.create_dataset(field, data=self.dm[field])
-
-    if hasattr(self, 'cell'):
-        #print("Saving gas")
-        gas = outfile.create_group("gas")
-        for field in self.cell.dtype.names:
-            gas.create_dataset(field, data=self.cell[field])
-
-    outfile.close()

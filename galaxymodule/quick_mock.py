@@ -85,7 +85,7 @@ class Simplemock():
 
     def get_flux(self, star,
                  cell=None,
-#                 info=None,
+                 simple=False,
                  metal_lower_cut = True,
                  filter_name='r'):
         ### star data ########################################################
@@ -137,7 +137,7 @@ class Simplemock():
         # d_lambda = wavelength[:-1] - wavelength[1:]
         #
         wavelength = self.sed_wavelength[i_lambda_min:i_lambda_max+2]
-        n_wavelength = i_lambda_max - i_lambda_min + 1
+        n_wavelength = len(wavelength)#i_lambda_max - i_lambda_min + 1
 
         ##### Caclulate band flux #################
         # Load only necessary data
@@ -147,7 +147,7 @@ class Simplemock():
             for i, metal in enumerate(relevant_metals):
                 seds[i,:,:] = self.SEDs[i,:nages, i_lambda_min:i_lambda_max+1]
 
-        # All are array-wise calculations.
+        # All are array calculations.
         # interpolation weight
         dl_m = (starmetal - relevant_metals[locate_metal] ) / \
                                      (relevant_metals[locate_metal+1] - relevant_metals[locate_metal])

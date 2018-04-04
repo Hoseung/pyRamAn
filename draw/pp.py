@@ -71,10 +71,9 @@ def part2den(part, info, region=None, proj='z', npix=800, ptype=None,
 
     if region is None:
         import utils.sampling as smp
-
-        region = smp.set_region(xr=[part['x'].min() + offset[0], part['x'].max() + offset[0]],
-                                yr=[part['y'].min() + offset[1], part['y'].max() + offset[1]],
-                                zr=[part['z'].min() + offset[2], part['z'].max() + offset[2]])
+        region = smp.Region( **{"xr":(part['x'].min() + offset[0], part['x'].max() + offset[0]),
+                                "yr":(part['y'].min() + offset[1], part['y'].max() + offset[1]),
+                                "zr":(part['z'].min() + offset[2], part['z'].max() + offset[2])})
         ind_ok = np.arange(len(part['x']))
     else:
         ind_ok = np.where((part["x"] > region.xr[0] - offset[0])
@@ -130,7 +129,7 @@ def den2d(x, y, z, m, npix, region=None, proj='z',
     If single is given max(x) - min(x) > 2 * region['radius'] is possible,
     causing error in assignment calculation.
     """
-    import pyximport; pyximport.install()
+    #import pyximport; pyximport.install()
     from utils import assign
     import numpy as np
 #   vmax = 1e12# in solar mass / kpc^2
@@ -332,7 +331,7 @@ def pp_halo(h, npix, rscale=1.0, region=None, ind=None, ax=None,
     TODO
     ----
     Convert length unit into a specific unit so that halos and trees can be overplotted.
-    But, what about tree being dependant on the expansion factor? 
+    But, what about tree being dependant on the expansion factor?
     """
 
     import matplotlib.pyplot as plt

@@ -10,6 +10,8 @@ halo / galaxy calss including basic data load functionality.
 import numpy as np
 from load.info import Info
 import struct
+from load import dtypes
+
 class HaloMeta():
     """
     HaloMeta class.
@@ -231,38 +233,17 @@ class Halo(HaloMeta):
         if pure == None:
             pure = self.pure
 
-        if double:
-            dtype_float = "<f8"
-        else:
-            dtype_float = "<f4"
-
-        dtype_halo = [('np', '<i4'), ('id', '<i4'), ('level', '<i4'),
-                      ('host', '<i4'), ('sub', '<i4'), ('nsub', '<i4'),
-                      ('nextsub', '<i4'),
-                      ('m', dtype_float), ('mvir', dtype_float),
-                      ('r', dtype_float), ('rvir', dtype_float),
-                      ('tvir', dtype_float), ('cvel', dtype_float),
-                      ('x', dtype_float), ('y', dtype_float), ('z', dtype_float),
-                      ('vx', dtype_float), ('vy', dtype_float), ('vz', dtype_float),
-                      ('ax', dtype_float), ('ay', dtype_float), ('az', dtype_float),
-                      ('sp', dtype_float), ('idx', '<i4'),
-                      ('p_rho', dtype_float),('p_c', dtype_float),
-                      ('energy', '<f8', (3,)), ('abc', '<f8', (3,))]
-
-        if self.is_gal:
-            dtype_halo += [('sig', dtype_float), ('sigbulge', dtype_float),
-                           ('mbulge', dtype_float), ('hosthalo', '<i4'),
-                           ('g_nbin', '<i4'), ('g_rr', dtype_float, (100,)),
-                           ('g_rho', dtype_float, (100,))]
-
-
+        from load.dtypes import get_halo_dtype
         f = open(fn, "rb")
         if pure:
             brick_data = f.read()
             offset, halnum, subnum = load_header(brick_data, double=double)
-            self.data = np.zeros(halnum+subnum, dtype=dtype_halo)
+            self.data = np.zeros(halnum+subnum,
+                                 dtype=dtypes.get_halo_dtype(is_gal=self.is_gal,
+                                                             double=double))
             for i in range(halnum+subnum):
-                offset = load_a_halo(brick_data, offset, self.data[i], is_gal=self.is_gal, double=double)
+                offset = load_a_halo(brick_data, offset, self.data[i],
+                                     is_gal=self.is_gal, double=double)
             f.close()
         else:
             from utils.io_module import read_fortran
@@ -279,7 +260,7 @@ class Halo(HaloMeta):
             allID, __, self.halnum, self.subnum,\
                 self.massp, self.aexp, self.omegat, self.age = temp[0:8]
             ntot = self.halnum + self.subnum
-            self.data = np.recarray(ntot, dtype=dtype_halo)
+            self.data = np.recarray(ntot, dtype=get_halo_dtype(is_gal=self.is_gal, double=double))
             self.data['np'], self.data['id'],\
             levels, ang, energy, \
             self.data['m'],\
@@ -295,15 +276,9 @@ class Halo(HaloMeta):
             self.data['sub'], self.data['nsub'], \
             self.data['nextsub'] = levels[:,0], \
                 levels[:,1], levels[:,2],levels[:,3], levels[:,4]
-            pos = pos.reshape((ntot,3))
-            self.data['x'], self.data['y'], self.data['z'] \
-                    = pos[:,0],pos[:,1],pos[:,2]
-            vel = vel.reshape((ntot,3))
-            self.data['vx'], self.data['vy'], self.data['vz'] \
-                    = vel[:,0],vel[:,1],vel[:,2]
-            ang = ang.reshape((ntot,3))
-            self.data['ax'], self.data['ay'], self.data['az'] \
-                    = ang[:,0],ang[:,1],ang[:,2]
+            self.data['pos'] = pos.reshape((ntot,3))
+            self.data['vel']= vel.reshape((ntot,3))
+            self.data['lvec'] = ang.reshape((ntot,3))
             self.data['r'] = radius[::4].copy()
 
 #           copy so that memory is continuous. (Not tested!)
@@ -462,9 +437,6 @@ class Halo(HaloMeta):
             self.nhalo = len(ind)
         except:
             self.nhalo = len([ind])
-
-
-
 
 
 def load_header(brick_data, double=False):

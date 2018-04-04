@@ -200,56 +200,8 @@ class Tree():
 
         self.fatherIDx -=1
         # zred is omitted to reduce memory usage
-        dtype_tree = [('nstep', '<i4'),
-                      ('id', '<i4'),
-                      ('m', '<f8'),
-                      ('macc', '<f8'),
-                      ('nsub', '<i4'),
-                      ('xp', '<f8', (3,)),
-                      ('vp', '<f8', (3,)),
-                      ('lp', '<f8', (3,)),
-                      ('abc', '<f8', (4,)),
-                      ("ek", '<f8'),
-                      ("ep", '<f8'),
-                      ("et", '<f8'),
-                      ("spin", '<f8'),
-                      ('mvir', '<f8'),
-                      ('rvir', '<f8'),
-                      ('tvir', '<f8'),
-                      ('cvel', '<f8'),
-                      ('rho_0', '<f8'),
-                      ('rs', '<f8'),
-                      ('level', '<i4'),
-                      ('hosthalo', '<i4'), ('hostsub', '<i4'),
-                      ('nextsub', '<i4'), ('idx', '<i4'),
-                      ('nprgs', '<i4'),
-                      ('f_ind', '<i4'),
-                      ('nsons', '<i4'),
-                      ('s_ind', '<i4')]
-        if not BIG_RUN:
-            dtype_tree.append(("np", '<i4'))
-
-        if True:
-            """
-            This allows multiple ways of accessing fields.
-
-            tree["x"] is equivalent with tree["pos"][:,0]
-            tree["vx"] is equivalent with tree["vel"][:,0]
-
-            Doing this requires an optional parameter "offset" to be given,
-            which is calculated as offset+ad[3].
-            """
-            add_dtype = [("x", "f8", 1, 0, "xp"),
-                         ("y", "f8", 1, 8, "xp"),
-                         ("z", "f8", 1, 16, "xp"),
-                         ("vx", "f8", 1, 0, "vp"),
-                         ("vy", "f8", 1, 8, "vp"),
-                         ("vz", "f8", 1, 16, "vp")]
-            dt = np.dtype(dtype_tree)
-            dtype_tree =dict(dt.fields)
-            for ad in add_dtype:
-                offset = dt.fields.get(ad[4])[1]
-                dtype_tree.update({ad[0]: ((ad[1], ad[2]), offset+ad[3])})
+        from load import dtypes
+        dtype_tree = dtypes.get_tree_dtypes(BIG_RUN=BIG_RUN)
 
         tt = np.recarray(self.n_all_halos +1, dtype = dtype_tree)
         self.tree = tt
@@ -292,10 +244,6 @@ class Tree():
         tt["f_ind"][1:] = i_arr[:,12] -1 #
         tt["nsons"][1:] = i_arr[:,13] #
         tt["s_ind"][1:] = i_arr[:,14] -1 #
-
-        #return
-        # idx, id, bushID, st, hosts(5), nprgs, np(if not big_run)
-        # m, macc, xp(3), vp(3), lp(3), abc(4), energy(3), spin, virial(4), rho(2)
 
 
     def get_best_matched_desc(pids_now, gids, nout_next):
