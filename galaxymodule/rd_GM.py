@@ -537,7 +537,7 @@ def _rd_gal(nout, idgal, wdir="./", metal=True,
     return rd_gm_star_file(fname)
 
 
-def rd_gal(nout, idgal, wdir="./", metal=True,
+def rd_gal(nout, idgal, info=None, wdir="./", metal=True,
           nchem=0, long=True, fname=None):
     """
     Parameters
@@ -563,7 +563,7 @@ def rd_gal(nout, idgal, wdir="./", metal=True,
     print("[rd_GM.rd_gal] fname=", fname)
     header, data = rd_gm_star_file(fname)
 
-    gal = Gal(nout, idgal, wdir=wdir, load=False)
+    gal = Gal(nout, idgal, info=info, wdir=wdir, load=False)
     gal.star = data
     gal.header = header
     gal.gid = header['my_number']
