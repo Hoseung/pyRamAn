@@ -58,8 +58,9 @@ def get_all_trees(self, idx_prgs_alltime,
                         verbose=False,
                         **kwargs):
     """
-        * For a given idx_prgs list of lists, find main progenitor tree of all entries.
-        * A satellite can contribute to a host over multiple snapshots by
+        Take idx list of progenitors and return tree catalogs.
+        Removes double-counted satellties
+        -> A satellite can contribute to a host over multiple snapshots by
         given fractions of DM particles each time. In such case, the satellite
         appears in the host's progenitor tree several times.
         * Note that a 'multi-snapshot' satellite never be a main progenitor.
@@ -134,7 +135,7 @@ def get_all_trees(self, idx_prgs_alltime,
                                 idxs.remove(idx)
 
     return all_main_prgs
-    
+
 
 def extract_main_tree(self, idx,
                       mmin=3.3e8,
@@ -247,7 +248,7 @@ def extract_direct_full_tree(self, idx,
                              m_frac_min = 0.5,
                              verbose=False):
     """
-    Extracts main progenitors from a TreeMaker tree.
+    Extracts (ID, IDx) of main progenitors from a TreeMaker tree.
 
     example
     -------
@@ -404,7 +405,7 @@ def plot_tree_detail(axs, tree, main=None,
     line_scatter(axs[2][4],xtime,np.log10(tree["m"]))
 
 
-def check_tree(adp,
+def check_tree(main, adp,
                out_dir="./",
                save=True,
                suffix="org",
@@ -418,7 +419,7 @@ def check_tree(adp,
     """
         pos_diff is not working yet.
     """
-    main = adp[0].pop(0)
+    #main = adp[0].pop(0)
     if pos_diff:
         sats = copy(adp)
         sats["x"]-=main["x"]

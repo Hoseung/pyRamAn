@@ -136,8 +136,8 @@ class Simplemock():
         # Well.. actually I don't care..
         # d_lambda = wavelength[:-1] - wavelength[1:]
         #
-        wavelength = self.sed_wavelength[i_lambda_min:i_lambda_max+2]
-        n_wavelength = len(wavelength)#i_lambda_max - i_lambda_min + 1
+        wavelength = self.sed_wavelength[i_lambda_min:i_lambda_max+2] # why +2?
+        n_wavelength = len(wavelength)-1#i_lambda_max - i_lambda_min + 1
 
         ##### Caclulate band flux #################
         # Load only necessary data
