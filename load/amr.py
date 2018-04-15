@@ -150,7 +150,7 @@ class AmrHeader():
         self.key_size = int(np.fromfile(f, np.dtype('i4'), 1))
         if self.key_size/(ncpu + 1) == 8:
             dtype = np.float64
-        elif alen/(ncpu + 1) == 16:
+        elif self.key_size/(ncpu + 1) == 16:
             dtype = np.float128
         else:
             raise Exception('Failed to detect bound_key precision.')
