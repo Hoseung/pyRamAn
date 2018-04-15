@@ -147,8 +147,8 @@ class AmrHeader():
 
         #h4 = read_header(f, np.dtype([('bound_key', 'f8', (ncpu+1,))]),check=False)
         # Get the data type by calculating precision from the fortran block header
-        alen = np.fromfile(f, np.dtype('i4'), 1)
-        if alen/(ncpu + 1) == 8:
+        self.key_size = np.fromfile(f, np.dtype('i4'), 1)
+        if self.key_size/(ncpu + 1) == 8:
             dtype = np.float64
         elif alen/(ncpu + 1) == 16:
             dtype = np.float128
