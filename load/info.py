@@ -134,6 +134,7 @@ class Info:
         self.boxlen = rarr[0]
         self.lmin = arr[2]
         self.lmax = arr[3]
+        self.ngridmax = arr[4]
         self.unit_l = scale_l
         self.unit_d = scale_d
         self.unit_t = scale_t
