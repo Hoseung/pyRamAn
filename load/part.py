@@ -1026,7 +1026,7 @@ class Part(load.sim.Simbase):
             #              ('vx', '<f8'), ('vy', '<f8'), ('vz', '<f8'),
             #              ('m', '<f8'), ('time', '<f8'), ('id', '<i4')]
             if read_metal:
-                dtype_star.update({'metal': (('<f8', 1), 72)})
+                dtype_star.update({'metal': (('<f8', 1), 80)})
 
             self.star = np.zeros(self.nstar, dtype=dtype_star)
             self.star['x'] = star_float[:,0]

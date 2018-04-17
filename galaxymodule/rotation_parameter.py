@@ -165,11 +165,13 @@ def gen_vmap_sigmap(self,
         from Cappellari.voronoi.voronoi_2d_binning import voronoi_2d_binning
         """
         This function accepts only data on uniform grid...?
+        => Yes.
+        Provide pixelsize to speed up the calculation.
         """
         print("Inside voronoi, plot =", voronoi["plot"])
         binNum, xNode, yNode, xBar, yBar, sn, nPixels, scale = \
             voronoi_2d_binning(xpos_regular, ypos_regular, count_map,
-                             noise_map, targetSN=voronoi["targetSN"],
+                             noise_map, pixelsize=1, targetSN=voronoi["targetSN"],
                              plot=voronoi["plot"], quiet=voronoi["quiet"])
 
         self.xNode = xNode
