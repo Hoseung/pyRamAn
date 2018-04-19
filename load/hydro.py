@@ -455,9 +455,9 @@ class Hydro(Simbase):
                                 son[:ncache,ind] = struct.unpack("%ii"%(ncache), amrContent[offset:offset+4*ncache])
                                 # var: hydro variables
                                 jvar = 0
-                                for ivar in range(self.info.nvarh):
+                                for ivar in range(nvarh):
                                     if var_read[ivar]:
-                                        offset = 4*ninteg_hydro + 8*(nlines_hydro+nfloat_hydro+(ind*self.info.nvarh+ivar)*(ncache+1)) + nstrin_hydro + 4
+                                        offset = 4*ninteg_hydro + 8*(nlines_hydro+nfloat_hydro+(ind*nvarh+ivar)*(ncache+1)) + nstrin_hydro + 4
                                         var[:ncache,ind,jvar] = struct.unpack("%id"%(ncache), hydroContent[offset:offset+8*ncache])
                                         jvar += 1
 
@@ -508,8 +508,8 @@ class Hydro(Simbase):
                         nlines_amr += 4 + 3*twotondim + 3*self.info.ndim
 
 
-                        nfloat_hydro += ncache*twotondim*self.info.nvarh
-                        nlines_hydro += twotondim*self.info.nvarh
+                        nfloat_hydro += ncache*twotondim*nvarh
+                        nlines_hydro += twotondim*nvarh
 
                 # Now increment the offsets while looping through the levels
                 ninteg1 = ninteg_amr
@@ -546,8 +546,12 @@ class Hydro(Simbase):
         if read_cpu:
             dtype_cell.update({'cpu': (('<f8',1),dt_off+8)})
             dt_off += 8
+        if read_level:
+            dtype_cell.update({'level': (('<f8',1),dt_off+8)})
+            dt_off +=8
         if read_ref:
             dtype_cell.update({'ref': (('bool',1),dt_off+8)})
+
 
         # This part
         self.cell = np.zeros(len(all_array), dtype=dtype_cell)
