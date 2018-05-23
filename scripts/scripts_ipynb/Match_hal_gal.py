@@ -101,7 +101,7 @@ def distv3d(halo, center):
     return norm
 
 def distv(halo, center):
-    norm = center['vx'] - halo['vx'] +            center['vy'] - halo['vy'] +            center['vz'] - halo['vz']
+    norm = center['vx'] - halo['vx'] + center['vy'] - halo['vy'] + center['vz'] - halo['vz']
     return norm
 
 

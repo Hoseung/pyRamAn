@@ -888,7 +888,7 @@ class Galaxy():
 
 
     def cal_b2t(self, ptype='star', disk_criterion="Abadi2003",
-                bound_only = True, hist=False, proj="z"):
+                bound_only = True, hist=False):
         """
         Measure bulge to total ratio of the galaxy.
 
@@ -911,10 +911,6 @@ class Galaxy():
             msun = 1.98892e33 # solar mass in gram.
             return (cell['rho'] * info.unit_d) * (cell['dx'] * info.unit_l)**3 / msun
 
-        if proj=="x":
-            pos1, pos2, vel1, vel2 = 'y', 'z', 'vy', 'vz'
-        if proj=="y":
-            pos1, pos2, vel1, vel2 = 'z', 'x', 'vz', 'vx'
         if proj=="z":
             pos1, pos2, vel1, vel2 = 'x', 'y', 'vx', 'vy'
 
