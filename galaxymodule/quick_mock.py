@@ -1,4 +1,5 @@
 import numpy as np
+
 class Simplemock():
     """
     Calculate flux through a filter for all stellar particle.
@@ -6,11 +7,12 @@ class Simplemock():
     Example
     >>> from general import defaults
     >>> import quick_mock
+    >>> import galaxymodule
     >>> dfl = defaults.Default()
     >>> nout = 312#782 # 312
     >>> s = load.sim.Sim(nout=nout)
     >>> gcat = tree.halomodule.Halo(nout=nout, is_gal=True)
-    >>> gg = load.rd_GM.Gal(nout, catalog=gcat.data[21].copy(), info=s.info)
+    >>> gg = galaxymodule.rd_GM.Gal(nout, catalog=gcat.data[21].copy(), info=s.info)
     >>> gg.debug=False
     >>> make_gal.mk_gal(gg)
     >>> from galaxymodule import quick_mock as qmc
@@ -84,15 +86,32 @@ class Simplemock():
 
     def get_flux(self, star,
                  cell=None,
-#                 info=None,
+                 simple=False,
                  metal_lower_cut = True,
-                 filter_name='r'):
-        ### star data ########################################################
-        # BC03 related.
+                 filter_name='r',
+                 quick=False,
+                 speed_check=False):
+        """
+        calculate SED of each particle.
+        If cell is not None, attenuate flux accordingly.
+
+        parameters
+        ----------
+        quick : False
+            If True, reduce wavelength point of sed and filter significantly.
+            This still gives reasonable value.
+
+        speed_check : False
+            If True, measure time taken. Only for optimizing purpose.
+        """
+        if speed_check:
+            from time import time
+
+        t0 = time()
         Lum_sun = 3.826e33
         # BC2003 is in unit of L_sun Ang-1, where L_sun = Lum_sun.
 
-        starmetal = star["metal"] # Is the original array modified?
+        starmetal = star["metal"].copy() # Is the original array modified?
         starmetal[starmetal > 0.04] = 0.0399999 # a few stars have higher metallicity
         if metal_lower_cut:
             # No star with metallicity lower than the lowest table.
@@ -110,23 +129,33 @@ class Simplemock():
         locate_age = np.digitize(starage, self.age_points)-1 # GOOD
         relevant_ages = self.age_points[:max(locate_age)+2]
         nages = len(relevant_ages)
+        t1 = time() #
 
         ### Filter optimization. #################################################
-
         # Pick one
         this_filter = self.filters[filter_name]
 
         # band range
         i_filter_pos = this_filter > 0
-
-        this_filter = this_filter[i_filter_pos]
-        filter_lambda_this_band = self.filters["lambda"][i_filter_pos]
+        if quick:
+            this_filter = this_filter[i_filter_pos][::10]
+            filter_lambda_this_band = self.filters["lambda"][i_filter_pos][::10]
+        else:
+            this_filter = this_filter[i_filter_pos]
+            filter_lambda_this_band = self.filters["lambda"][i_filter_pos]
 
         lambda_min_this_band = min(filter_lambda_this_band)
         lambda_max_this_band = max(filter_lambda_this_band)
 
-        i_lambda_min = np.argmax(self.sed_wavelength > lambda_min_this_band) -1
-        i_lambda_max = np.argmax(self.sed_wavelength > lambda_max_this_band)
+        if quick:
+            n_compress = 20
+            sed_org = self.sed_wavelength
+            sed_wavelength = self.sed_wavelength[::n_compress]
+        else:
+            sed_wavelength = self.sed_wavelength
+
+        i_lambda_min = np.argmax(sed_wavelength > lambda_min_this_band) -1
+        i_lambda_max = np.argmax(sed_wavelength > lambda_max_this_band)
 
         # Only a small part of SED is needed.
         # To compute d_lambda, one additional lambda point is desired.
@@ -134,9 +163,8 @@ class Simplemock():
         # let me take backward as fractional chnge in d_lambda is less in longer wavelength
         # Well.. actually I don't care..
         # d_lambda = wavelength[:-1] - wavelength[1:]
-        #
-        wavelength = self.sed_wavelength[i_lambda_min:i_lambda_max+2]
-        n_wavelength = i_lambda_max - i_lambda_min + 1
+        wavelength = sed_wavelength[i_lambda_min:i_lambda_max+2] # why +2?
+        n_wavelength = len(wavelength)-1#i_lambda_max - i_lambda_min + 1
 
         ##### Caclulate band flux #################
         # Load only necessary data
@@ -144,9 +172,17 @@ class Simplemock():
         seds = np.zeros((nmetals, nages, n_wavelength)) # metal age lambda
         if self.sed_model == "bc03":
             for i, metal in enumerate(relevant_metals):
-                seds[i,:,:] = self.SEDs[i,:nages, i_lambda_min:i_lambda_max+1]
+                if quick:
+                    for j in range(seds.shape[1]):
+                        seds[i,j,:] = np.interp(wavelength[:-1],
+                                            sed_org,
+                                            self.SEDs[i,j,:])
+                else:
+                    seds[i,:,:] = self.SEDs[i,:nages, i_lambda_min:i_lambda_max+1]
 
-        # All are array-wise calculations.
+        t2 = time() # all set up
+
+        # All are array calculations.
         # interpolation weight
         dl_m = (starmetal - relevant_metals[locate_metal] ) / \
                                      (relevant_metals[locate_metal+1] - relevant_metals[locate_metal])
@@ -157,14 +193,16 @@ class Simplemock():
         dr_a = (relevant_ages[locate_age+1] - starage ) / \
                                      (relevant_ages[locate_age+1] - relevant_ages[locate_age])
 
+        t3 = time() # done first easy calculation
 
         # 2D linear interpolation
         # weight * SED.
         Flux =  np.multiply( (dr_m * dr_a), seds[locate_metal, locate_age,:].T).T +\
                 np.multiply( (dl_m * dr_a), seds[locate_metal + 1, locate_age,:].T).T +\
                 np.multiply( (dr_m * dl_a), seds[locate_metal, locate_age + 1, :].T).T +\
-                np.multiply( (dl_m * dl_a), seds[locate_metal + 1, locate_age + 1,:].T).T\
+                np.multiply( (dl_m * dl_a), seds[locate_metal + 1, locate_age + 1,:].T).T
 
+        t4 = time()
         # Convolve filter
         # Wavelengths at which filter function are defined are different from the SED wavelength points.
         # Interpolate filter function on SED points.
@@ -172,6 +210,7 @@ class Simplemock():
         Flux = np.multiply(filter_in_sed_wavelengths[:-1] * wavelength[-1], Flux)#\
         div = np.multiply(filter_in_sed_wavelengths[:-1], wavelength[-1])
 
+        t5 = time()
         # Need to multiply stellar mass
 
         if cell is None or self.info is None or len(cell) == 0:
@@ -200,7 +239,13 @@ class Simplemock():
 
             #print("before ext", np.sum(Flux, axis=1))
             #print("After ext", np.sum(F_ext, axis=1))
-
+            t6 = time()
+            print("age metal digitize {:.3f}".format(t1-t0))
+            print("setup done {:.3f}".format(t2-t0))
+            print("interpolation coefficient {:.3f}".format(t3-t0))
+            print("flux {:.3f}".format(t4-t0))
+            print("filter, flux, div {:.3f}".format(t5-t0))
+            print("After dust attanuation {:.3f}".format(t6-t0))
             return np.sum(F_ext, axis=1) / np.sum(div) * Lum_sun * star["m"]
 
 ##################################################################
@@ -389,11 +434,6 @@ def get_star_colden(star, cell):
 
     ddx_h = cell["dx"] * 0.5
 
-    #xl = cell["x"] - ddx_h
-    #xr = cell["x"] + ddx_h
-    #yl = cell["y"] - ddx_h
-    #yr = cell["y"] + ddx_h
-    #zr = cell["z"] + ddx_h
     sub_cell = cell[((cell["x"]+ddx_h) > star["x"].min()) * (cell["x"]-ddx_h < star["x"].max()) *\
                     ((cell["y"]+ddx_h) > star["y"].min()) * (cell["y"]-ddx_h < star["y"].max()) *\
                     ((cell["z"]+ddx_h) < star["z"].max())]

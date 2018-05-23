@@ -45,18 +45,11 @@ def extract_gas(cell_all, gal, s, rscale=4.0):
 
 def _extract_cell(cell_all, cpus, xc, yc, zc, rr,
                   min_gas_density=0, unit="code"):
-#    ind_c = np.where((np.square(cell_all['x'] - xc) + 
-#    cell_cube = cell_all[(np.abs(cell_all['x'] - xc) < rr) * \
-#                         (np.abs(cell_all['y'] - yc) < rr) * \
-#                         (np.abs(cell_all['z'] - zc) < rr)]
-#    cell_cube = cell_all[ix*iy*iz]
 
     cell_cube = cell_all[np.in1d(cell_all['cpu'], cpus)]
 
-
     if len(cell_cube) < 500:
         return None
-#    ixy = np.where(np.abs(cell_all["y"][ix] - yc) < rr)[0]
     ind_c = np.where(np.square(cell_cube['x'] - xc) + 
                      np.square(cell_cube['y'] - yc) +
                      np.square(cell_cube['z'] - zc) < rr**2)[0]
@@ -79,8 +72,6 @@ def _extract_cell(cell_all, cpus, xc, yc, zc, rr,
     return cell
 
 
-# In[2]:
-
 from analysis.cal_lambda import *  
 def main(nout_ini, nout_fi, wdir='./', rcluster_scale = 2.9):
     import load
@@ -91,10 +82,8 @@ def main(nout_ini, nout_fi, wdir='./', rcluster_scale = 2.9):
     import analysis.misc
     import utils.match as mtc
 
-
     nouts = range(nout_fi, nout_ini -1, -1)
 
-# In[15]:
     for nout in nouts:
         print("Nout =", nout)
         s = load.sim.Sim(nout=nout, base=wdir, setup=True)

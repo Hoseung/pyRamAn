@@ -134,6 +134,7 @@ class Info:
         self.boxlen = rarr[0]
         self.lmin = arr[2]
         self.lmax = arr[3]
+        self.ngridmax = arr[4]
         self.unit_l = scale_l
         self.unit_d = scale_d
         self.unit_t = scale_t
@@ -143,7 +144,7 @@ class Info:
         self.unit_Z = scale_Z
         self.kms = scale_v/1e5
         self.unit_flux = scale_d * scale_v * (1e-9*Gyr)*kpc/m_sun
-        self.punit_m = scale_d * scale_l**3/m_sun
+        self.punit_m = scale_d * scale_l**3/m_sun #convert cell mass into Msun
         self.pboxsize = rarr[0] * scale_l/(kpc*1000.)
         self.time = rarr[1]
         self.aexp = rarr[2]

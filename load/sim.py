@@ -50,7 +50,7 @@ class Simbase():
 
     def set_ranges(self, ranges=[[0, 1], [0, 1], [0, 1]]):
         if ranges is not None:
-            nr = np.asarray(ranges)
+            nr = np.asarray(ranges) # Now it is a class, not a list of list, or ,..
             if not(nr.shape[0] == 3 and nr.shape[1] == 2):
                 # Because actual operation on the given input(ranges)
                 # does not take place soon, it's not a good place to use
@@ -110,7 +110,6 @@ class Simbase():
             lmax
         except:
             lmax = nlevelmax
-#        print(' >>> working resolution (lmax) =', lmax)
 
         xxmin = ranges[0][0]
         xxmax = ranges[0][1]
@@ -121,6 +120,7 @@ class Simbase():
 
         dmax = max([xxmax-xxmin, yymax-yymin, zzmax-zzmin])
 #        lmin = lmax # sometimes even smallest dx is larger than the region size.
+        lmin = info.lmin # default value. But, which value should I pick?
         for ilevel in range(1, lmax):
             dx = 0.5**ilevel
             if (dx < dmax):
@@ -361,7 +361,7 @@ class Sim(Simbase):
         if load :
             if lmax is None:
                 lmax = self.info.lmax
-            self.hydro.amr2cell(lmax=lmax, cpu=cpu, **kwargs)
+            self.hydro.load(lmax=lmax, cpu=cpu, **kwargs)
         else:
             print("Use hydro.amr2cell() to load hydro variables")
 

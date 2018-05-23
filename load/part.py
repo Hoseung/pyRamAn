@@ -1011,11 +1011,22 @@ class Part(load.sim.Simbase):
                 work_dir, xmi, xma, ymi, yma, zmi, zma, read_metal, self.cpus)
 
         if 'star' in self.pt:
-            dtype_star = [('x', '<f8'), ('y', '<f8'), ('z', '<f8'),
-                          ('vx', '<f8'), ('vy', '<f8'), ('vz', '<f8'),
-                          ('m', '<f8'), ('time', '<f8'), ('id', '<i4')]
+            dtype_star = {'pos': (('<f8', (3,)), 0),
+                            'x': (('<f8', 1), 0),
+                            'y': (('<f8', 1), 8),
+                            'z': (('<f8', 1), 16),
+                           'id': (('<i8', 1), 24),
+                            'm': (('<f8', 1), 32),
+                          'vel': (('<f8', (3,)), 40),
+                           'vx': (('<f8', 1), 40),
+                           'vy': (('<f8', 1), 48),
+                           'vz': (('<f8', 1), 56),
+                         'time': (('<f8', 1), 72)}
+            #dtype_star = [('x', '<f8'), ('y', '<f8'), ('z', '<f8'),
+            #              ('vx', '<f8'), ('vy', '<f8'), ('vz', '<f8'),
+            #              ('m', '<f8'), ('time', '<f8'), ('id', '<i4')]
             if read_metal:
-                dtype_star.append(('metal', '<f8'))
+                dtype_star.update({'metal': (('<f8', 1), 80)})
 
             self.star = np.zeros(self.nstar, dtype=dtype_star)
             self.star['x'] = star_float[:,0]
@@ -1031,8 +1042,16 @@ class Part(load.sim.Simbase):
             self.star['id'] = star_int[:]
 
         if 'dm' in self.pt:
-            dtype_dm = [('x', '<f8'), ('y', '<f8'), ('z', '<f8'),('vx', '<f8'),
-                        ('vy', '<f8'), ('vz', '<f8'), ('m', '<f8'), ('id', '<i4')]
+            dtype_dm = {'pos': (('<f8', (3,)), 0),
+                          'x': (('<f8', 1), 0),
+                          'y': (('<f8', 1), 8),
+                          'z': (('<f8', 1), 16),
+                         'id': (('<i8', 1), 24),
+                          'm': (('<f8', 1), 32),
+                        'vel': (('<f8', (3,)), 40),
+                         'vx': (('<f8', 1), 40),
+                         'vy': (('<f8', 1), 48),
+                         'vz': (('<f8', 1), 56)}
 
             self.dm = np.zeros(self.ndm + self.nsink, dtype=dtype_dm)
             self.dm['x'] = dm_float[:,0]

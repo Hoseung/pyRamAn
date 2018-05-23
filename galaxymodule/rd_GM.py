@@ -241,7 +241,7 @@ class Gal(Galaxy):
         >>> hmo.Halo().data.dtype
         >>> dtype((numpy.record, [('np', '<i4'), ('id', '<i4'), ('level', '<i4'), ('host', '<i4'), ('sub', '<i4'), ('nsub', '<i4'), ('nextsub', '<i4'), ('m', '<f4'), ('mvir', '<f4'), ('r', '<f4'), ('rvir', '<f4'), ('tvir', '<f4'), ('cvel', '<f4'), ('x', '<f4'), ('y', '<f4'), ('z', '<f4'), ('vx', '<f4'), ('vy', '<f4'), ('vz', '<f4'), ('ax', '<f4'), ('ay', '<f4'), ('az', '<f4'), ('sp', '<f4'), ('idx', '<i4'), ('p_rho', '<f4'), ('p_c', '<f4'), ('energy', '<f8', (3,)), ('radius', '<f8', (4,))]))
         """
-        from utils import sampling
+        from utils.sampling import Region
 
         #if info is not None and not hasattr(self.info, "unit_l"):
         #    self._get_minimal_info(info)
@@ -257,8 +257,10 @@ class Gal(Galaxy):
                 if self.info is not None:
                     self.center_code = self.header['xg'] / self.info.pboxsize + 0.5
                     self.get_rgal()
-                    self.region = sampling.set_region(centers=self.center_code,
+                    self.region = Region(centers=self.center_code,
                                                   radius=self.rscale * self.rgal)
+                    #self.region = sampling.set_region(centers=self.center_code,
+                    #                              radius=self.rscale * self.rgal)
             elif type_star == "raw":
             # load catalog
                 import tree.halomodule as hmo
@@ -278,8 +280,9 @@ class Gal(Galaxy):
                 if radius is None:
                     radius = self.rgal
 
-                self.region = sampling.set_region(centers=self.header["xg"],
+                self.region = Region(centers=self.header["xg"],
                                                   radius=self.rscale * radius)
+
                 from load.part import Part
                 pp = Part(info=self.info, ptypes=['star id pos vel time metal'],
                           region=self.region, load=True)
@@ -534,7 +537,7 @@ def _rd_gal(nout, idgal, wdir="./", metal=True,
     return rd_gm_star_file(fname)
 
 
-def rd_gal(nout, idgal, wdir="./", metal=True,
+def rd_gal(nout, idgal, info=None, wdir="./", metal=True,
           nchem=0, long=True, fname=None):
     """
     Parameters
@@ -560,7 +563,7 @@ def rd_gal(nout, idgal, wdir="./", metal=True,
     print("[rd_GM.rd_gal] fname=", fname)
     header, data = rd_gm_star_file(fname)
 
-    gal = Gal(nout, idgal, wdir=wdir, load=False)
+    gal = Gal(nout, idgal, info=info, wdir=wdir, load=False)
     gal.star = data
     gal.header = header
     gal.gid = header['my_number']
@@ -592,14 +595,16 @@ def rd_gm_dm_file(fname, long=True):
                              ('npart', 'i4')])
 
     # variable type
-    dtype_data=[('x', '<f8'),
-                ('y', '<f8'),
-                ('z', '<f8'),
-                ('vx', '<f8'),
-                ('vy', '<f8'),
-                ('vz', '<f8'),
-               ('id', '<i4'),
-               ('m', '<f8')]
+    dtype_data = {'pos': (('<f8', (3,)), 0),
+                  'x': (('<f8', 1), 0),
+                  'y': (('<f8', 1), 8),
+                  'z': (('<f8', 1), 16),
+                 'id': (('<i8', 1), 24),
+                  'm': (('<f8', 1), 32),
+                'vel': (('<f8', (3,)), 40),
+                 'vx': (('<f8', 1), 40),
+                 'vy': (('<f8', 1), 48),
+                 'vz': (('<f8', 1), 56)}
 
     with open(fname, "rb") as f:
         header = read_header(f, dtype=dtype_header)
@@ -633,19 +638,23 @@ def rd_gm_star_file(fname, metal=True, nchem=0, long=True):
                              ('npart', 'i4')])
 
     # variable type
-    dtype_data=[('x', '<f8'),
-                ('y', '<f8'),
-                ('z', '<f8'),
-                ('vx', '<f8'),
-                ('vy', '<f8'),
-                ('vz', '<f8'),
-                ('id', '<i4'),
-                ('m', '<f8'),
-                ('time', '<f8')]
+    dtype_data = {'pos': (('<f8', (3,)), 0),
+                    'x': (('<f8', 1), 0),
+                    'y': (('<f8', 1), 8),
+                    'z': (('<f8', 1), 16),
+                   'id': (('<i8', 1), 24),
+                    'm': (('<f8', 1), 32),
+                  'vel': (('<f8', (3,)), 40),
+                   'vx': (('<f8', 1), 40),
+                   'vy': (('<f8', 1), 48),
+                   'vz': (('<f8', 1), 56),
+                 'time': (('<f8', 1), 72)}
+    d_off = 72
     if metal:
-        dtype_data.append(('metal', '<f8'))
+        dtype_data.update({'metal': (('<f8', 1), d_off+8)})
+        d_off +=8
         if nchem > 0:
-            dtype_data.append(('cp', '<f8', (nchem,)))
+            dtype_data.update({'cp': (('<f8', (nchem,)), d_off+8)})
 
     with open(fname, "rb") as f:
         header = read_header(f, dtype=dtype_header)
@@ -690,7 +699,7 @@ def rd_cell(nout, idgal, wdir="./", metal=True, nchem=0,
             return rd_gm_cell_file(nout, idgal, fname, metal=metal, nchem=nchem)
 
 
-def rd_gm_cell_file(nout, idgal, fname, metal=True, nchem=0):
+def rd_gm_cell_file(nout, idgal, fname, metal=True, cpu=False, ref=False, nchem=0):
     """
     Read GalaxyMaker format cell dump data into Recarray.
     No unit conversion performed.
@@ -699,6 +708,31 @@ def rd_gm_cell_file(nout, idgal, fname, metal=True, nchem=0):
     -----
     Cell may have 'cpu' field. take care of this.
     """
+    dtype_cell = {'pos': (('<f8', (3,)), 0),
+                    'x': (('<f8', 1), 0),
+                    'y': (('<f8', 1), 8),
+                    'z': (('<f8', 1), 16),
+                   'dx': (('<f8', 1), 24),
+                 'var0': (('<f8', 1), 32),
+                  'rho': (('<f8', 1), 32),
+                  'vel': (('<f8', (3,)), 40),
+                   'vx': (('<f8', 1), 40),
+                   'vy': (('<f8', 1), 48),
+                   'vz': (('<f8', 1), 56),
+                 'var1': (('<f8', 1), 40),
+                 'var2': (('<f8', 1), 48),
+                 'var3': (('<f8', 1), 56),
+                 'var4': (('<f8', 1), 64),
+                 'temp': (('<f8', 1), 64),
+                 'var5': (('<f8', 1), 72),
+                'metal': (('<f8', 1), 72)}
+    dt_off = 72
+    if cpu:
+        dtype_cell.update({'cpu': (('<f8',1),dt_off+8)})
+        dt_off += 8
+    if ref:
+        dtype_cell.update({'ref': (('bool',1),dt_off+8)})
+
     import  utils.io_module as io
     with open(fname, 'rb') as f:
         nout0 = io.read_fortran(f, dtype=np.int32, check=False)[0]
@@ -707,10 +741,8 @@ def rd_gm_cell_file(nout, idgal, fname, metal=True, nchem=0):
 #        assert idgal == gid, "given idgal ({}) and loaded idgal ({}) do not match".format(idgal, gid)
 
         ncell = io.read_fortran(f, dtype=np.int32, check=False)[0]
-        cell = np.zeros(ncell, dtype=[('x', '<f8'),('y', '<f8'),('z', '<f8'),
-                                     ('dx', '<f8'),('var0', '<f8'),('var1', '<f8'),
-                                     ('var2', '<f8'),('var3', '<f8'),('var4', '<f8'),
-                                     ('var5', '<f8')])
+
+        cell = np.zeros(ncell, dtype=dtype_cell)
         cell['x']  = io.read_fortran(f, dtype=np.float64, n=ncell)
         cell['y']  = io.read_fortran(f, dtype=np.float64, n=ncell)
         cell['z']  = io.read_fortran(f, dtype=np.float64, n=ncell)

@@ -1,5 +1,5 @@
 import numpy as np
-import matplotlib.pyplot as plt 
+import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 
 def _display_pixels(x, y, counts, pixelSize):
@@ -165,11 +165,13 @@ def gen_vmap_sigmap(self,
         from Cappellari.voronoi.voronoi_2d_binning import voronoi_2d_binning
         """
         This function accepts only data on uniform grid...?
+        => Yes.
+        Provide pixelsize to speed up the calculation.
         """
         print("Inside voronoi, plot =", voronoi["plot"])
         binNum, xNode, yNode, xBar, yBar, sn, nPixels, scale = \
             voronoi_2d_binning(xpos_regular, ypos_regular, count_map,
-                             noise_map, targetSN=voronoi["targetSN"],
+                             noise_map, pixelsize=1, targetSN=voronoi["targetSN"],
                              plot=voronoi["plot"], quiet=voronoi["quiet"])
 
         self.xNode = xNode
@@ -203,7 +205,7 @@ def gen_vmap_sigmap(self,
         self.sigmap_v = sigmap_v
 
 
-        if plot_map:  
+        if plot_map:
 
             vmap_plot = np.empty_like(count_map).ravel()
             sigmap_plot = np.empty_like(count_map).ravel()
@@ -335,7 +337,6 @@ def cal_lambda_r_eps(self,
     import matplotlib.pyplot as plt
     is_voronoi = lambda x : x is not None
 
-#
 # 2. calculate profile over radial bins.
 # iterate_mge : run MGE with various light fraction
 #               to find out half light radius.
@@ -345,15 +346,14 @@ def cal_lambda_r_eps(self,
 
     nx = round(npix_per_reff * 2 * (rscale + 1))
     ny = nx
-    
+
     xpos = np.tile(np.arange(nx),ny)
     ypos = np.repeat(np.arange(ny),nx)
-        
+
     #xNode = self.xNode
     #yNode = self.yNode
     reff = self.meta.reff
     self.npix_per_reff = npix_per_reff
-
 
     mmap_tot = sum(mmap)
     dist = np.sqrt(np.square(xpos- nx/2) \
@@ -364,9 +364,9 @@ def cal_lambda_r_eps(self,
         if iterate_mge:
             eps_arr = []
             mjr_arr = []
-            pa_arr = []
-            xpos_arr=[]
-            ypos_arr=[]
+            pa_arr  = []
+            xpos_arr= []
+            ypos_arr= []
             f_light_arr=[]
             for i in range(6):
                 # mmap = 1D, self.mmap = mmap.reshap(nx,ny)
@@ -395,7 +395,7 @@ def cal_lambda_r_eps(self,
 
                 self.meta.eps, self.meta.pa, self.meta.sma, self.meta.xcen, self.meta.ycen = \
                     interpol(np.array(f_light_arr), 0.5, (eps_arr, pa_arr, mjr_arr, xpos_arr, ypos_arr))
-                print('eps arra', eps_arr)
+                print('eps array', eps_arr)
                 print("interpolated eps, pa, sma, xcen, ycen", \
                       self.meta.eps, self.meta.pa, self.meta.sma, self.meta.xcen, self.meta.ycen)
                 self.meta.smi = self.meta.sma * (1 - self.meta.eps)
@@ -443,12 +443,19 @@ def cal_lambda_r_eps(self,
                 if recenter_v:
                     xcen=mge_now["xcen"]
                     ycen=mge_now["ycen"]
-                    dist1d = np.sqrt(np.square(self.xNode - xcen) + np.square(self.yNode - ycen))
-                    i_very_cen = np.where(dist1d < 1.5)[0] # within 0.2 Reff
-                    #print("{:1f} % are very close to the center".format(100*len(i_very_cen)/len(dist1d)))
-                    new_vc = np.mean(self.vmap_v[i_very_cen])
-                    self.vmap_v = self.vmap_v - new_vc
-    
+                    if is_voronoi(voronoi):
+                        dist1d = np.sqrt(np.square(self.xNode - xcen) + np.square(self.yNode - ycen))
+                        i_very_cen = np.where(dist1d < 1.5)[0] # within 0.2 Reff
+                        #print("{:1f} % are very close to the center".format(100*len(i_very_cen)/len(dist1d)))
+                        new_vc = np.mean(self.vmap_v[i_very_cen])
+                        self.vmap_v = self.vmap_v - new_vc
+                    else:
+                        dist = np.sqrt(np.square(xpos- xcen) \
+                                       + np.square(ypos- ycen))
+                        i_very_cen = np.where(dist < 1.5)[0] # within 0.2 Reff
+                        new_vc = np.mean(self.vmap.ravel()[i_very_cen])
+                        self.vmap = self.vmap - new_vc
+
                 self.meta.mge_result_list.append(mge_now)
 
                 if is_voronoi(voronoi):

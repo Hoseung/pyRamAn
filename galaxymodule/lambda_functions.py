@@ -183,9 +183,9 @@ def associate_gal_hal(allgal, allhal, plot_check=False, dir_out=""):
                 np.square(center['z'] - data['z']))
 
     def distv(halo, center):
-        norm = np.sqrt(np.square(center['vx'] - halo.vx) +
-                       np.square(center['vy'] - halo.vy) +
-                       np.square(center['vz'] - halo.vz))
+        norm = np.sqrt(np.square(center['vx'] - halo["vx"]) +
+                       np.square(center['vy'] - halo["vy"]) +
+                       np.square(center['vz'] - halo["vz"]))
 
         return norm
 
