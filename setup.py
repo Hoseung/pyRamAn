@@ -29,7 +29,7 @@ setup(
     long_description=long_description,
 
     # The project's main homepage.
-    url='https://bitbucket.org/py_gem/pyclusterevol/',
+    url='https://bitbucket.org/hoseung/pynhevol/',
 
     # Author details
     author='Hoseung Choi',
@@ -56,7 +56,7 @@ setup(
         # Specify the Python versions you support here. In particular, ensure
         # that you indicate whether you support Python 2, Python 3 or both.
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
     ],
 
     # What does your project relate to?
@@ -76,7 +76,7 @@ setup(
     # https://packaging.python.org/en/latest/requirements.html
     install_requires=['numpy', 'scipy', 'matplotlib', 'astropy'],
 
-    python_requires='>=3.5',
+    python_requires='>=3.6',
 
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,
@@ -123,7 +123,6 @@ ext_modules = [Extension("tree/rd_hal",
                          language='c++',)]
 setup(cmdclass = {'build_ext': build_ext},
               ext_modules = ext_modules)
-
 
 
 # Fortran extension
