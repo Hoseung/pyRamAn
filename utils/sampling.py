@@ -9,17 +9,21 @@ Routines used in sampling tasks
 """
 import numpy as np
 class Region():
-    def __init__(self, **region):
-        self._xc = 0.5
-        self._yc = 0.5
-        self._zc = 0.5
-        self._xr = [0,1]
-        self._yr = [0,1]
-        self._zr = [0,1]
-        self._centers = [0.5, 0.5, 0.5]
-        self._radius = 0.5
-        self._ranges = [[0,1]]*3
-        self.set_region(**region)
+    def __init__(self, halo=None, **region):
+        if halo is not None:
+            self.region_from_halo(halo)
+        else:
+            self._xc = 0.5
+            self._yc = 0.5
+            self._zc = 0.5
+            self._xr = [0,1]
+            self._yr = [0,1]
+            self._zr = [0,1]
+            self._centers = [0.5, 0.5, 0.5]
+            self._radius = 0.5
+            self._ranges = [[0,1]]*3
+            self.set_region(**region)
+
 
     @property
     def xc(self):
