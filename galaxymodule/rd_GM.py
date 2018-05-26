@@ -148,13 +148,17 @@ class Gal(Galaxy):
             idgal = catalog["id"]
 
         super(Gal, self).__init__(catalog=catalog, info=info, halo=halo)
+        try:
+            self.hid = self.hcat["id"]
+        except:
+            self.hid = idhal
+            pass
         self.star = None # data -> star
         self.cell = None
         self.dm = None
         self.header = None
         self.nout = nout
         self.gid = idgal
-        self.hid = idhal
         self.units = Dummy()
         self.units.star = Units()
         self.units.dm = Units()
@@ -187,9 +191,6 @@ class Gal(Galaxy):
         for name, val in info.__dict__.items():
             if name in keep_list:
                 setattr(self.info, name, val)
-#                print(self.info.unit_d)
-
-
 
     def get_rgal(self):
         """
@@ -211,7 +212,10 @@ class Gal(Galaxy):
 
 
     def load(self, type_star="gm", type_dm="gm", type_cell="gm",
-             info=None, rscale=None, radius=None):
+             info=None, rscale=None, radius=None,
+             rd_star_params=None,
+             rd_cell_params=None,
+             rd_dm_params=None):
         """
         Load per-galaxy data (if exist).
         Automatically skips missing components.
@@ -245,13 +249,13 @@ class Gal(Galaxy):
 
         #if info is not None and not hasattr(self.info, "unit_l"):
         #    self._get_minimal_info(info)
-
         if rscale is not None:
             self.rscale = rscale
         try:
             if type_star == "gm":
+                print("1", rd_star_params)
                 self.header, self.star = _rd_gal(self.nout, self.gid,
-                             wdir=self.wdir, metal=True)
+                             wdir=self.wdir, metal=True, **rd_star_params)
                 self.units.header = unit_gm
                 self.units.star = unit_gm
                 if self.info is not None:
@@ -297,7 +301,8 @@ class Gal(Galaxy):
 
         try:
             if type_dm == "gm":
-                self.dm = rd_dm(self.nout, self.hid, wdir=self.wdir)
+                self.dm = rd_dm(self.nout, self.hid, wdir=self.wdir,
+                                **rd_dm_params)
                 self.units.dm.name="gm"
             elif type_dm == 'raw':
                 from load.part import Part
@@ -314,7 +319,8 @@ class Gal(Galaxy):
 
         try:
             if type_cell == "gm":
-                self.cell = rd_cell(self.nout, self.gid, wdir=self.wdir, metal=True)
+                self.cell = rd_cell(self.nout, self.gid, wdir=self.wdir,
+                                    metal=True, **rd_cell_params)
                 self.units.cell= unit_gm
                 self._has_cell=True
             elif type_cell == "raw":
@@ -506,7 +512,7 @@ def time2gyr(self, info=None):
 
 
 def _rd_gal(nout, idgal, wdir="./", metal=True,
-          nchem=0, long=True, fname=None):
+          nchem=0, long=True, fname=None, additional_fields=None):
     """
     Just read a GM file.
     All this function does is to generate a file name
@@ -532,9 +538,9 @@ def _rd_gal(nout, idgal, wdir="./", metal=True,
         idgal = str(idgal).zfill(7)
         dir_nout = "GAL_" + str(nout).zfill(5)
         fname = wdir + 'GalaxyMaker/' +  dir_nout + '/gal_stars_' + idgal
-
+    print("2",additional_fields)
     #header, data =
-    return rd_gm_star_file(fname)
+    return rd_gm_star_file(fname, additional_fields=additional_fields)
 
 
 def rd_gal(nout, idgal, info=None, wdir="./", metal=True,
@@ -554,6 +560,10 @@ def rd_gal(nout, idgal, info=None, wdir="./", metal=True,
     Notes
     -----
     header xg in Mpc (physical, centered at 0.5, 0.5, 0.5 of the simualtion volume)
+
+    ...
+
+    deprecated??
     """
     if fname is None:
         idgal = str(idgal).zfill(7)
@@ -627,7 +637,67 @@ def rd_gm_dm_file(fname, long=True):
     return data
 
 
-def rd_gm_star_file(fname, metal=True, nchem=0, long=True):
+def rd_gm_star_file(fname, metal=True, nchem=0
+                    additional_fields=None):
+    """
+
+
+    Parameters
+    ----------
+    metal : boolean {True}
+        if True, read metallicity from the raw file
+    nchem : int {0}
+        Number of chemical elements in addition to the total metallicity.
+
+    additional_fields : dtype in a specific format
+        appends fields to the default stellar particle fields.
+
+
+
+    Examples
+    --------
+    new_dtype = {"ellip": (('<f8', 1), 0),
+           "flux_r": (('<f8', 1), 8),
+           "flux_g": (('<f8', 1), 16),
+           "flux_b": (('<f8', 1), 24)}
+    rd_star_params = dict(additional_fields=new_dtype)
+    gg.load(type_cell="none", type_dm="none", rd_star_params=rd_star_params)
+    print(gg.star.dtype)
+        dtype((numpy.record,
+        {'names':
+        ['pos','x','y','z','id','m','vel','vx','vy','vz','time','metal','ellip',
+        'flux_r','flux_g','flux_b'],
+        'formats':
+        [('<f8', (3,)),'<f8','<f8','<f8','<i8','<f8',('<f8', (3,)),'<f8','<f8',
+        '<f8','<f8','<f8','<f8','<f8','<f8','<f8'],
+        'offsets':
+        [0,0,8,16,24,32,40,40,48,56,72,80,80,88,96,104],
+        'itemsize':
+        112}))
+
+
+
+    NOTE: There is no point automatically calculating the offset as sometimes
+    I want duplicate offset for multiple fields. Unless the dtype grow huge,
+    it is easier to manually manage the dtype.
+
+    I could do something like this if REALLY needed.
+    dtype_data = {'pos': ('<f8', (3,)),
+                'x': ('<f8', 1),
+                'y': ('<f8', 1),
+                'z': ('<f8', 1),
+               'id': ('<i8', 1),
+                'm': ('<f8', 1),
+              'vel': ('<f8', (3,)),
+               'vx': ('<f8', 1),
+               'vy': ('<f8', 1),
+               'vz': ('<f8', 1),
+             'time': ('<f8', 1)}
+
+    for field in dtype_data.items():
+        dtype_data.update({field[0]: (field[1][0], d_off)})
+        d_off += np.dtype(field[1][0]).itemsize * np.squeeze(field[1][1])
+    """
     # Header structure
     dtype_header = np.dtype([('my_number', 'i4'),
                              ('level', 'i4'),
@@ -655,6 +725,11 @@ def rd_gm_star_file(fname, metal=True, nchem=0, long=True):
         d_off +=8
         if nchem > 0:
             dtype_data.update({'cp': (('<f8', (nchem,)), d_off+8)})
+
+    if additional_fields is not None:
+        for field in additional_fields.items():
+            additional_fields.update({field[0]: (field[1][0], field[1][1]+d_off)})
+    dtype_data.update(additional_fields)
 
     with open(fname, "rb") as f:
         header = read_header(f, dtype=dtype_header)
