@@ -219,13 +219,13 @@ def mk_gal(gal,
                       ('vx', '<f8'), ('vy', '<f8'), ('vz', '<f8'),
                       ('temp', '<f8')]#, ('metal', '<f8')]
         if "var5" in cell.dtype.names:
-            if len(cell.dtype.names < 12):
+            if len(cell.dtype.names) < 12:
                 dtype_cell.append(("metal", "<f8"))
             else:
-                print("Warning...")
-                print("Don't know what to do with all the hydro-variables:")
-                print(cell.dtype)
-                print("Ignoring anyting after the temperature field.")
+                print("[mk_gal] Warning...")
+                print("[mk_gal] Don't know what to do with all the hydro-variables:")
+                print("[mk_gal] ",cell.dtype)
+                print("[mk_gal] Ignoring anyting after the temperature field.")
 
         if "cpu" in cell.dtype.names:
             dtype_cell.append(('cpu', '<f8'))

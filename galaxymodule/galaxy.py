@@ -156,7 +156,8 @@ class Galaxy():
                  catalog=None, convert_cat=True):
         self.meta = Meta()
         self.set_info(info)
-        self.set_catalog(np.copy(catalog), convert_cat)
+        self.set_catalog(catalog.copy(), convert_cat)
+        self.set_halo(halo.copy(), convert_cat)
         self._has_star=False
         self._has_dm=False
         self._has_cell=False
@@ -164,6 +165,31 @@ class Galaxy():
 
     def set_info(self, info):
         self.info = get_minimal_info(info)
+
+    def set_halo(self, halo, convert):
+        """
+            Copy so not to be affected by the original data being modified outside.
+            center of galaxy may be updated by more sophisticated method.
+        """
+        is_tree=False
+        if "pos" in halo.dtype.fields:
+            is_tree = True
+            tt = halo.copy()
+            self.hcat = dict( x=tt["pos"][0],#*self.info.pboxsize,
+            	      	  	y=tt["pos"][1],#*self.info.pboxsize,
+            	      	 	z=tt["pos"][2],#*self.info.pboxsize,
+            	     	  	vx=tt["vel"][0],
+            	 	   	  	vy=tt["vel"][1],
+            	  	        vz=tt["vel"][2],
+                            r=tt["rvir"],
+                            m=tt["m"]*1e11,
+            	      	    id=tt["id"],
+                            mvir=tt["mvir"],
+                            rvir=tt["rvir"],
+                            idx=tt["idx"])
+
+            if not is_tree and convert:
+                convert_catalog(self.hcat, self.info.pboxsize)
 
     def set_catalog(self, catalog, convert):
         """
@@ -888,7 +914,7 @@ class Galaxy():
 
 
     def cal_b2t(self, ptype='star', disk_criterion="Abadi2003",
-                bound_only = True, hist=False):
+                bound_only = True, return_ellip=False):
         """
         Measure bulge to total ratio of the galaxy.
 
@@ -900,8 +926,8 @@ class Galaxy():
             discrimination criterion. (Defaults to "Abadi2003")
         bound_only : logical
             consider bound particles only
-        hist : logical
-            if True, ellipticity histogram is returned
+        return_ellip : logical
+            if True, ellipticity of each particle is returned
         """
         def gas_mass(cell, info):
             """
@@ -911,8 +937,8 @@ class Galaxy():
             msun = 1.98892e33 # solar mass in gram.
             return (cell['rho'] * info.unit_d) * (cell['dx'] * info.unit_l)**3 / msun
 
-        if proj=="z":
-            pos1, pos2, vel1, vel2 = 'x', 'y', 'vx', 'vy'
+        #if proj=="z":
+        pos1, pos2, vel1, vel2 = 'x', 'y', 'vx', 'vy'
 
 
         # Radius
@@ -932,7 +958,7 @@ class Galaxy():
         r_d = np.sqrt(np.sum(np.square(self.dm["pos"]), axis=1))
 
         if hasattr(self, "cell"):
-            r_g = np.sqrt(np.sum(np.square(self.cel["pos"]), axis=1))
+            r_g = np.sqrt(np.sum(np.square(self.cell["pos"]), axis=1))
             r_all = np.concatenate((r_s, r_g, r_d))
         else:
             r_all = np.concatenate((r_s, r_d))
@@ -979,8 +1005,9 @@ class Galaxy():
             disk = np.sum(m) - bulge
 
         self.meta.d2t = disk / self.meta.mstar # or sum(self.star['m'][ind])
-        if hist:
-            return np.histogram(ellipticity, range=[-2,2], bins=20)
+        self.meta.b2t = bulge / self.meta.mstar
+        if return_ellip:
+            return ellipticity
 
 
     def cal_trivia(self):
