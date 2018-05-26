@@ -637,7 +637,7 @@ def rd_gm_dm_file(fname, long=True):
     return data
 
 
-def rd_gm_star_file(fname, metal=True, nchem=0
+def rd_gm_star_file(fname, metal=True, nchem=0,
                     additional_fields=None):
     """
 
