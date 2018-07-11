@@ -5,6 +5,8 @@ Created on Mon Mar 16 14:01:14 2015
 @author: hoseung
 """
 import numpy as np
+import matplotlib.pyplot as plt
+
 def circle_scatter(ax, x_array, y_array, radii_array,
                    colors=None,
                    cmap='RdYlBu_r', **kwargs):
@@ -15,7 +17,6 @@ def circle_scatter(ax, x_array, y_array, radii_array,
         zip only works with iterables (not with a single value, int or float.)
         Can I make it more general?
     """
-    import matplotlib.pylab as plt
     from matplotlib.collections import PatchCollection
 
     mypatches = []
@@ -44,7 +45,6 @@ def square_scatter(ax, x_array, y_array, size_array, **kwargs):
     """
     draws square of given x,y, and lengths of side.
     """
-    import matplotlib.pylab as plt
     for (x, y, size) in zip(x_array, y_array, size_array):
         square = plt.Rectangle((x-size/2,y-size/2), size, size, **kwargs)
         ax.add_patch(square)
@@ -65,8 +65,6 @@ def part2den(part, info, region=None, proj='z', npix=800, ptype=None,
     given part, info, region, it passes x,y,z,m,npix,info arrays to pp.den2d.
     mass [Msun]
     """
-
-    import numpy as np
     from draw import img_obj
 
     if region is None:
@@ -94,7 +92,6 @@ def part2den(part, info, region=None, proj='z', npix=800, ptype=None,
         return img
     else:
         return False
-
 
 def den2d(x, y, z, m, npix, region=None, proj='z',
                     ngp=False, cic=False, tsc=False,
@@ -131,7 +128,6 @@ def den2d(x, y, z, m, npix, region=None, proj='z',
     """
     #import pyximport; pyximport.install()
     from utils import assign
-    import numpy as np
 #   vmax = 1e12# in solar mass / kpc^2
 
 #   range = in data unit.   # prange = in physical unit
@@ -227,7 +223,6 @@ def den2d(x, y, z, m, npix, region=None, proj='z',
 
 
 def update_tick_labels(ax):
-
     proj = ax.pp_hal_meta.proj
     npix = ax.pp_hal_meta.npix
 
@@ -334,10 +329,6 @@ def pp_halo(h, npix, rscale=1.0, region=None, ind=None, ax=None,
     But, what about tree being dependant on the expansion factor?
     """
 
-    import matplotlib.pyplot as plt
-    from draw import pp
-    import numpy as np
-
     class ax_meta():
         def __init__(self, proj, npix):
             self.region=None
@@ -407,7 +398,7 @@ def pp_halo(h, npix, rscale=1.0, region=None, ind=None, ax=None,
             zspan= zmax - zmin
 
         else:
-            # If reion is given, only plot halos inside the region.
+            # If a reion is given, plot only  the halos inside the region.
             # The size of region is retained.
             # image area does not shrink to fit only valid halos.
             ind = np.where( (hd[xn] > getattr(region,xrn)[0]) &
@@ -435,7 +426,6 @@ def pp_halo(h, npix, rscale=1.0, region=None, ind=None, ax=None,
 
         if region is None:
             # in the original direction.
-
             xmin = min(hd[ind][xn] - hd[ind][radius])
             ymin = min(hd[ind][yn] - hd[ind][radius])
             zmin = min(hd[ind][zn] - hd[ind][radius])
@@ -484,16 +474,19 @@ def pp_halo(h, npix, rscale=1.0, region=None, ind=None, ax=None,
             ccc = np.log10(hd[ind][color_field])
         else:
             ccc = hd[ind][color_field]
+        if vmin is None:
+            vmin = ccc.min()
+        if vmax is None:
+            vmax = ccc.max()
         # normalize colors
-        ccc = 256 * (ccc-ccc.min()) /ccc.ptp()
+        ccc = 256 * (ccc-vmin) /(vmax-vmin)
         if not (hasattr(ax, "clim") and keep_clim):
-            ax.clim = ccc.min(), ccc.max()
+            ax.clim = vmin, vmax
 
         print("MinMax ccc", ccc.min(), ccc.max())
         kwargs.update({"colors": ccc})
-    #else:
-        #kwargs.update({"colors": None})
-    pp.circle_scatter(ax, x, y, r, facecolors='none',
+
+    circle_scatter(ax, x, y, r, facecolors='none',
                       linewidth=linewidth, cmap=cmap, **kwargs)
 
     #if hasattr(ax,"pp_hal_meta"):
@@ -529,7 +522,6 @@ def resize_deprecated(X,shape=None):
     ----
         Doesn't work if the image is not rectangular.
     """
-    import numpy as np
     if shape==None:
         return X
     m,n = shape
@@ -548,7 +540,6 @@ def pp_colden(cell, npix, info, proj="z", verbose=False, autosize=False):
     incomplete.
     column density is simpler (no need to divide by projected mass.)
     """
-    import numpy as np
 #    xh = np.asarray([0.5, 0.5, 0.5])
     hvar = 1
     sig = 1.0
@@ -699,7 +690,6 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
     To do: Currently only column sum is supported. maximum value along the column, or column average option are needed.
 
     """
-    import numpy as np
     from draw import ppc
 
     sig = 1.0
