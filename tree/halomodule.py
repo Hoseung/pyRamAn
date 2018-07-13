@@ -10,7 +10,7 @@ halo / galaxy calss including basic data load functionality.
 import numpy as np
 from load.info import Info
 import struct
-from load import dtypes
+from load.dtypes import get_halo_dtype
 
 class HaloMeta():
     """
@@ -32,7 +32,7 @@ class HaloMeta():
     """
     def __init__(self, nout=None, base='./', info=None, halofinder='HM',
                  load=True, is_gal=False, return_id=False, outdir=None, fn=None,
-                 verbose=False, double=False, pure=False):
+                 verbose=False, double=False, pure=False, read_mbp=False):
         """
 
         Parameters
@@ -80,6 +80,7 @@ class HaloMeta():
         self.massp = 0 # in case of single level DMO run.
         self.unit={"mass":None, "lengh":None, "velocity":None}
         self.is_gal = is_gal
+        self.read_mbp = read_mbp
         self.convert=True
         if return_id is False:
             self.return_id = False
@@ -233,14 +234,14 @@ class Halo(HaloMeta):
         if pure == None:
             pure = self.pure
 
-        from load.dtypes import get_halo_dtype
         f = open(fn, "rb")
         if pure:
             brick_data = f.read()
             offset, halnum, subnum = load_header(brick_data, double=double)
             self.data = np.zeros(halnum+subnum,
-                                 dtype=dtypes.get_halo_dtype(is_gal=self.is_gal,
-                                                             double=double))
+                                 dtype=get_halo_dtype(is_gal=self.is_gal,
+                                                             double=double,
+                                                             read_mbp=self.read_mbp))
             for i in range(halnum+subnum):
                 offset = load_a_halo(brick_data, offset, self.data[i],
                                      is_gal=self.is_gal, double=double)
@@ -253,22 +254,27 @@ class Halo(HaloMeta):
             f.close()
             #self.nbodies = rd_halo.read_nbodies(fn.encode())
             if double:
-                temp = rd_hal.read_file_double(fn.encode(), self.nbodies, int(self.is_gal))# as a byte str.
+                temp = rd_hal.read_file_double(fn.encode(), self.nbodies, int(self.is_gal),
+                                               int(self.read_mbp))# as a byte str.
             else:
-                temp = rd_hal.read_file(fn.encode(), self.nbodies, int(self.is_gal))# as a byte str.
+                temp = rd_hal.read_file(fn.encode(), self.nbodies, int(self.is_gal),
+                                        int(self.read_mbp))# as a byte str.
 
             allID, __, self.halnum, self.subnum,\
                 self.massp, self.aexp, self.omegat, self.age = temp[0:8]
             ntot = self.halnum + self.subnum
-            self.data = np.recarray(ntot, dtype=get_halo_dtype(is_gal=self.is_gal, double=double))
+            self.data = np.recarray(ntot, dtype=get_halo_dtype(is_gal=self.is_gal, double=double, read_mbp=self.read_mbp))
+            print(self.data.dtype)
             self.data['np'], self.data['id'],\
             levels, ang, energy, \
             self.data['m'],\
             radius, pos,\
             self.data['sp'], vel = temp[8:18]
             vir, profile = temp[18:20]
+            ilast = 19
             if self.is_gal:
-                temp_gal = temp[20]
+                ilast += 1
+                temp_gal = temp[ilast]
 
             self.data['energy'] = energy.reshape((ntot,3))
             levels = levels.reshape((ntot,5))
@@ -290,9 +296,19 @@ class Halo(HaloMeta):
             if self.is_gal:
                 self.data['sig'], self.data['sigbulge'], self.data['mbulge'] =\
                         temp_gal[::3].copy(), temp_gal[1::3].copy(), temp_gal[2::3].copy()
-                self.data['g_nbin'] = temp[21]
-                self.data['g_rr'] = temp[22].reshape(ntot,100)
-                self.data['g_rho']= temp[23].reshape(ntot,100)
+                self.data['g_nbin'] = temp[ilast+1]
+                self.data['g_rr'] = temp[ilast+2].reshape(ntot,100)
+                self.data['g_rho']= temp[ilast+3].reshape(ntot,100)
+                ilast += 3
+            if self.read_mbp:
+                """
+                it does not make sense to get the index of particles
+                if the member id list is not read.
+                Should I force reading them? or ignore read_mbp if member IDs are not read?
+                """
+                ilast += 1
+                #imbp = temp[ilast]
+                self.data["mbp"] = temp[ilast]
 
         if self.return_id:
             self.idlists=[]
@@ -322,7 +338,7 @@ class Halo(HaloMeta):
                  "level", "host", "sub", "nsub", "nextsub",
                  "spinx", "spiny", "spinz", "angx", "angy", "angz"]
 
-        dtypes = "int64, int64, float64, float64, float64, float64, \
+        _dtypes = "int64, int64, float64, float64, float64, float64, \
                   float64, float64, float64, float64, float64, float64,\
                   int8, int64, int64, int32, int64, \
                   float64, float64, float64, float64, float64, float64"
@@ -337,7 +353,7 @@ class Halo(HaloMeta):
                       data["HHOST"][0][4],
                       data["SP"][0][0], data["SP"][0][1], data["SP"][0][2],
                       data["ANG"][0][0], data["ANG"][0][1], data["ANG"][0][2]],
-                      dtype = dtypes)
+                      dtype = _dtypes)
         self.data.dtype.names = names
 
     def normalize(self):

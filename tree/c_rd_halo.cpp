@@ -22,6 +22,14 @@ void fortran_read_int(std::fstream& fin, int &data, int len){
     return ;
 }
 
+void fortran_read_long(std::fstream& fin, long &data, int len){
+    int dummy;
+    fin.read((char *) &dummy, sizeof(dummy));
+    fin.read((char *) &data, sizeof(long) * len);
+    fin.read((char *) &dummy, sizeof(dummy));
+    return ;
+}
+
 void fortran_read_float(std::fstream& fin, float &data, int len){
     int dummy;
 //    double data;
@@ -65,7 +73,7 @@ void load_meta_d(std::fstream& fin, Meta2& haloinfo){
 }
 
 
-void load_data_gal(std::fstream& fin, Meta& haloinfo,  Data& halodata, int tothal, int is_gal){
+void load_data_gal(std::fstream& fin, Meta& haloinfo,  Data& halodata, int tothal, int is_gal, int read_mbp){
     //int* ids;
     int iskip=0;
     for (int i=0; i < tothal; i++){
@@ -76,6 +84,10 @@ void load_data_gal(std::fstream& fin, Meta& haloinfo,  Data& halodata, int totha
         fortran_read_int(fin, halodata.hnu[i], 1);
         fortran_skip(fin);// time step
         fortran_read_int(fin, halodata.hhost[i*5], 5);
+        if(read_mbp>0)
+      	{
+      	  fortran_read_long(fin, halodata.imbp[i], 1);
+      	}
         fortran_read_float(fin, halodata.mass[i], 1);
         fortran_read_float(fin, halodata.pos[i*3], 3);
         fortran_read_float(fin, halodata.vel[i*3], 3);
@@ -99,7 +111,7 @@ void load_data_gal(std::fstream& fin, Meta& haloinfo,  Data& halodata, int totha
     }
 }
 
-void load_data_gal_d(std::fstream& fin, Meta2& haloinfo,  Data2& halodata, int tothal, int is_gal){
+void load_data_gal_d(std::fstream& fin, Meta2& haloinfo,  Data2& halodata, int tothal, int is_gal, int read_mbp){
     //int* ids;
     int iskip=0;
     for (int i=0; i < tothal; i++){
@@ -134,10 +146,11 @@ void load_data_gal_d(std::fstream& fin, Meta2& haloinfo,  Data2& halodata, int t
 }
 
 
-void allocate_data(Data& halodata, int ntot, int is_gal){
+void allocate_data(Data& halodata, int ntot, int is_gal, int read_mbp){
     halodata.np = new int [ntot];
     halodata.hnu = new int [ntot];
     halodata.hhost = new int [ntot * 5];
+    halodata.imbp = new long [ntot];
     halodata.ang = new float [ntot * 3];
     halodata.pos = new float [ntot * 3];
     halodata.vel = new float [ntot * 3];
@@ -155,10 +168,11 @@ void allocate_data(Data& halodata, int ntot, int is_gal){
     }
 }
 
-void allocate_data_d(Data2& halodata, int ntot, int is_gal){
+void allocate_data_d(Data2& halodata, int ntot, int is_gal, int read_mbp){
     halodata.np = new int [ntot];
     halodata.hnu = new int [ntot];
     halodata.hhost = new int [ntot * 5];
+    halodata.imbp = new long [ntot];
     halodata.ang = new double [ntot * 3];
     halodata.pos = new double [ntot * 3];
     halodata.vel = new double [ntot * 3];
@@ -177,7 +191,7 @@ void allocate_data_d(Data2& halodata, int ntot, int is_gal){
 }
 
 
-void load(std::string& fname, Meta& haloinfo, Data& halodata, int nbodies, int is_gal){
+void load(std::string& fname, Meta& haloinfo, Data& halodata, int nbodies, int is_gal, int read_mbp){
     std::fstream fhalo(fname.c_str(), std::ios::binary | std::ios::in);
     if (fhalo.fail()){
         std::cerr << "EXIT 1\n";
@@ -189,15 +203,15 @@ void load(std::string& fname, Meta& haloinfo, Data& halodata, int nbodies, int i
     int ntot = haloinfo.halnum + haloinfo.subnum;
 
 //    Data2 halodata;
-    allocate_data(halodata, ntot, is_gal);
-    load_data_gal(fhalo, haloinfo, halodata, ntot, is_gal);
+    allocate_data(halodata, ntot, is_gal, read_mbp);
+    load_data_gal(fhalo, haloinfo, halodata, ntot, is_gal, read_mbp);
 
 //    std::cout << halodata.pos[123] << std::endl;
 //    std::cout << " Load done " << std::endl;
     fhalo.close();
 }
 
-void load_d(std::string& fname, Meta2& haloinfo, Data2& halodata, int nbodies, int is_gal){
+void load_d(std::string& fname, Meta2& haloinfo, Data2& halodata, int nbodies, int is_gal, int read_mbp){
     std::fstream fhalo(fname.c_str(), std::ios::binary | std::ios::in);
     if (fhalo.fail()){
         std::cerr << "EXIT 1\n";
@@ -209,8 +223,8 @@ void load_d(std::string& fname, Meta2& haloinfo, Data2& halodata, int nbodies, i
     int ntot = haloinfo.halnum + haloinfo.subnum;
 
 //    Data2 halodata;
-    allocate_data_d(halodata, ntot, is_gal);
-    load_data_gal_d(fhalo, haloinfo, halodata, ntot, is_gal);
+    allocate_data_d(halodata, ntot, is_gal, read_mbp);
+    load_data_gal_d(fhalo, haloinfo, halodata, ntot, is_gal, read_mbp);
 
 //    std::cout << halodata.pos[123] << std::endl;
 //    std::cout << " Load done " << std::endl;

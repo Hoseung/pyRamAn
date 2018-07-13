@@ -43,7 +43,7 @@ def add_dtypes(old_dtypes, add_dtypes):
     return dtype_new
 
 
-def get_halo_dtype(is_gal=False, double=False):
+def get_halo_dtype(is_gal=False, double=False, read_mbp=False):
     if double:
         dtype_float = "<f8"
         df=8
@@ -69,6 +69,9 @@ def get_halo_dtype(is_gal=False, double=False):
                        ('mbulge', dtype_float), ('hosthalo', '<i4'),
                        ('g_nbin', '<i4'), ('g_rr', dtype_float, (100,)),
                        ('g_rho', dtype_float, (100,))]
+
+    if read_mbp:
+        dtype_halo += [('mbp', '<i4')]
 
     add_dtype = [("pos", dtype_float, (3,), "x", 0),
                  ("vel", dtype_float, (3,), "vx", 0),
