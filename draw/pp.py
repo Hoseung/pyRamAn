@@ -257,7 +257,7 @@ def update_tick_labels(ax):
     ax.set_yticklabels(yticks)
 
 
-def pp_halo(h, npix, rscale=1.0, region=None, ind=None, ax=None,
+def pp_halo(h, npix=200, rscale=1.0, region=None, ind=None, ax=None,
             name=False, radius="rvir",
             verbose=False, new_ax=False,
             fontsize=10, linewidth=1.0,
@@ -367,7 +367,7 @@ def pp_halo(h, npix, rscale=1.0, region=None, ind=None, ax=None,
         xn,yn,zn = xn_org, yn_org, zn_org
         xrn, yrn, zrn="xr", "yr", "zr"
 
-    # use pp_halo rather then the script below.
+    # What if there is no open axis?
     if ax is None:
         ax = plt.gca()
 
@@ -382,6 +382,7 @@ def pp_halo(h, npix, rscale=1.0, region=None, ind=None, ax=None,
         else:
             print("ax has region, but a new region is given")
 
+    # Select halos to plot.
     if ind is None:
         if region is None:
             # If no region, plot all
