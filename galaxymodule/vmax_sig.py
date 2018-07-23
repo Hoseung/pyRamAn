@@ -17,18 +17,14 @@ def get_vmax_sig(gal,
                  vsig_results,
                  make_plot=False,
                  nreff=2.0,
-                 img_size = 40,
-                 n_pseudo = 30,
+                 img_size = None,
                  npix_per_reff = 5,
                  out_dir="./"):
 
     # get points near the major axis line
-
-
     if not hasattr(gal.meta, "mge_result_list"):
         lambdas = cal_lambda_r_eps(gal, save_result=False, n_pseudo=n_pseudo,
                                    npix_per_reff=npix_per_reff)
-
 
     if hasattr(gal, "vmap_v"):
         v_good = gal.vmap_v
@@ -37,6 +33,8 @@ def get_vmax_sig(gal,
         vmap = gal.vmap_v
         sigmap = gal.sigmap_v
     else:
+        if img_size is None:
+            img_size = gal.vmap.shape[0]
         xinds = np.tile(np.arange(img_size) + 0.5, img_size)
         yinds = np.repeat(np.arange(img_size) + 0.5, img_size)
         vmap = gal.vmap
@@ -98,7 +96,7 @@ def get_vmax_sig(gal,
 
         print("Vmax {:.2f}, sigma {:.2f}, v/sig {:.2f}".format(vmax, sig, vmax/sig))
         ax[1].set_aspect('auto')
-        plt.savefig(out_dir + str(gal.meta.id) + "_vel_curve" + str(n_pseudo) + ".png")
+        plt.savefig(out_dir + str(gal.meta.id) + "_vel_curve" + ".png")
         plt.close()
 
     vsig_results["Vmax"]= vmax

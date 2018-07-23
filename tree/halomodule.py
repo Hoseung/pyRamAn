@@ -32,7 +32,8 @@ class HaloMeta():
     """
     def __init__(self, nout=None, base='./', info=None, halofinder='HM',
                  load=True, is_gal=False, return_id=False, outdir=None, fn=None,
-                 verbose=False, double=False, pure=False, read_mbp=False):
+                 verbose=False, double=False, pure=False, read_mbp=False,
+                 add_fields=None):
         """
 
         Parameters
@@ -109,7 +110,7 @@ class HaloMeta():
             pass
 
         if load:
-            self.load()
+            self.load(add_fields=add_fields)
 
 
     def set_info(self, info):
@@ -163,8 +164,6 @@ class Halo(HaloMeta):
     -----
     Rockstar halo id starts from 0. CT id too.
     For the details of Halofinders refer Aubert 2004, Behroozi 2013.
-
-
     """
     def __init__(self, convert=True, **kwargs):
         self.convert = convert
@@ -182,7 +181,8 @@ class Halo(HaloMeta):
         else:
             self.data = data
 
-    def load(self, nout=None, base=None, info=None, pure=None, double=None):
+    def load(self, nout=None, base=None, info=None, pure=None, double=None,
+             add_fields=None):
         """
         There are nout, base keywords.
         But self.nout and self.base are already available.
@@ -215,11 +215,12 @@ class Halo(HaloMeta):
                     self.fn = base + self.gal_find_dir + 'gal/tree_bricks' + snout
                 else:
                     self.fn = base + self.dm_find_dir + 'DM/tree_bricks' + snout
-            print(self.fn)
+
             if self.verbose:
+                print(self.fn)
                 print("Loading file:", self.fn)
-            print("Loading...", double, pure)
-            self.load_hm(self.fn, double=double, pure=pure)
+                print("double :", double, "Pure Python:", pure, "read_mbp",self.read_mbp)
+            self.load_hm(self.fn, double=double, pure=pure, add_fields=add_fields)
             if self.info is None:
                 info = Info(base = self.base, nout = self.nout, load=True)
                 self.set_info(info)
@@ -228,20 +229,22 @@ class Halo(HaloMeta):
         else:
             print("Not converting unit!")
 
-    def load_hm(self, fn, double=None, pure=None):
+    def load_hm(self, fn, double=None, pure=None, add_fields=None):
         if double == None:
             double = self.double
         if pure == None:
             pure = self.pure
 
         f = open(fn, "rb")
+        dtypes_halo = get_halo_dtype(is_gal=self.is_gal,
+                                    double=double,
+                                    read_mbp=self.read_mbp,
+                                    new_fields=add_fields)
         if pure:
             brick_data = f.read()
             offset, halnum, subnum = load_header(brick_data, double=double)
             self.data = np.zeros(halnum+subnum,
-                                 dtype=get_halo_dtype(is_gal=self.is_gal,
-                                                             double=double,
-                                                             read_mbp=self.read_mbp))
+                                 dtype=dtypes_halo)
             for i in range(halnum+subnum):
                 offset = load_a_halo(brick_data, offset, self.data[i],
                                      is_gal=self.is_gal, double=double)
@@ -263,8 +266,7 @@ class Halo(HaloMeta):
             allID, __, self.halnum, self.subnum,\
                 self.massp, self.aexp, self.omegat, self.age = temp[0:8]
             ntot = self.halnum + self.subnum
-            self.data = np.recarray(ntot, dtype=get_halo_dtype(is_gal=self.is_gal, double=double, read_mbp=self.read_mbp))
-            print(self.data.dtype)
+            self.data = np.recarray(ntot, dtype=dtypes_halo)
             self.data['np'], self.data['id'],\
             levels, ang, energy, \
             self.data['m'],\
