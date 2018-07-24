@@ -30,7 +30,7 @@ def gen_vmap_sigmap(self,
                     voronoi=None,
                     verbose=False,
                     plot_map=False,
-                    weight="mass"):
+                    weight="m"):
     """
     generates mass, velocity, sigma map from stellar particles.
     npix = (npix_per_reff * 2 * (rsacle + 1))
@@ -48,8 +48,11 @@ def gen_vmap_sigmap(self,
         split each particle into n_pseudo pseudo particles. default = 1
     voronoi :
         parameter set of voronoi tesselation as a dict. None by default.
+    weight : field name
+        Name of the field to give wieght. for example:  "m", "flux_g", "flux_r",...
     verbose :
         default = False
+
 
     Todo
     1. if n_pseudo > 1, sig = 0.3kpc should scale with aexp.
@@ -103,17 +106,9 @@ def gen_vmap_sigmap(self,
         # Todo
         # sig = 0.3kpc should scale with aexp.
         n_pseudo = max([round(1e6/self.meta.nstar), n_pseudo])
-        if weight == "mass":
-            xstars, ystars, mm, vz = self._pseudo_particles(self.star['x'][ind],
+        xstars, ystars, mm, vz = self._pseudo_particles(self.star['x'][ind],
                                                   self.star['y'][ind],
-                                                  self.star['m'][ind],
-                                                  self.star['vz'][ind],
-                                                  sig=0.3,
-                                                  n_times=n_pseudo)
-        elif weight == "luminosity":
-            xstars, ystars, mm, vz = self._pseudo_particles(self.star['x'][ind],
-                                                  self.star['y'][ind],
-                                                  self.star.Flux_r[ind],
+                                                  self.star[weight][ind],
                                                   self.star['vz'][ind],
                                                   sig=0.3,
                                                   n_times=n_pseudo)
@@ -121,10 +116,7 @@ def gen_vmap_sigmap(self,
         xstars = self.star['x'][ind]
         ystars = self.star['y'][ind]
         vz = self.star['vz'][ind]
-        if weight == "mass":
-            mm = self.star['m'][ind]
-        elif weight == "luminosity":
-            mm = self.star.Flux_r
+        mm = self.star[weight][ind]
 
     if verbose: print(("\n" "Calculating rotation parameter using {} particles "
     "inside {:.3f}kpc, or {}Reff".format(len(ind), r_img_kpc, rscale + 1)))
