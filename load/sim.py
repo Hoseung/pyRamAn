@@ -42,8 +42,6 @@ class Simbase():
         # Lock, but only there is a valid list of cpus.
         if lock and self.cpus is not None:
             self.cpu_fixed = True
-        #print("Updating info.cpus")
-        #self.info._set_cpus(self.get_cpus())
 
     def show_cpus(self):
         print(" ncpus : %s \n" % self.get_cpus())
@@ -60,10 +58,6 @@ class Simbase():
                 print('example : [[0.1,0.3],[0.2,0.4],[0.6,0.8]] \n')
             else:
                 self.ranges = ranges
-    #            try:
-    #                self.info._set_ranges(self.ranges)
-    #            except AttributeError:
-    #                print("There is no info._set_ranges attribute")
                 self.set_cpus(self._hilbert_cpulist(self.info, self.ranges))
         else:
             self.ranges = None
@@ -76,13 +70,10 @@ class Simbase():
         -> cpu files contain data points within a given ranges
         BUT! they also contain other data points outside the ranges.
         """
-
         from load.a2c import hilbert3d
-        from load.amr import Amr
         if not(hasattr(self, 'amr')):
             print("[sim._hilbert_cpulist] No AMR instance,")
             print("[sim._hilbert_cpulist] Loading one...")
-            #self.amr = Amr(self.info)
             self.add_amr(load=False)# load only meta data
 
         nlevelmax = self.amr.header.nlevelmax
@@ -103,8 +94,6 @@ class Simbase():
 
         if (nboundary > 0):
             ngridbound = np.zeros(nboundary, nlevelmax)
-        # info file is needed. (and is ready)
-        # cpu_list & hilbert_key : sim.info.
 
         try:
             lmax
@@ -129,12 +118,7 @@ class Simbase():
 
         bit_length = lmin - 1
         maxdom = 2**bit_length
-        imin = 0
-        imax = 0
-        jmin = 0
-        jmax = 0
-        kmin = 0
-        kmax = 0
+        imin, imax, jmin, jmax, kmin, kmax = 0,0,0,0,0,0
 
         if (bit_length > 0):
             imin = int(xxmin * maxdom)
@@ -168,8 +152,6 @@ class Simbase():
 
         for i in range(1, ndom + 1):
             if bit_length > 0:
-                #order_min = self._hilbert3d([idom[i]], [jdom[i]], [kdom[i]],
-                #                            bit_length, 1)
                 order_min = hilbert3d([idom[i]], [jdom[i]], [kdom[i]],
                                             bit_length, 1)
                 # order_min, array or single variable??
@@ -211,7 +193,6 @@ class Simbase():
         cpu_list = cpu_list[cpu_list > 0]  # crop empty part
 
         return np.sort(cpu_list)
-
 
 
 class Sim(Simbase):
@@ -266,11 +247,11 @@ class Sim(Simbase):
         # should call parent class' init.
 
         self.nout = nout
-        self.set_base(base)
+        self.base = base
         # info appreciates nout and base (not mandatary, though)
         self.dmo = dmo
         self.cosmo = cosmo
-        self.set_data_dir(data_dir)
+        self.data_dir = data_dir
         self.add_info()
         # set_data_dir and set_range needs info instance be exist.
         self.set_ranges(ranges)
@@ -290,7 +271,7 @@ class Sim(Simbase):
     def setup(self, nout=None, base='./', data_dir='snapshots/',
                  ranges=[[0.0,1.0],[0.0,1.0],[0.0,1.0]], dmo=False):
         self.nout = nout
-        self.set_base(base)
+        self.base = base
         if self.nout is None:
             raise ValueError("Note that 'nout' is not set. \n use sim.Sim.set_nout(nout)")
         self.add_info()
@@ -303,28 +284,46 @@ class Sim(Simbase):
                 self.set_cpus(self._hilbert_cpulist(self.info, self.ranges))
         print('Simulation set up.')
 
-    def set_base(self, base):
-        """
-            Sets Working directory.
-        """
-        from os import path
-        self.base = path.abspath(base)
-        #self.show_base()
+    """
+    Programming note.
+    No need to use .gettter and .setter always.
+    Just make values public if they need to be accessed.
+    If an additional operation is needed on setting a variable,
+    use @property macro like this.
 
-    def set_nout(self, nout):
+    Here, _base is encapsulated.
+    This is desired because in this time we need to separate
+    """
+    @property
+    def base(self):
+        return self._base
+    @base.setter
+    def base(self, base):
+        from os import path
+        self._base = path.abspath(base)
+
+    @property
+    def nout(self):
+        return self._nout
+    @nout.setter
+    def nout(self, nout):
         """
             Sets output number.
             a list of nouts will be supported in the future, soon, I hope.
         """
-        self.nout = nout
+        self._nout = nout
 
-    def set_data_dir(self, data_dir):
+    @property
+    def data_dir(self):
+        return self._data_dir
+    @data_dir.setter
+    def data_dir(self, data_dir):
         """
         By default, simulation outputs are in simulation_base/snapshots/
         """
         from os import path
         #self.data_dir =  path.join(self.base, '', data_dir, '')
-        self.data_dir = path.join('', data_dir, '')
+        self._data_dir = path.join('', data_dir, '')
 
     def show_base(self):
         print("setting the base(working) directory to :", self.base)
