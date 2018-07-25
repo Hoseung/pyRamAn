@@ -58,8 +58,6 @@ class Meta():
         self.vmap = None
         self.pt=[]
         self.pq=[]
-        #self.sfr=0.0
-        #self.ssfr=0.0
         self.mrj=0.0
         self.d2t=0.0
         self.nvec=None
