@@ -1,12 +1,4 @@
 import numpy as np
-#from galaxymodule import make_gal
-#from galaxymodule import mk_gal_params as mgp
-#from galaxymodule import rd_GM
-#from galaxymodule import rotation_parameter
-#import utils
-#from load import sim
-#from scipy.spatial import cKDTree
-
 
 def ind_cell_kd(kdtree, gal, pboxsize, rscale=25.0):
     """
@@ -38,7 +30,14 @@ def get_cell(allcell, kdtree, gg, info):
         gg.cell["dx"] *= info.boxtokpc
 
 
-def plot_rot_map(gg, npix_reff=5):
+def plot_rot_map(gg):
+    """
+    Make a rotation parameter with 4 panels.
+    """
+    import matplotlib.pyplot as plt
+    from matplotlib.colors import LogNorm
+
+    npix_reff = gg.params.vmap_sigmap["npix_per_reff"]
     rscale=gg.meta.rscale_lambda
     fig,axs = plt.subplots(2,2)
     im = axs[0,0].imshow(gg.mmap, norm=LogNorm())
@@ -90,7 +89,7 @@ def plot_rot_map(gg, npix_reff=5):
     axs[1,1].text(10, 0.8, "{:.2e}M" + r"$\odot$".format(gg.meta.mstar))
     fig.suptitle("ID {},  z={:.1f}".format(gg.meta.id, gg.info.zred))
     plt.tight_layout()
-    plt.savefig("lam_map_{}_{}_lum.png".format(nout, gg.meta.id), dpi=200)
+    plt.savefig("lam_map_{}_{}_lum.png".format(gg.nout, gg.meta.id), dpi=200)
     plt.close()
 
 
