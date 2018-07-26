@@ -85,8 +85,14 @@ class Part(load.sim.Simbase):
     def __init__(self, parent=None, nout=None, info=None, dmo=False, ptypes=None, base='./',
                  region=None, ranges=[[0,1]]*3, cpus=None,
                  cpu_fixed=False,
-                 data_dir='snapshots/', dmref=False, dmvel=False,
-                 dmmass=True, load=False, cosmo=True, fortran=True):
+                 data_dir='snapshots/',
+                 dmref=False,
+                 dmvel=False,
+                 dmmass=True,
+                 load=False,
+                 cosmo=True,
+                 fortran=True,
+                 verbose=False):
         """
         parameters
         ----------
@@ -125,20 +131,20 @@ class Part(load.sim.Simbase):
         self.nstar = 0
         self.nsink = 0
 
-        print("Part", base)
+        if verbose: print("Part", base)
         try:
             self.set_base(info.base)
             print(info.base)
         except:
             self.set_base(base)
         self.data_dir = data_dir
-        self.setwhattoread(ptypes)
+        if ptypes is not None: self.setwhattoread(ptypes)
         self.dmo = dmo
         self.dm_with_ref = dmref
         self.dm_with_vel = dmvel
         self.dm_with_mass = dmmass
 
-        print("Part2", self.base)
+        #print("Part2", self.base)
         self.set_fbase(self.base, data_dir)
 
         if region is not None:
@@ -166,7 +172,7 @@ class Part(load.sim.Simbase):
         self._get_basic_info()
         # Depending on user's choice, generate dm, star, sink classes
 
-        if load:
+        if ptypes is not None and load:
             self.load(fortran=fortran)
 
     def mass2msun(self):
