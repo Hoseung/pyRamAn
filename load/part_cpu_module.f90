@@ -2,30 +2,31 @@ module part_load_module
   implicit none
 contains
 
-subroutine count_part(ndm_actual, nstar_actual, nsink_actual, repository, xmin, xmax, ymin, ymax, zmin, zmax, cpu_list)
+subroutine count_part(ndm_actual, nstar_actual, nsink_actual, ntr_actual, &
+  & repository, xmin, xmax, ymin, ymax, zmin, zmax, cpu_list)
   !--------------------------------------------------------------------------
   ! Ce programme calcule la carte de densite surfacique projetee
-  ! des particules de matiere noire d'une simulation RAMSES. 
+  ! des particules de matiere noire d'une simulation RAMSES.
   ! Version F90 par R. Teyssier le 01/04/01.
   !--------------------------------------------------------------------------
 
-  integer,INTENT(OUT)::ndm_actual, nstar_actual, nsink_actual
+  integer,INTENT(OUT)::ndm_actual, nstar_actual, nsink_actual, ntr_actual
 
   integer::i,k,icpu,ipos,nstar
   integer::ncpu2,npart2,ndim2, ncpu_read
   real(KIND=8), INTENT(IN)::xmin,xmax,ymin,ymax,zmin,zmax
   real(KIND=8),dimension(:,:),allocatable::x
-  real(KIND=8),dimension(:)  ,allocatable::age
+  real(KIND=8),dimension(:)  ,allocatable::m, age
   integer,dimension(:)  ,allocatable::id
   character(LEN=5)::nchar,ncharcpu
   character(LEN=128)::nomfich
   character(LEN=128), INTENT(IN)::repository
-  logical::ok_part
+  !logical::ok_part
 
   ! CPU list
-!  integer,dimension(:),allocatable, INTENT(OUT)::cpu_list 
-!  -> No!, you can not return an assumed-size array. 
-  integer,dimension(:),INTENT(IN)::cpu_list 
+!  integer,dimension(:),allocatable, INTENT(OUT)::cpu_list
+!  -> No!, you can not return an assumed-size array.
+  integer,dimension(:),INTENT(IN)::cpu_list
   !-----------------------------------------------
   ! Lecture du fichier particules au format RAMSES
   !-----------------------------------------------
@@ -37,6 +38,7 @@ subroutine count_part(ndm_actual, nstar_actual, nsink_actual, repository, xmin, 
   ndm_actual=0
   nstar_actual=0
   nsink_actual=0
+  ntr_actual=0
   ncpu_read = size(cpu_list)
 
   do k=1,ncpu_read
@@ -57,10 +59,11 @@ subroutine count_part(ndm_actual, nstar_actual, nsink_actual, repository, xmin, 
      read(1)
 
      allocate(id(1:npart2))
+     allocate(m(1:npart2))
      if(nstar>0)then ! age and id to distinguish star, DM, and sink.
         allocate(age(1:npart2))
      endif
-     allocate(x(1:npart2,1:ndim2)) 
+     allocate(x(1:npart2,1:ndim2))
      ! Position to select particles insdie the region of interest
      ! Read position
      read(1)x(1:npart2,1)
@@ -69,10 +72,10 @@ subroutine count_part(ndm_actual, nstar_actual, nsink_actual, repository, xmin, 
 
      ! Skip velocity
      do i=1,ndim2
-        read(1) !age
+        read(1)
      end do
      ! Skip mass
-     read(1) !age
+     read(1)m
      if(nstar>0)then
         read(1)id
         read(1) ! Skip level
@@ -83,34 +86,38 @@ subroutine count_part(ndm_actual, nstar_actual, nsink_actual, repository, xmin, 
      close(1)
 
      do i=1,npart2
-          ok_part=(x(i,1)>=xmin.and.x(i,1)<=xmax.and. &
+        if (x(i,1)>=xmin.and.x(i,1)<=xmax.and. &
               &   x(i,2)>=ymin.and.x(i,2)<=ymax.and. &
-              &   x(i,3)>=zmin.and.x(i,3)<=zmax)
+              &   x(i,3)>=zmin.and.x(i,3)<=zmax) then
 
-          if(ok_part.and.(age(i).eq.0.0d0).and.(id(i)>0)) then
-          ndm_actual = ndm_actual + 1
-          elseif(ok_part.and.(age(i).ne.0.0d0).and.(id(i)>0)) then
-              nstar_actual = nstar_actual + 1
-      elseif(ok_part.and.(age(i).eq.0.0d0).and.(id(i)<0)) then
-              nsink_actual = nsink_actual + 1
-          endif
+            if(age(i).eq.0.0d0)then
+              if(id(i)>0) then
+                  ndm_actual = ndm_actual + 1
+              elseif(m(i)>0) then
+                nsink_actual = nsink_actual + 1
+              else
+                  ntr_actual = ntr_actual + 1 ! tracer particle in NH
+              endif
+            else
+                nstar_actual = nstar_actual + 1
+            endif
+        endif
      enddo
-     deallocate(x,id)
+     write(*,*)nstar_actual, ndm_actual, nsink_actual, ntr_actual
+     deallocate(x,m,id)
      if(nstar>0)deallocate(age)
   enddo
 
   end subroutine
 
 
-  subroutine load_part(star_float, star_int, dm_float, dm_int, nstar_actual, &
-             & ndm_actual, nsink_actual, repository, &
+  subroutine load_part(part_float, part_int, npart_actual, repository, &
              & xmin, xmax, ymin, ymax, zmin, zmax, read_metal, cpu_list)
 
   real(KIND=8), INTENT(IN)::xmin,xmax,ymin,ymax,zmin,zmax
-  integer,INTENT(IN)::ndm_actual, nstar_actual, nsink_actual
+  integer,INTENT(IN)::npart_actual
   integer,dimension(:),INTENT(IN)::cpu_list
   integer, INTENT(IN):: read_metal
-
 
   real(KIND=8),dimension(:,:),allocatable::x,v
   real(KIND=8),dimension(:)  ,allocatable::m,age,metal
@@ -119,28 +126,24 @@ subroutine count_part(ndm_actual, nstar_actual, nsink_actual, repository, xmin, 
   character(LEN=128)::nomfich
   character(LEN=128), INTENT(IN)::repository
 
-  real(KIND=8),INTENT(OUT),dimension(nstar_actual,9)::star_float
-  integer(KIND=4),INTENT(OUT),dimension(nstar_actual)::star_int
-  real(KIND=8),INTENT(OUT),dimension(ndm_actual + nsink_actual,7)::dm_float
-  integer(KIND=4),INTENT(OUT),dimension(ndm_actual + nsink_actual)::dm_int
+  real(KIND=8),INTENT(OUT),dimension(npart_actual,9)::part_float
+  integer(KIND=4),INTENT(OUT),dimension(npart_actual)::part_int
 
-  logical::ok_part
+  !logical::ok_part
   integer::i,k,icpu,ipos,nstar
-  integer::i_dm, i_star, i_sink
+  integer::i_part
   integer::ncpu2,npart2,ndim2, ncpu_read
-  
+
   ! CPU list
   ipos=INDEX(repository,'output_')
   nchar=repository(ipos+7:ipos+13)
 
   ! Store particles
-  i_dm = 0
-  i_star = 0
-  i_sink = 0
+  i_part = 0
 
   ncpu_read = size(cpu_list)
 
-  write(*,*)"cpu list fortran got"
+  !write(*,*)"cpu list fortran got"
 
   do k=1,ncpu_read
      icpu=cpu_list(k)
@@ -158,9 +161,9 @@ subroutine count_part(ndm_actual, nstar_actual, nsink_actual, repository, xmin, 
      read(1)
      read(1)
 
-     allocate(x(1:npart2,1:ndim2)) 
+     allocate(x(1:npart2,1:ndim2))
      allocate(m(1:npart2))
-     allocate(v(1:npart2,1:ndim2)) 
+     allocate(v(1:npart2,1:ndim2))
      allocate(id(1:npart2))
 !    if(nstar>0)then ! age and id to distinguish star, DM, and sink.
      allocate(age(1:npart2))
@@ -189,32 +192,22 @@ subroutine count_part(ndm_actual, nstar_actual, nsink_actual, repository, xmin, 
      close(1)
 
      do i=1,npart2
-        ok_part=(x(i,1)>=xmin.and.x(i,1)<=xmax.and. &
-            &   x(i,2)>=ymin.and.x(i,2)<=ymax.and. &
-            &   x(i,3)>=zmin.and.x(i,3)<=zmax)
+        if (x(i,1)>=xmin.and.x(i,1)<=xmax.and. &
+          & x(i,2)>=ymin.and.x(i,2)<=ymax.and. &
+          & x(i,3)>=zmin.and.x(i,3)<=zmax) then
 
-    if(ok_part.and.(age(i).eq.0.0d0))then ! Sink particles are also considered as DM.
-           i_dm = i_dm + 1
-       dm_float(i_dm,1) = x(i,1)
-       dm_float(i_dm,2) = x(i,2)
-       dm_float(i_dm,3) = x(i,3)
-       dm_float(i_dm,4) = v(i,1)
-       dm_float(i_dm,5) = v(i,2)
-       dm_float(i_dm,6) = v(i,3)
-       dm_float(i_dm,7) = m(i)
-       dm_int(i_dm) = id(i)
-       elseif(ok_part.and.(age(i).ne.0.0d0).and.(id(i)>0))then
-         i_star = i_star + 1
-          star_float(i_star,1) = x(i,1)
-         star_float(i_star,2) = x(i,2)
-         star_float(i_star,3) = x(i,3)
-         star_float(i_star,4) = v(i,1)
-         star_float(i_star,5) = v(i,2)
-         star_float(i_star,6) = v(i,3)
-         star_float(i_star,7) = m(i)
-         star_int(i_star) = id(i)
-         star_float(i_star,8) = age(i)
-       if(read_metal==1)  star_float(i_star,9) = metal(i)
+         i_part = i_part + 1
+         part_float(i_part,1) = x(i,1)
+         part_float(i_part,2) = x(i,2)
+         part_float(i_part,3) = x(i,3)
+         part_float(i_part,4) = v(i,1)
+         part_float(i_part,5) = v(i,2)
+         part_float(i_part,6) = v(i,3)
+         part_float(i_part,7) = m(i)
+         part_int(i_part) = id(i)
+         part_float(i_part,8) = age(i)
+         if(read_metal==1)  part_float(i_part,9) = metal(i)
+
         endif
      end do
      deallocate(x,v,m,id)
@@ -222,7 +215,7 @@ subroutine count_part(ndm_actual, nstar_actual, nsink_actual, repository, xmin, 
      if(read_metal==1)deallocate(metal)
   end do
 
-end subroutine  
+end subroutine
 
 !=======================================================================
 subroutine title(n,nchar)

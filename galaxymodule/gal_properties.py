@@ -145,7 +145,7 @@ def get_sfr_all(gg, sfr_dts=0.1,
     else:
         area = np.pi * gg.rgal**2
 
-    if not hasattr(gg.meta, "sfr_results"):
+    if not hasattr(gg.meta, "sfr_results") or gg.meta.sfr_results is None:
         gg.meta.sfr_results={"hist_dt":None,
                              "hist_tmin":None,
                              "hist_tmax":None,
