@@ -60,9 +60,14 @@ def match_list_ind(arr1, arr2,
 
     '''
 
-    # If arr1 is not a sequence,   return
-    if len(arr1) == 1:
-        return
+    # If arr1 is not a sequence,  return
+    try:
+        if len(arr1) == 0:
+            return
+        elif len(arr1) == 1:
+            return np.where(arr1 == arr2)[0]
+    except:
+        raise ValueError("Array is needed")
 
     if len(arr2) == 1:
         return np.where(arr1 == arr2)[0]
