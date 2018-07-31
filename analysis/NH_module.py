@@ -1,11 +1,19 @@
 import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.colors import LogNorm
+
+
+msun_in_g = 1.989e33
+kpc_in_cm = 3.086e+21
+
 
 def ind_cell_kd(kdtree, gal, pboxsize, rscale=25.0):
     """
     Extract cells within rscale * Rreff and add to the galaxy.
     """
     xc,yc,zc = gal.meta.xc, gal.meta.yc, gal.meta.zc
-    rgal = min([100, max([30, gal.meta.reff * rscale])]) / (pboxsize*1e3) # kpc -> code unit
+    rgal = min([100, max([30, gal.meta.reff * rscale])]) / (pboxsize*1e3)
+    # kpc -> code unit
     #index = kdtree.query_ball_point((xc,yc,zc), rgal)
     xyzcen = (xc/pboxsize + 0.5,
               yc/pboxsize + 0.5,
@@ -28,6 +36,119 @@ def get_cell(allcell, kdtree, gg, info):
         gg.cell["vy"] = gg.cell["vy"]*info.kms
         gg.cell["vz"] = gg.cell["vz"]*info.kms
         gg.cell["dx"] *= info.boxtokpc
+
+def plot_2d_simple_maps(gg):
+    fig, axs = plt.subplots(2,2)
+    axs = axs.ravel()
+    fig.set_size_inches(12,8)
+    axs[0].hist(gg.star["metal"],
+                weights= gg.star["m"],
+                histtype="step",
+                 label="star")
+    axs[0].legend()
+    axs[0].set_xlabel("Z")
+
+    axs[1].hist2d(gg.star["z"], gg.star["x"],
+                  range=[[-25,25],[-25,25]], bins=100, norm=LogNorm())
+    axs[2].hist2d(gg.star["y"], gg.star["z"],
+                  range=[[-25,25],[-25,25]], bins=100, norm=LogNorm())
+    axs[3].hist2d(gg.star["x"], gg.star["y"],
+                  range=[[-25,25],[-25,25]], bins=100, norm=LogNorm())
+    axs[1].set_aspect("equal")
+    axs[2].set_aspect("equal")
+    axs[3].set_aspect("equal")
+
+
+def plot_2d_simple_gas_maps(gg):
+    cell_to_msun = gg.info.unit_d/msun_in_g * kpc_in_cm**3
+    cell_mass = gg.cell["rho"]*gg.cell["dx"]**3 * cell_to_msun
+
+    # 2d maps
+    fig, axs = plt.subplots(2,2)
+    axs = axs.ravel()
+    rgal = gg.meta.reff * 5
+    axs[0].hist2d(gg.star["x"], gg.star["y"], weights=gg.star["m"],
+                  bins=100, range=[[-rgal,rgal]]*2, norm=LogNorm())
+    axs[1].hist2d(gg.dm["x"], gg.dm["y"], weights=gg.dm["m"],
+                  bins=100, range=[[-rgal,rgal]]*2, norm=LogNorm())
+    axs[2].hist2d(gg.cell["x"], gg.cell["y"], weights=cell_mass,
+                  bins=100, range=[[-rgal,rgal]]*2, norm=LogNorm(), vmin=1e4)
+    for ax in axs:
+        ax.set_aspect("equal")
+    plt.savefig("{}_{}_gas.png".format(gg.nout, gg.meta.id), dpi=200)
+
+
+def plot_radial(gg, nbins=50, rmax=3):
+    gg.info.unit_d/msun_in_g * kpc_in_cm**3
+    cell_to_msun = gg.info.unit_d/msun_in_g * kpc_in_cm**3
+
+    fig, ax = plt.subplots()
+    bins = np.linspace(0,3,50)**3
+
+    dist_star = np.sqrt(np.sum(np.square(gg.star["pos"]), axis=1))
+    isort_dist_star = np.argsort(dist_star)
+
+    # star
+    h_st, bin_st = np.histogram(dist_star[isort_dist_star], bins=bins,
+                         weights=gg.star["m"][isort_dist_star])
+    ax.plot(bins[1:]**1/3, h_st, label="star")
+
+    if hasattr(gg, "dm") and gg.dm is not None:
+        dist_dm = np.sqrt(np.sum(np.square(gg.dm["pos"]), axis=1))
+        isort_dist_dm = np.argsort(dist_dm)
+
+        h_dm, bin_dm = np.histogram(dist_dm[isort_dist_dm],  bins=bins,
+                                    weights=gg.dm["m"][isort_dist_dm])
+        ax.plot(bins[1:]**1/3, h_dm, label="dm")
+
+    if hasattr(gg, "cell") and gg.cell is not None:
+        dist_cell = np.sqrt(np.sum(np.square(gg.cell["pos"]), axis=1))
+        isort_dist_cell = np.argsort(dist_cell)
+
+        h_cell, bin_cell = np.histogram(dist_cell[isort_dist_cell],  bins=bins,
+                 weights=gg.cell["rho"][isort_dist_cell]*
+                         gg.cell["dx"][isort_dist_cell]**3 * cell_to_msun)
+        ax.plot(bins[1:]**1/3, h_cell, label="gas")
+
+    # all
+    all_comp = h_st + h_dm + h_cell
+    ax.plot(bins[1:]**1/3, h_st + h_dm + h_cell,
+            label="all")
+
+    ax.legend()
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.set_xlim([0.1,3**3])
+    ax.set_ylim([1e7,1e11])
+    ax.set_xlabel("kpc")
+    ax.set_ylabel(r"$M_{\odot}$")
+    plt.savefig("{}_{}_comp_profile.png".format(gg.nout, gg.meta.id), dpi=200)
+
+
+def plot_bulge_disk(gg, bulge, disk, nbins=200, band="flux_u"):
+    fig, axs = plt.subplots(3,2)
+    fig.set_size_inches(6,9)
+    axs = axs.ravel()
+    axs[0].hist2d(bulge["x"], bulge["y"],
+                  weights=bulge[band], bins=nbins, norm=LogNorm())
+    axs[2].hist2d(bulge["y"], bulge["z"],
+                  weights=bulge[band], bins=nbins, norm=LogNorm())
+    axs[4].hist2d(bulge["z"], bulge["x"],
+                  weights=bulge[band], bins=nbins, norm=LogNorm())
+    axs[1].hist2d(disk["x"], disk["y"],
+                  weights=disk[band], bins=nbins, norm=LogNorm())
+    axs[3].hist2d(disk["y"], disk["z"],
+                  weights=disk[band], bins=nbins, norm=LogNorm())
+    axs[5].hist2d(disk["z"], disk["x"],
+                  weights=disk[band], bins=nbins, norm=LogNorm())
+    axs[0].set_title("Bulge  (e < 0.5)")
+    axs[1].set_title("disk  (e > 0.8)")
+    for ax in axs:
+        ax.set_aspect("equal")
+
+    fig.suptitle("B/T (0.5) = {:.2f}".format(np.sum(bulge["m"])/np.sum(gg.star["m"])))
+    plt.savefig("{}_{}_xyz_{}-band.png".format(gg.nout, gg.meta.id, band),
+                dpi=200)
 
 
 def plot_rot_map(gg):
