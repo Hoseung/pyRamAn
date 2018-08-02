@@ -22,6 +22,9 @@ class Tree():
                      BIG_RUN=True,
                      is_gal=False,
                      load_info=True):
+        """
+        NH tree => BIG_RUN == False
+        """
 
         self.set_fn(fn)
         self.tree = None
@@ -305,7 +308,6 @@ class Tree():
             atree[i]=t_now
 
         return np.copy(atree[:i][::-1])
-
 
 
     def extract_direct_full_tree(self, idx, return_id=False):

@@ -1,10 +1,11 @@
-subroutine count_tree(fn, n_halos_all, flist_index, slist_index, nsteps, big_run)
+subroutine count_tree(fn, n_halos_all,  flist_index, slist_index, nsteps, big_run)
     implicit none
     character(LEN=256), INTENT(IN)::fn
 
     integer::nfathers, nsons
     integer, dimension(:), allocatable::nb_of_halos, nb_of_subhalos
-    integer, INTENT(OUT)::flist_index, slist_index, n_halos_all, nsteps
+    integer, INTENT(OUT)::nsteps, n_halos_all
+    integer(KIND=8), INTENT(OUT)::flist_index, slist_index
 
     integer(KIND=4)::i,j, nhals_now
     logical, INTENT(IN)::big_run
@@ -55,6 +56,7 @@ subroutine count_tree(fn, n_halos_all, flist_index, slist_index, nsteps, big_run
                 read(1)!id_tmp! particle ID
             endif
 
+        write(*,*)flist_index
         enddo
     enddo
     deallocate(nb_of_halos, nb_of_subhalos)
@@ -72,9 +74,11 @@ subroutine load_tree(fn, fatherID, fatherIDx, sonID, fatherMass, &
     implicit none
     character(LEN=256), INTENT(IN)::fn
     logical, INTENT(IN)::big_run
-    integer, INTENT(IN)::n_all_sons, n_all_fathers, n_halos_all, nsteps
+    integer, INTENT(IN)::n_all_sons, n_all_fathers, nsteps
+    integer(KIND=8), INTENT(IN)::n_halos_all
 
-    integer(KIND=4):: nsons, flist_index, slist_index
+    integer(KIND=4):: nsons
+    integer(KIND=8):: flist_index, slist_index
     integer(KIND=4):: i,j, k,nhals_now, n_fathers, idx_old, nhals_old, idx
     real(KIND=8)::macc
 

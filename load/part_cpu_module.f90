@@ -24,8 +24,8 @@ subroutine count_part(ndm_actual, nstar_actual, nsink_actual, ntr_actual, &
   !logical::ok_part
 
   ! CPU list
-!  integer,dimension(:),allocatable, INTENT(OUT)::cpu_list
-!  -> No!, you can not return an assumed-size array.
+  !  integer,dimension(:),allocatable, INTENT(OUT)::cpu_list
+  !  -> No!, you cannot return an assumed-size array.
   integer,dimension(:),INTENT(IN)::cpu_list
   !-----------------------------------------------
   ! Lecture du fichier particules au format RAMSES
@@ -33,8 +33,8 @@ subroutine count_part(ndm_actual, nstar_actual, nsink_actual, ntr_actual, &
   ipos=INDEX(repository,'output_')
   nchar=repository(ipos+7:ipos+13)
 
-! read part
-!  npart_actual=0
+  ! read part
+  !  npart_actual=0
   ndm_actual=0
   nstar_actual=0
   nsink_actual=0
@@ -44,8 +44,6 @@ subroutine count_part(ndm_actual, nstar_actual, nsink_actual, ntr_actual, &
   do k=1,ncpu_read
      icpu=cpu_list(k)
      call title(icpu,ncharcpu)
-	 !write(ncharcpu,'I5')icpu
-     !write(*,*) ncharcpu, icpu, k
      nomfich=TRIM(repository)//'/part_'//TRIM(nchar)//'.out'//TRIM(ncharcpu)
      open(unit=1,file=nomfich,status='old',form='unformatted')
 !     write(*,*)'Processing file '//TRIM(nomfich)
