@@ -1,4 +1,5 @@
-subroutine a2c_count(ngridtot, nvarh, repository, xmin, xmax, ymin, ymax, zmin, zmax, lmax, cpu_list)
+subroutine a2c_count(ngridtot, nvarh, repository, xmin, xmax, ymin, &
+                  & ymax, zmin, zmax, lmax, cpu_list)
   !--------------------------------------------------------------------------
   ! Ce programme calcule le cube cartesien pour les
   ! variables hydro d'une simulation RAMSES.
@@ -296,10 +297,10 @@ subroutine a2c_load(xarr, dxarr, varr, cpuarr, refarr, repository, &
   implicit none
 
   integer,dimension(:),INTENT(IN)::cpu_list
-  character(len=*),intent(in)::repository
+  character(len=*),intent(IN)::repository
   character(len=128)::nomfich
-  real(kind=8),intent(in)::xmin,xmax,ymin,ymax,zmin,zmax
-  integer     ,intent(in)::lmax,ngridtot
+  real(kind=8),intent(IN)::xmin,xmax,ymin,ymax,zmin,zmax
+  integer     ,intent(IN)::lmax,ngridtot
   !default value from python side is 0.
 
   real(kind=8),intent(out),dimension(ngridtot,3)::xarr

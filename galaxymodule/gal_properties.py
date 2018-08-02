@@ -13,7 +13,8 @@ def get_axis_ratio(gg):
     gg.meta.abc_eig_vec = np.sort(eig_val_cov)
 
 
-def get_cold_cell(gg, info, dr=5, rmax=200, density_ratio=1e-3, check_bound=False):
+def get_cold_cell(gg, info,
+                  dr=5, rmax=200, density_ratio=1e-3, check_bound=False):
     """
         returns True if the galaxy has cold gas.
     """
@@ -26,7 +27,8 @@ def get_cold_cell(gg, info, dr=5, rmax=200, density_ratio=1e-3, check_bound=Fals
         if check_bound:
             i_dense = ind_dense(cold_cell, dr=dr, rmax=rmax)
             if len(i_dense)/len(cold_cell) < density_ratio:
-                print("Warning.. only a tiny fraction of cold gas is bound to the galaxy?")
+                print("Warning.. "
+                      "only a tiny fraction of cold gas is bound to the galaxy?")
             gg.cell = cold_cell[i_dense]
         else:
             gg.cell = cold_cell
@@ -37,12 +39,16 @@ def rho_t_cut(cell, info, lose_cut=False):
         Extract galactic cold gas following Torrey+12 criterion.
         Assume cells in the original (code) unit.
     """
-    # Var0 in Msun h^2 kpc^-3 unit.
+
     kpc_in_cm = 3.08567758e21
     msun_in_g = 1.99e33
-    gcc2this_unit = kpc_in_cm**3/msun_in_g
+    gcc2this_unit = kpc_in_cm**3/( (msun_in_g*1e10) * (1e-2*info.h)**2)
+    # in Msun h^2 kpc^-3 unit.
 
-    return np.log10(cell["var4"]/cell["var0"]*info.unit_T2) < 6 + 0.25*np.log10((cell["var0"]*info.unit_d)*gcc2this_unit*1e-10)#
+    T_cell = cell["var4"]/cell["var0"]*info.unit_T2
+    rho_cell = cell["var0"]*info.unit_d * gcc2this_unit
+
+    return np.log10(T_cell) < 6 + 0.25*np.log10(rho_cell)
 
 
 def ind_dense(cell, rmax = 200, dr = 5, rmin=1):
@@ -62,9 +68,7 @@ def ind_dense(cell, rmax = 200, dr = 5, rmin=1):
     mm = cell["dx"]**3 * cell["var0"]
     m_sorted = mm[i_sort]
     rmax = max([10, min([np.max(rr), rmax])])
-    #print(rmax)
 
-    #print("rmax now", rmax)
     # Note 1.
     # Depends on the cell resolution. How about 8 * dx_min?
     # Larger dx will count in small satellites,
@@ -108,7 +112,6 @@ def get_gas_properties(gg, info):
         Length must be in kpc unit, velocities in km/s unit.
         But densities... not sure yet.
 
-
     """
     vrho = "var0"
     vdx = "dx"
@@ -118,18 +121,24 @@ def get_gas_properties(gg, info):
     msun = 1.989e33
 
     # total gas mass before extracting cold gas.
-    gg.meta.gas_results["mgas_tot"] = np.sum(gg.cell[vrho]*info.unit_d * (gg.cell[vdx] * info.unit_l/info.boxtokpc)**3) / msun
+    gg.meta.gas_results["mgas_tot"] = \
+        np.sum(gg.cell[vrho]*info.unit_d * \
+               (gg.cell[vdx] * info.unit_l/info.boxtokpc)**3) / msun
 
     # Leave only cold gas and measure properties.
     has_cold_gas = get_cold_cell(gg, info)
     if has_cold_gas:
-        gg.meta.gas_results["mgas_cold"] = np.sum(gg.cell[vrho]*info.unit_d * (gg.cell[vdx] * info.unit_l/info.boxtokpc)**3) / msun
-        vec_rot = np.cross(np.stack((gg.cell["x"],gg.cell["y"],gg.cell["z"])).T,
+        gg.meta.gas_results["mgas_cold"] = \
+            np.sum(gg.cell[vrho]*info.unit_d * \
+               (gg.cell[vdx] * info.unit_l/info.boxtokpc)**3) / msun
+        vec_rot = np.cross(np.stack((gg.cell["x"],gg.cell["y"],
+                                     gg.cell["z"])).T,
                            np.stack((gg.cell[vvx],
                                      gg.cell[vvy],
                                      gg.cell[vvz])).T)
 
-        gg.meta.gas_results["Ln_gas"]=(vec_rot.T * (gg.cell[vdx]**3 *gg.cell[vrho])).sum(axis=1)
+        gg.meta.gas_results["Ln_gas"]=\
+            (vec_rot.T * (gg.cell[vdx]**3 *gg.cell[vrho])).sum(axis=1)
     else:
         gg.meta.gas_results["mgas_cold"]= 0
         gg.meta.gas_results["Ln_gas"] = (-1,-1,-1)
@@ -185,8 +194,9 @@ def get_age_hist(gg,
 
     if tmax is None:
         tmax = gg.star["time"].max()
-    h, _ = np.histogram(gg.star["time"],weights=gg.star["m"]/(dt*1e9),bins=np.arange(tmin,tmax,dt))
-
+    h, _ = np.histogram(gg.star["time"],
+                        weights=gg.star["m"]/(dt*1e9),
+                        bins=np.arange(tmin,tmax,dt))
     return h
 
 

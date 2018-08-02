@@ -250,7 +250,8 @@ class Amr():
         self.info = info
         self.cpus = cpus
 
-        self._fnbase = os.path.join(info.base, info.data_dir) + 'output_' + snout + '/amr_' + snout + '.out'
+        self._fnbase = os.path.join(info.base, info.data_dir) +\
+                    'output_' + snout + '/amr_' + snout + '.out'
         try:
             f = open(self._fnbase + '00001', "rb")
         except:
@@ -337,8 +338,6 @@ class Amr():
         ngridarr = np.zeros((nlevelmax, listmax), dtype=np.int32)
         #ngridarr = np.zeros((nlevelmax, listmax))
         levellist = [[0] * listmax for i in range(nlevelmax)] # nlevelmax by listmax list.
-        #levellist = [[0] * nlevelmax for i in range(listmax)] # nlevelmax by listmax list.
-        #np.zeros((nlevelmax, listmax), dtype=np.int32)
         llist = 0
         self.header.ngridtot = 0
         for jcpu in cpus:
@@ -426,8 +425,6 @@ class Amr():
                         llist += 1
             f.close
 
-#        self.grid = Grid()
-        #self.grid.set_data(ncpu=listmax, ndim=ndim, time=t, aexp=aexp,
         self.ngridarr = ngridarr
         self.levellist = levellist
         #grid.set_data(ngrid=ngridarr, levellist=levellist)
