@@ -7,18 +7,70 @@ msun_in_g = 1.989e33
 kpc_in_cm = 3.086e+21
 
 
+def load_components(gg, s, idlist=None,
+                    load_dm=True,
+                    load_cell=True,
+                    load_raw=False,
+                    save_cell=False,
+                    verbose=False):
+    """
+
+    """
+    import pickle
+    from utils import match as mtc
+    from utils.sampling import Region
+    from scipy.spatial import cKDTree
+    nout = s.nout
+
+    if load_dm or load_cell:
+        reg = Region()
+        reg.region_from_halo(gg.hcat)
+        s.set_ranges(reg.ranges)
+    else:
+        return
+
+    if load_dm:
+        s.add_part(ptypes=["dm id pos vel mass"])
+        ind = mtc.match_list_ind(s.part.dm["id"], idlist)
+        gg.dm = s.part.dm[ind]
+        gg.dm["pos"] -= gg.center_code
+        gg.dm["pos"] *= gg.info.boxtokpc
+        gg.dm["vel"] *= gg.info.kms
+        gg.dm["m"] *= gg.info.msun
+
+    if load_cell:
+        # gas properties
+        fn_cell=s.base+"/GalaxyMaker/CELL_"+\
+                "{:05d}/CELL_{:d}_{:d}.pickle".format(nout,nout,gg.meta.id)
+
+        if not load_raw:
+            try:
+                gg.cell = pickle.load(open(fn_cell, "rb"))
+            except:
+                pass
+
+        else:
+            rmin = 1e-5
+            if reg.radius < rmin:
+                reg.radius = rmin
+            s.set_ranges(reg.ranges)
+            s.add_hydro(verbose=False, load=True, pure=False)
+            kdtree = cKDTree(np.stack((s.hydro.cell["x"],
+                                       s.hydro.cell["y"],
+                                       s.hydro.cell["z"])).T)
+            get_cell(s.hydro.cell, kdtree, gg, s.info)
+            #print("Retrieving cells from sim.hydro")
+            if len(gg.cell) > 1 and save_cell:
+                pickle.dump(gg.cell, open(fn_cell,"wb"))
+
+
 def ind_cell_kd(kdtree, gal, pboxsize, rscale=25.0):
     """
     Extract cells within rscale * Rreff and add to the galaxy.
     """
     xc,yc,zc = gal.meta.xc, gal.meta.yc, gal.meta.zc
     rgal = min([100, max([30, gal.meta.reff * rscale])]) / (pboxsize*1e3)
-    # kpc -> code unit
-    #index = kdtree.query_ball_point((xc,yc,zc), rgal)
-    xyzcen = (xc/pboxsize + 0.5,
-              yc/pboxsize + 0.5,
-              zc/pboxsize + 0.5)
-    return kdtree.query_ball_point(xyzcen, rgal)
+    return kdtree.query_ball_point((xc,yc,zc), rgal)
 
 
 def get_cell(allcell, kdtree, gg, info):
@@ -78,12 +130,18 @@ def plot_2d_simple_gas_maps(gg):
     plt.savefig("{}_{}_gas.png".format(gg.nout, gg.meta.id), dpi=200)
 
 
-def plot_radial(gg, nbins=50, rmax=3):
-    gg.info.unit_d/msun_in_g * kpc_in_cm**3
+def plot_radial(gg, nbins=50, rmax=25, xlog=False, ylog=True,
+                surface_density=False):
+    """
+    parameters
+    ----------
+    surface_density : boolean
+        If True, the radial profile is divided by r^2.
+    """
     cell_to_msun = gg.info.unit_d/msun_in_g * kpc_in_cm**3
 
     fig, ax = plt.subplots()
-    bins = np.linspace(0,3,50)**3
+    bins = np.linspace(0,rmax,50)
 
     dist_star = np.sqrt(np.sum(np.square(gg.star["pos"]), axis=1))
     isort_dist_star = np.argsort(dist_star)
@@ -91,7 +149,13 @@ def plot_radial(gg, nbins=50, rmax=3):
     # star
     h_st, bin_st = np.histogram(dist_star[isort_dist_star], bins=bins,
                          weights=gg.star["m"][isort_dist_star])
-    ax.plot(bins[1:]**1/3, h_st, label="star")
+    bin_centers = 0.5*(bin_st[:-1] + bin_st[1:])
+    bin_widths  = bin_st[1:] - bin_st[:-1]
+
+    if surface_density:
+        two_pi_r_dr = 2 * np.pi * bin_centers * bin_widths
+        h_st /= two_pi_r_dr
+    ax.plot(bins[1:], h_st, label="star")
 
     if hasattr(gg, "dm") and gg.dm is not None:
         dist_dm = np.sqrt(np.sum(np.square(gg.dm["pos"]), axis=1))
@@ -99,7 +163,10 @@ def plot_radial(gg, nbins=50, rmax=3):
 
         h_dm, bin_dm = np.histogram(dist_dm[isort_dist_dm],  bins=bins,
                                     weights=gg.dm["m"][isort_dist_dm])
-        ax.plot(bins[1:]**1/3, h_dm, label="dm")
+        if surface_density:
+            two_pi_r_dr = 2 * np.pi * bin_centers * bin_widths
+            h_dm /= two_pi_r_dr
+        ax.plot(bins[1:], h_dm, label="dm")
 
     if hasattr(gg, "cell") and gg.cell is not None:
         dist_cell = np.sqrt(np.sum(np.square(gg.cell["pos"]), axis=1))
@@ -108,20 +175,39 @@ def plot_radial(gg, nbins=50, rmax=3):
         h_cell, bin_cell = np.histogram(dist_cell[isort_dist_cell],  bins=bins,
                  weights=gg.cell["rho"][isort_dist_cell]*
                          gg.cell["dx"][isort_dist_cell]**3 * cell_to_msun)
-        ax.plot(bins[1:]**1/3, h_cell, label="gas")
+        if surface_density:
+            two_pi_r_dr = 2 * np.pi * bin_centers * bin_widths
+            h_cell /= two_pi_r_dr
+        ax.plot(bins[1:], h_cell, label="gas")
 
     # all
-    all_comp = h_st + h_dm + h_cell
-    ax.plot(bins[1:]**1/3, h_st + h_dm + h_cell,
+    h_all = h_st + h_dm + h_cell
+    if surface_density:
+        two_pi_r_dr = 2 * np.pi * bin_centers * bin_widths
+        h_all /= two_pi_r_dr
+    ax.plot(bins[1:], h_all,
             label="all")
 
     ax.legend()
-    ax.set_xscale("log")
-    ax.set_yscale("log")
-    ax.set_xlim([0.1,3**3])
-    ax.set_ylim([1e7,1e11])
+    if xlog:
+        ax.set_xscale("log")
+        ax.set_xlim([0.1,rmax])
+    else:
+        ax.set_xlim([0.01,rmax])
+    if ylog:
+        ax.set_yscale("log")
+        if surface_density:
+            ax.set_ylim([1e4,1e10])
+        else:
+            ax.set_ylim([1e7,1e11])
+    else:
+        ax.set_ylim([0,1e11])
+    if surface_density:
+        ylabel = r"$\Sigma \, [M_{\odot}/kpc^2]$"
+    else:
+        ylabel = r"$M_{\odot}$"
     ax.set_xlabel("kpc")
-    ax.set_ylabel(r"$M_{\odot}$")
+    ax.set_ylabel(ylabel)
     plt.savefig("{}_{}_comp_profile.png".format(gg.nout, gg.meta.id), dpi=200)
 
 
@@ -211,7 +297,7 @@ def plot_rot_map(gg):
     fig.suptitle("ID {},  z={:.1f}".format(gg.meta.id, gg.info.zred))
     plt.tight_layout()
     plt.savefig("lam_map_{}_{}_lum.png".format(gg.nout, gg.meta.id), dpi=200)
-    plt.close()
+    #plt.close()
 
 
 def add_output_containers(gg):

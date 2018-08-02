@@ -1,5 +1,4 @@
 import numpy as np
-from utils import match as mtc
 
 def get_phi(rsorted,cumsum):
     """
@@ -11,12 +10,11 @@ def get_phi(rsorted,cumsum):
     return np.cumsum(pi[::-1])[::-1]
 
 
-def get_E(self, nvec=None, nvec_ys=True, ptype='star', method="Abadi2003",
+def get_E(self, nvec=None, nvec_ys=True, ptype='star', method="Abadi",
                 bound_only = True, return_ellip=False):
 
     # parameters
     pos1, pos2, vel1, vel2 = 'z', 'x', 'vz', 'vx'
-    method="Abadi"
 
     # constants
     G = 6.67384e-11  # m^3 kg^-1 s^-2
@@ -79,8 +77,6 @@ def get_E(self, nvec=None, nvec_ys=True, ptype='star', method="Abadi2003",
     # First nstar indices are stars.
 
     # Exclude the star at the center.
-
-
     bound_only = False
 
     if bound_only:
@@ -129,7 +125,8 @@ def get_E(self, nvec=None, nvec_ys=True, ptype='star', method="Abadi2003",
         cos = cos_alp[rssort][1:]
 
         phi = get_phi(r_s_sorted, M)
-        specificE = phi + 0.5*(star["vel"][:,0]**2+star["vel"][:,1]**2+star["vel"][:,2]**2)[rssort][1:]
+        specificE = phi + 0.5*(star["vel"][:,0]**2+star["vel"][:,1]**2
+                               +star["vel"][:,2]**2)[rssort][1:]
         Ecir = 0.5*Grav*M/r_s_sorted + phi
 
         i_sort_Ecir = np.argsort(Ecir)
@@ -147,57 +144,3 @@ def get_E(self, nvec=None, nvec_ys=True, ptype='star', method="Abadi2003",
         self.cos = cos
         self.vcir = vcir
         self.ind_closest_star = rssort[0]
-
-
-
-def load_components(gg, thishalo, s, idlist, load_dm=True, load_cell=True):
-    import pickle
-    from utils.sampling import Region
-    from scipy.spatial import cKDTree
-    nout = s.nout
-
-    if load_dm or load_cell:
-        reg = Region()
-        reg.region_from_halo(thishalo)
-        s.set_ranges(reg.ranges)
-    else:
-        return
-
-    if load_dm:
-        s.add_part(ptypes=["dm id pos vel mass"])
-        ind = mtc.match_list_ind(s.part.dm["id"], idlist)
-        gg.dm = s.part.dm[ind]
-        gg.dm["pos"] -= gg.center_code
-        gg.dm["pos"] *= gg.info.boxtokpc
-        gg.dm["vel"] *= gg.info.kms
-        gg.dm["m"] *= gg.info.msun
-
-    if load_cell:
-        # gas properties
-        fn_cell=s.base+"/GalaxyMaker/CELL_{:05d}/CELL_{:d}_{:d}.pickle".format(nout,nout,gg.meta.id)
-        load_hydro = True
-        try:
-            gg.cell = pickle.load(open(fn_cell, "rb"))
-            if 'var5' in gg.cell.dtype.names:
-                load_hydro = False
-        except:
-            pass
-
-        if load_hydro:
-            rmin = 1e-5
-            if reg.radius < rmin:
-                reg.radius = rmin
-            s.set_ranges(reg.ranges)
-            if verbose: t0 = time.time()
-            s.add_hydro(verbose=False, load=True, pure=True)
-            if verbose:
-                t1 = time.time()
-                print("Loading hydro took", t1 - t0)
-            kdtree = cKDTree(np.stack((s.hydro.cell["x"],
-                                       s.hydro.cell["y"],
-                                       s.hydro.cell["z"])).T)
-            get_cell(s.hydro.cell, kdtree, gg, s.info)
-            #print("Retrieving cells from sim.hydro")
-            if len(gg.cell) > 1:
-                if save_cell:
-                    pickle.dump(gg.cell, open(fn_cell,"wb"))
