@@ -101,7 +101,7 @@ subroutine count_part(ndm_actual, nstar_actual, nsink_actual, ntr_actual, &
             endif
         endif
      enddo
-     write(*,*)nstar_actual, ndm_actual, nsink_actual, ntr_actual
+     !write(*,*)nstar_actual, ndm_actual, nsink_actual, ntr_actual
      deallocate(x,m,id)
      if(nstar>0)deallocate(age)
   enddo
@@ -239,11 +239,7 @@ subroutine title(n,nchar)
      nchar = '00'//nchar3
   elseif(n.ge.10)then
      write(nchar2,'(i2)') n
-     write(*,*)nchar2, "a"
      nchar = '000'//nchar2
-     write(*,*)nchar, "aa"
-	 !write(*,'(I5.5)')n
-     !write(*,*)nchar, n
   else
      write(nchar1,'(i1)') n
      nchar = '0000'//nchar1

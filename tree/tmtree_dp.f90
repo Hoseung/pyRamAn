@@ -47,7 +47,6 @@ subroutine count_tree(fn, n_halos_all,  flist_index, slist_index, nsteps, big_ru
             read(1)nsons
             if (nsons .gt. 0) then
                 read(1)!id_tmp!son ID
-                !write(*,*)id_tmp
             endif
             slist_index = slist_index + nsons
             read(1)! (r,m,t)_vir, c_vel
@@ -56,7 +55,6 @@ subroutine count_tree(fn, n_halos_all,  flist_index, slist_index, nsteps, big_ru
                 read(1)!id_tmp! particle ID
             endif
 
-        write(*,*)flist_index
         enddo
     enddo
     deallocate(nb_of_halos, nb_of_subhalos)
@@ -134,7 +132,7 @@ subroutine load_tree(fn, fatherID, fatherIDx, sonID, fatherMass, &
             read(1)f_arr(idx,16:18)!energy
             read(1)f_arr(idx,19)!spin
             read(1)n_fathers!nfathers
-            if (n_fathers .gt. n_fathers_max) then 
+            if (n_fathers .gt. n_fathers_max) then
                 write(*,*) "Increase n_fathers_max above ",n_fathers
             endif
             read(1)fid_tmp(1:n_fathers)

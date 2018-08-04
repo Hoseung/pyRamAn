@@ -122,7 +122,7 @@ class Part(load.sim.Simbase):
         if verbose: print("Part", base)
         try:
             self.set_base(info.base)
-            print(info.base)
+            if verbose: print(info.base)
         except:
             self.set_base(base)
         self.data_dir = data_dir
@@ -673,7 +673,7 @@ class Part(load.sim.Simbase):
                      return_meta=False,
                      read_metal=True,
                      return_whole=False,
-                     verbose=True):
+                     verbose=False):
         """
 
         # parameters:
@@ -692,7 +692,7 @@ class Part(load.sim.Simbase):
 
         """
         from load.part_load import part_load_module
-        print("Loading by fortran module")
+        if verbose: print("Loading by fortran module")
         xmi = self.ranges[0][0]
         xma = self.ranges[0][1]
         ymi = self.ranges[1][0]
@@ -806,8 +806,7 @@ class Part(load.sim.Simbase):
             self.tracer['vz'] = part_float[ind_tracer,5]
             self.tracer['id'] = part_int[ind_tracer]
 
-
-        print("Fortran-reading done")
+        if verbose: print("Fortran-reading done")
 
         if return_whole:
             return part_float, part_int
