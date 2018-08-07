@@ -11,7 +11,7 @@ def get_phi(rsorted,cumsum):
 
 
 def get_E(self, nvec=None, nvec_ys=True, ptype='star', method="Abadi",
-                bound_only = True, return_ellip=False):
+                bound_only = True, return_ellip=False, phi_direct=False):
 
     # parameters
     pos1, pos2, vel1, vel2 = 'z', 'x', 'vz', 'vx'
@@ -124,7 +124,29 @@ def get_E(self, nvec=None, nvec_ys=True, ptype='star', method="Abadi",
         e = jz/jcir
         cos = cos_alp[rssort][1:]
 
-        phi = get_phi(r_s_sorted, M)
+        if phi_direct:
+            from analysis import pot_diret
+            Grav = 6.67408*1e-11*1.989*1e30/(3.0857*1e16*1e9)
+            #md,xd,yd,zd,mg,xg,yg,zg,ms,xs,ys,zs,eps,nd,ng,ns
+            phi = pot_diret.star_potential(self.dm['m'],
+                                     self.dm['x'],
+                                     self.dm['y'],
+                                     self.dm['z'],
+                                     cell_mass,
+                                     self.cell["x"],
+                                     self.cell["y"],
+                                     self.cell["z"],
+                                     self.star["m"],
+                                     self.star["x"],
+                                     self.star["y"],
+                                     self.star["z"],
+                                     np.ones_like(self.star["m"])*self.cell["dx"].min()*0.3,
+                                     len(self.dm), len(self.cell), len(star))
+            phi *= -Grav
+        else:
+            phi = get_phi(r_s_sorted, M)
+
+        print(phi[:20])
         specificE = phi + 0.5*(star["vel"][:,0]**2+star["vel"][:,1]**2
                                +star["vel"][:,2]**2)[rssort][1:]
         Ecir = 0.5*Grav*M/r_s_sorted + phi
