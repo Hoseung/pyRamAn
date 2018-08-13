@@ -27,12 +27,10 @@ class HaloMeta():
 
     set_halofinder(self, halofinder)
 
-
-
     """
     def __init__(self, nout=None, base='./', info=None, halofinder='HM',
                  load=True, is_gal=False, return_id=False, outdir=None, fn=None,
-                 verbose=False, double=False, pure=False, read_mbp=False,
+                 verbose=False, double=False, pure_python=False, read_mbp=False,
                  add_fields=None):
         """
 
@@ -74,7 +72,7 @@ class HaloMeta():
         self.nout = nout
         self.verbose = verbose
         self.double = double
-        self.pure = pure
+        self.pure_python = pure_python
         self.base = base
         self.info = None
         self.set_info(info=info)
@@ -190,7 +188,7 @@ class Halo(HaloMeta):
         else:
             self.data = data
 
-    def load(self, nout=None, base=None, info=None, pure=None, double=None,
+    def load(self, nout=None, base=None, info=None, pure_python=None, double=None,
              add_fields=None):
         """
         There are nout, base keywords.
@@ -199,8 +197,8 @@ class Halo(HaloMeta):
         """
         if double is None:
             double = self.double
-        if pure is None:
-            pure = self.pure
+        if pure_python is None:
+            pure_python = self.pure_python
 
         if self.fn is None:
             self._check_params()
@@ -228,8 +226,8 @@ class Halo(HaloMeta):
             if self.verbose:
                 print(self.fn)
                 print("Loading file:", self.fn)
-                print("double :", double, "Pure Python:", pure, "read_mbp",self.read_mbp)
-            self.load_hm(self.fn, double=double, pure=pure, add_fields=add_fields)
+                print("double :", double, "Pure Python:", pure_python, "read_mbp",self.read_mbp)
+            self.load_hm(self.fn, double=double, pure_python=pure_python, add_fields=add_fields)
             if self.info is None:
                 info = Info(base = self.base, nout = self.nout, load=True)
                 self.set_info(info)
@@ -238,18 +236,18 @@ class Halo(HaloMeta):
         else:
             print("Not converting unit!")
 
-    def load_hm(self, fn, double=None, pure=None, add_fields=None):
+    def load_hm(self, fn, double=None, pure_python=None, add_fields=None):
         if double == None:
             double = self.double
-        if pure == None:
-            pure = self.pure
+        if pure_python == None:
+            pure_python = self.pure_python
 
         f = open(fn, "rb")
         dtypes_halo = get_halo_dtype(is_gal=self.is_gal,
                                     double=double,
                                     read_mbp=self.read_mbp,
                                     new_fields=add_fields)
-        if pure:
+        if pure_python:
             brick_data = f.read()
             offset, halnum, subnum = load_header(brick_data, double=double)
             self.data = np.zeros(halnum+subnum,
@@ -402,13 +400,13 @@ class Halo(HaloMeta):
         and mass in solar mass (physical).
         """
         info = self.info
-        self.data['x'] = self.data['x'] / info.pboxsize + 0.5 #* info.cboxsize * 1e3
-        self.data['y'] = self.data['y'] / info.pboxsize + 0.5 #* info.cboxsize * 1e3
-        self.data['z'] = self.data['z'] / info.pboxsize + 0.5 #* info.cboxsize * 1e3
-        self.data['r'] = self.data['r'] / info.pboxsize  #* info.cboxsize * 1e3
-        self.data['rvir'] = self.data['rvir'] / info.pboxsize #* info.cboxsize * 1e3
-        self.data['m'] = self.data['m'] * 1e11 # / info.h
-        self.data['mvir'] = self.data['mvir'] * 1e11 # / info.h
+        self.data['x'] = self.data['x'] / info.pboxsize + 0.5
+        self.data['y'] = self.data['y'] / info.pboxsize + 0.5
+        self.data['z'] = self.data['z'] / info.pboxsize + 0.5
+        self.data['r'] = self.data['r'] / info.pboxsize
+        self.data['rvir'] = self.data['rvir'] / info.pboxsize
+        self.data['m'] = self.data['m'] * 1e11
+        self.data['mvir'] = self.data['mvir'] * 1e11
         self.unit.update({"Mass":"Msun (physical)",
                           "Length":"code unit (0 - 1), (comoving)",
                             "velocity":"km/s physical"})
@@ -467,6 +465,19 @@ class Halo(HaloMeta):
         except:
             self.nhalo = len([ind])
 
+    def cal_purity(self):
+        """
+        Calculate purity by the mean mass of the DM particles.
+        """
+        mean_m = self.data["m"] / self.data["np"]
+        M_hires = mean_m.min()
+        try:
+            self.data["purity"] = np.clip(1 - (mean_m / M_hires -1) / 8, 0,1)
+        except:
+            from numpy.lib import recfunctions as rfc
+            self.data = rfc.append_fields(self.data, "purity",
+                                          np.clip(1 - (mean_m / M_hires -1) / 8, 0,1),
+                                           dtypes=float, usemask=False)
 
 def load_header(brick_data, double=False):
     offset = 4
