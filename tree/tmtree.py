@@ -11,6 +11,7 @@ from utils.io_module import read_fortran, skip_fortran
 from utils.hagn import Nnza
 from utils import cosmology
 import os
+from os.path import isfile
 from tree import halomodule
 
 class Tree():
@@ -25,8 +26,7 @@ class Tree():
         """
         NH tree => BIG_RUN == False
         """
-
-        self.set_fn(fn)
+        self.fn = None
         self.tree = None
         self.fatherID = None
         self.fatherIDx = None
@@ -43,11 +43,15 @@ class Tree():
         self.nsteps = None
         self.info = info
         self.verbose=False
+
         if self.info is None and load_info:
             self.load_info()
 
-        if fn is None:
+        if fn is not None and isfile(fn):
+            self.set_fn(fn)
+        else:
             self.get_fn()
+
         if load:
             self.load(nout_now=nout_now, BIG_RUN=BIG_RUN)
         # Load nnza()
@@ -146,11 +150,7 @@ class Tree():
         #            return
         self.tree, self.fatherID, self.fatherIDx, self.fatherMass, self.sonIDx = np.load(self.dump_files["data"])
 
-    def set_fn(self,fn):
-        self.fn = fn
-
     def get_fn(self):
-        from os.path import isfile
         if self.is_gal:
             dir_mid = "GalaxyMaker/gal/"
         if not self.is_gal:
@@ -158,12 +158,12 @@ class Tree():
         fn = self.wdir + dir_mid + "tree.dat"
 
         if isfile(fn):
-            self.set_fn(fn)
-        elif isfile(self.set_fn(fn = self.wdir + dir_mid.split("/")[0] + "/" + "tree.dat")):
-            self.set_fn(fn = self.wdir + dir_mid.split("/")[0] + "/" + "tree.dat")
+            self.fn = fn
+        elif isfile(self.wdir + dir_mid.split("/")[0] + "/" + "tree.dat"):
+            self.fn = self.wdir + dir_mid.split("/")[0] + "/" + "tree.dat"
             print("tree.dat found in another location", self.fn)
         else:
-            self.set_fn(None)
+            #self.set_fn(None)
             print(fn, "is not found")
 
 
