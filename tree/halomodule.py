@@ -296,7 +296,9 @@ class Halo(HaloMeta):
             self.data['pos'] = pos.reshape((ntot,3))
             self.data['vel']= vel.reshape((ntot,3))
             self.data['lvec'] = ang.reshape((ntot,3))
-            self.data['r'] = radius[::4].copy()
+            radius = radius.reshape((ntot,4))
+            self.data['r'] = radius[:,0]
+            self.data["abc"] = radius[:,1:4]
 
 #           copy so that memory is continuous. (Not tested!)
             self.data['rvir'],self.data['mvir'], \
