@@ -102,9 +102,9 @@ class HaloMeta():
 
         if outdir is None:
             if is_gal:
-                self.gal_find_dir = 'GalaxyMaker/'
+                self.gal_find_dir = 'GalaxyMaker/gal/'
             else:
-                self.dm_find_dir= 'halo/'
+                self.dm_find_dir= 'halo/DM/'
         else:
             if is_gal:
                 self.gal_find_dir = outdir
@@ -219,9 +219,9 @@ class Halo(HaloMeta):
 
                 snout = str(self.nout).zfill(3)
                 if self.is_gal:
-                    self.fn = base + self.gal_find_dir + 'gal/tree_bricks' + snout
+                    self.fn = base + self.gal_find_dir + 'tree_bricks' + snout
                 else:
-                    self.fn = base + self.dm_find_dir + 'DM/tree_bricks' + snout
+                    self.fn = base + self.dm_find_dir + 'tree_bricks' + snout
 
             if self.verbose:
                 print(self.fn)
