@@ -161,7 +161,7 @@ class Region():
         xrans = "ranges" in region
 
         """
-        Check more annoying(more to type) parameters first.
+        Check more annoying(to type) parameters earlier.
         """
 
         if xxr:
@@ -222,6 +222,11 @@ class Region():
 
 
     def region_from_halo(self, halo, ind=None, rscale = 1.0):
+        """
+        Set a region as a halo.
+
+        If multiple halos are given, define an area encompassing all halos.
+        """
         if ind is None:
             try:
                 return self.set_region(xc = halo['x'],
@@ -234,15 +239,21 @@ class Region():
                                              zc = halo.data['z'],
                                              radius = halo.data['rvir'] * rscale)
         else:
-            return self.set_region(xc = halo.data['x'][ind],
-                                   yc = halo.data['y'][ind],
-                                   zc = halo.data['z'][ind],
-                                   radius = halo.data['rvir'][ind] * rscale)
+            if len(ind) > 1:
+                return self.set_region_multi(xc = halo.data['x'][ind],
+                                             yc = halo.data['y'][ind],
+                                             zc = halo.data['z'][ind],
+                                       radius = halo.data['rvir'][ind] * rscale)
+            else:
+                return self.set_region(xc = halo.data['x'][ind],
+                                       yc = halo.data['y'][ind],
+                                       zc = halo.data['z'][ind],
+                                       radius = halo.data['rvir'][ind] * rscale)
 
-    def distance_to(xc, xx):
+    def distance_to(self, xc, xx):
         return np.sqrt([(xc[0] - xx[0])**2 + (xc[1] - xx[1])**2 + (xc[2] - xx[2])**2])[0]
 
-    def extract_halos_within(halos, i_center, scale=1.0, Mcut=1e5):
+    def extract_halos_within(self, halos, i_center, scale=1.0, Mcut=1e5):
         '''
         Return indices of halos within SCALE * Rvir of the central halo.
 
@@ -280,7 +291,7 @@ class Region():
         return (dd < (rvir * scale)) * (np.array(halos['m']) > Mcut)
 
 
-    def set_region_multi(xc=None, yc=None, zc=None, radius=None, **kwargs):
+    def set_region_multi(self, xc=None, yc=None, zc=None, radius=None, **kwargs):
         """
         Return region dict.
 
@@ -290,19 +301,19 @@ class Region():
         If scalar variables are given, set_region is directly called.
         """
         if isinstance(xc, float):
-            return set_region(xc=xc, yc=yc, zc=zc, radius = radius, **kwargs)
+            return self.set_region(xc=xc, yc=yc, zc=zc, radius = radius, **kwargs)
         else:
-            ranges = sum_region_multi(xc=xc, yc=yc, zc=zc, radius=radius)
+            ranges = self.sum_region_multi(xc=xc, yc=yc, zc=zc, radius=radius)
             rr = max([np.ptp(ranges[0:2]),
                       np.ptp(ranges[2:4]),
                       np.ptp(ranges[4:6])]) * 0.5
 
-            return set_region(xc=0.5 * sum(ranges[0:2]),
+            return self.set_region(xc=0.5 * sum(ranges[0:2]),
                                 yc=0.5 * sum(ranges[2:4]),
                                 zc=0.5 * sum(ranges[4:6]), radius = rr)
 
 
-    def sum_region_multi(xc=[], yc=[], zc=[], radius=[]):
+    def sum_region_multi(self, xc=[], yc=[], zc=[], radius=[]):
         """
         Returns minimum and maximum of given ranges.
 
