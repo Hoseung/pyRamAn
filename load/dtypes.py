@@ -13,7 +13,7 @@ import numpy as np
 
 def add_dtypes(old_dtypes, new_dtypes):
     """
-    append new field, or alias to the current dtypes.
+    append new field, or alias to current dtypes.
     old_dtypes may be np.dtype or an input to make a np.dtype.
 
     add_dtypes must be composed of 5 elements:
@@ -47,7 +47,7 @@ def add_dtypes(old_dtypes, new_dtypes):
 
     dtype_new =dict(old_dtypes.fields)
 
-    # re-organize so that the un-referenced fields appear at last.
+    # reorder so that the un-referenced fields appear at last.
     i=0
     simply_add=[]
     for nf in new_dtypes:
@@ -58,10 +58,11 @@ def add_dtypes(old_dtypes, new_dtypes):
     new_dtypes += simply_add
 
     for nf in new_dtypes:
-        try:
+        if nf[3] in old_dtypes.fields.keys():
             # If the reference field is found.
             offset = old_dtypes.fields.get(nf[3])[1]
-        except:
+            dtype_new.update({nf[0]: ((nf[1], nf[2]), offset+nf[4])})
+        else:
             # If not, it could be a default field input
             try:
                 # The "last" entry == largest offet
@@ -72,7 +73,7 @@ def add_dtypes(old_dtypes, new_dtypes):
             except:
                 print("[load/dtype error] Can't find the field ({}) in the old dtypes".format(nf[3]))
                 raise
-        dtype_new.update({nf[0]: ((nf[1], nf[2]), offset+nf[4])})
+
 
     return dtype_new
 

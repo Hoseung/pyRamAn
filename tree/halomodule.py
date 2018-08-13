@@ -51,6 +51,15 @@ class HaloMeta():
             If True, load (as hcat.hal_idlists) constituent particle id of all halo.
             If halo ids are given, load (as hcat.hal_idlists) particle ids of the given halos.
 
+        add_fields : None
+            New fields is added to the halo catalog by using the "add_dtypes" function.
+            The add_fields must be in the following format:
+            (name, type, shape, existing field, offset wrt the existing field)
+            For example,
+            ("pos", dtype_float, (3,), "x", 0),
+            ("vel", dtype_float, (3,), "vx", 0),
+            ("lvec", dtype_float, (3,), "ax", 0)
+
         Examples
         --------
         It is better to specify nout, base, halofinder from the beginning.
