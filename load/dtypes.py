@@ -68,7 +68,7 @@ def add_dtypes(old_dtypes, new_dtypes):
                 # The "last" entry == largest offet
                 key_max = max(dtype_new, key=(lambda key: dtype_new[key][-1]))
                 off_last = dtype_new[key_max][-1]
-                size_last = dtype_new[key_max][0].itemsize
+                size_last = np.dtype(dtype_new[key_max][0]).itemsize
                 dtype_new.update({nf[0]: ((nf[1], nf[2]), off_last+size_last)})
             except:
                 print("[load/dtype error] Can't find the field ({}) in the old dtypes".format(nf[3]))
