@@ -176,7 +176,7 @@ def close_gals(halo, gals, return_ind=True, rscale=3.0):
 
 
 
-def compile_mpgs(alltrees, idx_all, wdir='./', cdir='easy/', nout_ini=37, nout_fi=187):
+def compile_mpgs(alltrees, idx_all, base='./', cdir='easy/', nout_ini=37, nout_fi=187):
     ad = alltrees.data
     mpg_tmp = []
     for i, idx in enumerate(idx_all):
@@ -237,7 +237,7 @@ def Maj_min_acc_ratio(mpgs, dt=5, major_ratio=3):
 
 
 def multipage_plot(mpgs, nout_ini=37, nout_fi = 187,
-                    wdir='./',
+                    base='./',
                     suffix="",
                     dt_after = 1.0,
                     dt_before = 1.0,
@@ -251,7 +251,7 @@ def multipage_plot(mpgs, nout_ini=37, nout_fi = 187,
 
     with PdfPages(wdir + 'MMA_plots' + suffix +'.pdf') as pdf:
         measure_delta(mpgs, nout_ini=37, nout_fi = 187,
-                    wdir='./',
+                    base='./',
                     dt_after = dt_after,
                     dt_before = dt_before,
                     ax=ax)
@@ -268,7 +268,7 @@ def multipage_plot(mpgs, nout_ini=37, nout_fi = 187,
 
 
 def measure_delta(mpgs, nout_ini=37, nout_fi = 187,
-                    wdir='./',
+                    base='./',
                     dt_after = 1.0,
                     dt_before = 1.0,
                     ax=None):

@@ -307,7 +307,7 @@ def measure_mstar_mhal(cluster,
     mhal = []
 
     for mhal_this, idgal in zip(mhal_result, good_gal):
-        gal = Gal(nout_fi, idgal, wdir=wdir, load=False)
+        gal = Gal(nout_fi, idgal, base=wdir, load=False)
         gal.load(cell="none", dm="none")
         # There are only two options: gm or raw. 
         # Others are ignored.

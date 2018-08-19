@@ -637,7 +637,7 @@ def not_all_galaxies_have_hosthalo(allhal, allgal):
 	allhal.idlists = newlist
 
 
-def main(wdir='./',
+def main(base='./',
          ncore=4,
          nout_ini=37,
          nout_end=187,
@@ -758,7 +758,7 @@ def main(wdir='./',
     if not read_halo_list:
         info = load.info.Info(nout=nout_fi, base=wdir, load=True)
         prg_only_tree = get_sample_tree(alltrees, info,
-                        wdir=wdir,
+                        base=wdir,
                         nout_ini=nout_ini,
                         nout_fi =nout_fi,  
                         is_gal = is_gal,

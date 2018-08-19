@@ -16,7 +16,7 @@ from tree import halomodule
 
 class Tree():
     def __init__(self, fn=None,
-                     wdir='./',
+                     base='./',
                      load=True,
                      nout_now=None,
                      info=None,

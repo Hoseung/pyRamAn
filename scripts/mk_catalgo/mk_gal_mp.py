@@ -129,7 +129,7 @@ def mkgal(s, halodata, info, i_queue, out_q, star=None, dm=None, cell=None, rsca
             else:
                 print("R eff:", gal.reff * info.pboxsize)
                 gal.cal_lambda_r(npix=20, method=1, rscale=1.5) # calculate within 1.0 * reff    
-    #            gal.plot_gal(wdir=wdir + 'galaxy_plot4/')
+    #            gal.plot_gal(base=wdir + 'galaxy_plot4/')
     #            gal.save_gal(base=wdir)
             
                 # Instead of galaxy class, save them in a dict.    

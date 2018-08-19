@@ -158,7 +158,7 @@ for gcat_this in good_gals[2:3]:
 
     gcat_sub = gcat.data[gcat.data["host"]==gid]
     hcat_sub = hcat.data[hcat.data["host"]==hid]
-    gg = rd_GM.Gal(nout=nout, wdir=wdir,
+    gg = rd_GM.Gal(nout=nout, base=wdir,
                    gcat=gcat_this.copy(),
                    hcat=thishalo,
                    #gcat_subs = gcat_sub,

@@ -84,11 +84,11 @@ def mk_gal(gal,
 
     star = gal.star
     # re-center position first.
-    if star is not None:
-        star["x"] = (star["x"] - xc)*1e3
-        star["y"] = (star["y"] - yc)*1e3
-        star["z"] = (star["z"] - zc)*1e3
-        star["m"] *= 1e11#gal.info.msun
+    #if star is not None:
+    #    star["x"] = (star["x"] - xc)*1e3
+    #    star["y"] = (star["y"] - yc)*1e3
+    #    star["z"] = (star["z"] - zc)*1e3
+    #    star["m"] *= 1e11#gal.info.msun
     if verbose: print("star x", gal.star["x"])
 
     dm = gal.dm

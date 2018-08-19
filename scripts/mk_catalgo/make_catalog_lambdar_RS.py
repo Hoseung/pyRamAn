@@ -249,7 +249,7 @@ for icat, i in enumerate(range(1,nh)):
 #    gal.get_radius("eff")
     print("R eff:", gal.reff * info.pboxsize)
     gal.cal_lambda_r(npix=20, method=1, rscale=1.5) # calculate within 1.0 * reff
-    gal.plot_gal(wdir=wdir + 'galaxy_plot4/')
+    gal.plot_gal(base=wdir + 'galaxy_plot4/')
     isort = np.argsort(gal.dist1d)
     print(gal.lambda_r[1:-1:5])
     print("  ")

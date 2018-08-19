@@ -31,7 +31,7 @@ def plot_violin(mpgs,
                 mstar_cut_hard = 5e9,
                 massive_cut=1e10,
                 fname="",
-                wdir='./',
+                base='./',
                 use_seaborn=True,
                 scale = "width",
                 pallette="muted",
@@ -209,7 +209,7 @@ def plot_violin2(mpgs,
                 mstar_cut_hard = 5e9,
                 massive_cut=1e10,
                 fname="",
-                wdir='./',
+                base='./',
                 use_seaborn=True,
                 scale = "width",
                 pallette="muted",
@@ -403,7 +403,7 @@ def plot_violin2(mpgs,
     return av
 
 
-def plot_simple(mpgs, wdir='./', suffix=""):
+def plot_simple(mpgs, base='./', suffix=""):
     fig, ax = plt.subplots(2)
     for igal, gal in enumerate(mpgs):
         if gal.merger is not None:
@@ -420,7 +420,7 @@ def plot_simple(mpgs, wdir='./', suffix=""):
 
 # In[3]:
 
-def plot_hist(mpgs, wdir='./', suffix=""):
+def plot_hist(mpgs, base='./', suffix=""):
     all_mr = []
     all_delta =[]
     fig, ax = plt.subplots()
@@ -832,7 +832,7 @@ def get_merger_info(main, atree, sat_root_idx,
 def measure_delta(mpgs,
                   nout_ini=37,
                   nout_fi = 187,
-                  wdir='./',
+                  base='./',
                   dt_after = 0.5,
                   dt_before = 0.5,
                   dt_settle = 0.5,

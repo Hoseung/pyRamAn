@@ -142,7 +142,7 @@ for idgal in idgals[4:]:
         gal.mk_gal(part=s.part, cell=None, rscale=0.6) # First guess, stars inside 0.5Rvir.
         gal.cal_lambda_r(npix=npix, method=1, rscale=1.0) # lambdar_r out to 1 * Reff
 #        gal_evol[inout]['lambdar_arr'][0:len(gal.lambda_r)] = gal.lambda_r# array length?
-        gal.plot_gal(wdir=wdir + snout + 'prg_' + sidgal)
+        gal.plot_gal(base=wdir + snout + 'prg_' + sidgal)
 
 #%%        
         gal_evol[inout]['mstar'] = gal.mstar

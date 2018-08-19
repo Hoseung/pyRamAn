@@ -4,6 +4,16 @@ Created on Thu Mar 10 04:50:37 2016
 
 Inherits galaxymodule.galaxy.Galaxy class
 
+A galaxy is built with stars, DMs, and cell data bu default. The three components
+are assuemd to present, but an additional functionality is desired in case one
+or more components are missing.
+
+Unlike cells, there are two possibilities in determining member particles.
+Eighter use GalaxyMaker/HaloMaker idlist or take everythin within a certain radius.
+As a galaxy is resolved into mulitple substructures at the NH resolution, the membership of
+a "host" galaxy maybe not compatble with observations. By default, I will take
+all member particles of all member substructures as the member of the "host" galaxy.
+
 @author: hoseung
 """
 from galaxymodule.galaxy import Galaxy
@@ -95,21 +105,22 @@ class Dummy():
         pass
 
 class Gal(Galaxy):
-    def __init__(self, nout, idgal=None,
-                 catalog=None, halo=None, info=None,
+    def __init__(self, nout, info, idgal=None,
+                 gcat=None, hcat=None,
+                 gcat_subs=[], hcat_subs=[],
                  type_dm="gm", type_cell="gm",
-                 wdir='./', idhal = -1, load=True, rscale=1.5):
+                 base='./', idhal = -1, load=True, rscale=1.5):
         """
 
         Parameters
         ----------
         load : logical (Default = True)
-            load avaialable (star, dm, cell) data on creating an instance.
+            load avaialable (star, dm, cell) data on creating the instance.
         idgal : int
             galaxy ID
-        catalog : gcat.data
+        gcat : gcat.data
             gcat if avaialble.
-            Well, actually it does not work properly without a catalog.
+            Well, actually it does not work properly without a gcat.
         halo : hcat.data
             If there is no CELL, DM, or GAL files avaialble, automatically fallback
             to read dm and cell from the raw data. halo information is required in that case.
@@ -137,28 +148,29 @@ class Gal(Galaxy):
 
         ToDo
         ----
-        GAL, CELL files naming convention is confusing. (17.08.20)
-
+        GAL, CELL files' naming convention is confusing. (17.08.20)
 
         """
-        assert(not(idgal == None and catalog == None)), ("either idgal or a catalog"
+        assert(not(idgal == None and gcat == None)), ("either idgal or a gcat"
         " is needed.")
-        assert(not(info == None)), "Need info, use info=gcat.info"
+        #assert(not(info == None)), "Need info, use info=gcat.info"
         if idgal is None:
-            idgal = catalog["id"]
+            idgal = gcat["id"]
 
-        super(Gal, self).__init__(catalog=catalog, info=info, halo=halo)
+        super(Gal, self).__init__(gcat=gcat, info=info, hcat=hcat)
         try:
             self.hid = self.hcat["id"]
         except:
             self.hid = idhal
             pass
-        self.star = None # data -> star
+        self.star = None
         self.cell = None
         self.dm = None
         self.header = None
         self.nout = nout
         self.gid = idgal
+        self.gcat_subs = gcat_subs
+        self.hcat_subs = hcat_subs
         self.units = Dummy()
         self.units.star = Units()
         self.units.dm = Units()
@@ -170,7 +182,7 @@ class Gal(Galaxy):
         #self.set_info(info)
         self.rscale=rscale
         if load:
-            if idhal == -1:
+            if idhal < 0:
                 type_dm = None
             self.load(type_dm=type_dm, type_cell=type_cell)
         # try loading cell:
@@ -207,8 +219,13 @@ class Gal(Galaxy):
 
         if self.units.star.name == "code":
             self.rgal = 0.5 * max([self.star['x'].ptp(), self.star['y'].ptp(), self.star['z'].ptp()])
+            self.rgal_code = self.rgal
         elif self.units.star.name == "gm":
             self.rgal = 0.5 * max([self.star['x'].ptp(), self.star['y'].ptp(), self.star['z'].ptp()]) / self.info.pboxsize
+            self.rgal_code = self.rgal * 1e-3
+        elif self.units.star.name == "relative_p":
+            self.rgal = 0.5 * max([self.star['x'].ptp(), self.star['y'].ptp(), self.star['z'].ptp()])
+            self.rgal_code = self.rgal / self.info.boxtokpc
 
 
     def load(self, type_star="gm", type_dm="gm", type_cell="gm",
@@ -217,7 +234,7 @@ class Gal(Galaxy):
              rd_cell_params=None,
              rd_dm_params=None):
         """
-        Load per-galaxy data (if exist).
+        Load per-galaxy data (if exists).
         Automatically skips missing components.
 
         Parameters
@@ -247,30 +264,38 @@ class Gal(Galaxy):
         """
         from utils.sampling import Region
 
-        #if info is not None and not hasattr(self.info, "unit_l"):
-        #    self._get_minimal_info(info)
         if rscale is not None:
             self.rscale = rscale
         try:
             if type_star == "gm":
-                print("1", rd_star_params)
                 self.header, self.star = _rd_gal(self.nout, self.gid,
-                             wdir=self.wdir, metal=True, **rd_star_params)
+                             base=self.wdir, metal=True, **rd_star_params)
+                if len(self.gcat_subs) > 0:
+                    ss_all = [self.star]
+                    for sub in self.gcat_subs:
+                        h, ss = _rd_gal(self.nout, sub["id"],
+                                 base=self.wdir, metal=True, **rd_star_params)
+                        ss_all.append(ss)
+                    self.star = np.concatenate(ss_all)
+
+                # convert units to kpc from the center
+                self.center_code = self.header['xg'] / self.info.pboxsize + 0.5
+
+                self.star["pos"]-=(self.center_code - 0.5)*self.info.pboxsize
+                self.star["pos"]*=1e3
+                self.star["m"] *= 1e11
+
                 self.units.header = unit_gm
-                self.units.star = unit_gm
-                if self.info is not None:
-                    self.center_code = self.header['xg'] / self.info.pboxsize + 0.5
-                    self.get_rgal()
-                    self.region = Region(centers=self.center_code,
-                                                  radius=self.rscale * self.rgal)
-                    #self.region = sampling.set_region(centers=self.center_code,
-                    #                              radius=self.rscale * self.rgal)
+                self.units.star = unit_rel
+
+                self.get_rgal()
+                self.region = Region(centers=self.center_code,
+                                              radius=self.rscale * self.rgal_code)
             elif type_star == "raw":
             # load catalog
                 import tree.halomodule as hmo
                 gcat = hmo.Halo(nout=self.nout, base=self.wdir, is_gal=True)
                 thisgal = gcat.data[gcat.data["id"] == self.gid]
-                # In which format should the header be?
                 # Raw
 
                 # Header is originally a numpy array, but a dict should be enough.
@@ -301,7 +326,7 @@ class Gal(Galaxy):
 
         try:
             if type_dm == "gm":
-                self.dm = rd_dm(self.nout, self.hid, wdir=self.wdir,
+                self.dm = rd_dm(self.nout, self.hid, base=self.wdir,
                                 **rd_dm_params)
                 self.units.dm.name="gm"
             elif type_dm == 'raw':
@@ -319,7 +344,7 @@ class Gal(Galaxy):
 
         try:
             if type_cell == "gm":
-                self.cell = rd_cell(self.nout, self.gid, wdir=self.wdir,
+                self.cell = rd_cell(self.nout, self.gid, base=self.wdir,
                                     metal=True, **rd_cell_params)
                 self.units.cell= unit_gm
                 self._has_cell=True
@@ -339,101 +364,6 @@ class Gal(Galaxy):
             print("No CELL data loaded")
             self.cell = None
             pass
-
-    def convert_unit(self, unit_system):
-        """
-            converts data units into the 'standard' units.
-            i.e., position in pkpc w.r.t the galaxy center,
-                  velocity in km/s (which is, already),
-                  mass in Msun,
-                  time in Gyr since bigbang,
-                  metal in [Z/H].
-
-            Parameters
-            ----------
-            unit_system : str {"gm", "relative_p", "raw"}
-                desired unit system.
-            Notes
-            -----
-            Current unit system is referred from the gal.units.
-
-            It should convert to the desired units for all the possible units given.
-            But I don't do any computational/statistical tests on the units
-            to minimize the computing cost.
-            Instead, I use an additional units attribute (gal.units).
-
-        """
-        # check info
-        if not (hasattr(self, "info") and hasattr(self.info, "zred")):
-            print("gal.info is not available. aborting...")
-            return
-
-        if sum([unit_system == us.name for us in unit_systems]) !=1:
-            print("Illegal unit system detected. \n Aborting...")
-            return
-
-        # Case 1)
-        # from gm to relative_p
-        if self.header is not None:
-            if self.units.header.position == "box center":
-                try:
-                    self.header['xg'] = self.header['xg'] / self.info.pboxsize + 0.5
-                    self.units.header.position = "code"
-                    self.units.header.length = "code"
-                except AttributeError:
-                    print("No .header attribute")
-            else:
-                print("Header position not in GM unit")
-
-        if self.star is not None:
-            if self.units.star.position == "box center":
-                # pos
-                self.star["x"] -= gal.header["xg"][0]
-                self.star["y"] -= gal.header["xg"][1]
-                self.star["z"] -= gal.header["xg"][2]
-            if self.units.star.vel_org == "box":
-                # vel
-                self.star["vx"] -= gal.header["vg"][0]
-                self.star["vy"] -= gal.header["vg"][1]
-                self.star["vz"] -= gal.header["vg"][2]
-            if self.units.star.mass == "1e11Msun":
-                # mass
-                self.star["m"] *=1e11
-            if self.units.star.time == "conformal":
-                # time
-                self.star["time"] = self.time2Gyr(self.info)
-                self.units.star.name("relative_p")
-
-            else:
-                print("star position not in GM unit")
-
-
-        if self.dm is not None:
-            if self.units.dm.position == "box center":
-                try:
-                    for field in ["x", "y", "z"]:
-                        self.dm[field] = self.dm[field] / self.info.pboxsize + 0.5
-                    self.units.dm.position = "code"
-                    self.units.dm.length = "code"
-                except AttributeError:
-                    print("No .dm attribute")
-            else:
-                print("dm position not in GM unit")
-        if cell == True and self.cell is not None:
-            if self.units.cell.position == "box center":
-                try:
-                    for field in ["x", "y", "z"]:
-                        self.cell[field] = self.cel[field] / self.info.pboxsize + 0.5
-                    self.units.cell.position = "code"
-                except AttributeError:
-                    print("No .cell attribute")
-            else:
-                print("cell position not in GM unit")
-            if self.units.cell.length == "gm":
-                self.cell['dx'] *= self.info.pboxsize
-                self.units.cell.length = "code"
-
-
 
     def gm2code(self, header=True, star=True, dm=True, cell=True):
         if header == True and self.header is not None:
@@ -511,7 +441,7 @@ def time2gyr(self, info=None):
 
 
 
-def _rd_gal(nout, idgal, wdir="./", metal=True,
+def _rd_gal(nout, idgal, base="./", metal=True,
           nchem=0, long=True, fname=None, additional_fields=None):
     """
     Just read a GM file.
@@ -538,12 +468,11 @@ def _rd_gal(nout, idgal, wdir="./", metal=True,
         idgal = str(idgal).zfill(7)
         dir_nout = "GAL_" + str(nout).zfill(5)
         fname = wdir + 'GalaxyMaker/' +  dir_nout + '/gal_stars_' + idgal
-    print("2",additional_fields)
     #header, data =
     return rd_gm_star_file(fname, additional_fields=additional_fields)
 
 
-def rd_gal(nout, idgal, info=None, wdir="./", metal=True,
+def rd_gal(nout, idgal, info=None, base="./", metal=True,
           nchem=0, long=True, fname=None):
     """
     Parameters
@@ -563,7 +492,6 @@ def rd_gal(nout, idgal, info=None, wdir="./", metal=True,
 
     ...
 
-    deprecated??
     """
     if fname is None:
         idgal = str(idgal).zfill(7)
@@ -573,7 +501,7 @@ def rd_gal(nout, idgal, info=None, wdir="./", metal=True,
     print("[rd_GM.rd_gal] fname=", fname)
     header, data = rd_gm_star_file(fname)
 
-    gal = Gal(nout, idgal, info=info, wdir=wdir, load=False)
+    gal = Gal(nout, idgal, info=info, base=wdir, load=False)
     gal.star = data
     gal.header = header
     gal.gid = header['my_number']
@@ -582,7 +510,7 @@ def rd_gal(nout, idgal, info=None, wdir="./", metal=True,
     return gal
 
 
-def rd_dm(nout, idgal, wdir="./", long=True, fname=None):
+def rd_dm(nout, idgal, base="./", long=True, fname=None):
     """
 
     header xg in Mpc (physical, centered at 0.5, 0.5, 0.5 of the simualtion volume)
@@ -640,7 +568,7 @@ def rd_gm_dm_file(fname, long=True):
 def rd_gm_star_file(fname, metal=True, nchem=0,
                     additional_fields=None):
     """
-
+    Load one GAL file, return header and the data as is.
 
     Parameters
     ----------
@@ -729,7 +657,7 @@ def rd_gm_star_file(fname, metal=True, nchem=0,
     if additional_fields is not None:
         for field in additional_fields.items():
             additional_fields.update({field[0]: (field[1][0], field[1][1]+d_off)})
-    dtype_data.update(additional_fields)
+        dtype_data.update(additional_fields)
 
     with open(fname, "rb") as f:
         header = read_header(f, dtype=dtype_header)
@@ -757,7 +685,7 @@ def rd_gm_star_file(fname, metal=True, nchem=0,
     return header, data
 
 
-def rd_cell(nout, idgal, wdir="./", metal=True, nchem=0,
+def rd_cell(nout, idgal, base="./", metal=True, nchem=0,
             fname=None):
     """
     A warpper of rd_gm_cell_file that (only) provides the file name.

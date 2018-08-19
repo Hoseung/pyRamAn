@@ -69,7 +69,7 @@ if __name__ == "__main__":
             args.append([cat_chunk, nout, i])
             #print(i,cat_chunk[0]["id"])
             #if test:
-            ccm.do_work(cat_chunk, nout, i, do_cell=False, wdir=wdir)
+            ccm.do_work(cat_chunk, nout, i, do_cell=False, base=wdir)
  
         print("# of subsamples", len(args))
         # Parallelize

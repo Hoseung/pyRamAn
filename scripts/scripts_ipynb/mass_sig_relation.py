@@ -79,7 +79,7 @@ if read:
     ngal = len(gg.data)
     print("Total {} galaxies in {}".format(ngal, wdir))
     for igal in range(1,ngal + 1):
-        gal = load.rd_GM.rd_gal(nout, igal, wdir=wdir)
+        gal = load.rd_GM.rd_gal(nout, igal, base=wdir)
         sig3d.append((np.std(gal.data['vel'][:,0])+
                       np.std(gal.data['vel'][:,0])+
                       np.std(gal.data['vel'][:,0]))/np.sqrt(3))

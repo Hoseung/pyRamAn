@@ -259,7 +259,7 @@ def mkgal(star, halodata, info, inds, out_q, rscale=0.4):
     #    gal.get_radius("eff")
         print("R eff:", gal.reff * info.pboxsize)
         gal.cal_lambda_r(npix=20, method=1, rscale=1.5) # calculate within 1.0 * reff
-        gal.plot_gal(wdir=wdir + 'galaxy_plot4/')
+        gal.plot_gal(base=wdir + 'galaxy_plot4/')
     
 #        gal_out = Galaxymeta()
     # Instead of galaxy class, save them in dict.

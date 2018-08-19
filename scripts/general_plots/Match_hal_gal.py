@@ -213,7 +213,7 @@ good_hal = np.unique(result[result > 0])
 #good_gal = [251,234]
 
 for idgal in good_gal:
-    gal = Gal(nout_fi, idgal, wdir=wdir, load=False)
+    gal = Gal(nout_fi, idgal, base=wdir, load=False)
     gal.load(cell="none", dm="none")
     # There are only two options: gm or raw. 
     # Others are ignored.

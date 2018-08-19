@@ -6,7 +6,7 @@
 def remove_nan(x):
     return x[~np.isnan(x)]
 
-def plot_violin(mpgs, mstar_limit=1e10, suffix="", wdir='./'):
+def plot_violin(mpgs, mstar_limit=1e10, suffix="", base='./'):
     dlt_all=[]
     dlo_all=[]
     dlM_all=[]
@@ -36,7 +36,7 @@ def plot_violin(mpgs, mstar_limit=1e10, suffix="", wdir='./'):
     #plt.show()
 
 
-def plot_simple(mpgs, wdir='./', suffix=""):
+def plot_simple(mpgs, base='./', suffix=""):
     fig, ax = plt.subplots(2)
     for igal, gal in enumerate(mpgs):
         if gal.merger is not None:
@@ -49,7 +49,7 @@ def plot_simple(mpgs, wdir='./', suffix=""):
     plt.savefig(wdir + "mma_simple" + suffix + ".png")
 
 
-def plot_hist(mpgs, wdir='./', suffix=""):
+def plot_hist(mpgs, base='./', suffix=""):
     all_mr = []
     all_delta =[]
     for gal in mpgs:
@@ -115,7 +115,7 @@ def filter_small_mergers(mm, window=7):
     mm.nout_ini = mm.nout_ini[ind_ok]
 
 
-def multipage_plots(mpgs, nout_ini=37, wdir='./', suffix="", dt_after = 10, dt_before = 7):
+def multipage_plots(mpgs, nout_ini=37, base='./', suffix="", dt_after = 10, dt_before = 7):
     from matplotlib.backends.backend_pdf import PdfPages
     from scipy.signal import medfilt
 
@@ -322,11 +322,11 @@ for gal in mpgs:
 
 # In[14]:
 
-#multipage_plots(mpgs, nout_ini=nout_ini, wdir=wdir, suffix=suffix)
+#multipage_plots(mpgs, nout_ini=nout_ini, base=wdir, suffix=suffix)
 #pickle.dump(mpgs, open(dir_out + "mpgs" + suffix + ".pickle", 'wb'))
-#plot_simple(mpgs, wdir=dir_out, suffix="")
+#plot_simple(mpgs, base=dir_out, suffix="")
 #plot_violin(mpgs, mstar_limit = 1e10)
-#plot_hist(mpgs, wdir=dir_out, suffix=suffix)
+#plot_hist(mpgs, base=dir_out, suffix=suffix)
 #### Draw a vilon plot of Major/Minor/accretion contributio ratio
 
 # ### Visual inspection. 

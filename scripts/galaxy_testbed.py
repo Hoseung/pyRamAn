@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import load
 import time
 
-def prepare_data(wdir='./', nout=187, npix=800, lmax=19, idgal=1197):
+def prepare_data(base='./', nout=187, npix=800, lmax=19, idgal=1197):
     import tree.halomodule as hmo
     import utils.sampling as smp    
 #    r_cluster_scale = 2.0
@@ -421,7 +421,7 @@ if __name__ == '__main__':
     nout=187
     # 691 : ~10000
     # 715 : 27518
-    hh, info, star, dm, cell = prepare_data(wdir=wdir, nout=nout, idgal=1242)
+    hh, info, star, dm, cell = prepare_data(base=wdir, nout=nout, idgal=1242)
     # Direct plot ---------------------------------------------------------
     plot_halo_region(hh.data, info, star, cell, npix=400, save_dir=wdir)
     

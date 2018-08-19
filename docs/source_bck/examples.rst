@@ -3,7 +3,7 @@ Examples
 
 Loading simulation raw data
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-By default, wdir='./' or base='./' for all methods/funcionts.
+By default, base='./' or base='./' for all methods/funcionts.
 So it is convenient to start analysis under a cluster directory (for example, /data1/good/01605/)::
 
    >>> import load

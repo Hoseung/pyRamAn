@@ -1,7 +1,7 @@
 # mge_fit_example() reference output (version 18 June 2015)
 # Python 3.4 using NumPy 1.10, SciPy 0.16, Matplotlib 1.4
 ###############################################################################
-runfile('mge/mge_fit_example.py', wdir='mge')
+runfile('mge/mge_fit_example.py', base='mge')
 
 Fitting M32---------------------------------------------
 

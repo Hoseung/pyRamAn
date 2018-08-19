@@ -178,7 +178,7 @@ def do_work(sub_sample, nout, i_subsample,
     result_sub_sample=[]
     print("{} galaxies in this sub sample".format(len(sub_sample)))
     for i, gcat_this in enumerate(sub_sample):
-        gg = rd_GM.Gal(nout=nout,wdir=wdir,
+        gg = rd_GM.Gal(nout=nout,base=wdir,
                        catalog=gcat_this.copy(),
                        info=s.info, type_cell=do_cell)
         #print("s.info.pboxsize", s.info.pboxsize)

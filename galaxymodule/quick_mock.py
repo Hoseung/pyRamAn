@@ -1,4 +1,5 @@
 import numpy as np
+from galaxymodule.load_sed import *
 
 class Simplemock():
     """
@@ -41,10 +42,12 @@ class Simplemock():
                  filter_system="SDSS",
                  sed_model="bc03",
                  info=None,
-                 load=True):
+                 load=True,
+                 imf = "Salpeter"):
         self.filter_system = filter_system
         self.repo = repo
         self.sed_model = sed_model
+        self.IMF = imf
         self.info = info
         if load is True:
             self.load_filters()
@@ -72,7 +75,7 @@ class Simplemock():
         """
         Full SEDs are just a few tens of MB.
         """
-        if self.sed_model == "bc03":
+        if self.sed_model == "bc03yy":
             self.metal_points = np.array([0.0004, 0.001, 0.004, 0.01, 0.02, 0.04])
             # age points in tables.
             self.age_points = np.genfromtxt(self.repo+"ages_yybc.dat") # in Gry unit
@@ -81,6 +84,17 @@ class Simplemock():
             for i, metal in enumerate(self.metal_points):
                 self.SEDs[i,:,:] = np.genfromtxt(self.repo +
                                             "bc03_yy_{:.4f}".format(metal)).reshape(221, 1221)
+        elif self.sed_model == "bc":
+            all_sed=[]
+            for fn in glob("./BC03_v03/bc03/models/Padova2000/salpeter/*lr*.ised*.gz"):
+                bc03 = Sed_block(fn)
+                all_sed.append(bc03)
+                print(bc03.isochrone)
+                print(bc03.X, bc03.Y, bc03.Z)
+
+            SED = Sed(all_sed)
+            self.SEDs
+
         else:
             print("Sorry, Only bc03 is implemented.")
 
@@ -102,7 +116,7 @@ class Simplemock():
             This still gives reasonable value.
 
         speed_check : False
-            If True, measure time taken. Only for optimizing purpose.
+            If True, measure the time taken. Only for optimizing purpose.
         """
         if speed_check:
             from time import time
@@ -120,8 +134,6 @@ class Simplemock():
         locate_metal = np.digitize(starmetal, self.metal_points)-1 # GOOD
         relevant_metals = self.metal_points[:max(locate_metal)+2]
         nmetals = len(relevant_metals)
-        #print("Metal ranges", self.metal_points, starmetal.min(), starmetal.max())
-        #print("nmetals", nmetals)
 
         # Star Age
         starage = star["time"]

@@ -20,16 +20,16 @@ for cluster in np.unique(clusterlist):
     i_this_cluster = clusterlist == cluster
     idgal_list = odd_list[i_this_cluster] - cluster*1e5
     print(cluster, "  ", idgal_list)
-    gals.extend(do_main(wdir=wdir, w_wdir=wdir, w_galaxy_plot=True,
+    gals.extend(do_main(base=wdir, w_base=wdir, w_galaxy_plot=True,
                w_galaxy_plot_dir= wdir +'galaxy_plot/',
                cluster = cluster,
                idgal_list=idgal_list))
 
-#gals.extend(do_main(wdir=wdir, w_wdir=wdir, w_galaxy_plot=True,
+#gals.extend(do_main(base=wdir, w_base=wdir, w_galaxy_plot=True,
 #               w_galaxy_plot_dir= wdir +'galaxy_plot/',
 #               idgal_list=np.array([1])))
 
-#gals.extend(do_main(wdir=wdir, w_wdir=wdir, w_galaxy_plot=True,
+#gals.extend(do_main(base=wdir, w_base=wdir, w_galaxy_plot=True,
 #               w_galaxy_plot_dir= wdir +'galaxy_plot/',
 #               idgal_list=np.array([444])))
 

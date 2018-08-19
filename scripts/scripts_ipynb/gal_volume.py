@@ -28,8 +28,8 @@ gcat = hmo.Halo(base=wdir, is_gal=True, verbose=False, nout=nout)
 gg = gcat.data[0]
 galid = gg['id']
 
-gm = load.rd_GM.rd_gal(nout, galid, wdir=wdir)
-#gm.cell = load.rd_GM.rd_cell(nout, galid, wdir=wdir)
+gm = load.rd_GM.rd_gal(nout, galid, base=wdir)
+#gm.cell = load.rd_GM.rd_cell(nout, galid, base=wdir)
 
 gal = galaxy.galaxy.Galaxy(halo = gg, info=info)
 good_gal = gal.mk_gal(gm.star, None, None, unit_conversion="GM", verbose=False)

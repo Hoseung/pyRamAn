@@ -82,7 +82,7 @@ def _extract_cell(cell_all, cpus, xc, yc, zc, rr,
 # In[2]:
 
 from analysis.cal_lambda import *  
-def main(nout_ini, nout_fi, wdir='./', rcluster_scale = 2.9):
+def main(nout_ini, nout_fi, base='./', rcluster_scale = 2.9):
     import load
     import tree.halomodule as hmo
     import numpy as np

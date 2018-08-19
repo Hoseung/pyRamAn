@@ -248,7 +248,7 @@ for icat, i in enumerate(range(nh)):
         continue
 #    gal.get_radius("eff")
     gal.cal_lambda_r(npix=20, method=1, rscale=1.0)
-    gal.plot_gal(wdir=wdir + 'galaxy_plot4/')
+    gal.plot_gal(base=wdir + 'galaxy_plot4/')
     gal.reorient(gal.star)
     gal.cal_b2t()
     isort = np.argsort(gal.dist1d)

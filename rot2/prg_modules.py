@@ -6,7 +6,7 @@ import tree.halomodule as hmo
 import utils.match as mtc
 
 
-def load_idx_list(wdir="./", test=False):
+def load_idx_list(base="./", test=False):
     if test:
         return np.genfromtxt(wdir+"test_direct_prgs_gal/final_idxs_allmassive_gal.txt",
                  dtype=[('idx', 'i8'), ('id', 'i8')])

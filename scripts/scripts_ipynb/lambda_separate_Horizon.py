@@ -66,7 +66,7 @@ def find_closest(A, target):
     return idx
 
 
-def nouts_from_zreds(zreds, wdir='./'):
+def nouts_from_zreds(zreds, base='./'):
 #if True:
     """
     Look for info in wdir/snapshots/outpu*/
@@ -118,7 +118,7 @@ def worker(gcatdata, additional_info,  hals, out_q, info, inds,
         tree_root_id = additional_info["tree_root_id"][i]
 
         gal = galaxy.Galaxy(halo=gcat_single, info=info)
-        gm = load.rd_GM.rd_gal(nout, galid, wdir=wdir)
+        gm = load.rd_GM.rd_gal(nout, galid, base=wdir)
 
         # with_cell, with_DM are not implemented yet!
         if with_cell:
@@ -127,7 +127,7 @@ def worker(gcatdata, additional_info,  hals, out_q, info, inds,
             gm.cell = None
         if with_DM:
             if halid > 0 :
-                gm.dm = load.rd_GM.rd_dm(info.nout, halid, wdir=wdir)
+                gm.dm = load.rd_GM.rd_dm(info.nout, halid, base=wdir)
             else:
                 gm.dm = extract_dm(hh, info, wdir)
                 # The	se are not in the final units that I want,
@@ -191,7 +191,7 @@ def worker(gcatdata, additional_info,  hals, out_q, info, inds,
             except:
                 return
 
-def main(wdir='./',
+def main(base='./',
          ncore=1,
          nout_ini=20,
          nout_end=788,
@@ -204,7 +204,7 @@ def main(wdir='./',
          w_galaxy_plot=True,
          w_galaxy_plot_dir= 'galaxy_plot/',
          w_region_plot=False,
-         w_wdir='./',
+         w_base='./',
          w_with_DM=False,
          w_with_cell=False,
          verbose=False,
@@ -303,7 +303,7 @@ def main(wdir='./',
     #nsteps = np.unique(tt["nstep"])[::-1]
     #zreds = np.unique(tt["zred"])
     print("Check2.5, loading halo")
-    nouts = nouts_from_zreds(zreds, wdir=wdir)
+    nouts = nouts_from_zreds(zreds, base=wdir)
     print(nouts)
     print("Check2.7, loading halo")
     for nout, nstep in zip(nouts, nsteps):

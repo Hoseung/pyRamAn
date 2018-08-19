@@ -63,7 +63,7 @@ def worker(gals, hals, out_q, info, inds,
            galaxy_plot=False,
            galaxy_plot_dir='galaxy_plot/',
            region_plot=False,
-           wdir='./',
+           base='./',
            with_DM=True,
            with_cell=True,
            mk_gal_params={},
@@ -94,17 +94,17 @@ def worker(gals, hals, out_q, info, inds,
 
         galid = gg['id']
         halid = hh['id']
-        gm = load.rd_GM.rd_gal(info.nout, galid, wdir=wdir)
+        gm = load.rd_GM.rd_gal(info.nout, galid, base=wdir)
         # print('!!!! mima vx in gm', min(gm.star['vx']), max(gm.star['vx']))
 
         if with_cell:
-            #gm.cell = load.rd_GM.rd_cell(info.nout, galid, wdir=wdir)
+            #gm.cell = load.rd_GM.rd_cell(info.nout, galid, base=wdir)
             gm.cell = extract_cell(hh, info, wdir, rscale=rscale_extract_cell)
         else:
             gm.cell = None
         if with_DM:
             if halid > 0 :
-                gm.dm = load.rd_GM.rd_dm(info.nout, halid, wdir=wdir)
+                gm.dm = load.rd_GM.rd_dm(info.nout, halid, base=wdir)
             else:
                 gm.dm = extract_dm(hh, info, wdir)
                 # The	se are not in the final units that I want,
@@ -174,7 +174,7 @@ def worker(gals, hals, out_q, info, inds,
         #print("where are you gone, dict?", out_q.get())
 
 
-def main(wdir='./',
+def main(base='./',
          ncore=1,
          nout_ini=37,
          nout_end=187,
@@ -189,7 +189,7 @@ def main(wdir='./',
          w_galaxy_plot=True,
          w_galaxy_plot_dir= 'galaxy_plot/',
          w_region_plot=False,
-         w_wdir='./',
+         w_base='./',
          w_with_DM=False,
          w_with_cell=False,
          ):
@@ -337,7 +337,7 @@ def main(wdir='./',
         # Reading tree done
         info = load.info.Info(nout=nout_fi, base=wdir, load=True)
         prg_only_tree = get_sample_tree(alltrees, info,
-                        wdir=wdir,
+                        base=wdir,
                         nout_ini=nout_ini,
                         nout_fi =nout_fi,  
                         is_gal = is_gal,

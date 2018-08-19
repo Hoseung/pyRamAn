@@ -32,7 +32,7 @@ for gg in mpgs:
             for i, nout in enumerate(gg.nouts):
                 galid = gg.ids[i]
                 if gg.data["rgal"][i] > 0:
-                    gal = Gal(nout, galid, wdir=wdir, load=False)
+                    gal = Gal(nout, galid, base=wdir, load=False)
     #                print("nout and Galaxy size", nout, gal.header["r"])
                     gal.load(star="raw", cell="none", dm="none",
                              rscale=rscale, radius=radius)

@@ -60,7 +60,7 @@ def kde_sci(mpgs
     ,mstar_cut_hard = 5e9
     ,mcut=1e10
     ,fname="figs/test"
-    ,wdir='./'
+    ,base='./'
     ,nbins=21
     ,kde=True
     ,hist=True

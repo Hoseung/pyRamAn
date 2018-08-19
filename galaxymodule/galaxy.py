@@ -33,16 +33,16 @@ def print_large_number(q):
         return("{:.2f}".format(q))
 
 
-def convert_catalog(catalog, pboxsize, unit="code"):
+def convert_catalog(gcat, pboxsize, unit="code"):
     """
     Default unit = code unit.
-    (tree.halomodule converts units to code units on reading catalogs)
+    (tree.halomodule converts units to code units on reading gcats)
     """
-    catalog['x'] = (catalog['x'] -0.5) * pboxsize
-    catalog['y'] = (catalog['y'] -0.5) * pboxsize
-    catalog['z'] = (catalog['z'] -0.5) * pboxsize
-    catalog['r'] = catalog['r'] * pboxsize  #* info.cboxsize * 1e3
-    catalog['rvir'] = catalog['rvir'] * pboxsize #* info.cboxsize * 1e3
+    #gcat['x'] = (gcat['x'] -0.5) * pboxsize
+    #gcat['y'] = (gcat['y'] -0.5) * pboxsize
+    #gcat['z'] = (gcat['z'] -0.5) * pboxsize
+    gcat['r'] = gcat['r'] * pboxsize  #* info.cboxsize * 1e3
+    gcat['rvir'] = gcat['rvir'] * pboxsize #* info.cboxsize * 1e3
 
 
 class Meta():
@@ -150,12 +150,12 @@ class Galaxy():
         Maybe.. this class is growing too heavy...?
         If I have to deal with millions of these...
     """
-    def __init__(self, info=None, halo=None,
-                 catalog=None, convert_cat=True):
+    def __init__(self, info=None,
+                 gcat=None, hcat=None, convert_cat=True):
         self.meta = Meta()
         self.set_info(info)
-        self.set_catalog(catalog.copy(), convert_cat)
-        self.set_halo(halo.copy(), convert_cat)
+        self.set_gcat(gcat.copy(), convert_cat)
+        self.set_hcat(hcat.copy(), convert_cat)
         self._has_star=False
         self._has_dm=False
         self._has_cell=False
@@ -164,7 +164,11 @@ class Galaxy():
     def set_info(self, info):
         self.info = get_minimal_info(info)
 
-    def set_halo(self, halo, convert):
+    def set_substructure(self, gcat):
+
+        self.gcat
+
+    def set_hcat(self, halo, convert):
         """
             Copy so not to be affected by the original data being modified outside.
             center of galaxy may be updated by more sophisticated method.
@@ -189,18 +193,19 @@ class Galaxy():
             if not is_tree and convert:
                 convert_catalog(self.hcat, self.info.pboxsize)
 
-    def set_catalog(self, catalog, convert):
+    def set_gcat(self, gcat, convert):
         """
             Copy so not to be affected by the original data being modified outside.
             center of galaxy may be updated by more sophisticated method.
         """
         is_tree=False
-        if "xp" in catalog.dtype.fields:
-            print(catalog["xp"])
-            if len(catalog["xp"]) == 3:
+        # If a tree is given
+        if "xp" in gcat.dtype.fields:
+            print(gcat["xp"])
+            if len(gcat["xp"]) == 3:
         	   	is_tree = True
-        	   	tt = catalog.copy()
-        	   	catalog = dict( x=tt["xp"][0],#*self.info.pboxsize,
+        	   	tt = gcat.copy()
+        	   	gcat = dict( x=tt["xp"][0],#*self.info.pboxsize,
               	      	   	  	y=tt["xp"][1],#*self.info.pboxsize,
               	      	   	 	z=tt["xp"][2],#*self.info.pboxsize,
               	      	   	  	vx=tt["vp"][0],
@@ -213,15 +218,15 @@ class Galaxy():
                                 rvir=tt["rvir"],
  	   	                        idx=tt["idx"])
 
-        self.gcat = catalog
+        self.gcat = gcat
 
         if not is_tree and convert:
             convert_catalog(self.gcat, self.info.pboxsize)
-        if catalog is not None:
-            self.meta.id = int(catalog['id'])
-            self.meta.xc = float(catalog["x"])
-            self.meta.yc = float(catalog["y"])
-            self.meta.zc = float(catalog["z"])
+        if gcat is not None:
+            self.meta.id = int(gcat['id'])
+            self.meta.xc = float(gcat["x"])
+            self.meta.yc = float(gcat["y"])
+            self.meta.zc = float(gcat["z"])
 
 
     def physical_print(self, x):
@@ -260,7 +265,7 @@ class Galaxy():
                 data['vel'] = data['vel'] * self.info.kms - self.meta.vel
         elif unit_conversion == "GM":
             if "x" in data.dtype.names:
-                data['pos'] = (data['pos'] - (self.meta.pos - 0.5) * self.info.pboxsize)*1e3
+                data['pos'] = (data['pos'] - self.meta.pos) * self.info.pboxsize*1e3
             if 'm' in data.dtype.names:
                 data['m'] = data['m'] * 1e11 # in Msun.
             if "vx" in data.dtype.names:
@@ -281,24 +286,6 @@ class Galaxy():
         if 'vel' in dm.dtype.names: self.dm['vel'] = dm['vel'][idm]
 
         if verbose: print("DM data stored")
-
-    #def _add_cell(self, cell, icell):
-    #    ncell_tot = len(icell)
-    #    dtype_cell = [('x', '<f8',),('y', '<f8',),('z', '<f8',), ('dx', '<f8'),
-    #                  ('rho', '<f8'), ('vx', '<f8' ), ('vy', '<f8' ), ('vz', '<f8' ),
-    #                  ('temp', '<f8'), ('metal', '<f8')]
-    #
-    #    self.cell = np.recarray(ncell_tot, dtype=dtype_cell)
-    #    self.cell['x'] = cell['x'][icell]
-    #    self.cell['y'] = cell['y'][icell]
-    #    self.cell['z'] = cell['z'][icell]
-    #    self.cell['dx'] = cell['dx'][icell]
-    #    self.cell['rho'] = cell['var0'][icell]
-    #    self.cell['vx'] = cell['var1'][icell]
-    #    self.cell['vy'] = cell['var2'][icell]
-    #    self.cell['vz'] = cell['var3'][icell]
-    #    self.cell['temp'] = cell['var4'][icell]
-    #    self.cell['metal'] = cell['var5'][icell]
 
 
     def reff_main_gal(self, x, y, z):

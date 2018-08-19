@@ -8,7 +8,7 @@ def find_closest(A, target):
     return idx
 
 
-def nouts_from_zreds(zreds, wdir='./'):
+def nouts_from_zreds(zreds, base='./'):
 #if True:
     """
     Look for info in wdir/snapshots/outpu*/

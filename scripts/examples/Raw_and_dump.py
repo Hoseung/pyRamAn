@@ -18,7 +18,7 @@ def load_gal(nout, idgal):
     s = load.sim.Sim(nout)
     
     # GalaxyMaker dump
-    gal = load.rd_GM.rd_gal(nout, idgal, wdir='./')
+    gal = load.rd_GM.rd_gal(nout, idgal, base='./')
     
     gal.header['xg'] = gm2code(gal.header['xg'], s.info)
     gal.star['x'] = gm2code(gal.star['x'], s.info)

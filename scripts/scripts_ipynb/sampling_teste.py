@@ -351,7 +351,7 @@ def get_sample_gal(wdir, nout, info, prg_only_tree):
 
 #%%
 
-def main(wdir='./',
+def main(base='./',
          ncore=4,
          nout_ini=37,
          nout_end=187,
@@ -466,7 +466,7 @@ def main(wdir='./',
 
     if not read_halo_list:
         prg_only_tree = get_sample_tree(alltrees, info,
-                        wdir=wdir,
+                        base=wdir,
                         nout_ini=nout_ini,
                         nout_fi =nout_fi,  
                         is_gal = is_gal,

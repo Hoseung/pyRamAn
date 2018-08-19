@@ -3,7 +3,7 @@
 
 # In[1]:
 
-def multipage_plots(mpgs, nout_ini=37, wdir='./', suffix=""):
+def multipage_plots(mpgs, nout_ini=37, base='./', suffix=""):
     from matplotlib.backends.backend_pdf import PdfPages
 
     fig, ax = plt.subplots(2,2, sharex=True)
@@ -55,7 +55,7 @@ def multipage_plots(mpgs, nout_ini=37, wdir='./', suffix=""):
 
 # In[2]:
 
-def plot_violin(mpgs, mstar_limit=1e10, suffix="", wdir='./'):
+def plot_violin(mpgs, mstar_limit=1e10, suffix="", base='./'):
     dlt_all=[]
     dlo_all=[]
     dlM_all=[]
@@ -81,7 +81,7 @@ def plot_violin(mpgs, mstar_limit=1e10, suffix="", wdir='./'):
 
 # In[3]:
 
-def plot_simple(mpgs, wdir='./', suffix=""):
+def plot_simple(mpgs, base='./', suffix=""):
     fig, ax = plt.subplots(2)
     for igal, gal in enumerate(mpgs):
         if gal.merger is not None:
@@ -96,7 +96,7 @@ def plot_simple(mpgs, wdir='./', suffix=""):
 
 # In[18]:
 
-def plot_hist(mpgs, wdir='./', suffix=""):
+def plot_hist(mpgs, base='./', suffix=""):
     all_mr = []
     all_delta =[]
     for gal in mpgs:
@@ -166,7 +166,7 @@ def filter_small_mergers(mm, window=7):
 
 # In[11]:
 
-def multipage_plots(mpgs, nout_ini=37, wdir='./', suffix="", dt_after = 10, dt_before = 7):
+def multipage_plots(mpgs, nout_ini=37, base='./', suffix="", dt_after = 10, dt_before = 7):
     from matplotlib.backends.backend_pdf import PdfPages
     from scipy.signal import medfilt
 
@@ -333,7 +333,7 @@ idx_all = cat['idx'].astype(int) # fix so that idx is int from the beginning.
 
 # In[7]:
 
-mpgs = mma.compile_mpgs(alltrees, idx_all, wdir=wdir, cdir=cdir, nout_ini=nout_ini, nout_fi=nout_fi)
+mpgs = mma.compile_mpgs(alltrees, idx_all, base=wdir, cdir=cdir, nout_ini=nout_ini, nout_fi=nout_fi)
 
 
 # Merger epochs
@@ -359,15 +359,15 @@ mma.Maj_min_acc_ratio(mpgs)
 
 # In[19]:
 
-multipage_plots(mpgs, nout_ini=nout_ini, wdir=wdir, suffix=suffix)
+multipage_plots(mpgs, nout_ini=nout_ini, base=wdir, suffix=suffix)
 
 pickle.dump(mpgs, open(dir_out + "mpgs" + suffix + ".pickle", 'wb'))
 
-#plot_simple(mpgs, wdir=dir_out, suffix="")
+#plot_simple(mpgs, base=dir_out, suffix="")
 
 plot_violin(mpgs, mstar_limit = 1e10)
 
-plot_hist(mpgs, wdir=dir_out, suffix=suffix)
+plot_hist(mpgs, base=dir_out, suffix=suffix)
 
 
 # ### Draw a vilon plot of Major/Minor/accretion contributio ratio

@@ -60,7 +60,7 @@ def mma_all(clusters, nout_fi=187, nout_ini=57, cdir='easy/',
         #print(good_gals)
 
 
-        mpgs = mma.compile_mpgs(alltrees, idx_all, wdir=wdir, cdir=cdir, nout_ini=nout_ini, nout_fi=nout_fi)
+        mpgs = mma.compile_mpgs(alltrees, idx_all, base=wdir, cdir=cdir, nout_ini=nout_ini, nout_fi=nout_fi)
         mma.find_merger_epochs(alltrees, idx_all, mpgs, nout_ini=nout_ini)
         mma.measure_delta_lambda(mpgs, dt=7, nout_ini=nout_ini)
         mma.Maj_min_acc_ratio(mpgs)
