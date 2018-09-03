@@ -132,7 +132,6 @@ class Part(load.sim.Simbase):
         self.dm_with_vel = dmvel
         self.dm_with_mass = dmmass
 
-        #print("Part2", self.base)
         self.set_fbase(self.base, data_dir)
 
         if region is not None:
@@ -260,7 +259,6 @@ class Part(load.sim.Simbase):
         zc = 0.5 * sum(zr)
 
         radius = 0.5 * max([xr[1]-xr[0], yr[1]-yr[0], zr[1]-zr[0]]) * scale
-#        print(radius)
 
         return(sampling.set_region(centers=[xc, yc, zc], radius=radius))
 

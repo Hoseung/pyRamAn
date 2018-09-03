@@ -101,7 +101,6 @@ subroutine count_part(ndm_actual, nstar_actual, nsink_actual, ntr_actual, &
             endif
         endif
      enddo
-     !write(*,*)nstar_actual, ndm_actual, nsink_actual, ntr_actual
      deallocate(x,m,id)
      if(nstar>0)deallocate(age)
   enddo

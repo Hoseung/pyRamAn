@@ -16,16 +16,18 @@ from tree import halomodule
 
 class Tree():
     def __init__(self, fn=None,
-                     base='./',
+                     wdir='./',
                      load=True,
-                     nout_now=None,
+                     nout_fi=None,
                      info=None,
                      BIG_RUN=True,
                      is_gal=False,
-                     load_info=True):
+                     load_info=True,
+                     tree_fn="tree.dat"):
         """
         NH tree => BIG_RUN == False
         """
+        self.tree_fn = tree_fn
         self.fn = None
         self.tree = None
         self.fatherID = None
@@ -43,9 +45,10 @@ class Tree():
         self.nsteps = None
         self.info = info
         self.verbose=False
+        self.nout_fi=nout_fi
 
         if self.info is None and load_info:
-            self.load_info()
+            self.load_info(nout_fi=nout_fi)
 
         if fn is not None and isfile(fn):
             self.set_fn(fn)
@@ -53,23 +56,24 @@ class Tree():
             self.get_fn()
 
         if load:
-            self.load(nout_now=nout_now, BIG_RUN=BIG_RUN)
+            self.load(nout_now=nout_fi, BIG_RUN=BIG_RUN)
         # Load nnza()
         try:
-            self.nnza = Nnza(fname=self.fn.split("tree.dat")[0]+"nout_nstep_zred_aexp.txt")
+            self.nnza = Nnza(fname=self.fn.split(self.tree_fn)[0]+"nout_nstep_zred_aexp.txt")
         except:
             try:
                 self.cal_nnza()
-                self.nnza = Nnza(fname=self.fn.split("tree.dat")[0]+"nout_nstep_zred_aexp.txt")
+                self.nnza = Nnza(fname=self.fn.split(self.tree_fn)[0]+"nout_nstep_zred_aexp.txt")
             except:
                 print("[warning] Can not load nnza")
 
-    def load_info(self):
+    def load_info(self, nout_fi=None):
         from load.info import Info
         from utils import util
 
-        nout_fi = util.get_last_snapshot(self.wdir)
-        self.info = Info(base=self.wdir,nout=nout_fi)
+        if nout_fi is None:
+            nout_fi = util.get_last_snapshot(self.wdir)
+        self.info = Info(base=self.wdir, nout=nout_fi)
 
     def cal_time(self, info=None):
         """
@@ -155,13 +159,13 @@ class Tree():
             dir_mid = "GalaxyMaker/gal/"
         if not self.is_gal:
             dir_mid = "halo/DM/"
-        fn = self.wdir + dir_mid + "tree.dat"
+        fn = self.wdir + dir_mid + self.tree_fn
 
         if isfile(fn):
             self.fn = fn
-        elif isfile(self.wdir + dir_mid.split("/")[0] + "/" + "tree.dat"):
-            self.fn = self.wdir + dir_mid.split("/")[0] + "/" + "tree.dat"
-            print("tree.dat found in another location", self.fn)
+        elif isfile(self.wdir + dir_mid.split("/")[0] + "/" + self.tree_fn):
+            self.fn = self.wdir + dir_mid.split("/")[0] + "/" + self.tree_fn
+            print("{} found in another location {}".format(self.tree_fn, self.fn))
         else:
             #self.set_fn(None)
             print(fn, "is not found")
@@ -494,7 +498,7 @@ class Tree():
 
         ToDo: change name as get_nnza()
         """
-        fdir = self.fn.split("tree.dat")[0]
+        fdir = self.fn.split(self.tree_fn)[0]
 
         fsave = fdir+"nout_nstep_zred_aexp.txt"
         if os.path.isfile(fsave):

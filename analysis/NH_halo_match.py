@@ -22,6 +22,8 @@ def get_kd_matches(kdtree, gal, n_match=5, rscale = 4.0, dist_upper=None):
     #len_tree = kdtree.length
     if dist_upper is None:
         dist_upper = gal["rvir"] * rscale
+
+    # kdtree.query_ball_point ??
     dd, ind = kdtree.query((gal["x"],
                             gal["y"],
                             gal["z"]),
