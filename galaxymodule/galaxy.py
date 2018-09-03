@@ -149,13 +149,18 @@ class Galaxy():
     """
         Maybe.. this class is growing too heavy...?
         If I have to deal with millions of these...
+
+        Case 1. Gcat only
+        Case 2. Gcat and hcat
+        Case 3. Hcat Only
+        Case 4. Gal file Only
     """
     def __init__(self, info=None,
                  gcat=None, hcat=None, convert_cat=True):
         self.meta = Meta()
         self.set_info(info)
-        self.set_gcat(gcat.copy(), convert_cat)
-        self.set_hcat(hcat.copy(), convert_cat)
+        if gcat is not None: self.set_gcat(gcat.copy(), convert_cat)
+        if hcat is not None: self.set_hcat(hcat.copy(), convert_cat)
         self._has_star=False
         self._has_dm=False
         self._has_cell=False

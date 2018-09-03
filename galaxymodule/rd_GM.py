@@ -134,7 +134,7 @@ class Gal(Galaxy):
         idhal : defaults to -1
             ID of the mathing halo must be provided explicitly.
 
-        wdir : "./" by default.
+        base : "./" by default.
 
         load : True
             Load actual data. If false, only meta data are loaded.
@@ -176,7 +176,7 @@ class Gal(Galaxy):
         self.units.dm = Units()
         self.units.cell = Units()
         self.units.header = Units()
-        self.wdir = wdir
+        self.base = base
         self.info = info
         self.debug=False
         #self.set_info(info)
@@ -186,7 +186,6 @@ class Gal(Galaxy):
                 type_dm = None
             self.load(type_dm=type_dm, type_cell=type_cell)
         # try loading cell:
-
 
     def _check_info(self):
         return hasattr(self.info, "unit_l")
@@ -269,12 +268,12 @@ class Gal(Galaxy):
         try:
             if type_star == "gm":
                 self.header, self.star = _rd_gal(self.nout, self.gid,
-                             base=self.wdir, metal=True, **rd_star_params)
+                             base=self.base, metal=True, **rd_star_params)
                 if len(self.gcat_subs) > 0:
                     ss_all = [self.star]
                     for sub in self.gcat_subs:
                         h, ss = _rd_gal(self.nout, sub["id"],
-                                 base=self.wdir, metal=True, **rd_star_params)
+                                 base=self.base, metal=True, **rd_star_params)
                         ss_all.append(ss)
                     self.star = np.concatenate(ss_all)
 
@@ -294,7 +293,7 @@ class Gal(Galaxy):
             elif type_star == "raw":
             # load catalog
                 import tree.halomodule as hmo
-                gcat = hmo.Halo(nout=self.nout, base=self.wdir, is_gal=True)
+                gcat = hmo.Halo(nout=self.nout, base=self.base, is_gal=True)
                 thisgal = gcat.data[gcat.data["id"] == self.gid]
                 # Raw
 
@@ -326,7 +325,7 @@ class Gal(Galaxy):
 
         try:
             if type_dm == "gm":
-                self.dm = rd_dm(self.nout, self.hid, base=self.wdir,
+                self.dm = rd_dm(self.nout, self.hid, base=self.base,
                                 **rd_dm_params)
                 self.units.dm.name="gm"
             elif type_dm == 'raw':
@@ -344,7 +343,7 @@ class Gal(Galaxy):
 
         try:
             if type_cell == "gm":
-                self.cell = rd_cell(self.nout, self.gid, base=self.wdir,
+                self.cell = rd_cell(self.nout, self.gid, base=self.base,
                                     metal=True, **rd_cell_params)
                 self.units.cell= unit_gm
                 self._has_cell=True
@@ -426,7 +425,7 @@ def time2gyr(self, info=None):
                 info = self.info
             try:
                 import load
-                self.info = load.info.Info(nout=self.nout, base=self.wdir)
+                self.info = load.info.Info(nout=self.nout, base=self.base)
                 info = self.info
             except:
                 print("Failed to load info")
@@ -467,7 +466,7 @@ def _rd_gal(nout, idgal, base="./", metal=True,
     if fname is None:
         idgal = str(idgal).zfill(7)
         dir_nout = "GAL_" + str(nout).zfill(5)
-        fname = wdir + 'GalaxyMaker/' +  dir_nout + '/gal_stars_' + idgal
+        fname = base + 'GalaxyMaker/' +  dir_nout + '/gal_stars_' + idgal
     #header, data =
     return rd_gm_star_file(fname, additional_fields=additional_fields)
 
@@ -496,17 +495,17 @@ def rd_gal(nout, idgal, info=None, base="./", metal=True,
     if fname is None:
         idgal = str(idgal).zfill(7)
         dir_nout = "GAL_" + str(nout).zfill(5)
-        fname = wdir + 'GalaxyMaker/' +  dir_nout + '/gal_stars_' + idgal
+        fname = base + 'GalaxyMaker/' +  dir_nout + '/gal_stars_' + idgal
 
     print("[rd_GM.rd_gal] fname=", fname)
     header, data = rd_gm_star_file(fname)
 
-    gal = Gal(nout, idgal, info=info, base=wdir, load=False)
+    gal = Gal(nout, idgal, info=info, base=base, load=False)
     gal.star = data
     gal.header = header
     gal.gid = header['my_number']
     gal.units.star.name = "gm"
-    gal.wdir = wdir
+    gal.base = base
     return gal
 
 
@@ -518,7 +517,7 @@ def rd_dm(nout, idgal, base="./", long=True, fname=None):
     if fname is None:
         idgal = str(idgal).zfill(7)
         dir_nout = "HAL_" + str(nout).zfill(5)
-        fname = wdir + 'halo/' +  dir_nout + '/hal_dms_' + idgal
+        fname = base + 'halo/' +  dir_nout + '/hal_dms_' + idgal
     return rd_gm_dm_file(fname)
 
 
@@ -695,10 +694,10 @@ def rd_cell(nout, idgal, base="./", metal=True, nchem=0,
         snout = str(nout).zfill(5)
         dir_nout = "CELL_" + snout
         try:
-            fname = wdir + 'GalaxyMaker/' +  dir_nout + '/CELL_'+str(nout)+"_"+str(idgal)+".pickle"
+            fname = base + 'GalaxyMaker/' +  dir_nout + '/CELL_'+str(nout)+"_"+str(idgal)+".pickle"
             return pickle.load(open(fname, "rb"))
         except:
-            fname = wdir + 'GalaxyMaker/' +  dir_nout + '/CELL_'+str(nout)+"_"+str(idgal).zfill(7)
+            fname = base + 'GalaxyMaker/' +  dir_nout + '/CELL_'+str(nout)+"_"+str(idgal).zfill(7)
             return rd_gm_cell_file(nout, idgal, fname, metal=metal, nchem=nchem)
 
 
