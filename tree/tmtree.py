@@ -16,6 +16,7 @@ from tree import halomodule
 
 class Tree():
     def __init__(self, fn=None,
+                     double=None,
                      wdir='./',
                      load=True,
                      nout_fi=None,
@@ -26,8 +27,16 @@ class Tree():
                      tree_fn="tree.dat"):
         """
         NH tree => BIG_RUN == False
+        NH Galaxy -> double == True
         """
         self.tree_fn = tree_fn
+
+        if double is not None:
+            self.double = dobule
+        elif is_gal:
+            self.double = True
+        else:
+            self.double = False
         self.fn = None
         self.tree = None
         self.fatherID = None
@@ -192,10 +201,14 @@ class Tree():
         if self.fn is None:
             print("No tree file name is given")
             return
-        from tree import cnt_tree
+        if self.double:
+            from tree import cnt_tree
+        else:
+            from tree import cnt_tree_sp as cnt_tree
 
         print("BIG_RUN", BIG_RUN)
-        self.n_all_halos, self.n_all_fathers, self.n_all_sons, self.nsteps = cnt_tree.count_tree(self.fn, int(BIG_RUN))
+        self.n_all_halos, self.n_all_fathers, self.n_all_sons, self.nsteps = \
+            cnt_tree.count_tree(self.fn, int(BIG_RUN))
 
         if self.verbose:
             print(self.n_all_halos, self.n_all_fathers, self.n_all_sons, self.nsteps)
@@ -303,7 +316,8 @@ class Tree():
                 ind_matched = np.where(fatherIDx[f_ind_first:f_ind_last] == idx)[0]
                 ind_next_step = np.searchsorted(np.cumsum(t_next["nprgs"]), ind_matched)
                 all_desc = t_next[ind_next_step]
-                i_best, pids_now = get_best_matched_desc(pids_now, all_desc["id"], nout_next = self.nnza.step2out(nstep+1))
+                i_best, pids_now = get_best_matched_desc(pids_now, all_desc["id"], nout_next = \
+                                                         self.nnza.step2out(nstep+1))
                 idx = all_desc["idx"][i_best]
                 t_now = t[idx]
 
@@ -374,7 +388,8 @@ class Tree():
                         idx_prgs_alltime.append(list(idx_father[idx_father>0]))
                         mass_father_transfer = fatherMass[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]]
                         mass_father = t[idx_father[idx_father>0]]["m"]
-                        idx = idx_father[np.argmax(mass_father_transfer/mass_father * (np.abs(np.log10(mass_father/t[idx]["m"])) < 0.2).astype(int))]
+                        idx = idx_father[np.argmax(mass_father_transfer/mass_father *\
+                                                   (np.abs(np.log10(mass_father/t[idx]["m"])) < 0.2).astype(int))]
                         if idx < 1:
                             break
                         t_father=t[idx]
@@ -495,8 +510,7 @@ class Tree():
 
     def cal_nnza(self):
         """
-
-        ToDo: change name as get_nnza()
+        Make nout_nstep_zred_aexp.txt file from the input_TreeMaker.dat file.
         """
         fdir = self.fn.split(self.tree_fn)[0]
 
@@ -526,22 +540,6 @@ class Tree():
         zreds = 1./aexps - 1
         np.savetxt(fsave, np.c_[nouts, nsteps, zreds, aexps], fmt=['%d', '%d', '%.9f', '%.9f'])
 
-def load_fits(base=None, work_dir=None, filename="halo/TMtree.fits"):
-    """
-        Load tree.fits file and get the data table.
-        use base always. Work_dir is for backward compatibility.
-    """
-    from astropy.io import fits
-    from astropy.table import Table
-    if base == None:
-        base = work_dir
-
-    if base == None:
-        raise ValueError ("Please provide the parameter base=")
-
-    data = fits.getdata(base + filename, 1)
-    return Table(data)
-
 
 def fix_nout(tt, nout_ini, nout_fi):
     nout_min_org = tt['NOUT'].min()
@@ -553,7 +551,8 @@ def fix_nout(tt, nout_ini, nout_fi):
     assert (nnout_org == nnout_new), "number of nouts does not match"
 
     i_z_max = np.where(tt["Z"] == tt["Z"].max())[0]
-    assert (tt["NOUT"][np.where(tt["Z"] == tt["Z"].max())[0]][0] == nout_max_org), "The snapshot number of highest redshift snapshot is not 0. Maybe you've already fixed nouts?"
+    assert (tt["NOUT"][np.where(tt["Z"] == tt["Z"].max())[0]][0] == nout_max_org),\
+     "The snapshot number of highest redshift snapshot is not 0. Maybe you've already fixed nouts?"
 
     # OK. It's safe.
     tt["NOUT"] = nout_fi - tt["NOUT"]

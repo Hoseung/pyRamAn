@@ -146,7 +146,7 @@ def get_E(self, nvec=None, nvec_ys=True, ptype='star', method="Abadi",
         else:
             phi = get_phi(r_s_sorted, M)
 
-        print(phi[:20])
+        #print(phi[:20])
         specificE = phi + 0.5*(star["vel"][:,0]**2+star["vel"][:,1]**2
                                +star["vel"][:,2]**2)[rssort][1:]
         Ecir = 0.5*Grav*M/r_s_sorted + phi
