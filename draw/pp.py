@@ -35,7 +35,7 @@ def circle_scatter(ax, x_array, y_array, radii_array,
                         #facecolors = color_map(colors))
     if colors is not None:
         p.set_edgecolor(color_map(colors))
-        #p.set_facecolor('none')
+        p.set_facecolor('none')
         #p.set_clim([np.min(colors),np.max(colors)])
     #plt.colorbar(p,shrink=0.5)
     ax.add_collection(p)
@@ -258,6 +258,7 @@ def update_tick_labels(ax):
 
 
 def pp_halo(h, npix=200, rscale=1.0, region=None, ind=None, ax=None,
+            info=None,
             name=False, radius="rvir",
             verbose=False, new_ax=False,
             fontsize=10, linewidth=1.0,
@@ -490,12 +491,22 @@ def pp_halo(h, npix=200, rscale=1.0, region=None, ind=None, ax=None,
     circle_scatter(ax, x, y, r, facecolors='none',
                       linewidth=linewidth, cmap=cmap, **kwargs)
 
+
     #if hasattr(ax,"pp_hal_meta"):
     #    if ax.pp_hal_meta.xrange is None:
     #        ax.pp_hal_meta.xrange = [min(x), max(x)]
     #        ax.pp_hal_meta.yrange = [min(y), max(y)]
     ax.set_xlim([0,npix])
     ax.set_ylim([0,npix])
+    if info is not None:
+        pxmin = xmin * info.pboxsize
+        pymin = ymin * info.pboxsize
+        pxmax = (xmin+xspan) * info.pboxsize
+        pymax = (ymin+yspan) * info.pboxsize
+        ax.xaxis.set_ticks(np.linspace(0, npix, 5))
+        ax.xaxis.set_ticklabels(["{:.3f}".format(x) for x in np.linspace(pxmin, pxmax, 5)])
+        ax.yaxis.set_ticks(np.linspace(0, npix, 5))
+        ax.yaxis.set_ticklabels(["{:.3f}".format(y) for y in np.linspace(pymin, pymax, 5)])
 
     if name:
         for i, ii in enumerate(ind):

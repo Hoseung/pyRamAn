@@ -130,7 +130,7 @@ class Gal(Galaxy):
             "gm" tries to read DM dump file, while "raw" tries to read from raw DM data.
         type_cell : ["gm", "raw"], "gm" by default.
             Same as type_dm.
-            Note that there is no type_star, as GAL dump are always assuemd to be avaialble.
+            Note that there is no type_star, as GAL dump are always assumed to be avaialble.
         idhal : defaults to -1
             ID of the mathing halo must be provided explicitly.
 
@@ -256,10 +256,18 @@ class Gal(Galaxy):
 
 
         >>> GM_gal.header.dtype
-        >>> dtype([('my_number', '<i4'), ('level', '<i4'), ('mgal', '<f8'), ('xg', '<f8', (3,)), ('vg', '<f8', (3,)), ('lg', '<f8', (3,)), ('npart', '<i4')])
+        >>> dtype([('my_number', '<i4'), ('level', '<i4'), ('mgal', '<f8'),
+         ('xg', '<f8', (3,)), ('vg', '<f8', (3,)), ('lg', '<f8', (3,)), ('npart', '<i4')])
 
         >>> hmo.Halo().data.dtype
-        >>> dtype((numpy.record, [('np', '<i4'), ('id', '<i4'), ('level', '<i4'), ('host', '<i4'), ('sub', '<i4'), ('nsub', '<i4'), ('nextsub', '<i4'), ('m', '<f4'), ('mvir', '<f4'), ('r', '<f4'), ('rvir', '<f4'), ('tvir', '<f4'), ('cvel', '<f4'), ('x', '<f4'), ('y', '<f4'), ('z', '<f4'), ('vx', '<f4'), ('vy', '<f4'), ('vz', '<f4'), ('ax', '<f4'), ('ay', '<f4'), ('az', '<f4'), ('sp', '<f4'), ('idx', '<i4'), ('p_rho', '<f4'), ('p_c', '<f4'), ('energy', '<f8', (3,)), ('radius', '<f8', (4,))]))
+        >>> dtype((numpy.record, [('np', '<i4'), ('id', '<i4'), ('level', '<i4'),
+                ('host', '<i4'), ('sub', '<i4'), ('nsub', '<i4'), ('nextsub', '<i4'),
+                 ('m', '<f4'), ('mvir', '<f4'), ('r', '<f4'), ('rvir', '<f4'),
+                  ('tvir', '<f4'), ('cvel', '<f4'), ('x', '<f4'), ('y', '<f4'),
+                   ('z', '<f4'), ('vx', '<f4'), ('vy', '<f4'), ('vz', '<f4'),
+                    ('ax', '<f4'), ('ay', '<f4'), ('az', '<f4'), ('sp', '<f4'),
+                     ('idx', '<i4'), ('p_rho', '<f4'), ('p_c', '<f4'),
+                      ('energy', '<f8', (3,)), ('radius', '<f8', (4,))]))
         """
         from utils.sampling import Region
 
@@ -305,11 +313,12 @@ class Gal(Galaxy):
                                    npart = thisgal["np"])
                 self.units.header = unit_gm
                 self.rgal = thisgal["r"] # in code unit.
+                self.center_code = self.header['xg'] / self.info.pboxsize + 0.5
                 if radius is None:
                     radius = self.rgal
 
-                self.region = Region(centers=self.header["xg"],
-                                                  radius=self.rscale * radius)
+                self.region = Region(centers=self.center_code,
+                                              radius=self.rscale * radius)
 
                 from load.part import Part
                 pp = Part(info=self.info, ptypes=['star id pos vel time metal'],
@@ -580,7 +589,6 @@ def rd_gm_star_file(fname, metal=True, nchem=0,
         appends fields to the default stellar particle fields.
 
 
-
     Examples
     --------
     new_dtype = {"ellip": (('<f8', 1), 0),
@@ -601,8 +609,6 @@ def rd_gm_star_file(fname, metal=True, nchem=0,
         [0,0,8,16,24,32,40,40,48,56,72,80,80,88,96,104],
         'itemsize':
         112}))
-
-
 
     NOTE: There is no point automatically calculating the offset as sometimes
     I want duplicate offset for multiple fields. Unless the dtype grow huge,
