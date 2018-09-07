@@ -31,7 +31,7 @@ def load_components(gg, s, idlist=None,
 
     if load_dm:
         s.add_part(ptypes=["dm id pos vel mass"])
-        ind = mtc.match_list_ind(s.part.dm["id"], idlist)
+        ind = mtc.match_list_ind(s.part.dm["id"], idlist, allow_swap=False)
         gg.dm = s.part.dm[ind]
         gg.dm["pos"] -= gg.center_code
         gg.dm["pos"] *= gg.info.boxtokpc

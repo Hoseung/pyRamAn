@@ -5,9 +5,8 @@ from analysis import NH_halo_match as hmat
 import load
 from load import part
 from utils.sampling import Region
-
-import importlib
 import utils.match as mtc
+import pickle
 
 
 def load_dm_of_hal(this_halo):
@@ -42,39 +41,41 @@ def gal_hal_match(gcat, hcat, mgal_min=None, mhal_min=None):
 
     return gals_of_interest
 
-def cal_purity(hcat):
+def cal_purity(hcat, do_part=False):
     from utils.sampling import Region
     from load import part
     import utils.match as mtc
     from scipy.spatial import cKDTree
     import pickle
 
-    reg = Region()
-
-    # Part alone should work!!
-    ptcl = part.Part(info=hcat.info, ptypes=["dm id pos mass"])
-    h_center = hcat.data[np.argmax(hcat.data["np"])]
-    reg.region_from_halo(h_center)
-    reg.radius = 0.1
-    ptcl.set_ranges(reg.ranges)
-    ptcl.load()
-    pkdt = cKDTree(ptcl.dm["pos"])
-
-    M_hires = 1.3e6 / ptcl.info.msun
-
     hcat.data["mean_m"] = hcat.data["m"] / hcat.data["np"]
     min_mean_m = hcat.data["mean_m"].min()
-    i_ok = np.where(hcat.data["mean_m"] < 2*min_mean_m)[0]
 
-    for i, (this_halo, this_idlist) in enumerate(zip(hcat.data, hcat.idlists)):
+    if do_part:
+        reg = Region()
+    
+        # Part alone should work!!
+        ptcl = part.Part(info=hcat.info, ptypes=["dm id pos mass"])
+        h_center = hcat.data[np.argmax(hcat.data["np"])]
+        reg.region_from_halo(h_center)
+        reg.radius = 0.1
+        ptcl.set_ranges(reg.ranges)
+        ptcl.load()
+        pkdt = cKDTree(ptcl.dm["pos"])
 
-        i_near = pkdt.query_ball_point((this_halo["x"], this_halo["y"], this_halo["z"]),
-                                        this_halo["r"] * 1.5)
-        dd = ptcl.dm[i_near]
-        dm = dd[mtc.match_list_ind(dd["id"], this_idlist, allow_swap=False)]
-        # print("contam: {:.2f} %".format(100 * np.sum(dm["m"] > M_hires)/ len(dm)))
-        this_halo["purity"] = 1 - np.sum(dm["m"] > M_hires) / len(dm)
-        this_halo["np"] = len(dm)
+        M_hires = 1.3e6 / ptcl.info.msun
+
+        for i, (this_halo, this_idlist) in enumerate(zip(hcat.data, hcat.idlists)):
+
+            i_near = pkdt.query_ball_point((this_halo["x"], this_halo["y"], this_halo["z"]),
+                                            this_halo["r"] * 1.5)
+            dd = ptcl.dm[i_near]
+            dm = dd[mtc.match_list_ind(dd["id"], this_idlist, allow_swap=False)]
+            # print("contam: {:.2f} %".format(100 * np.sum(dm["m"] > M_hires)/ len(dm)))
+            this_halo["purity"] = 1 - np.sum(dm["m"] > M_hires) / len(dm)
+            this_halo["np"] = len(dm)
+    else:
+        hcat.data["purity"] = 2 - hcat.data["mean_m"]/min_mean_m
         
     output = np.vstack((hcat.data["id"], hcat.data["purity"],
                         hcat.data["mean_m"], hcat.data["np"])).T
@@ -88,12 +89,12 @@ if __name__=='__main__':
     out_base='./'
     wdir = "./"
 
-    nouts = np.arange(629, 29, -1)
+    nouts = np.arange(594, 593, -1)
 
     for nout in nouts:    
         print(" \n NOUT = {}\n".format(nout))
-        gcat = hmo.Halo(nout=nout, is_gal=True, double=True, pure=False)
-        hcat = hmo.Halo(nout=nout, is_gal=False, double=False, pure=False, return_id=True)
+        gcat = hmo.Halo(nout=nout, is_gal=True, double=True)
+        hcat = hmo.Halo(nout=nout, is_gal=False, double=False, return_id=True)
         
         # temporarily modify gcat fields 
         lnames = list(gcat.data.dtype.names)
@@ -110,9 +111,11 @@ if __name__=='__main__':
         #
         cal_purity(hcat)
 
-        large_matched_gals = gal_hal_match(gcat, hcat, mgal_min=3e8)
+        gals_of_interest = gal_hal_match(gcat, hcat, mgal_min=3e8)
         purity_crit = 0.995
         good_gals = gals_of_interest[gals_of_interest["host_purity"] > purity_crit]
         
-        pickle.dump(good_gals, open("good_gals_{}.pickle".format(nout)))
+        pickle.dump(good_gals, open("good_gals_{}.pickle".format(nout), "wb"))
+        # release memory... how? 
+        gcat = None
 
