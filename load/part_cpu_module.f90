@@ -107,7 +107,6 @@ subroutine count_part(ndm_actual, nstar_actual, nsink_actual, ntr_actual, &
 
   end subroutine
 
-
   subroutine load_part(part_float, part_int, npart_actual, repository, &
              & xmin, xmax, ymin, ymax, zmin, zmax, read_metal, cpu_list)
 
@@ -115,6 +114,13 @@ subroutine count_part(ndm_actual, nstar_actual, nsink_actual, ntr_actual, &
   integer,INTENT(IN)::npart_actual
   integer,dimension(:),INTENT(IN)::cpu_list
   integer, INTENT(IN):: read_metal
+  real(KIND=8),INTENT(INOUT),dimension(npart_actual,9)::part_float
+  integer(KIND=4),INTENT(INOUT),dimension(npart_actual)::part_int
+  !f2py intent(inout) part_float
+  !f2py depend(npart_actual) part_float
+  !f2py intent(inout) part_int
+  !f2py depend(npart_actual) part_int
+
 
   real(KIND=8),dimension(:,:),allocatable::x,v
   real(KIND=8),dimension(:)  ,allocatable::m,age,metal
@@ -122,9 +128,6 @@ subroutine count_part(ndm_actual, nstar_actual, nsink_actual, ntr_actual, &
   character(LEN=5)::nchar,ncharcpu
   character(LEN=128)::nomfich
   character(LEN=128), INTENT(IN)::repository
-
-  real(KIND=8),INTENT(OUT),dimension(npart_actual,9)::part_float
-  integer(KIND=4),INTENT(OUT),dimension(npart_actual)::part_int
 
   !logical::ok_part
   integer::i,k,icpu,ipos,nstar

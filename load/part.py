@@ -700,24 +700,22 @@ class Part(load.sim.Simbase):
         work_dir = self.base + '/snapshots/output_' + str(self.nout).zfill(5)
         self.ndm, self.nstar, self.nsink, self.ntracer = part_load_module.count_part( \
                             work_dir, xmi, xma, ymi, yma, zmi, zma, self.cpus)
-        npart_tot = sum((self.ndm, self.nstar, self.nsink, self.ntracer))
+        npart_tot = np.int32(sum((self.ndm, self.nstar, self.nsink, self.ntracer)))
         if verbose:
             print("star:", self.nstar, "DM:", self.ndm,
                   "sink:", self.nsink, "tracer:",self.ntracer)
         if npart_tot == 0:
             return
-        """
-        if return_meta is True:
-            return (ndm_actual, nstar_actual, nsink_actual, work_dir, xmi, xma, ymi, yma, zmi, zma)
-        else:
-        """
+
         # I want to pass shared arrays that are allocated in Python side.
         # But I get the following message :(
         # ValueError: failed to initialize intent(inout) array -- input not fortran contiguous
-        ndm_actual = max([self.ndm, 1]) # why 1?
-        nstar_actual = max([self.nstar, 1])
+        #ndm_actual = max([self.ndm, 1]) # why 1?
+        #nstar_actual = max([self.nstar, 1])
         read_metal = 1 #
-        part_float, part_int = part_load_module.load_part(
+        part_float = np.zeros((npart_tot,9), order="F",dtype=np.float64)
+        part_int = np.zeros(npart_tot, order="F", dtype=np.int32)
+        part_load_module.load_part(part_float, part_int,
                 npart_tot,
                 work_dir, xmi, xma, ymi, yma, zmi, zma, read_metal, self.cpus)
 
