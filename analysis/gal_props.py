@@ -11,8 +11,26 @@ def get_phi(rsorted,cumsum):
 
 
 def get_E(self, nvec=None, nvec_ys=True, ptype='star', method="Abadi",
-                bound_only = True, return_ellip=False, phi_direct=False):
+                bound_only = True, return_ellip=False, phi_direct=False,
+                save_mbp=False, nmbp=100):
+    """
+    Approximate potential calculation.
 
+    parameters
+    ----------
+    nvec :
+        dd
+    nvec_ys :
+
+    ptype : "star"
+        Components with which
+
+    save_mbp: false
+        Store nmbp most bound star and DM ids.
+
+    nmbp : 100
+
+    """
     # parameters
     pos1, pos2, vel1, vel2 = 'z', 'x', 'vz', 'vx'
 
@@ -24,79 +42,61 @@ def get_E(self, nvec=None, nvec_ys=True, ptype='star', method="Abadi",
     kpc_in_cm = kpc_to_m * 1e2
     msun_in_g = msun_in_kg * 1e3
 
-    info = self.info
+    info = gal.info
 
     cell_to_msun = info.unit_d/msun_in_g * kpc_in_cm**3
-    cell_mass = self.cell["rho"]*self.cell["dx"]**3 * cell_to_msun
+    cell_mass = gal.cell["rho"]*gal.cell["dx"]**3 * cell_to_msun
 
-    r_s = np.sqrt(np.sum(np.square(self.star["pos"]), axis=1))
-    if False:
-        i_ok = np.zeros(len(r_s), dtype="bool")
-        i_ok[:] = True
-        i_ok[np.argmin(r_s)] = False
+    r_s = np.sqrt(np.sum(np.square(gal.star["pos"]), axis=1))
+    gal.star = gal.star[np.argsort(r_s)]
+    r_s = r_s[np.argsort(r_s)]
 
-        star = self.star[i_ok]
-        r_s = r_s[i_ok]
-    else:
-        star = self.star
+    rv = np.cross(gal.star["pos"], gal.star["vel"])
 
-    rv = np.cross(star["pos"], star["vel"])
+    # Normal vector of the galaxy rotation
     if nvec is None:
         if nvec_ys:
-            if star["time"].mean() < 0:
+            if gal.star["time"].mean() < 0:
                 # it's in conformal time unit.
                 from utils.cosmology import Timeconvert
                 tc = Timeconvert(info = info)
-                star['time'] = tc.time2gyr(star['time'], z_now = info.zred)
-            nvec = sum(rv[star['time']<0.01]) # younger than 10Myr
+                gal.star['time'] = tc.time2gyr(gal.star['time'], z_now = info.zred)
+            nvec = sum(rv[gal.star['time']<0.01]) # younger than 10Myr
         else:
-            R90m = get_radius(star,star['m'],0.9)
+            R90m = get_radius(gal.star,gal.star['m'],0.9)
             nvec = sum(rv[r_s<R90m])
-
 
     # Calculating boundness requires total mass inside a radius.
     # -> DM, Cell are also needed.
     if hasattr(self, "cell"):
         m_g = cell_mass
-        m_all = np.concatenate((self.star['m'],
+        m_all = np.concatenate((gal.star['m'],
                                 m_g,
-                                self.dm['m']))
+                                gal.dm['m']))
         r_all = np.concatenate((r_s,
-                                np.sqrt(np.sum(np.square(self.cell["pos"]), axis=1)),
-                                np.sqrt(np.sum(np.square(self.dm  ["pos"]), axis=1))))
+                                np.sqrt(np.sum(np.square(gal.cell["pos"]), axis=1)),
+                                np.sqrt(np.sum(np.square(gal.dm  ["pos"]), axis=1))))
     else:
-        m_all = np.concatenate((self.star['m'],
-                                self.dm['m']))
-        r_all = np.concatenate((np.sqrt(np.sum(np.square(self.star["pos"]), axis=1)),
-                                np.sqrt(np.sum(np.square(self.dm  ["pos"]), axis=1))))
+        m_all = np.concatenate((gal.star['m'],
+                                gal.dm['m']))
+        r_all = np.concatenate((np.sqrt(np.sum(np.square(gal.star["pos"]), axis=1)),
+                                np.sqrt(np.sum(np.square(gal.dm  ["pos"]), axis=1))))
 
     i_sorted = np.argsort(r_all)
-    r_all = r_all[i_sorted]
+    r_all_sorted = r_all[i_sorted]
     m_enc = np.cumsum(m_all[i_sorted])
 
     # First nstar indices are stars.
 
     # Exclude the star at the center.
-    bound_only = False
+    x  = gal.star[pos1]
+    y  = gal.star[pos2]
+    vx = gal.star[vel1]
+    vy = gal.star[vel2]
+    m  = gal.star['m']
 
-    if bound_only:
-        i_star = i_sorted[self.bound_ptcl]
-        x  = self.star[pos1][self.bound_ptcl]
-        y  = self.star[pos2][self.bound_ptcl]
-        vx = self.star[vel1][self.bound_ptcl]
-        vy = self.star[vel2][self.bound_ptcl]
-        m  = self.star['m'] [self.bound_ptcl]
-    else:
-        #i_star = i_sorted[:len(r_s)]
-        x  = star[pos1]
-        y  = star[pos2]
-        vx = star[vel1]
-        vy = star[vel2]
-        m  = star['m']
-
-
-    #boxtokpc = self.info.pboxsize * 1000
-    i_star_dist = np.searchsorted(r_all, r_s)
+    #boxtokpc = gal.info.pboxsize * 1000
+    i_star_dist = np.searchsorted(r_all_sorted, r_s)
 
     if method=="scannapieco":
         v_circ = np.sqrt(G * msun_in_kg * m_enc[i_star_dist]/
@@ -106,63 +106,78 @@ def get_E(self, nvec=None, nvec_ys=True, ptype='star', method="Abadi",
         j_phi = np.inner(rv, [0,1,0])
         # Equivalent, but below is probably faster.
         #j_phi = (x * vy - y * vx) # * boxtokpc omitted.
-        self.E = j_phi / j_circ
+        gal.E = j_phi / j_circ
     elif method=="Abadi":
-        rssort = np.argsort(r_s)
-        r_s_sorted = r_s[rssort][1:]
+        #r_s_sorted = r_s[1:]
 
         RV = np.inner(rv,nvec)#/np.sqrt(sum(J*J))
         cos_alp = RV/np.sqrt((rv*rv).sum(axis=1))
 
-        st_ind = np.searchsorted(r_all, r_s[rssort])
+        st_ind = np.searchsorted(r_all_sorted, r_s)
+        M_incl_star = m_enc[st_ind][1:]
 
-        jz = RV[rssort][1:]
-        M = m_enc[st_ind][1:]
-
-        vcir = np.sqrt(Grav*M/r_s[rssort][1:])
-        jcir = r_s[rssort][1:]*vcir
+        jz = RV[1:]
+        vcir = np.sqrt(Grav*M_incl_star/r_s[1:])
+        jcir = r_s[1:]*vcir
         e = jz/jcir
-        cos = cos_alp[rssort][1:]
+        cos = cos_alp[1:]
 
         if phi_direct:
             from analysis import pot_diret
             Grav = 6.67408*1e-11*1.989*1e30/(3.0857*1e16*1e9)
             #md,xd,yd,zd,mg,xg,yg,zg,ms,xs,ys,zs,eps,nd,ng,ns
-            phi = pot_diret.star_potential(self.dm['m'],
-                                     self.dm['x'],
-                                     self.dm['y'],
-                                     self.dm['z'],
+            phi = pot_diret.star_potential(gal.dm['m'],
+                                     gal.dm['x'],
+                                     gal.dm['y'],
+                                     gal.dm['z'],
                                      cell_mass,
-                                     self.cell["x"],
-                                     self.cell["y"],
-                                     self.cell["z"],
-                                     self.star["m"],
-                                     self.star["x"],
-                                     self.star["y"],
-                                     self.star["z"],
-                                     np.ones_like(self.star["m"])*self.cell["dx"].min()*0.3,
-                                     len(self.dm), len(self.cell), len(star))
+                                     gal.cell["x"],
+                                     gal.cell["y"],
+                                     gal.cell["z"],
+                                     gal.star["m"],
+                                     gal.star["x"],
+                                     gal.star["y"],
+                                     gal.star["z"],
+                                     np.ones_like(gal.star["m"])*gal.cell["dx"].min()*0.3,
+                                     len(gal.dm), len(gal.cell), len(gal.star))
             phi *= -Grav
         else:
-            phi = get_phi(r_s_sorted, M)
+            phi = get_phi(r_s[1:], M_incl_star)
 
-        #print(phi[:20])
-        specificE = phi + 0.5*(star["vel"][:,0]**2+star["vel"][:,1]**2
-                               +star["vel"][:,2]**2)[rssort][1:]
-        Ecir = 0.5*Grav*M/r_s_sorted + phi
+        specificE = phi + 0.5*(gal.star["vel"][:,0]**2
+                               +gal.star["vel"][:,1]**2
+                               +gal.star["vel"][:,2]**2)[1:]
+
+        if save_mbp:
+            gal.mbp_star = gal.star["id"][np.argsort(specificE)[:nmbp]]
+
+            r_dm = np.sqrt(np.sum(np.square(gal.dm["pos"]), axis=1))
+            i_dm_sort = np.argsort(r_dm)
+            gal.dm = gal.dm[i_dm_sort]
+            r_dm = r_dm[i_dm_sort]
+
+            dm_ind = np.searchsorted(r_all_sorted, r_dm)
+            M_incl_star = m_enc[dm_ind]
+            phi_DM = get_phi(r_dm_sorted, M_incl_dm)
+            specificE_DM = phi_DM + 0.5*(gal.dm["vel"][:,0]**2
+                                   +gal.dm["vel"][:,1]**2
+                                   +gal.dm["vel"][:,2]**2)
+            gal.mbp_DM = gal.dm["id"][np.argsort(specificE_DM)[:nmbp]]
+            
+        Ecir = 0.5*Grav*M_incl_star/r_s[1:] + phi
 
         i_sort_Ecir = np.argsort(Ecir)
         jE = jcir[i_sort_Ecir][np.digitize(specificE,Ecir[i_sort_Ecir])-1]
 
         try:
-            self.star["ellip"][rssort[1:]] = jz/jE
-            self.star["ellip"][rssort[0]] = 0
+            gal.star["ellip"][1:] = jz/jE
+            gal.star["ellip"][0] = 0
         except:
             print("[get_E] ellip field is not available")
-            self.E = jz/jE
+            gal.E = jz/jE
 
         #gal.sorted = star[rssort][1:]
-        self.e = e
-        self.cos = cos
-        self.vcir = vcir
-        self.ind_closest_star = rssort[0]
+        gal.e = e
+        gal.cos = cos
+        gal.vcir = vcir
+        gal.ind_closest_star = rssort[0]
