@@ -10,7 +10,7 @@ def get_phi(rsorted,cumsum):
     return np.cumsum(pi[::-1])[::-1]
 
 
-def get_E(self, nvec=None, nvec_ys=True, ptype='star', method="Abadi",
+def get_E(gal, nvec=None, nvec_ys=True, ptype='star', method="Abadi",
                 bound_only = True, return_ellip=False, phi_direct=False,
                 save_mbp=False, nmbp=100):
     """
@@ -68,7 +68,7 @@ def get_E(self, nvec=None, nvec_ys=True, ptype='star', method="Abadi",
 
     # Calculating boundness requires total mass inside a radius.
     # -> DM, Cell are also needed.
-    if hasattr(self, "cell"):
+    if hasattr(gal, "cell"):
         m_g = cell_mass
         m_all = np.concatenate((gal.star['m'],
                                 m_g,
@@ -149,7 +149,7 @@ def get_E(self, nvec=None, nvec_ys=True, ptype='star', method="Abadi",
                                +gal.star["vel"][:,2]**2)[1:]
 
         if save_mbp:
-            gal.mbp_star = gal.star["id"][np.argsort(specificE)[:nmbp]]
+            gal.meta.mbp_star = gal.star["id"][np.argsort(specificE)[:nmbp]]
 
             r_dm = np.sqrt(np.sum(np.square(gal.dm["pos"]), axis=1))
             i_dm_sort = np.argsort(r_dm)
@@ -157,12 +157,12 @@ def get_E(self, nvec=None, nvec_ys=True, ptype='star', method="Abadi",
             r_dm = r_dm[i_dm_sort]
 
             dm_ind = np.searchsorted(r_all_sorted, r_dm)
-            M_incl_star = m_enc[dm_ind]
-            phi_DM = get_phi(r_dm_sorted, M_incl_dm)
+            M_incl_dm = m_enc[dm_ind]
+            phi_DM = get_phi(r_dm, M_incl_dm)
             specificE_DM = phi_DM + 0.5*(gal.dm["vel"][:,0]**2
-                                   +gal.dm["vel"][:,1]**2
-                                   +gal.dm["vel"][:,2]**2)
-            gal.mbp_DM = gal.dm["id"][np.argsort(specificE_DM)[:nmbp]]
+                                        +gal.dm["vel"][:,1]**2
+                                        +gal.dm["vel"][:,2]**2)
+            gal.meta.mbp_DM = gal.dm["id"][np.argsort(specificE_DM)[:nmbp]]
             
         Ecir = 0.5*Grav*M_incl_star/r_s[1:] + phi
 
@@ -176,8 +176,7 @@ def get_E(self, nvec=None, nvec_ys=True, ptype='star', method="Abadi",
             print("[get_E] ellip field is not available")
             gal.E = jz/jE
 
-        #gal.sorted = star[rssort][1:]
         gal.e = e
         gal.cos = cos
         gal.vcir = vcir
-        gal.ind_closest_star = rssort[0]
+        gal.id_closest_star = gal.star["id"][0]
