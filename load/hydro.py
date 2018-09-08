@@ -9,7 +9,6 @@ from load.sim import Simbase
 from utils.io_module import read_header
 import struct
 
-
 def generate_fname(nout,path="",ftype="",cpuid=1,ext=""):
 
     if len(path) > 0:

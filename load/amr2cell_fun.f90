@@ -287,6 +287,7 @@ subroutine a2c_count(ngridtot, nvarh, repository, xmin, xmax, ymin, &
      close(10)
      close(11)
   end do
+  deallocate(ngridfile,ngridlevel,ngridbound)
 
 end subroutine a2c_count
 
@@ -598,6 +599,7 @@ subroutine a2c_load(xarr, dxarr, varr, cpuarr, refarr, repository, &
   end do
   ! End loop over cpus
 
+  deallocate(ngridfile,ngridlevel,ngridbound)
 end subroutine
 
 
@@ -917,7 +919,7 @@ subroutine a2c_load_level(xarr, dxarr, varr, cpuarr, refarr, repository, &
 
   end do
   ! End loop over cpus
-
+  deallocate(ngridfile,ngridlevel,ngridbound)
 end subroutine
 
 
