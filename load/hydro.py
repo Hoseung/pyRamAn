@@ -62,7 +62,6 @@ class Hydro(Simbase):
     def __init__(self,
                  nout=None,
                  info=None,
-                 amr=None,
                  region=None,
                  ranges=None,
                  load=False,
@@ -85,13 +84,16 @@ class Hydro(Simbase):
 
         Note
         ----
-            It is important to distingush the number of hydrovaraibles to read and
+            It is important to distingush the number of hydro-variables to read and
             the number of hydrovaraibles in the simulation.
 
             Recent version of RAMSES generates "hydro_file_descriptor.txt" by default.
             This file contains nvarh and the type of each hydro-variable.
             With this file, nvarh input is not needed.
 
+            self.amr is set inside the Simbase instance, which is evaluated before
+            the Hydro.init(). Thus, if Hydro.init() "initializes" as self.amr = None,
+            the already-set amr instance is gone. So don't do that.
 
         """
         super(Hydro, self).__init__()
@@ -129,11 +131,6 @@ class Hydro(Simbase):
                 self.set_ranges(ranges=info.ranges)
         else:
             self.set_ranges([[-9e9,9e9]] * 3)
-
-        try:
-            self.amr = amr
-        except NameError:
-            print("Loading amr first! \n")
 
         if load:
             print("amr2cell_params", amr2cell_params)
@@ -200,7 +197,7 @@ class Hydro(Simbase):
         verbose : bool, optional
 
         """
-        print("[hydro.amr2cell], self.cpus   - 0", self.cpus)
+        print("[hydro.amr2cell], self.cpus - 0", self.cpus)
         if nvarh is None:
             if self.header.nvarh is None:
                 nvarh = self.header.nvarh_org
@@ -215,9 +212,7 @@ class Hydro(Simbase):
         if verbose: print('[hydro.amr2cell] >>> working resolution (lmax) =', lmax)
 
         if ranges is not None: self.set_ranges(ranges=ranges)
-        #print("[hydro.amr2cell], self.cpus   - 1", self.cpus)
-        # Set ranges
-        #print("[hydro.amr2cell], self.ranges - 1", self.ranges)
+
         xmi, xma = self.ranges[0]
         ymi, yma = self.ranges[1]
         zmi, zma = self.ranges[2]
@@ -230,7 +225,7 @@ class Hydro(Simbase):
 
         from load.a2c import a2c
         if verbose: print("[hydro.amr2cell] before a2c_count..  lmax =", lmax)
-        
+
         ngridtot, nvarh = a2c.a2c_count(work_dir, xmi, xma, ymi, yma, zmi, zma, lmax, self.cpus)
         if verbose: print("[hydro.amr2ell] a2c_count done")
         if verbose: print("[hydro.amr2cell]ranges", xmi, xma, ymi, yma, zmi, zma)
@@ -246,8 +241,8 @@ class Hydro(Simbase):
             a2c.a2c_load(xarr, dxarr, varr, cpuarr, refarr, work_dir, xmi, xma, ymi, yma, zmi, zma,\
                                 lmax, ngridtot, nvarh, self.cpus)
             # nvarh + 2 because fortran counts from 1, and nvarh=5 means 0,1,2,3,4,5.
-            #dtype_cell = [('x', '<f8'), ('y', '<f8'), ('z', '<f8'), ('dx', '<f8')]
-            # print(xarr, varr, dxarr, cpuarr, refarr)
+            # nvarh_org of NH = 7 : rho, u,v,w, T, metal, zoomin_tag
+
             dtype_cell = {'pos': (('<f8', (3,)), 0),
                             'x': (('<f8', 1), 0),
                             'y': (('<f8', 1), 8),
@@ -272,15 +267,14 @@ class Hydro(Simbase):
                 dt_off += 8
             if ref:
                 dtype_cell.update({'ref': (('bool',1),dt_off+8)})
-            #for i in range(nvarh):
-            #    dtype_cell.append( ('var' + str(i), '<f8'))
 
         self.cell = np.zeros(ngridtot, dtype=dtype_cell)
         self.cell['pos'] = xarr# cell[0][:,0]
         #self.cell['y'] = cell[0][:,1]
         #self.cell['z'] = cell[0][:,2]
         self.cell['dx'] = dxarr#cell[1]
-        for i in range(nvarh):
+        # Ignore the last hydro variable, which is zoom-in flag
+        for i in range(nvarh-1):
             self.cell['var' + str(i)] = varr[:,i]
         if cpu:
             self.cell['cpu'] = cpuarr#cell[3]

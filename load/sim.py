@@ -32,11 +32,8 @@ class Simbase():
 
     def set_cpus(self, cpus=None, lock=False):
         if cpus is None:
-            if self.cpus is None:
-                print("self.cpus is None, provide cpus=")
-                return
-            else:
-                cpus = self.cpus
+            cpus = self._hilbert_cpulist(self.info, self.ranges)
+
         if not self.cpu_fixed:
             self.cpus = np.array(cpus)
         # Lock, but only there is a valid list of cpus.
@@ -48,7 +45,10 @@ class Simbase():
 
     def set_ranges(self, ranges=[[0, 1], [0, 1], [0, 1]]):
         if ranges is not None:
-            nr = np.asarray(ranges) # Now it is a class, not a list of list, or ,..
+            if not hasattr(self, "amr"):
+                self.add_amr(load=False)
+
+            nr = np.asarray(ranges) # Now it is a class
             if not(nr.shape[0] == 3 and nr.shape[1] == 2):
                 # Because actual operation on the given input(ranges)
                 # does not take place soon, it's not a good place to use
@@ -58,7 +58,7 @@ class Simbase():
                 print('example : [[0.1,0.3],[0.2,0.4],[0.6,0.8]] \n')
             else:
                 self.ranges = ranges
-                self.set_cpus(self._hilbert_cpulist(self.info, self.ranges))
+                self.set_cpus()
         else:
             self.ranges = None
 
