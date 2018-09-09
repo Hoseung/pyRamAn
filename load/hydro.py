@@ -228,19 +228,26 @@ class Hydro(Simbase):
             print("[hydro.amr2cell] Ranges", xmi, xma, zmi,zma)
             print("[hydro.amr2cell] cpus", self.cpus)
 
-        from load import a2c
+        from load.a2c import a2c
         if verbose: print("[hydro.amr2cell] before a2c_count..  lmax =", lmax)
-        out = a2c.a2c_count(work_dir, xmi, xma, ymi, yma, zmi, zma, lmax, self.cpus)
+        
+        ngridtot, nvarh = a2c.a2c_count(work_dir, xmi, xma, ymi, yma, zmi, zma, lmax, self.cpus)
         if verbose: print("[hydro.amr2ell] a2c_count done")
         if verbose: print("[hydro.amr2cell]ranges", xmi, xma, ymi, yma, zmi, zma)
         #return
         if return_meta:
-            return (out[0], work_dir, xmi, xma, ymi, yma, zmi, zma, lmax)
+            return (ngridtot, nvarh, work_dir, xmi, xma, ymi, yma, zmi, zma, lmax)
         else:
-            cell = a2c.a2c_load(work_dir, xmi, xma, ymi, yma, zmi, zma,\
-                                lmax, out[0], nvarh+2, self.cpus)
+            xarr = np.zeros((ngridtot,3), order="F", dtype=np.float64)
+            varr = np.zeros((ngridtot,nvarh), order="F", dtype=np.float64)
+            dxarr = np.zeros(ngridtot, order="F", dtype=np.float64)
+            cpuarr = np.zeros(ngridtot, order="F", dtype=np.int32)
+            refarr = np.zeros(ngridtot, order="F", dtype=np.int32)
+            a2c.a2c_load(xarr, dxarr, varr, cpuarr, refarr, work_dir, xmi, xma, ymi, yma, zmi, zma,\
+                                lmax, ngridtot, nvarh, self.cpus)
             # nvarh + 2 because fortran counts from 1, and nvarh=5 means 0,1,2,3,4,5.
             #dtype_cell = [('x', '<f8'), ('y', '<f8'), ('z', '<f8'), ('dx', '<f8')]
+            # print(xarr, varr, dxarr, cpuarr, refarr)
             dtype_cell = {'pos': (('<f8', (3,)), 0),
                             'x': (('<f8', 1), 0),
                             'y': (('<f8', 1), 8),
@@ -268,17 +275,17 @@ class Hydro(Simbase):
             #for i in range(nvarh):
             #    dtype_cell.append( ('var' + str(i), '<f8'))
 
-        self.cell = np.zeros(len(cell[1]), dtype=dtype_cell)
-        self.cell['x'] = cell[0][:,0]
-        self.cell['y'] = cell[0][:,1]
-        self.cell['z'] = cell[0][:,2]
-        self.cell['dx'] = cell[1]
+        self.cell = np.zeros(ngridtot, dtype=dtype_cell)
+        self.cell['pos'] = xarr# cell[0][:,0]
+        #self.cell['y'] = cell[0][:,1]
+        #self.cell['z'] = cell[0][:,2]
+        self.cell['dx'] = dxarr#cell[1]
         for i in range(nvarh):
-            self.cell['var' + str(i)] = cell[2][:,i]
+            self.cell['var' + str(i)] = varr[:,i]
         if cpu:
-            self.cell['cpu'] = cell[3]
+            self.cell['cpu'] = cpuarr#cell[3]
         if ref:
-            self.cell["ref"] = cell[4]
+            self.cell["ref"] = refarr#cell[4]
 
 
     def amr2cell_py(self, lmax=None,

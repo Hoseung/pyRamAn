@@ -70,7 +70,7 @@ class Simbase():
         -> cpu files contain data points within a given ranges
         BUT! they also contain other data points outside the ranges.
         """
-        from load.a2c import hilbert3d
+        from load.a2c import a2c
         if not(hasattr(self, 'amr')):
             print("[sim._hilbert_cpulist] No AMR instance,")
             print("[sim._hilbert_cpulist] Loading one...")
@@ -152,7 +152,7 @@ class Simbase():
 
         for i in range(1, ndom + 1):
             if bit_length > 0:
-                order_min = hilbert3d([idom[i]], [jdom[i]], [kdom[i]],
+                order_min = a2c.hilbert3d([idom[i]], [jdom[i]], [kdom[i]],
                                             bit_length, 1)
                 # order_min, array or single variable??
                 # Will it be vectorized??

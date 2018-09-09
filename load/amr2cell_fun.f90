@@ -1,3 +1,7 @@
+module a2c
+    IMPLICIT NONE
+contains
+
 subroutine a2c_count(ngridtot, nvarh, repository, xmin, xmax, ymin, &
                   & ymax, zmin, zmax, lmax, cpu_list)
   !--------------------------------------------------------------------------
@@ -5,8 +9,6 @@ subroutine a2c_count(ngridtot, nvarh, repository, xmin, xmax, ymin, &
   ! variables hydro d'une simulation RAMSES.
   ! Version F90 par R. Teyssier le 01/04/01.
   !--------------------------------------------------------------------------
-  implicit none
-
   character(LEN=*),INTENT(IN)::repository
   character(LEN=128)::nomfich
   real(KIND=8),INTENT(IN)::xmin,xmax,ymin,ymax,zmin,zmax
@@ -48,7 +50,6 @@ subroutine a2c_count(ngridtot, nvarh, repository, xmin, xmax, ymin, &
      integer::kmin
      integer::kmax
   end type level
-
 
   type(level),dimension(1:50)::grid
 
@@ -287,28 +288,30 @@ subroutine a2c_count(ngridtot, nvarh, repository, xmin, xmax, ymin, &
      close(10)
      close(11)
   end do
-  deallocate(ngridfile,ngridlevel,ngridbound)
-
+  deallocate(ngridfile,ngridlevel)
+  if(nboundary>0) deallocate(ngridbound)
 end subroutine a2c_count
 
 
-subroutine a2c_load(xarr, dxarr, varr, cpuarr, refarr, repository, &
-                    & xmin, xmax, ymin, ymax, zmin, zmax, lmax, &
-                    & ngridtot, nvarh, cpu_list)
+subroutine a2c_load(xarr, dxarr, varr, cpuarr, refarr, repository &
+                    &, xmin, xmax, ymin, ymax, zmin, zmax, lmax &
+                    &, ngridtot, nvarh, cpu_list)
   implicit none
 
   integer,dimension(:),INTENT(IN)::cpu_list
   character(len=*),intent(IN)::repository
   character(len=128)::nomfich
   real(kind=8),intent(IN)::xmin,xmax,ymin,ymax,zmin,zmax
-  integer     ,intent(IN)::lmax,ngridtot
+  integer     ,intent(IN)::lmax,ngridtot, nvarh
   !default value from python side is 0.
 
-  real(kind=8),intent(out),dimension(ngridtot,3)::xarr
-  real(kind=8),intent(out),dimension(ngridtot,nvarh)::varr
-  real(kind=8),intent(out),dimension(ngridtot)::dxarr
-  integer,intent(out),dimension(ngridtot)::cpuarr
-  logical,intent(out),dimension(ngridtot)::refarr
+  real(kind=8),intent(inout),dimension(ngridtot,3)::xarr
+  real(kind=8),intent(inout),dimension(ngridtot,nvarh)::varr
+  real(kind=8),intent(inout),dimension(ngridtot)::dxarr
+  integer,intent(inout),dimension(ngridtot)::cpuarr,refarr
+  !logical,intent(inout),dimension(ngridtot)::refarr
+  !f2py depend(ngridtot) xarr,dxarr,cpuarr,refarr
+  !f2py depend(ngridtot, nvarh) varr
 
   integer::ndim,i,j,k,twotondim
   integer::ivar,ncpu,nboundary
@@ -319,7 +322,7 @@ subroutine a2c_load(xarr, dxarr, varr, cpuarr, refarr, repository, &
   !real::boxlen,t
 
   integer::imin,imax,jmin,jmax,kmin,kmax
-  integer::nvarh, nvarh_org
+  integer::nvarh_org
   integer::ix,iy,iz
   integer::nx_full,ny_full,nz_full
   real(kind=8)::xxmin,xxmax,yymin,yymax,zzmin,zzmax,dx,dx2
@@ -375,10 +378,8 @@ subroutine a2c_load(xarr, dxarr, varr, cpuarr, refarr, repository, &
   read(10)nlevelmax
   read(10)ngridmax
   read(10)nboundary
-!  read(10)ngrid_current
-!  read(10)boxlen
+
   close(10)
-  write(*,*) "HERE"
   twotondim=2**ndim
   xbound=(/dble(nx/2),dble(ny/2),dble(nz/2)/)
 
@@ -599,7 +600,8 @@ subroutine a2c_load(xarr, dxarr, varr, cpuarr, refarr, repository, &
   end do
   ! End loop over cpus
 
-  deallocate(ngridfile,ngridlevel,ngridbound)
+  deallocate(ngridfile,ngridlevel)
+  if(nboundary>0) deallocate(ngridbound)
 end subroutine
 
 
@@ -1050,3 +1052,5 @@ end subroutine hilbert3d
 !================================================================
 !================================================================
 !================================================================
+
+end module
