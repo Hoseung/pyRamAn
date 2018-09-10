@@ -8,6 +8,7 @@ import numpy as np
 from load.sim import Simbase
 from utils.io_module import read_header
 import struct
+import gc
 
 def generate_fname(nout,path="",ftype="",cpuid=1,ext=""):
 
@@ -280,6 +281,9 @@ class Hydro(Simbase):
             self.cell['cpu'] = cpuarr#cell[3]
         if ref:
             self.cell["ref"] = refarr#cell[4]
+        #xarr=0; dxarr=0; cpuarr=0; refarr=0; varr=0
+        del xarr, varr, dxarr, cpuarr, refarr
+        gc.collect()
 
 
     def amr2cell_py(self, lmax=None,

@@ -426,7 +426,7 @@ subroutine a2c_load(xarr, dxarr, varr, cpuarr, refarr, repository &
      ! Open AMR file and skip header
      nomfich=TRIM(repository)//'/amr_'//TRIM(nchar)//'.out'//TRIM(ncharcpu)
      open(unit=10,file=nomfich,status='old',form='unformatted')
-     write(*,*)'Processing file '//TRIM(nomfich)
+     ! write(*,*)'Processing file '//TRIM(nomfich)
      do i=1,21
         read(10)
      end do

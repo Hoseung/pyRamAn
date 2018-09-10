@@ -350,9 +350,7 @@ class Sim(Simbase):
                                  cpus=self.cpus,
                                  cpu_fixed=self.cpu_fixed,
                                  region=region,
-                                 ranges=ranges,
-                                 amr=self.amr)
-
+                                 ranges=ranges)
         #for kwarg in kwargs:
         #    if kwarg== "amr2cell_params":
         #        amr2cell_params = kwarg

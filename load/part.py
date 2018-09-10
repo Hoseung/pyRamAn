@@ -804,6 +804,8 @@ class Part(load.sim.Simbase):
 
         if verbose: print("Fortran-reading done")
 
+        part_float=0
+        part_int=0
         if return_whole:
             return part_float, part_int
         # now, how to deallocate it?
