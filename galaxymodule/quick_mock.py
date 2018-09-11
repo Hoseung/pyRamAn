@@ -40,7 +40,7 @@ class Simplemock():
     """
     def __init__(self, repo="/home/hoseung/Work/pyclusterevol/repo/sed/",
                  filter_system="SDSS",
-                 sed_model="bc03",
+                 sed_model="bc03yy",
                  info=None,
                  load=True,
                  imf = "Salpeter"):
@@ -68,7 +68,7 @@ class Simplemock():
                             "z":filter_z}
 
     def load_SED_wavelength(self):
-        if self.sed_model == "bc03":
+        if self.sed_model == "bc03yy":
             self.sed_wavelength = np.genfromtxt(self.repo + "lambda.dat")
 
     def load_SED_all(self):
@@ -180,9 +180,9 @@ class Simplemock():
 
         ##### Caclulate band flux #################
         # Load only necessary data
-        # Load all once, keep under the class and copy part of it when needed heere.
+        # Load all once, keep under the class and copy a part of it when needed here.
         seds = np.zeros((nmetals, nages, n_wavelength)) # metal age lambda
-        if self.sed_model == "bc03":
+        if self.sed_model == "bc03yy":
             for i, metal in enumerate(relevant_metals):
                 if quick:
                     for j in range(seds.shape[1]):
