@@ -9,6 +9,7 @@ def mk_gal(gal,
             den_lim2=5e6,
             rmin = -1,
             Rgal_to_reff=5.0,
+            Rgal_max = 50,
             method_com="catalog",
             method_cov="catalog",
             method_member="Reff",
@@ -33,17 +34,20 @@ def mk_gal(gal,
             Galaxy radius = Reff * Rgal_to_reff.
             By default, Rgal = 5*Reff.
             (E's have smaller R_t_r, L's have larger.)
-        save: False,
-        verbose:False,
-        mstar_min:1e9,
-        den_lim:1e6,
-        den_lim2:5e6,
-        rmin : -1,
-        Rgal_to_reff:5.0,
-        method_com:"catalog",
-        method_cov:"catalog",
-        method_member:"Reff",
-        follow_bp:False,
+        save: False
+        verbose:False
+        mstar_min:1e9
+        den_lim:1e6
+        den_lim2:5e6
+        rmin : -1
+        Rgal_to_reff:5.0
+        Rgal_max : 50
+            Maximum possible size of a galaxy.
+
+        method_com:"catalog"
+        method_cov:"catalog"
+        method_member:"Reff"
+        follow_bp:False
         unit_conversion:"code"
         convert_time:
             default = False
@@ -60,6 +64,12 @@ def mk_gal(gal,
 
         3. dr, bin size in determining the radial profile cut scales with exponential factor.
         Without scaling, 0.5kpc bin size is too large for ~1kpc galaxies at high-z.
+
+        4. The outer part of a galaxy (or halo stars) is sometimes critical.
+        It is especially true when measuring the total angular momentum of a galaxy (or halo).
+        On the other hand, including background stars as a member of a galaxy is
+        a source of errors, particularly for satellite galaxies. So be very smart
+        to choose the Rmax. (Or it is not a good idea to use Rmax at all.)
 
     """
     # Need halo information
@@ -115,7 +125,7 @@ def mk_gal(gal,
         print("Halo size:", gal.gcat['rvir'])
 
 
-    rgal_tmp = min([gal.gcat['r'] * 1e3, 30]) # gcat["rvir"] in kpc
+    rgal_tmp = min([gal.gcat['r'] * 1e3, Rgal_max]) # gcat["rvir"] in kpc
     if verbose:
         print("Rgal_tmp", rgal_tmp)
         print("gal.debug",gal.debug)
@@ -187,8 +197,6 @@ def mk_gal(gal,
     # VERY arbitrary..
     rgal_tmp = gal.meta.Rgal_to_reff *gal.meta.reff
 
-    #print(".........", gal.star['m'][100:120], gal.mstar)
-
     gal.region = Region(xc=gal.meta.xc,
                         yc=gal.meta.yc,
                         zc=gal.meta.zc,
@@ -237,7 +245,6 @@ def mk_gal(gal,
 
         #gal._add_cell(cell, icell)
         #gal._convert_unit("cell", unit_conversion)
-
         gal.cell = np.recarray(len(icell), dtype=dtype_cell)
         gal.cell['x'] = (cell['x'][icell] - 0.5) * pbx * 1e3 - xc
         gal.cell['y'] = (cell['y'][icell] - 0.5) * pbx * 1e3 - xc
