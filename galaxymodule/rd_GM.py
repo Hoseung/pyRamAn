@@ -111,7 +111,6 @@ class Gal(Galaxy):
                  type_dm="gm", type_cell="gm",
                  base='./', idhal = -1, load=True, rscale=1.5):
         """
-
         Parameters
         ----------
         load : logical (Default = True)
@@ -179,6 +178,8 @@ class Gal(Galaxy):
         self.base = base
         self.info = info
         self.debug=False
+        self.params = Dummy()
+
         #self.set_info(info)
         self.rscale=rscale
         if load:
@@ -270,6 +271,7 @@ class Gal(Galaxy):
                       ('energy', '<f8', (3,)), ('radius', '<f8', (4,))]))
         """
         from utils.sampling import Region
+        import sys
 
         if rscale is not None:
             self.rscale = rscale
@@ -279,10 +281,21 @@ class Gal(Galaxy):
                              base=self.base, metal=True, **rd_star_params)
                 if len(self.gcat_subs) > 0:
                     ss_all = [self.star]
+                    print(sys.getsizeof(ss_all)/1e9, "for the main galaxy")
                     for sub in self.gcat_subs:
-                        h, ss = _rd_gal(self.nout, sub["id"],
-                                 base=self.base, metal=True, **rd_star_params)
-                        ss_all.append(ss)
+                        if sub["id"] == self.gid:
+                            continue
+                        try:
+                            h, ss = _rd_gal(self.nout, sub["id"],
+                                     base=self.base, metal=True, **rd_star_params)
+                            ss_all.append(ss)
+                            print(len(ss_all))
+                            print(ss.dtype)
+                        except:
+                            print("Missing satellite / star clumps. Too small? {}".format(sub["np"]))
+                            continue
+                    print(sys.getsizeof(ss_all)/1e9, "after gathering all")
+                    print(len(np.ravel(ss_all)))
                     self.star = np.concatenate(ss_all)
 
                 # convert units to kpc from the center
@@ -473,9 +486,8 @@ def _rd_gal(nout, idgal, base="./", metal=True,
     header xg in Mpc (physical, centered at 0.5, 0.5, 0.5 of the simualtion volume)
     """
     if fname is None:
-        idgal = str(idgal).zfill(7)
         dir_nout = "GAL_" + str(nout).zfill(5)
-        fname = base + 'GalaxyMaker/' +  dir_nout + '/gal_stars_' + idgal
+        fname = base + 'GalaxyMaker/' +  dir_nout + '/gal_stars_' + str(idgal).zfill(7)
     #header, data =
     return rd_gm_star_file(fname, additional_fields=additional_fields)
 
@@ -652,6 +664,7 @@ def rd_gm_star_file(fname, metal=True, nchem=0,
                    'vy': (('<f8', 1), 48),
                    'vz': (('<f8', 1), 56),
                  'time': (('<f8', 1), 72)}
+
     d_off = 72
     if metal:
         dtype_data.update({'metal': (('<f8', 1), d_off+8)})
@@ -660,9 +673,11 @@ def rd_gm_star_file(fname, metal=True, nchem=0,
             dtype_data.update({'cp': (('<f8', (nchem,)), d_off+8)})
 
     if additional_fields is not None:
-        for field in additional_fields.items():
-            additional_fields.update({field[0]: (field[1][0], field[1][1]+d_off)})
-        dtype_data.update(additional_fields)
+        # add offset
+        add_f = additional_fields.copy()
+        for field in add_f.items():
+            add_f.update({field[0]: (field[1][0], field[1][1]+d_off)})
+        dtype_data.update(add_f)
 
     with open(fname, "rb") as f:
         header = read_header(f, dtype=dtype_header)
