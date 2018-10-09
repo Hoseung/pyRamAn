@@ -267,7 +267,7 @@ def plot_rot_map(gg):
     from matplotlib.colors import LogNorm
 
     npix_reff = gg.params.vmap_sigmap["npix_per_reff"]
-    rscale=gg.meta.rscale_lambda
+    rscale=gg.params.vmap_sigmap["rscale"]
     fig,axs = plt.subplots(2,2)
     im = axs[0,0].imshow(gg.mmap, norm=LogNorm())
     fig.colorbar(im,ax=axs[0,0])
@@ -281,7 +281,7 @@ def plot_rot_map(gg):
     n_lam_points = len(gg.meta.lambda_result_list[0])
     axs[1,1].plot(np.arange(n_lam_points)/npix_reff,
                   gg.meta.lambda_result_list[0])
-    axs[1,1].set_title("Stellar density")
+    axs[1,1].set_title(r"$\lambda_{<r}$")
 
     ticks = npix_reff * np.arange(0, 2*(rscale+1)+1, 2)
     axs[0,0].set_xticks(ticks)

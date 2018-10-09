@@ -14,14 +14,24 @@ def weighted_std(values, weights):
     return math.sqrt(variance)
 
 def get_vmax_sig(gal,
-                 vsig_results,
                  make_plot=False,
                  nreff=2.0,
-                 img_size = None,
-                 npix_per_reff = 5,
                  out_dir="./"):
+    """
+    Determine maximum rotation velocity and the projected velocity dispersion
+    within 1Reff. Requires vmap and sigmap.
 
-    # get points near the major axis line
+    parameters
+    ----------
+    nreff : 2.0
+        maximum range in Reff where the Vmax is expected to occur.
+
+    """
+
+    npix_per_reff = gal.params.vmap_sigmap["npix_per_reff"]
+    rscale = gal.params.vmap_sigmap["rscale"]
+
+    # get points near the major axis
     if not hasattr(gal.meta, "mge_result_list"):
         lambdas = cal_lambda_r_eps(gal, save_result=False, n_pseudo=n_pseudo,
                                    npix_per_reff=npix_per_reff)
@@ -33,15 +43,13 @@ def get_vmax_sig(gal,
         vmap = gal.vmap_v
         sigmap = gal.sigmap_v
     else:
-        if img_size is None:
-            img_size = gal.vmap.shape[0]
+        img_size = gal.vmap.shape[0]
         xinds = np.tile(np.arange(img_size) + 0.5, img_size)
         yinds = np.repeat(np.arange(img_size) + 0.5, img_size)
         vmap = gal.vmap
         sigmap = gal.sigmap
 
     ## Pixels on the major axis.
-
     # polynomial constants
     fit = gal.meta.mge_result_list[0]
     f_a = np.tan(fit["pa_rad"])
@@ -49,13 +57,13 @@ def get_vmax_sig(gal,
     f_c = fit["ycen"] - f_a*fit["xcen"]
 
     distance_to_line = np.abs(f_a*xinds + f_b*yinds + f_c)/np.sqrt(f_a**2 + f_b**2)
-    i_ok = distance_to_line < 1
+    i_ok = np.where(distance_to_line < 1)[0]
 
     if make_plot:
         import matplotlib.pyplot as plt
         fig, ax = plt.subplots(2)
 
-        ax[0].imshow(gal.vmap, origin="lower")
+        ax[0].imshow(vmap, origin="lower")
         ax[0].scatter(xinds[i_ok], yinds[i_ok], color="g")
 
     v_good = vmap.flatten()[i_ok]
@@ -102,3 +110,5 @@ def get_vmax_sig(gal,
     vsig_results["Vmax"]= vmax
     vsig_results["sigma"] = sig
     vsig_results["V_sig"] = vmax/sig
+
+    gg.meta.vsig_results = dict(Vmax=vmax, sigma=sig, V_sig=vmax/sig)
