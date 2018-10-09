@@ -271,7 +271,6 @@ class Gal(Galaxy):
                       ('energy', '<f8', (3,)), ('radius', '<f8', (4,))]))
         """
         from utils.sampling import Region
-        import sys
 
         if rscale is not None:
             self.rscale = rscale
@@ -281,7 +280,6 @@ class Gal(Galaxy):
                              base=self.base, metal=True, **rd_star_params)
                 if len(self.gcat_subs) > 0:
                     ss_all = [self.star]
-                    print(sys.getsizeof(ss_all)/1e9, "for the main galaxy")
                     for sub in self.gcat_subs:
                         if sub["id"] == self.gid:
                             continue
@@ -289,13 +287,9 @@ class Gal(Galaxy):
                             h, ss = _rd_gal(self.nout, sub["id"],
                                      base=self.base, metal=True, **rd_star_params)
                             ss_all.append(ss)
-                            print(len(ss_all))
-                            print(ss.dtype)
                         except:
                             print("Missing satellite / star clumps. Too small? {}".format(sub["np"]))
                             continue
-                    print(sys.getsizeof(ss_all)/1e9, "after gathering all")
-                    print(len(np.ravel(ss_all)))
                     self.star = np.concatenate(ss_all)
 
                 # convert units to kpc from the center

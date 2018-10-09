@@ -32,7 +32,6 @@ def col_over_denom(np.ndarray[np.int32_t, ndim=1] iin, \
 #    cdef int percent = 0
    colden = np.zeros((nx,ny), dtype=np.float32)
 
-
    denom =  np.zeros((nx,ny), dtype=np.float32)
    for i in iin:
        i1 = ixl[i]
