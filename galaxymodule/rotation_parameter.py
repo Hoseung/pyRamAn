@@ -201,25 +201,18 @@ def gen_vmap_sigmap(self,
         self.vmap_v = vmap_v
         self.sigmap_v = sigmap_v
 
-
-        if plot_map:
-
-            vmap_plot = np.empty_like(count_map).ravel()
-            sigmap_plot = np.empty_like(count_map).ravel()
-            # npix * npix map for plots
-            for ibin in range(len(xNode)):
-                ind = np.where(binNum == ibin)[0]
-                vmap_plot[ind] = vmap_v[ibin]
-                sigmap_plot[ind] = sigmap_v[ibin]
-            # Stellar particle density map
-
-            fig, axs = plt.subplots(2,2)
-            axs[0,0].imshow(mmap.reshape(nx,ny),interpolation='nearest', norm=LogNorm())
-            axs[0,1].imshow(vmap_plot.reshape(nx,ny),interpolation='nearest')
-            axs[1,0].imshow(sigmap_plot.reshape(nx,ny),interpolation='nearest')
-            axs[1,1].set_ylim(0,1)
-            plt.savefig("voronoi_map_{}.png".format(self.meta.id))
-            plt.close()
+        # Always make 2D maps.
+        vmap_plot = np.empty_like(count_map).ravel()
+        sigmap_plot = np.empty_like(count_map).ravel()
+        # npix * npix map for plots
+        for ibin in range(len(xNode)):
+            ind = np.where(binNum == ibin)[0]
+            vmap_plot[ind] = vmap_v[ibin]
+            sigmap_plot[ind] = sigmap_v[ibin]
+        # Stellar particle density map
+        self.mmap = mmap.reshape(nx,ny)
+        self.vmap = vmap_plot.reshape(nx,ny)
+        self.sigmap = sigmap_plot.reshape(nx,ny)
 
     else:
         # Velocity and dispersion map
@@ -241,6 +234,15 @@ def gen_vmap_sigmap(self,
         #self.yNode = np.repeat(np.arange(ny),nx)
         self.sigmap = sigmap.reshape(nx, ny)
         self.vmap = vmap.reshape(nx,ny)
+
+    if plot_map:
+        fig, axs = plt.subplots(2,2)
+        axs[0,0].imshow(self.mmap,interpolation='nearest', norm=LogNorm())
+        axs[0,1].imshow(self.vmap,interpolation='nearest')
+        axs[1,0].imshow(self.sigmap,interpolation='nearest')
+        axs[1,1].set_ylim(0,1)
+        plt.savefig("vsigmaps_{}.png".format(self.meta.id))
+        plt.close()
 
 
 def get_mge_out(f, frac, npix_per_reff, name):
@@ -299,8 +301,6 @@ def _measure_lambda(mge_par,
                         * np.sqrt(vmap[ind[ind2]]**2 + sigmap[ind[ind2]]**2))
 
                 points[i] = a/b
-    # print(points)
-
 
     return points
 
