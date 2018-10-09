@@ -46,9 +46,9 @@ def plot_gal(self, npix=200, fn_save=None, ioff=True,
         fig, axs = plt.subplots(2,2)
 
     try:
-        fig.suptitle("ID: {}    z: {:2f}".format(str(self.meta.id).zfill(5), self.info.zred))
+        fig.suptitle("ID: {},  z= {:2f}".format(str(self.meta.id).zfill(5), self.info.zred))
     except:
-        fig.suptitle("ID: {}    z: not available".format(str(self.meta.id).zfill(5)))
+        fig.suptitle("ID: {},  z= not available".format(str(self.meta.id).zfill(5)))
 
 # Stellar particle density map
     ax = axs[0,0]

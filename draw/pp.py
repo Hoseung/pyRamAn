@@ -676,13 +676,15 @@ def pp_colden(cell, npix, info, proj="z", verbose=False, autosize=False):
 
 def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
             column=False,
+            ranges=None,
             region=None,
             xmin=None, xmax=None, ymin=None, ymax=None,
             hvar="rho", field_var=None,
             do_resize=True):
     """
     Accepts cell data and returns 2D projected gas map.
-     *position and dx must be in the same unit.
+
+    *position and dx must be in the same unit.
 
     example
     -------
@@ -695,7 +697,6 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
     >>> gas_map = pp_cell(gal.cell, 200, info, region=region)
     -> cells only inside the region are taken into account.
        *It's a cubic region, not a sphere.
-
 
     Note
     ----
@@ -735,6 +736,12 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
     y = cell[dim2]
 #    di = [0, 1]  # What is this?
 #    zh = xh[2]  # what is this?
+    try:
+        xmin, xmax = ranges[0]
+        ymin, ymax = ranges[1]
+    except:
+        pass
+
     xmi0 = xmin
     xma0 = xmax
     ymi0 = ymin
@@ -781,9 +788,6 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
     dx = cell["dx"][val]
 
 # No max, no column
-    # mass/L**2 = rho*L
-    # sden differs with hydro variable type.
-
     if column:
         sden = cell[hvar][val]*dx*(scale_d*scale_l)*0.76/1.66e-24
     else:
@@ -866,7 +870,6 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
 #    sden.transpose()
 #    colden = np.zeros((nx,ny), dtype=np.float32)
 #    denom =  np.zeros((nx,ny), dtype=np.float32)
-
     if verbose:
         print("dimensions of \n mass = {}, \n sden = {}, and nx, ny are {}, {}".format(\
         mass.shape, sden.shape, nx, ny))
@@ -877,12 +880,12 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
     # if ppc.col_over_denom throw an type missmatch error,
     # compile the ppc module locally once more.
     if do_resize:
-        return resize(ppc.col_over_denom(iin,
+        return np.transpose(resize(ppc.col_over_denom(iin,
                 ixl, ixr, iyl, iyr,
                 mass, sden,
-                nx, ny, column), [npix,npix])
+                nx, ny, column), [npix,npix]))
     else:
-        return ppc.col_over_denom(iin,
+        return np.transpose(ppc.col_over_denom(iin,
             ixl, ixr, iyl, iyr,
             mass, sden,
-            nx, ny, column)
+            nx, ny, column))
