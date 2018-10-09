@@ -116,18 +116,31 @@ def plot_2d_simple_gas_maps(gg):
     cell_mass = gg.cell["rho"]*gg.cell["dx"]**3 * cell_to_msun
 
     # 2d maps
-    fig, axs = plt.subplots(2,2)
+    fig, axs = plt.subplots(3,3)
     axs = axs.ravel()
     rgal = gg.meta.reff * 5
     axs[0].hist2d(gg.star["x"], gg.star["y"], weights=gg.star["m"],
                   bins=100, range=[[-rgal,rgal]]*2, norm=LogNorm())
-    axs[1].hist2d(gg.dm["x"], gg.dm["y"], weights=gg.dm["m"],
+    axs[1].hist2d(gg.star["x"], gg.star["y"], weights=gg.star["m"],
                   bins=100, range=[[-rgal,rgal]]*2, norm=LogNorm())
-    axs[2].hist2d(gg.cell["x"], gg.cell["y"], weights=cell_mass,
+    axs[2].hist2d(gg.star["x"], gg.star["y"], weights=gg.star["m"],
+                  bins=100, range=[[-rgal,rgal]]*2, norm=LogNorm())
+    axs[3].hist2d(gg.dm["x"], gg.dm["y"], weights=gg.dm["m"],
+                  bins=100, range=[[-rgal,rgal]]*2, norm=LogNorm())
+    axs[4].hist2d(gg.dm["x"], gg.dm["y"], weights=gg.dm["m"],
+                  bins=100, range=[[-rgal,rgal]]*2, norm=LogNorm())
+    axs[5].hist2d(gg.dm["x"], gg.dm["y"], weights=gg.dm["m"],
+                  bins=100, range=[[-rgal,rgal]]*2, norm=LogNorm())
+    axs[6].hist2d(gg.cell["x"], gg.cell["y"], weights=cell_mass,
+                  bins=100, range=[[-rgal,rgal]]*2, norm=LogNorm(), vmin=1e4)
+    axs[7].hist2d(gg.cell["x"], gg.cell["y"], weights=cell_mass,
+                  bins=100, range=[[-rgal,rgal]]*2, norm=LogNorm(), vmin=1e4)
+    axs[8].hist2d(gg.cell["x"], gg.cell["y"], weights=cell_mass,
                   bins=100, range=[[-rgal,rgal]]*2, norm=LogNorm(), vmin=1e4)
     for ax in axs:
         ax.set_aspect("equal")
     plt.savefig("{}_{}_gas.png".format(gg.nout, gg.meta.id), dpi=200)
+    plt.close()
 
 
 def plot_radial(gg, nbins=50, rmax=25, xlog=False, ylog=True,
@@ -155,6 +168,9 @@ def plot_radial(gg, nbins=50, rmax=25, xlog=False, ylog=True,
     if surface_density:
         two_pi_r_dr = 2 * np.pi * bin_centers * bin_widths
         h_st /= two_pi_r_dr
+    else:
+        four_third_pi_r_r_dr = 4/3 * np.pi * (bin_centers**2 - (bin_centers - bin_widths)**2)
+        h_st /= four_third_pi_r_r_dr
     ax.plot(bins[1:], h_st, label="star")
 
     if hasattr(gg, "dm") and gg.dm is not None:
@@ -164,8 +180,9 @@ def plot_radial(gg, nbins=50, rmax=25, xlog=False, ylog=True,
         h_dm, bin_dm = np.histogram(dist_dm[isort_dist_dm],  bins=bins,
                                     weights=gg.dm["m"][isort_dist_dm])
         if surface_density:
-            two_pi_r_dr = 2 * np.pi * bin_centers * bin_widths
             h_dm /= two_pi_r_dr
+        else:
+            h_dm /= four_third_pi_r_r_dr
         ax.plot(bins[1:], h_dm, label="dm")
 
     if hasattr(gg, "cell") and gg.cell is not None:
@@ -176,15 +193,14 @@ def plot_radial(gg, nbins=50, rmax=25, xlog=False, ylog=True,
                  weights=gg.cell["rho"][isort_dist_cell]*
                          gg.cell["dx"][isort_dist_cell]**3 * cell_to_msun)
         if surface_density:
-            two_pi_r_dr = 2 * np.pi * bin_centers * bin_widths
             h_cell /= two_pi_r_dr
+        else:
+            h_cell /= four_third_pi_r_r_dr
+
         ax.plot(bins[1:], h_cell, label="gas")
 
     # all
     h_all = h_st + h_dm + h_cell
-    if surface_density:
-        two_pi_r_dr = 2 * np.pi * bin_centers * bin_widths
-        h_all /= two_pi_r_dr
     ax.plot(bins[1:], h_all,
             label="all")
 
@@ -197,18 +213,24 @@ def plot_radial(gg, nbins=50, rmax=25, xlog=False, ylog=True,
     if ylog:
         ax.set_yscale("log")
         if surface_density:
-            ax.set_ylim([1e4,1e10])
+            ax.set_ylim([5e5,5e10])
         else:
-            ax.set_ylim([1e7,1e11])
+            ax.set_ylim([5e5,5e10])
     else:
-        ax.set_ylim([0,1e11])
+        ax.set_ylim([1e8,1e10])
     if surface_density:
         ylabel = r"$\Sigma \, [M_{\odot}/kpc^2]$"
     else:
-        ylabel = r"$M_{\odot}$"
+        ylabel = r"$M_{\odot} kpc^{-3}$"
     ax.set_xlabel("kpc")
     ax.set_ylabel(ylabel)
-    plt.savefig("{}_{}_comp_profile.png".format(gg.nout, gg.meta.id), dpi=200)
+    if surface_density:
+        fig_type = "surface density"
+    else:
+        fig_type = "density"
+    plt.savefig("{}_{}_comp_{}_profile.png".format(gg.nout, gg.meta.id, fig_type),
+                dpi=200)
+    plt.close()
 
 
 def plot_bulge_disk(gg, bulge, disk, nbins=200, band="flux_u"):
@@ -235,7 +257,7 @@ def plot_bulge_disk(gg, bulge, disk, nbins=200, band="flux_u"):
     fig.suptitle("B/T (0.5) = {:.2f}".format(np.sum(bulge["m"])/np.sum(gg.star["m"])))
     plt.savefig("{}_{}_xyz_{}-band.png".format(gg.nout, gg.meta.id, band),
                 dpi=200)
-
+    plt.close()
 
 def plot_rot_map(gg):
     """
@@ -297,7 +319,7 @@ def plot_rot_map(gg):
     fig.suptitle("ID {},  z={:.1f}".format(gg.meta.id, gg.info.zred))
     plt.tight_layout()
     plt.savefig("lam_map_{}_{}_lum.png".format(gg.nout, gg.meta.id), dpi=200)
-    #plt.close()
+    plt.close()
 
 
 def add_output_containers(gg):
