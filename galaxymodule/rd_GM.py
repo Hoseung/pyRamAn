@@ -657,14 +657,15 @@ def rd_gm_star_file(fname, metal=True, nchem=0,
                    'vx': (('<f8', 1), 40),
                    'vy': (('<f8', 1), 48),
                    'vz': (('<f8', 1), 56),
-                 'time': (('<f8', 1), 72)}
+                 'time': (('<f8', 1), 64)}
 
     d_off = 72
     if metal:
-        dtype_data.update({'metal': (('<f8', 1), d_off+8)})
+        dtype_data.update({'metal': (('<f8', 1), d_off)})
         d_off +=8
-        if nchem > 0:
-            dtype_data.update({'cp': (('<f8', (nchem,)), d_off+8)})
+        # For HAGN
+        #if nchem > 0:
+        #    dtype_data.update({'cp': (('<f8', (nchem,)), d_off+8)})
 
     if additional_fields is not None:
         # add offset
