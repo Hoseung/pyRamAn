@@ -36,18 +36,11 @@ def get_vmax_sig(gal,
         lambdas = cal_lambda_r_eps(gal, save_result=False, n_pseudo=n_pseudo,
                                    npix_per_reff=npix_per_reff)
 
-    if hasattr(gal, "vmap_v"):
-        v_good = gal.vmap_v
-        xinds = gal.xNode
-        yinds = gal.yNode
-        vmap = gal.vmap_v
-        sigmap = gal.sigmap_v
-    else:
-        img_size = gal.vmap.shape[0]
-        xinds = np.tile(np.arange(img_size) + 0.5, img_size)
-        yinds = np.repeat(np.arange(img_size) + 0.5, img_size)
-        vmap = gal.vmap
-        sigmap = gal.sigmap
+    img_size = gal.vmap.shape[0]
+    xinds = np.tile(np.arange(img_size) + 0.5, img_size)
+    yinds = np.repeat(np.arange(img_size) + 0.5, img_size)
+    vmap = gal.vmap
+    sigmap = gal.sigmap
 
     ## Pixels on the major axis.
     # polynomial constants
@@ -104,11 +97,7 @@ def get_vmax_sig(gal,
 
         print("Vmax {:.2f}, sigma {:.2f}, v/sig {:.2f}".format(vmax, sig, vmax/sig))
         ax[1].set_aspect('auto')
-        plt.savefig(out_dir + str(gal.meta.id) + "_vel_curve" + ".png")
+        plt.savefig(out_dir + "{}_{}_vel_curve.png".format(gal.nout, gal.meta.id))
         plt.close()
 
-    vsig_results["Vmax"]= vmax
-    vsig_results["sigma"] = sig
-    vsig_results["V_sig"] = vmax/sig
-
-    gg.meta.vsig_results = dict(Vmax=vmax, sigma=sig, V_sig=vmax/sig)
+    gal.meta.vsig_results = dict(Vmax=vmax, sigma=sig, V_sig=vmax/sig)
