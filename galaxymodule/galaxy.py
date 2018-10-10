@@ -22,25 +22,14 @@ Fix it
 
 import numpy as np
 from load.info import get_minimal_info
+from utils.util import print_large_number
 #import  matplotlib.pyplot as plt
-
-def print_large_number(q):
-    if isinstance(q, (int, np.int, np.int16, np.int32, np.int64)):
-        return("{:d}".format(q))
-    elif q > 1e4:
-        return("{:.3e}".format(q))
-    else:
-        return("{:.2f}".format(q))
-
 
 def convert_catalog(gcat, pboxsize, unit="code"):
     """
     Default unit = code unit.
     (tree.halomodule converts units to code units on reading gcats)
     """
-    #gcat['x'] = (gcat['x'] -0.5) * pboxsize
-    #gcat['y'] = (gcat['y'] -0.5) * pboxsize
-    #gcat['z'] = (gcat['z'] -0.5) * pboxsize
     gcat['r'] = gcat['r'] * pboxsize  #* info.cboxsize * 1e3
     gcat['rvir'] = gcat['rvir'] * pboxsize #* info.cboxsize * 1e3
 
@@ -364,7 +353,7 @@ class Galaxy():
         if len(imin) == 0 or len(imax) == 1:
             print("No second component.")
             print("Good to go!, Calcualte R_gal with all the particles")
-            return False #self.get_radius(xx, yy, zz, mm, self.radius_method)
+            return False
 
         else:
             cnt_major = sum(n[0:imin[0]])
