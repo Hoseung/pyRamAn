@@ -243,7 +243,7 @@ def do_work(sub_sample, nout, i_subsample,
         gg.star.Flux_r= MockSED.get_flux(star=gg.star, cell = gg.cell, filter_name='r')
         gg.meta.Mr = qmc.get_absolute_mag(gg.star.Flux_r, band=sdss_band, bandname="r")
 
-       	gg.meta.mean_age = np.average(gg.star["time"], weights=gg.star["m"])
+       	gg.meta.mean_age = np.average(gg.star["age"], weights=gg.star["m"])
 
         # SFR
         # send the parameters to the begining.

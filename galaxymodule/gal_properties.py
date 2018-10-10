@@ -193,8 +193,8 @@ def get_age_hist(gg,
     """
 
     if tmax is None:
-        tmax = gg.star["time"].max()
-    h, _ = np.histogram(gg.star["time"],
+        tmax = gg.star["age"].max()
+    h, _ = np.histogram(gg.star["age"],
                         weights=gg.star["m"]/(dt*1e9),
                         bins=np.arange(tmin,tmax,dt))
     return h

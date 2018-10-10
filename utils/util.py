@@ -8,6 +8,14 @@ import os
 import numpy as np
 from glob import glob
 
+def print_large_number(q):
+    if isinstance(q, (int, np.int, np.int16, np.int32, np.int64)):
+        return("{:d}".format(q))
+    elif q > 1e4:
+        return("{:.3e}".format(q))
+    else:
+        return("{:.2f}".format(q))
+
 def mkdir(dirpath):
     if not os.path.isdir(dirpath):
         os.mkdir(dirpath)
@@ -112,7 +120,7 @@ def dgyr2dnout(dt, nout_now):
 def get_last_snapshot(base='./'):
     """
     Some files/directories other than output_00xxx can be found under snapshots/
-    In such case, listing everything under snapshots/ and sorting and selectnig 
+    In such case, listing everything under snapshots/ and sorting and selectnig
     the last entry will fail (They may not even be a number.)
 
     Thus, search for output_ pattern and then search for the latest one.
@@ -121,3 +129,15 @@ def get_last_snapshot(base='./'):
     fi = glob(base+"snapshots/output_?????/info*.txt")
     return int(np.sort(fi)[-1].split("info_")[1].split(".txt")[0])
     #return int(np.sort(os.listdir(base + "snapshots/"))[-1].split("_")[1])
+
+
+def replace_field_name(arr, oldname, newname):
+    """
+    replace an old field name with a new field name.
+
+    example
+    -------
+    replace_field_name(gg.star, "time", "age")
+    """
+    orgnames = list(arr.dtype.names)
+    arr.dtype.names = tuple([newname if nn == oldname else nn for nn in orgnames])

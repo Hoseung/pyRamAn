@@ -61,6 +61,8 @@ def get_E(gal, nvec=None, nvec_ys=True, ptype='star', method="Abadi",
                 from utils.cosmology import Timeconvert
                 tc = Timeconvert(info = info)
                 gal.star['time'] = tc.time2gyr(gal.star['time'], z_now = info.zred)
+                from utils.util import replace_field_name
+                replace_field_name(gg.star, "time", "age")
             nvec = sum(rv[gal.star['time']<0.01]) # younger than 10Myr
         else:
             R90m = get_radius(gal.star,gal.star['m'],0.9)
@@ -163,7 +165,7 @@ def get_E(gal, nvec=None, nvec_ys=True, ptype='star', method="Abadi",
                                         +gal.dm["vel"][:,1]**2
                                         +gal.dm["vel"][:,2]**2)
             gal.meta.mbp_DM = gal.dm["id"][np.argsort(specificE_DM)[:nmbp]]
-            
+
         Ecir = 0.5*Grav*M_incl_star/r_s[1:] + phi
 
         i_sort_Ecir = np.argsort(Ecir)

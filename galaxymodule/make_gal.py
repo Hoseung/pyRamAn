@@ -354,14 +354,14 @@ def radial_profile_cut(gal, xx, yy, mm,
                        debug=False):
     """
     Determine the system velocity and size of the galaxy (stellar).
-    What about the gas disk size? 
+    What about the gas disk size?
     System velocity determined as np.average(vx[i_close]) sometimes fail,
     which may indicate that this function fails to extract reliable member stars.
     This occurs more frequently with high-z or high resolution data.
     Todo
     ----
-        Adaptive member determination over varying resolution and redshift.
-
+        1. Adaptive member determination over varying resolution and redshift.
+        2. Similar functionality is provided by galaxy.get_radius. 
 
     """
 
