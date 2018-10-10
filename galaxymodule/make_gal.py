@@ -353,6 +353,8 @@ def radial_profile_cut(gal, xx, yy, mm,
                        mag_lim=25, nbins=100, rmax=20, dr=0.5,
                        debug=False):
     """
+    Determine the system velocity and size of the galaxy (stellar).
+    What about the gas disk size? 
     System velocity determined as np.average(vx[i_close]) sometimes fail,
     which may indicate that this function fails to extract reliable member stars.
     This occurs more frequently with high-z or high resolution data.
