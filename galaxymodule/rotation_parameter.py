@@ -428,7 +428,7 @@ def cal_lambda_r_eps(self,
             d_05reff = np.argmax(dsort > 0.5*dsort[i_reff]) # dsort[d_05reff] = 0.5Reff
             frac05 = d_05reff/len(mmap)
 
-            frac15 = np.pi / self.meta.rscale_lambda**2 * (10/(2*reff))**2
+            frac15 = np.pi / self.params.vmap_sigmap["rscale"]**2 * (10/(2*reff))**2
             # fraction of 15kpc in the mmap.
             frac15 = min([0.99, frac15])
 
