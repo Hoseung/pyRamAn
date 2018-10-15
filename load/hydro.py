@@ -198,7 +198,7 @@ class Hydro(Simbase):
         verbose : bool, optional
 
         """
-        print("[hydro.amr2cell], self.cpus - 0", self.cpus)
+        if verbose: print("[hydro.amr2cell], self.cpus = ", self.cpus)
         if nvarh is None:
             if self.header.nvarh is None:
                 nvarh = self.header.nvarh_org

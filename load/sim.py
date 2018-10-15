@@ -11,18 +11,19 @@ class Simbase():
     """
     base
     """
-    def __init__(self, cosmo=True):
+    def __init__(self, cosmo=True, verbose=False):
         self.cosmo=cosmo
         self.ranges=None
         self.region=None
         self.nout=None
         self.cpu_fixed=False
         self.cpus=None
+        self.verbose=verbose
 
     def add_amr(self, load=False):
         from load.amr import Amr
         self.amr = Amr(self.info, cpus=self.cpus, load=load)
-        print("An AMR instance is created\n", self.__class__.__name__)
+        if self.verbose: print("An AMR instance is created\n", self.__class__.__name__)
 
     def get_cpus(self):
         return self.cpus
@@ -279,7 +280,7 @@ class Sim(Simbase):
         self.set_ranges(ranges)
 
         if self._all_set():
-            self.add_amr()
+            #self.add_amr()
             if self.ranges is not None:
                 self.set_cpus(self._hilbert_cpulist(self.info, self.ranges))
         print('Simulation set up.')

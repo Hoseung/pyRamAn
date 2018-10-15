@@ -42,7 +42,7 @@ import matplotlib.cm as cmx
 from matplotlib.colors import LogNorm
 from sklearn.preprocessing import scale
 from sklearn.mixture import GMM
-import twobody
+from gsf import twobody
 
 grav_const=4.302e-6
 plt.switch_backend('agg')
