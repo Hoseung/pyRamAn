@@ -545,7 +545,8 @@ def resize_deprecated(X,shape=None):
     return Y
 
 
-def pp_cell_den(cell, info, proj="z", verbose=False, autosize=False,
+def pp_cell_den(cell, info, lmax=None,
+                proj="z", verbose=False, autosize=False,
             column=False,
             ranges=None,
             region=None,
@@ -578,6 +579,15 @@ def pp_cell_den(cell, info, proj="z", verbose=False, autosize=False,
 
     sig = 1.0
     sigrange = sig * 2# what is sigrange?
+
+    if lmax == None:
+        mindx = min(dx)
+    else:
+        mindx = 1/2**lmax
+        
+    if verbose:
+        print("mindx", mindx)
+
 
     if proj=="z":
         dim1 = "x"
@@ -675,10 +685,6 @@ def pp_cell_den(cell, info, proj="z", verbose=False, autosize=False,
 
     mass = cell["var0"][val]*dx
     mass.transpose()
-
-    mindx = min(dx)
-    if verbose:
-        print("mindx", mindx)
 
     xmi = np.floor(xmi0/mindx)*mindx
     xma = np.ceil(xma0/mindx)*mindx
