@@ -4,6 +4,7 @@ Created on Thu Mar 26 17:44:27 2015
 
 @author: hoseung
 """
+from load.sim import Simbase
 import numpy as np
 from utils.io_module import read_header, read_fortran, skip_fortran
 
@@ -134,16 +135,11 @@ class AmrHeader():
         self.used_mem_tot = h4['htnm1m2'][4]
         self.ordering = h4['ordering']
 
-
     # When reading 2D array, beware that fortran file is written in
     # ???-major order but python will save it in ???-major order
 
-    # For example,
     # numbl is (ncpu x nlevelmax) array in fortran
     # and is accessed by numbl[icpu,ilevel]
-
-    # where is the 170 coming from?
-
 
         #h4 = read_header(f, np.dtype([('bound_key', 'f8', (ncpu+1,))]),check=False)
         # Get the data type by calculating precision from the fortran block header
@@ -161,13 +157,11 @@ class AmrHeader():
         h4 = read_header(f, np.dtype([('son', 'i4', (ncoarse,)),
                                       ('flag1', 'i4', (ncoarse,)),
                                       ('cpu_map', 'i4', (ncoarse,))]),check=True)
-
 # Aquarius data has 16Byte "bound_key".
 # Because of QUADHILBERT??
 
 # check=False => Even if user gives a wrong size,
 # it still reads based on what fortran binary says.
-
         # if assign
 
         self.tout = h2['tout']
@@ -206,6 +200,7 @@ class AmrHeader():
         self.flag1 = h4['flag1']
         self.cpu_map = h4['cpu_map']
 
+
 class Grid():
     def __init__(self):
         self.ncpu = 0
@@ -232,13 +227,12 @@ class Grid():
         self.levellist=levellist
 
 
-class Amr():
+class Amr(Simbase):
     """
     AMR class, which is required by Hydro class.
-
     """
 
-    def __init__(self, info, cpus=None, load=True):
+    def __init__(self, nout=None, info=None, cpus=None, load=True):
         import os
         """
         Parameters
@@ -246,9 +240,21 @@ class Amr():
         info : load.info.Info class
 
         """
-        snout = str(info.nout).zfill(5)
-        self.info = info
-        self.cpus = cpus
+        super(Amr, self).__init__()
+        if info is not None:
+            self.info = info
+        else:
+            assert nout is not None, "either info or nout is required"
+            from load.info import Info
+            print("[Amr.__init__] Loading info")
+            self.info = Info(nout=nout, cosmo=self.cosmo)
+
+        if nout is not None:
+            snout = str(self.info.nout).zfill(5)
+
+        # Update attributes
+        if cpus is not None:
+            self.cpus = cpus
 
         self._fnbase = os.path.join(info.base, info.data_dir) +\
                     'output_' + snout + '/amr_' + snout + '.out'
@@ -261,13 +267,21 @@ class Amr():
 
         self.header = AmrHeader()
         self.header._read_amr_header(f)
+        self.get_current_lmax()
         if load:
             self.load()
         f.close()
 
-    def _load_mesh(f, ndim=3):
-        for i in np.arange(ndim):
-            read_fortran(f, np.dtype('f8'))
+    #def _load_mesh(f, ndim=3):
+    #    for i in np.arange(ndim):
+    #        read_fortran(f, np.dtype('f8'))
+    def get_current_lmax(self):
+        imax_level = np.argmax(np.sum(numl, axis=1) == 0)
+        if imax_level == 0:
+            self.lmax_now = self.info.lmax
+        else:
+            self.lmax_now = imax_level
+
 
     def get_zoomin(self, scale=1.0):
         """
@@ -310,11 +324,6 @@ class Amr():
         cpu map and refinement map is additionaly needed to restart a simulation.
         octs of the same level are written at once. (So you need to loop over ilevel)
 
-        <Todo>
-        Think about when you will need to load the amr file.
-        It's rather unclear.
-
-        -> When I want to draw cell map!
         """
 
         # global header variables are available.
@@ -336,7 +345,6 @@ class Amr():
             listmax = ncpu + nboundary
 
         ngridarr = np.zeros((nlevelmax, listmax), dtype=np.int32)
-        #ngridarr = np.zeros((nlevelmax, listmax))
         levellist = [[0] * listmax for i in range(nlevelmax)] # nlevelmax by listmax list.
         llist = 0
         self.header.ngridtot = 0
@@ -344,14 +352,11 @@ class Amr():
             if(verbose):
                 self.print_cpu(self, icpu)
 
-            #print(self._fnbase + str(jcpu).zfill(5))
             f = open(self._fnbase + str(jcpu).zfill(5), "rb")  # +1
 
             # read header
             header_icpu = AmrHeader()
             header_icpu._read_amr_header(f)
-            #print(header_icpu.ngridtot)
-            #print(header_icpu.ngrid)
             self.header.ngridtot += header_icpu.ngrid
 
             numbl = header_icpu.numbl
@@ -362,7 +367,6 @@ class Amr():
                 numbb = np.zeros(np.shape(numbl)) # need an empty array.
 
             ngridtot = 0
-
             kcpumin = 1
             kcpumax = nboundary + ncpu
             nlevel = 0
@@ -385,7 +389,6 @@ class Amr():
                         if (verbose):
                             print("Level %2d has %6d grids in proc %4d"
                                   % (ilevel + 1, ng, kcpu))
-                        #print(f.tell())
                         nlevel = nlevel + 1  # number of valid (ng > 0) levels
                         mesh = {"ilevel":ilevel,
                                 "nc":ng,
@@ -427,6 +430,5 @@ class Amr():
 
         self.ngridarr = ngridarr
         self.levellist = levellist
-        #grid.set_data(ngrid=ngridarr, levellist=levellist)
 
         return

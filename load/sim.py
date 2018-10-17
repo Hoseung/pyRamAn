@@ -11,7 +11,9 @@ class Simbase():
     """
     base
     """
-    def __init__(self, cosmo=True, verbose=False):
+    def __init__(self,
+                 cosmo=True,
+                 verbose=False):
         self.cosmo=cosmo
         self.ranges=None
         self.region=None
@@ -25,13 +27,14 @@ class Simbase():
         self.amr = Amr(self.info, cpus=self.cpus, load=load)
         if self.verbose: print("An AMR instance is created\n", self.__class__.__name__)
 
-    def get_cpus(self):
-        return self.cpus
-
     def unlock_cpus(self):
         self.cpu_fixed=False
 
     def set_cpus(self, cpus=None, lock=False):
+        """
+        Determine the list of CPUs for the range.
+        Requires self.range.
+        """
         if cpus is None:
             cpus = self._hilbert_cpulist(self.info, self.ranges)
 
@@ -42,7 +45,7 @@ class Simbase():
             self.cpu_fixed = True
 
     def show_cpus(self):
-        print(" ncpus : %s \n" % self.get_cpus())
+        print(" ncpus : %s \n" % self.cpus)
 
     def set_ranges(self, ranges=[[0, 1], [0, 1], [0, 1]]):
         if ranges is not None:
@@ -242,7 +245,6 @@ class Sim(Simbase):
             setup: bool, optional
             region: (region)dict, optional
 
-
         """
         super(Sim,self).__init__()
         # should call parent class' init.
@@ -293,7 +295,6 @@ class Sim(Simbase):
     use @property macro like this.
 
     Here, _base is encapsulated.
-    This is desired because in this time we need to separate
     """
     @property
     def base(self):
