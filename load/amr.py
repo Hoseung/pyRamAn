@@ -249,8 +249,7 @@ class Amr(Simbase):
             print("[Amr.__init__] Loading info")
             self.info = Info(nout=nout)
 
-        if nout is not None:
-            snout = str(self.info.nout).zfill(5)
+        snout = str(self.info.nout).zfill(5)
 
         # Update attributes
         if cpus is not None:

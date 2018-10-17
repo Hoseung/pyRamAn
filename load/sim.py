@@ -24,7 +24,7 @@ class Simbase():
 
     def add_amr(self, load=False):
         from load.amr import Amr
-        self.amr = Amr(self.info, cpus=self.cpus, load=load)
+        self.amr = Amr(info=self.info, cpus=self.cpus, load=load)
         if self.verbose: print("An AMR instance is created\n", self.__class__.__name__)
 
     def unlock_cpus(self):
@@ -36,7 +36,8 @@ class Simbase():
         Requires self.range.
         """
         if cpus is None:
-            cpus = self._hilbert_cpulist(self.info, self.ranges)
+            cpus = self._hilbert_cpulist(self.info, self.ranges,
+                                         amrheader=self.amr.header)
 
         if not self.cpu_fixed:
             self.cpus = np.array(cpus)
@@ -74,10 +75,11 @@ class Simbase():
         BUT! they also contain other data points outside the ranges.
         """
         from load.a2c import a2c
-        if amrheader is None and not(hasattr(self, 'amr')):
-            print("[sim._hilbert_cpulist] No AMR instance,")
-            print("[sim._hilbert_cpulist] Loading one...")
-            self.add_amr(load=False)# load only meta data
+        if amrheader is None:
+            if not(hasattr(self, 'amr')):
+                print("[sim._hilbert_cpulist] No AMR instance,")
+                print("[sim._hilbert_cpulist] Loading one...")
+                self.add_amr(load=False)# load only meta data
             amrheader = self.amr.header
 
         nlevelmax = amrheader.nlevelmax
@@ -266,7 +268,7 @@ class Sim(Simbase):
             self.region=None
 
         if setup:
-            self.setup(nout, base, data_dir, ranges, dmo)
+            self.setup(nout, base, ranges, dmo)
 
     def _all_set(self):
         return (self.nout is not None) & (self.base is not None)
