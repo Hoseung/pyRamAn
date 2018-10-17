@@ -66,8 +66,7 @@ class Simbase():
         else:
             self.ranges = None
 
-
-    def _hilbert_cpulist(self, info, ranges):
+    def _hilbert_cpulist(self, info, ranges, amrheader=None):
         """
         After determining cpus, read the cpu files and cut off data
         that are outside ranges.
@@ -75,22 +74,23 @@ class Simbase():
         BUT! they also contain other data points outside the ranges.
         """
         from load.a2c import a2c
-        if not(hasattr(self, 'amr')):
+        if amrheader is None and not(hasattr(self, 'amr')):
             print("[sim._hilbert_cpulist] No AMR instance,")
             print("[sim._hilbert_cpulist] Loading one...")
             self.add_amr(load=False)# load only meta data
+            amrheader = self.amr.header
 
-        nlevelmax = self.amr.header.nlevelmax
-        nboundary = self.amr.header.nboundary
+        nlevelmax = amrheader.nlevelmax
+        nboundary = amrheader.nboundary
         ndim = self.info.ndim
         ncpu = self.info.ncpu_tot  #ncpu_tot
         # header of part output is needed (and is prepared.)
 
         # header of amr output is needed.
         two2ndim = 2**ndim
-        nx = self.amr.header.ng[0]
-        ny = self.amr.header.ng[1]
-        nz = self.amr.header.ng[2]
+        nx = amrheader.ng[0]
+        ny = amrheader.ng[1]
+        nz = amrheader.ng[2]
 
         xbound = [nx/2., ny/2., nz/2.]
         ngridfile = np.zeros(ncpu + nboundary, nlevelmax)
@@ -271,7 +271,7 @@ class Sim(Simbase):
     def _all_set(self):
         return (self.nout is not None) & (self.base is not None)
 
-    def setup(self, nout=None, base='./', data_dir='snapshots/',
+    def setup(self, nout=None, base='./',
                  ranges=[[0.0,1.0],[0.0,1.0],[0.0,1.0]], dmo=False):
         self.nout = nout
         self.base = base

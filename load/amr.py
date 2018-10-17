@@ -247,7 +247,7 @@ class Amr(Simbase):
             assert nout is not None, "either info or nout is required"
             from load.info import Info
             print("[Amr.__init__] Loading info")
-            self.info = Info(nout=nout, cosmo=self.cosmo)
+            self.info = Info(nout=nout)
 
         if nout is not None:
             snout = str(self.info.nout).zfill(5)
@@ -256,7 +256,7 @@ class Amr(Simbase):
         if cpus is not None:
             self.cpus = cpus
 
-        self._fnbase = os.path.join(info.base, info.data_dir) +\
+        self._fnbase = os.path.join(self.info.base, self.info.data_dir) +\
                     'output_' + snout + '/amr_' + snout + '.out'
         try:
             f = open(self._fnbase + '00001', "rb")
@@ -268,15 +268,52 @@ class Amr(Simbase):
         self.header = AmrHeader()
         self.header._read_amr_header(f)
         self.get_current_lmax()
+
+        # set_data_dir and set_range needs an info instance.
+        self.set_ranges()
+
+        #if self._all_set():
+            #self.add_amr()
+        #if self.ranges is not None:
+        #    self.set_cpus(self._hilbert_cpulist(self.info, self.ranges,
+        #                                        amrheader=self.header))
+
         if load:
             self.load()
         f.close()
+
+    def set_ranges(self, ranges=[[0, 1], [0, 1], [0, 1]]):
+        """
+        Override set_range in the Simbase class.
+
+        """
+        if ranges is not None:
+
+            nr = np.asarray(ranges) # Now it is a class
+            if not(nr.shape[0] == 3 and nr.shape[1] == 2):
+                # Because actual operation on the given input(ranges)
+                # does not take place soon, it's not a good place to use
+                # try & except clause. There is nothing to try yet.
+                print(' Error!')
+                print('Shape of ranges is wrong:', nr.shape)
+                print('example : [[0.1,0.3],[0.2,0.4],[0.6,0.8]] \n')
+            else:
+                self.ranges = ranges
+                self.set_cpus(self._hilbert_cpulist(self.info, self.ranges,
+                                                    amrheader=self.header))
+        else:
+            self.ranges = None
+
+    def setup(self, nout=None, base='./',
+             ranges=[[0.0,1.0],[0.0,1.0],[0.0,1.0]], dmo=False):
+
+        print('Simulation set up.')
 
     #def _load_mesh(f, ndim=3):
     #    for i in np.arange(ndim):
     #        read_fortran(f, np.dtype('f8'))
     def get_current_lmax(self):
-        imax_level = np.argmax(np.sum(numl, axis=1) == 0)
+        imax_level = np.argmax(np.sum(self.header.numbl, axis=1) == 0)
         if imax_level == 0:
             self.lmax_now = self.info.lmax
         else:
