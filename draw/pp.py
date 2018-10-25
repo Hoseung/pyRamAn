@@ -547,12 +547,12 @@ def resize_deprecated(X,shape=None):
 
 def pp_cell_den(cell, info, lmax=None,
                 proj="z", verbose=False, autosize=False,
-            column=False,
-            ranges=None,
-            region=None,
-            xmin=None, xmax=None, ymin=None, ymax=None,
-            hvar="rho", field_var=None,
-            do_resize=True):
+                column=False,
+                ranges=None,
+                region=None,
+                xmin=None, xmax=None, ymin=None, ymax=None,
+                hvar="rho", field_var=None,
+                do_resize=True):
     """
     Accepts cell data and returns 2D projected gas map.
 
@@ -577,14 +577,14 @@ def pp_cell_den(cell, info, lmax=None,
     """
     from draw import ppc
 
-    sig = 1.0
-    sigrange = sig * 2# what is sigrange?
+    #sig = 1.0
+    #sigrange = sig * 2# what is sigrange?
 
     if lmax == None:
         mindx = min(dx)
     else:
         mindx = 1/2**lmax
-        
+
     if verbose:
         print("mindx", mindx)
 
@@ -643,10 +643,10 @@ def pp_cell_den(cell, info, lmax=None,
     if yma0 is None:
         yma0 = max(y)
 
-    xl = x - cell['dx']*0.5*sigrange # array as long as x
-    xr = x + cell['dx']*0.5*sigrange
-    yl = y - cell['dx']*0.5*sigrange
-    yr = y + cell['dx']*0.5*sigrange
+    xl = x - cell['dx']#*0.5*sigrange # array as long as x
+    xr = x + cell['dx']#*0.5*sigrange
+    yl = y - cell['dx']#*0.5*sigrange
+    yr = y + cell['dx']#*0.5*sigrange
 
     maxdx = max(cell['dx'])
 
