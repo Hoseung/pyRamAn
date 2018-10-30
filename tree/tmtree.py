@@ -30,13 +30,15 @@ class Tree():
         NH Galaxy -> double == True
         """
         self.tree_fn = tree_fn
+        #self.double = False
 
         if double is not None:
-            self.double = dobule
+            self.double = double
         elif is_gal:
             self.double = True
         else:
             self.double = False
+
         self.fn = None
         self.tree = None
         self.fatherID = None

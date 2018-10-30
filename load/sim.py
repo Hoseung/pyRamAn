@@ -38,7 +38,6 @@ class Simbase():
         if cpus is None:
             cpus = self._hilbert_cpulist(self.info, self.ranges,
                                          amrheader=self.amr.header)
-
         if not self.cpu_fixed:
             self.cpus = np.array(cpus)
         # Lock, but only there is a valid list of cpus.

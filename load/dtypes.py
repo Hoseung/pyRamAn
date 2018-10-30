@@ -129,7 +129,7 @@ def get_halo_dtype(is_gal=False, double=False, read_mbp=False, new_fields=None):
                        ('g_rho', dtype_float, (100,))]
 
     if read_mbp:
-        dtype_halo += [('mbp', '<i4')]
+        dtype_halo += [('mbp', '<i8')]
 
     add_dtype = [("pos", dtype_float, (3,), "x", 0),
                  ("vel", dtype_float, (3,), "vx", 0),

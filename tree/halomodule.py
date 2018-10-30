@@ -104,7 +104,10 @@ class HaloMeta():
             if is_gal:
                 self.gal_find_dir = 'GalaxyMaker/gal/'
             else:
-                self.dm_find_dir= 'halo/DM/'
+                if self.read_mbp:
+                    self.dm_find_dir = 'halo/DM_mbp'
+                else:
+                    self.dm_find_dir= 'halo/DM/'
         else:
             if is_gal:
                 self.gal_find_dir = outdir

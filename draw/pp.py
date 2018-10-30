@@ -558,6 +558,10 @@ def pp_cell_den(cell, info, lmax=None,
 
     *position and dx must be in the same unit.
 
+    Parameters
+    ----------
+    hvar = {"rho", "temp", "metal}
+
     example
     -------
     >>> gas_map = pp_cell(gal.cell, 200, info)
@@ -584,7 +588,7 @@ def pp_cell_den(cell, info, lmax=None,
         mindx = min(dx)
     else:
         mindx = 1/2**lmax
-        
+
     if verbose:
         print("mindx", mindx)
 
@@ -758,6 +762,10 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
 
     *position and dx must be in the same unit.
 
+    Parameters
+    ----------
+    hvar = {"rho", "temp", "metal}
+
     example
     -------
     >>> gas_map = pp_cell(gal.cell, 200, info)
@@ -854,6 +862,8 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
 
     scale_d = info.unit_d
     scale_l = info.unit_l
+    length_to_cgs = s.info.unit_l / s.info.boxtokpc
+    # = kpc in cm = 3.08e21
     scale_nH = info.unit_nH
     scale_T2 = info.unit_T2
 
@@ -861,7 +871,8 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
 
 # No max, no column
     if column:
-        sden = cell[hvar][val]*dx*(scale_d*scale_l)*0.76/1.66e-24
+        # length in kpc unit!
+        sden = cell[hvar][val]*dx*(scale_d*length_to_cgs)*0.76/1.66e-24
     else:
         if field_var is None:
             if hvar == "rho":

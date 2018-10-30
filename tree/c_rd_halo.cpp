@@ -87,6 +87,9 @@ void load_data_gal(std::fstream& fin, Meta& haloinfo,  Data& halodata, int totha
         if(read_mbp>0)
       	{
       	  fortran_read_long(fin, halodata.imbp[i], 1);
+          if (i < 100){
+            std::cout<<halodata.imbp[i]<<std::endl;
+          }
       	}
         fortran_read_float(fin, halodata.mass[i], 1);
         fortran_read_float(fin, halodata.pos[i*3], 3);

@@ -232,6 +232,11 @@ def plot_radial(gg, nbins=50, rmax=25, xlog=False, ylog=True,
                 dpi=200)
     plt.close()
 
+    return dict(bins=bins,
+                star=h_st,
+                dm=h_dm,
+                cell=h_cell)
+
 
 def plot_bulge_disk(gg, bulge, disk, nbins=200, band="flux_u"):
     fig, axs = plt.subplots(3,2)
