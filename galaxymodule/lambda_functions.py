@@ -506,8 +506,6 @@ def mk_gal(galdata, halodata, info, star_all, cell_all, dm_all,
     return gal, good_gal
 
 
-
-
 def extract_dict_scalar(a):
     import collections
     d = dict()

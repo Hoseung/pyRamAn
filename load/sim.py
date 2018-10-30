@@ -11,28 +11,33 @@ class Simbase():
     """
     base
     """
-    def __init__(self, cosmo=True):
+    def __init__(self,
+                 cosmo=True,
+                 verbose=False):
         self.cosmo=cosmo
         self.ranges=None
         self.region=None
         self.nout=None
         self.cpu_fixed=False
         self.cpus=None
+        self.verbose=verbose
 
     def add_amr(self, load=False):
         from load.amr import Amr
-        self.amr = Amr(self.info, cpus=self.cpus, load=load)
-        print("An AMR instance is created\n", self.__class__.__name__)
-
-    def get_cpus(self):
-        return self.cpus
+        self.amr = Amr(info=self.info, cpus=self.cpus, load=load)
+        if self.verbose: print("An AMR instance is created\n", self.__class__.__name__)
 
     def unlock_cpus(self):
         self.cpu_fixed=False
 
     def set_cpus(self, cpus=None, lock=False):
+        """
+        Determine the list of CPUs for the range.
+        Requires self.range.
+        """
         if cpus is None:
-            cpus = self._hilbert_cpulist(self.info, self.ranges)
+            cpus = self._hilbert_cpulist(self.info, self.ranges,
+                                         amrheader=self.amr.header)
 
         if not self.cpu_fixed:
             self.cpus = np.array(cpus)
@@ -41,7 +46,7 @@ class Simbase():
             self.cpu_fixed = True
 
     def show_cpus(self):
-        print(" ncpus : %s \n" % self.get_cpus())
+        print(" ncpus : %s \n" % self.cpus)
 
     def set_ranges(self, ranges=[[0, 1], [0, 1], [0, 1]]):
         if ranges is not None:
@@ -62,8 +67,7 @@ class Simbase():
         else:
             self.ranges = None
 
-
-    def _hilbert_cpulist(self, info, ranges):
+    def _hilbert_cpulist(self, info, ranges, amrheader=None):
         """
         After determining cpus, read the cpu files and cut off data
         that are outside ranges.
@@ -71,22 +75,24 @@ class Simbase():
         BUT! they also contain other data points outside the ranges.
         """
         from load.a2c import a2c
-        if not(hasattr(self, 'amr')):
-            print("[sim._hilbert_cpulist] No AMR instance,")
-            print("[sim._hilbert_cpulist] Loading one...")
-            self.add_amr(load=False)# load only meta data
+        if amrheader is None:
+            if not(hasattr(self, 'amr')):
+                print("[sim._hilbert_cpulist] No AMR instance,")
+                print("[sim._hilbert_cpulist] Loading one...")
+                self.add_amr(load=False)# load only meta data
+            amrheader = self.amr.header
 
-        nlevelmax = self.amr.header.nlevelmax
-        nboundary = self.amr.header.nboundary
+        nlevelmax = amrheader.nlevelmax
+        nboundary = amrheader.nboundary
         ndim = self.info.ndim
         ncpu = self.info.ncpu_tot  #ncpu_tot
         # header of part output is needed (and is prepared.)
 
         # header of amr output is needed.
         two2ndim = 2**ndim
-        nx = self.amr.header.ng[0]
-        ny = self.amr.header.ng[1]
-        nz = self.amr.header.ng[2]
+        nx = amrheader.ng[0]
+        ny = amrheader.ng[1]
+        nz = amrheader.ng[2]
 
         xbound = [nx/2., ny/2., nz/2.]
         ngridfile = np.zeros(ncpu + nboundary, nlevelmax)
@@ -241,7 +247,6 @@ class Sim(Simbase):
             setup: bool, optional
             region: (region)dict, optional
 
-
         """
         super(Sim,self).__init__()
         # should call parent class' init.
@@ -263,12 +268,12 @@ class Sim(Simbase):
             self.region=None
 
         if setup:
-            self.setup(nout, base, data_dir, ranges, dmo)
+            self.setup(nout, base, ranges, dmo)
 
     def _all_set(self):
         return (self.nout is not None) & (self.base is not None)
 
-    def setup(self, nout=None, base='./', data_dir='snapshots/',
+    def setup(self, nout=None, base='./',
                  ranges=[[0.0,1.0],[0.0,1.0],[0.0,1.0]], dmo=False):
         self.nout = nout
         self.base = base
@@ -279,7 +284,7 @@ class Sim(Simbase):
         self.set_ranges(ranges)
 
         if self._all_set():
-            self.add_amr()
+            #self.add_amr()
             if self.ranges is not None:
                 self.set_cpus(self._hilbert_cpulist(self.info, self.ranges))
         print('Simulation set up.')
@@ -292,7 +297,6 @@ class Sim(Simbase):
     use @property macro like this.
 
     Here, _base is encapsulated.
-    This is desired because in this time we need to separate
     """
     @property
     def base(self):

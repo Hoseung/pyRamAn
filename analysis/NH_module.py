@@ -116,18 +116,31 @@ def plot_2d_simple_gas_maps(gg):
     cell_mass = gg.cell["rho"]*gg.cell["dx"]**3 * cell_to_msun
 
     # 2d maps
-    fig, axs = plt.subplots(2,2)
+    fig, axs = plt.subplots(3,3)
     axs = axs.ravel()
     rgal = gg.meta.reff * 5
     axs[0].hist2d(gg.star["x"], gg.star["y"], weights=gg.star["m"],
                   bins=100, range=[[-rgal,rgal]]*2, norm=LogNorm())
-    axs[1].hist2d(gg.dm["x"], gg.dm["y"], weights=gg.dm["m"],
+    axs[1].hist2d(gg.star["x"], gg.star["y"], weights=gg.star["m"],
                   bins=100, range=[[-rgal,rgal]]*2, norm=LogNorm())
-    axs[2].hist2d(gg.cell["x"], gg.cell["y"], weights=cell_mass,
+    axs[2].hist2d(gg.star["x"], gg.star["y"], weights=gg.star["m"],
+                  bins=100, range=[[-rgal,rgal]]*2, norm=LogNorm())
+    axs[3].hist2d(gg.dm["x"], gg.dm["y"], weights=gg.dm["m"],
+                  bins=100, range=[[-rgal,rgal]]*2, norm=LogNorm())
+    axs[4].hist2d(gg.dm["x"], gg.dm["y"], weights=gg.dm["m"],
+                  bins=100, range=[[-rgal,rgal]]*2, norm=LogNorm())
+    axs[5].hist2d(gg.dm["x"], gg.dm["y"], weights=gg.dm["m"],
+                  bins=100, range=[[-rgal,rgal]]*2, norm=LogNorm())
+    axs[6].hist2d(gg.cell["x"], gg.cell["y"], weights=cell_mass,
+                  bins=100, range=[[-rgal,rgal]]*2, norm=LogNorm(), vmin=1e4)
+    axs[7].hist2d(gg.cell["x"], gg.cell["y"], weights=cell_mass,
+                  bins=100, range=[[-rgal,rgal]]*2, norm=LogNorm(), vmin=1e4)
+    axs[8].hist2d(gg.cell["x"], gg.cell["y"], weights=cell_mass,
                   bins=100, range=[[-rgal,rgal]]*2, norm=LogNorm(), vmin=1e4)
     for ax in axs:
         ax.set_aspect("equal")
     plt.savefig("{}_{}_gas.png".format(gg.nout, gg.meta.id), dpi=200)
+    plt.close()
 
 
 def plot_radial(gg, nbins=50, rmax=25, xlog=False, ylog=True,
@@ -155,6 +168,9 @@ def plot_radial(gg, nbins=50, rmax=25, xlog=False, ylog=True,
     if surface_density:
         two_pi_r_dr = 2 * np.pi * bin_centers * bin_widths
         h_st /= two_pi_r_dr
+    else:
+        four_third_pi_r_r_dr = 4/3 * np.pi * (bin_centers**2 - (bin_centers - bin_widths)**2)
+        h_st /= four_third_pi_r_r_dr
     ax.plot(bins[1:], h_st, label="star")
 
     if hasattr(gg, "dm") and gg.dm is not None:
@@ -164,8 +180,9 @@ def plot_radial(gg, nbins=50, rmax=25, xlog=False, ylog=True,
         h_dm, bin_dm = np.histogram(dist_dm[isort_dist_dm],  bins=bins,
                                     weights=gg.dm["m"][isort_dist_dm])
         if surface_density:
-            two_pi_r_dr = 2 * np.pi * bin_centers * bin_widths
             h_dm /= two_pi_r_dr
+        else:
+            h_dm /= four_third_pi_r_r_dr
         ax.plot(bins[1:], h_dm, label="dm")
 
     if hasattr(gg, "cell") and gg.cell is not None:
@@ -176,15 +193,14 @@ def plot_radial(gg, nbins=50, rmax=25, xlog=False, ylog=True,
                  weights=gg.cell["rho"][isort_dist_cell]*
                          gg.cell["dx"][isort_dist_cell]**3 * cell_to_msun)
         if surface_density:
-            two_pi_r_dr = 2 * np.pi * bin_centers * bin_widths
             h_cell /= two_pi_r_dr
+        else:
+            h_cell /= four_third_pi_r_r_dr
+
         ax.plot(bins[1:], h_cell, label="gas")
 
     # all
     h_all = h_st + h_dm + h_cell
-    if surface_density:
-        two_pi_r_dr = 2 * np.pi * bin_centers * bin_widths
-        h_all /= two_pi_r_dr
     ax.plot(bins[1:], h_all,
             label="all")
 
@@ -197,18 +213,24 @@ def plot_radial(gg, nbins=50, rmax=25, xlog=False, ylog=True,
     if ylog:
         ax.set_yscale("log")
         if surface_density:
-            ax.set_ylim([1e4,1e10])
+            ax.set_ylim([5e5,5e10])
         else:
-            ax.set_ylim([1e7,1e11])
+            ax.set_ylim([5e5,5e10])
     else:
-        ax.set_ylim([0,1e11])
+        ax.set_ylim([1e8,1e10])
     if surface_density:
         ylabel = r"$\Sigma \, [M_{\odot}/kpc^2]$"
     else:
-        ylabel = r"$M_{\odot}$"
+        ylabel = r"$M_{\odot} kpc^{-3}$"
     ax.set_xlabel("kpc")
     ax.set_ylabel(ylabel)
-    plt.savefig("{}_{}_comp_profile.png".format(gg.nout, gg.meta.id), dpi=200)
+    if surface_density:
+        fig_type = "surface density"
+    else:
+        fig_type = "density"
+    plt.savefig("{}_{}_comp_{}_profile.png".format(gg.nout, gg.meta.id, fig_type),
+                dpi=200)
+    plt.close()
 
 
 def plot_bulge_disk(gg, bulge, disk, nbins=200, band="flux_u"):
@@ -235,17 +257,17 @@ def plot_bulge_disk(gg, bulge, disk, nbins=200, band="flux_u"):
     fig.suptitle("B/T (0.5) = {:.2f}".format(np.sum(bulge["m"])/np.sum(gg.star["m"])))
     plt.savefig("{}_{}_xyz_{}-band.png".format(gg.nout, gg.meta.id, band),
                 dpi=200)
-
+    plt.close()
 
 def plot_rot_map(gg):
     """
-    Make a rotation parameter with 4 panels.
+    Make a rotation parameter plot with 4 panels.
     """
     import matplotlib.pyplot as plt
     from matplotlib.colors import LogNorm
 
     npix_reff = gg.params.vmap_sigmap["npix_per_reff"]
-    rscale=gg.meta.rscale_lambda
+    rscale=gg.params.vmap_sigmap["rscale"]
     fig,axs = plt.subplots(2,2)
     im = axs[0,0].imshow(gg.mmap, norm=LogNorm())
     fig.colorbar(im,ax=axs[0,0])
@@ -259,7 +281,7 @@ def plot_rot_map(gg):
     n_lam_points = len(gg.meta.lambda_result_list[0])
     axs[1,1].plot(np.arange(n_lam_points)/npix_reff,
                   gg.meta.lambda_result_list[0])
-    axs[1,1].set_title("Stellar density")
+    axs[1,1].set_title(r"$\lambda_{<r}$")
 
     ticks = npix_reff * np.arange(0, 2*(rscale+1)+1, 2)
     axs[0,0].set_xticks(ticks)
@@ -297,7 +319,7 @@ def plot_rot_map(gg):
     fig.suptitle("ID {},  z={:.1f}".format(gg.meta.id, gg.info.zred))
     plt.tight_layout()
     plt.savefig("lam_map_{}_{}_lum.png".format(gg.nout, gg.meta.id), dpi=200)
-    #plt.close()
+    plt.close()
 
 
 def add_output_containers(gg):
@@ -309,3 +331,71 @@ def add_output_containers(gg):
     gg.meta.gas_results={"gas_results":None, "mgas_tot":None,
                          "mgas_cold":None, "Ln_gas":None}
     gg.meta.vsig_results={"Vmax":None, "sigma":None, "V_sig":None}
+
+
+def get_j_profile(gg, binwidth="reff"):
+    """
+    Caculate the specific angular momentum profile of each component up to
+    Rgal (which is determined by measuring the surface brightness of stars)
+    in bins with a width of Reff.
+    """
+    from collections import namedtuple
+
+    if binwidth=="reff":
+        binwidth = gg.meta.reff
+    mod = gg.meta.rgal//binwidth
+    bins = np.arange(mod+2)*binwidth
+
+    _, j_spec_s_pro, m_prof_s = cal_j_profile(gg.star, bins=bins)
+    _, j_spec_d_pro, m_prof_d = cal_j_profile(gg.star[gg.star["ellip"] > gg.params.decompose["e_disk"][0]], bins=bins)
+    _, j_spec_b_pro, m_prof_b = cal_j_profile(gg.star[gg.star["ellip"] < gg.params.decompose["e_bulge"][1]], bins=bins)
+    _, j_spec_g_pro, m_prof_g = cal_j_profile(gg.cell, info=gg.info, bins=bins)
+    _, j_spec_dm_pro, m_prof_dm = cal_j_profile(gg.dm, bins=bins)
+
+    Prof = namedtuple("profile", ["bins",
+                                  "M_s", "M_d", "M_b", "M_dm", "M_g",
+                                 "j_s", "j_d", "j_b", "j_dm", "j_g"])
+    #Massj = namedtuple("")
+    gg.profile = Prof(bins, m_prof_s, m_prof_d, m_prof_b, m_prof_dm, m_prof_g,
+                   j_spec_s_pro, j_spec_d_pro, j_spec_b_pro, j_spec_dm_pro, j_spec_g_pro)
+
+    gg.meta.MJ = {"j_s":j_spec_s_pro[-1],
+                  "j_profile_s":j_spec_s_pro,
+                  "j_b" :j_spec_b_pro[-1],
+                  "j_profile_b":j_spec_b_pro,
+                  "j_g" :j_spec_g_pro[-1],
+                  "j_profile_g":j_spec_g_pro,
+                  "j_d" :j_spec_d_pro[-1],
+                  "j_profile_d":j_spec_d_pro,
+                  "j_dm":j_spec_dm_pro[-1],
+                  "j_profile_dm":j_spec_dm_pro}
+
+
+def cal_j_profile(species, info=None, bins=10):
+    """
+    Calculate specific angular momentum profiles in bins.
+    Returns cumulative j profile (for r' < r), and mass profile in each shell.
+    """
+    from scipy.stats import binned_statistic
+
+    dist = np.sqrt(np.einsum("...i,...i",species["pos"],species["pos"]))
+    RV = np.cross(species["pos"], species["vel"])
+
+    try:
+        cell_to_msun = info.unit_d/info.msun_in_g * info.kpc_in_cm**3
+        mm = species["rho"] * species["dx"]**3 * cell_to_msun
+    except:
+        mm = species["m"]
+
+    jj_tot = mm * np.sqrt(np.einsum("...i,...i",RV,RV))
+
+    RVx_profile = binned_statistic(dist, RV[:,0]*mm, 'sum', bins=bins)[0]
+    RVy_profile = binned_statistic(dist, RV[:,1]*mm, 'sum', bins=bins)[0]
+    RVz_profile = binned_statistic(dist, RV[:,2]*mm, 'sum', bins=bins)[0]
+    mm_profile, bin_edges, _ = binned_statistic(dist, mm, 'sum', bins=bins)
+
+    jj_cum_profile = np.sqrt(np.square(np.cumsum(RVx_profile)) +
+                             np.square(np.cumsum(RVy_profile)) +
+                             np.square(np.cumsum(RVz_profile))) / np.cumsum(mm_profile)
+
+    return bin_edges, jj_cum_profile, mm_profile

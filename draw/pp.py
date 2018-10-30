@@ -545,144 +545,18 @@ def resize_deprecated(X,shape=None):
     return Y
 
 
-def pp_colden(cell, npix, info, proj="z", verbose=False, autosize=False):
-    """
-    Warning
-    -------
-    incomplete.
-    column density is simpler (no need to divide by projected mass.)
-    """
-#    xh = np.asarray([0.5, 0.5, 0.5])
-    hvar = 1
-    sig = 1.0
-    sigrange = sig * 2# what is sigrange?
-
-    x = cell.x
-    y = cell.y
-#    z = cell.z
-#    di = [0, 1]  # What is this?
-#    zh = xh[2]  # what is this?
-
-    # range
-    xmi0 = min(x)
-    xma0 = max(x)
-    ymi0 = min(y)
-    yma0 = max(y)
-
-    xl = x - cell.dx/2*sigrange # array as long as x
-    xr = x + cell.dx/2*sigrange
-    yl = y - cell.dx/2*sigrange
-    yr = y + cell.dx/2*sigrange
-
-    maxdx = max(cell.dx)
-
-# Assuming no slice.
-    tol = maxdx #
-    val= np.where((xr >= xmi0-tol) & (xl <= xma0+tol) &
-                  (yr >= ymi0-tol) & (yl <= yma0+tol))[0]
-
-# Check for valid cell existing.
-    if len(val) == 0:
-        print("No cell is selected")
-        return False
-
-    scale_d = info.unit_d
-    scale_l = info.unit_l
-#    scale_nH = info.unit_nH
-    scale_T2 = info.unit_T2
-
-    dx = cell.dx[val]
-
-# No max, no column
-    # mass/L**2 = rho*L
-    # sden differs with hydro variable type.
-    if hvar == 1:
-        sden = cell.var0[val]*dx*(scale_d*scale_l)*0.76/1.66e-24
-        #sden = cell.var0[val]**2*dx*scale_nH
-    if hvar == 5:
-        sden = cell.var4[val]*scale_T2
-    if hvar == 6:
-        sden = cell.var0[val]*dx*cell.var5[val]/0.02
-#    mass = cell.var0[val]*dx
-
-    mindx = min(dx)
-
-    xmi = np.floor(xmi0/mindx)*mindx
-    xma = np.ceil(xma0/mindx)*mindx
-    nx = np.round((xma-xmi-mindx)/mindx)
-
-    ymi = np.floor(ymi0/mindx)*mindx
-    yma = ymi + mindx*nx + mindx
-    ny = np.round((yma-ymi-mindx)/mindx)
-
-    if verbose:
-        print(" ... working resolution % npix ", nx, ny)
-        print(" ... given npix:", npix)
-
-    # adjust npix (IDL Line 173)
-
-    dx_dot = (xma0-xmi0)/npix
-#    lv_skip = np.floor(-1. * np.log10(dx_dot)/np.log10(2)) - 1
-    # Assum no smoothing.
-
-    ixmi = round(xmi/mindx)
-    iymi = round(ymi/mindx)
-
-    xl   = xl[val]
-    xr   = xr[val]
-    yl   = yl[val]
-    yr   = yr[val]
-
-    ixl = np.round(xl / mindx) - ixmi
-    ixr = np.round(xr / mindx) - ixmi -1
-    iyl = np.round(yl / mindx) - iymi
-    iyr = np.round(yr / mindx) - iymi -1
-
-    """
-    fd = np.where(ixl < 0)[0]
-    if len(fd) > 0:
-        ixl[fd] = 0
-    fd = np.where(ixr > nx - 1)[0]
-    if len(fd) > 0:
-        ixr[fd] = nx -1
-        fd = np.where(ixl < 0)[0]
-    if len(fd) > 0:
-        ixl[fd] = 0
-    fd = np.where(ixl < 0)[0]
-    if len(fd) > 0:
-        ixl[fd] = 0
-    """
-    ixl[ixl < 0] = 0
-    ixr[ixr > nx -1] = nx -1
-    iyl[iyl < 0] = 0
-    iyr[iyr > ny - 1] = ny -1
-
-    fd = np.where((ixl >= 0) & (ixr >=0) & (ixl > ixr))[0]
-    if len(fd):
-        ixr[fd] = ixl[fd]
-    fd = np.where((iyl >= 0) & (iyr >=0) & (iyl > iyr))[0]
-    if len(fd):
-        iyr[fd] = iyl[fd]
-
-#    mass.transpose()
-    sden.transpose()
-#    print("shape of sden", sden.shape)
-#    finalmap = ppc.col_over_denom(iin, ixl, ixr, iyl, iyr, mass, sden, nx, ny)
-
-    # original size != npix * npix.
-    # rescale it to npix * npix image.
-    return(resize(sden.reshape(npix,npix), [npix,npix]))
-
-
-def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
+def pp_cell_den(cell, info, lmax=None,
+                proj="z", verbose=False, autosize=False,
             column=False,
+            ranges=None,
             region=None,
             xmin=None, xmax=None, ymin=None, ymax=None,
             hvar="rho", field_var=None,
             do_resize=True):
     """
     Accepts cell data and returns 2D projected gas map.
-     *position and dx must be in the same unit.
+
+    *position and dx must be in the same unit.
 
     example
     -------
@@ -696,7 +570,6 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
     -> cells only inside the region are taken into account.
        *It's a cubic region, not a sphere.
 
-
     Note
     ----
     To do: Currently only column sum is supported. maximum value along the column, or column average option are needed.
@@ -706,6 +579,15 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
 
     sig = 1.0
     sigrange = sig * 2# what is sigrange?
+
+    if lmax == None:
+        mindx = min(dx)
+    else:
+        mindx = 1/2**lmax
+        
+    if verbose:
+        print("mindx", mindx)
+
 
     if proj=="z":
         dim1 = "x"
@@ -735,6 +617,12 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
     y = cell[dim2]
 #    di = [0, 1]  # What is this?
 #    zh = xh[2]  # what is this?
+    try:
+        xmin, xmax = ranges[0]
+        ymin, ymax = ranges[1]
+    except:
+        pass
+
     xmi0 = xmin
     xma0 = xmax
     ymi0 = ymin
@@ -781,9 +669,197 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
     dx = cell["dx"][val]
 
 # No max, no column
-    # mass/L**2 = rho*L
-    # sden differs with hydro variable type.
+    if column:
+        sden = cell[hvar][val]*dx*(scale_d*scale_l)*0.76/1.66e-24
+    else:
+        if field_var is None:
+            if hvar == "rho":
+                hvar = "var0"
+                sden = cell[hvar][val]**2*dx*scale_nH
+            if hvar == "temp":
+                sden = cell["var4"][val]*dx*scale_T2#/cell["var0"][val]
+            if hvar == "metal":
+                sden = cell["var5"][val]*dx*cell["var0"][val]/0.02
+        else:
+            sden = cell[field_var][val]
 
+    mass = cell["var0"][val]*dx
+    mass.transpose()
+
+    xmi = np.floor(xmi0/mindx)*mindx
+    xma = np.ceil(xma0/mindx)*mindx
+    nx = np.round((xma-xmi-mindx)/mindx).astype(np.int32)
+
+    ymi = np.floor(ymi0/mindx)*mindx
+    yma = np.ceil(yma0/mindx)*mindx#ymi + mindx*nx + mindx
+    ny = np.round((yma-ymi-mindx)/mindx).astype(np.int32)
+
+    #nx=ny=max([nx,ny])
+    if verbose:
+        print(" ... working resolution % npix ", nx, ny)
+
+    #dx_dot = (xma0-xmi0)/
+#    lv_skip = np.floor(-1. * np.log10(dx_dot)/np.log10(2)) - 1
+    # Assum no smoothing.
+    ixmi = np.round(xmi/mindx).astype(np.int32) # int
+    iymi = np.round(ymi/mindx).astype(np.int32)
+
+    xl   = xl[val]
+    xr   = xr[val]
+    yl   = yl[val]
+    yr   = yr[val]
+
+    ixl = np.round(xl / mindx).astype(np.int32) - ixmi
+    ixr = np.round(xr / mindx).astype(np.int32) - ixmi -1
+    iyl = np.round(yl / mindx).astype(np.int32) - iymi
+    iyr = np.round(yr / mindx).astype(np.int32) - iymi -1
+    iin = np.where((ixr >= 0) * (ixl <= nx-1) * (iyr >= 0) * (iyl <= ny-1))[0].astype(np.int32)
+    #print(len(iin))
+    # What does it mean?
+
+    fd = ixl < 0
+    if len(fd) > 0:
+        ixl[fd] = 0
+    fd = ixr > nx - 1
+    if len(fd) > 0:
+        ixr[fd] = nx -1
+        fd = ixl < 0
+    if len(fd) > 0:
+        ixl[fd] = 0
+    fd = ixl < 0
+    if len(fd) > 0:
+        ixl[fd] = 0
+
+    ixl[ixl < 0] = 0
+    ixr[ixr > nx -1] = nx -1
+    iyl[iyl < 0] = 0
+    iyr[iyr > ny - 1] = ny -1
+
+    fd = np.where((ixl >= 0) & (ixr >=0) & (ixl > ixr))[0]
+    if len(fd):
+        ixr[fd] = ixl[fd]
+    fd = np.where((iyl >= 0) & (iyr >=0) & (iyl > iyr))[0]
+    if len(fd):
+        iyr[fd] = iyl[fd]
+
+#    sden.transpose()
+    return ppc.col_over_denom(iin, ixl, ixr, iyl, iyr, mass, sden, nx, ny, column)
+
+
+def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
+            column=False,
+            ranges=None,
+            region=None,
+            xmin=None, xmax=None, ymin=None, ymax=None,
+            hvar="rho", field_var=None,
+            do_resize=True):
+    """
+    Accepts cell data and returns 2D projected gas map.
+
+    *position and dx must be in the same unit.
+
+    example
+    -------
+    >>> gas_map = pp_cell(gal.cell, 200, info)
+    >>> plt.imshow(gas_map, origin="lower")
+    >>> plt.show()
+    -> Without range or region, all cells are taken.
+
+    >>> region = smp.set_region(centers=[0.,0.,0.], radius=gal.region['radius'])
+    >>> gas_map = pp_cell(gal.cell, 200, info, region=region)
+    -> cells only inside the region are taken into account.
+       *It's a cubic region, not a sphere.
+
+    Note
+    ----
+    To do: Currently only column sum is supported. maximum value along the column, or column average option are needed.
+
+    """
+    from draw import ppc
+
+    sig = 1.0
+    sigrange = sig * 2# what is sigrange?
+
+    if proj=="z":
+        dim1 = "x"
+        dim1r = "xr"
+        dim2 = "y"
+        dim2r = "yr"
+        dim2_rev = 1
+
+    elif proj == "y":
+        dim1 = "x"
+        dim1r = "xr"
+        dim2 = "z"
+        dim2r = "zr"
+        dim1_rev = 1
+        dim2_rev = -1
+
+    elif proj == "x":
+        dim1 = "z"
+        dim1r = "zr"
+        dim2 = "y"
+        dim2r = "yr"
+        dim1_rev = -1
+        dim2_rev = 1
+        # apply reverse in imshow stage.
+
+    x = cell[dim1]
+    y = cell[dim2]
+#    di = [0, 1]  # What is this?
+#    zh = xh[2]  # what is this?
+    try:
+        xmin, xmax = ranges[0]
+        ymin, ymax = ranges[1]
+    except:
+        pass
+
+    xmi0 = xmin
+    xma0 = xmax
+    ymi0 = ymin
+    yma0 = ymax
+
+    if (xmin is None) & (xmax is None) & (ymin is None) & (ymax is None):
+        if region is not None:
+            xmi0, xma0 = getattr(egion,dim1r)#[0], region[dim1r][1]
+            ymi0, yma0 = getattr(egion,dim2r)#region[dim2r][0], region[dim2r][1]
+        else:
+            xmi0, xma0, ymi0, yma0 = min(x), max(x), min(y), max(y)
+    if xmi0 is None:
+        xmi0 = min(x)
+    if xma0 is None:
+        xma0 = max(x)
+    if ymi0 is None:
+        ymi0 = min(y)
+    if yma0 is None:
+        yma0 = max(y)
+
+    xl = x - cell['dx']*0.5*sigrange # array as long as x
+    xr = x + cell['dx']*0.5*sigrange
+    yl = y - cell['dx']*0.5*sigrange
+    yr = y + cell['dx']*0.5*sigrange
+
+    maxdx = max(cell['dx'])
+
+# Assuming no slice.
+    tol = maxdx #
+    #print("maxdx", tol)
+    val = np.where((xr >= xmi0-tol) & (xl <= xma0+tol) &
+                   (yr >= ymi0-tol) & (yl <= yma0+tol))[0]
+
+# Check for valid cell existing.
+    if len(val) == 0:
+        print("No cell is selected")
+        return False
+
+    scale_d = info.unit_d
+    scale_l = info.unit_l
+    scale_nH = info.unit_nH
+    scale_T2 = info.unit_T2
+
+    dx = cell["dx"][val]
+
+# No max, no column
     if column:
         sden = cell[hvar][val]*dx*(scale_d*scale_l)*0.76/1.66e-24
     else:
@@ -866,7 +942,6 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
 #    sden.transpose()
 #    colden = np.zeros((nx,ny), dtype=np.float32)
 #    denom =  np.zeros((nx,ny), dtype=np.float32)
-
     if verbose:
         print("dimensions of \n mass = {}, \n sden = {}, and nx, ny are {}, {}".format(\
         mass.shape, sden.shape, nx, ny))
@@ -876,13 +951,12 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
 
     # if ppc.col_over_denom throw an type missmatch error,
     # compile the ppc module locally once more.
-    if do_resize:
-        return resize(ppc.col_over_denom(iin,
-                ixl, ixr, iyl, iyr,
-                mass, sden,
-                nx, ny, column), [npix,npix])
-    else:
-        return ppc.col_over_denom(iin,
-            ixl, ixr, iyl, iyr,
-            mass, sden,
-            nx, ny, column)
+    #if do_resize:
+    #    return np.transpose(resize(
+    return ppc.col_over_denom(iin, ixl, ixr, iyl, iyr, mass, sden, nx, ny, column)#, [npix,npix]))
+    #else:
+        #return np.transpose(
+	#	return ppc.col_over_denom(iin,
+    #        ixl, ixr, iyl, iyr,
+    #        mass, sden,
+    #        nx, ny, column)

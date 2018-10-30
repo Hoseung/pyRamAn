@@ -136,7 +136,7 @@ class Simplemock():
         nmetals = len(relevant_metals)
 
         # Star Age
-        starage = star["time"]
+        starage = star["age"] # the field name "time" should have been changed to "age"
 
         locate_age = np.digitize(starage, self.age_points)-1 # GOOD
         relevant_ages = self.age_points[:max(locate_age)+2]

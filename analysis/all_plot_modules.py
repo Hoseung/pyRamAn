@@ -156,35 +156,24 @@ def kde_sci(mpgs
     l_dlo_g = np.array(l_dlo_g)
     l_dlM_g = np.array(l_dlM_g)
     l_dlm_g = np.array(l_dlm_g)
-    #l_mass_g = np.array(l_mass_g)
 
     s_dlt_g = np.array(s_dlt_g)
     s_dlo_g = np.array(s_dlo_g)
     s_dlM_g = np.array(s_dlM_g)
     s_dlm_g = np.array(s_dlm_g)
-    #s_mass_g = np.array(s_mass_g)
 
     # detected
     l_dlM_g = l_dlM_g [l_dlM_g !=0]
-    #l_dlM_M = l_mass_g[l_dlM_g !=0]
     l_dlm_g = l_dlm_g [l_dlm_g !=0]
-    #l_dlm_M = l_mass_g[l_dlm_g !=0]
-    #l_dlo_M = l_mass_g
 
     s_dlM_g = s_dlM_g [s_dlM_g !=0]
-    #s_dlM_M = s_mass_g[s_dlM_g !=0]
     s_dlm_g = s_dlm_g [s_dlm_g !=0]
-    #s_dlm_M = s_mass_g[s_dlm_g !=0]
-    #s_dlo_M = s_mass_g
-
 
     l_dl_e = np.array(l_dl_e)
     l_mr_e = np.array(l_mr_e)
-    #l_mass_e = []
 
     s_dl_e = np.array(s_dl_e)
     s_mr_e = np.array(s_mr_e)
-    #s_mass_e = []
 
     fig, axs = plt.subplots(3, sharex=True)
     fig.set_size_inches(4.75,7)
@@ -278,11 +267,6 @@ def kde_sci(mpgs
     plt.close()
 
 
-
-# In[ ]:
-
-
-
 # 2. Lambda Vs. Ellipticity
 def plot_density_map(axmain, x, y, xmin, xmax, ymin, ymax,
                     levels=None, color=True, cmap="winter",
@@ -364,12 +348,7 @@ def do_plot(x,y, obsdata,
     img_size_single_column =2.25 * img_scale
 
     from matplotlib import rc, font_manager
-#    fontProperties = {'family':'Liberation Sans',
-#                      'weight' : 'normal', 'size' : sizeOfFont}
-#    ticks_font = font_manager.FontProperties(family='Liberation Sans', style='normal',
-#                   size=sizeOfFont, weight='normal', stretch='normal')
-#    rc('text', usetex=True)
-#    rc('font',**fontProperties)
+
     ticks_font = None
 
     xmin = ymin = -0.05
@@ -402,8 +381,6 @@ def do_plot(x,y, obsdata,
     axmain.plot(sr_line_xx, sr_line_yy, '--', lw=1, color='black')
 
     # Draw main density map
-
-
     if surf:
         fname_vs_e = fname_vs_e + "_srf"
     elif contour_label:
@@ -442,8 +419,6 @@ def do_plot(x,y, obsdata,
                             surf=False,
                             d_alpha=d_alpha)
     # My data
-
-
     if contour_label:
         axmain.clabel(cfset, inline=1, fontsize=7)
 
@@ -477,15 +452,9 @@ def do_plot(x,y, obsdata,
                       labelspacing=1.2,
                       fontsize=fontsize_legend)
 
-
     plt.savefig(fname_vs_e + ".pdf", bbox_inches='tight')
     plt.savefig(fname_vs_e + ".png", bbox_inches='tight', dpi=200)
     axmain.set_title(title)
-    #plt.savefig(fname_vs_e + ".svg", bbox_inches='tight')
-    #plt.savefig(fname_vs_e + ".eps", bbox_inches='tight')
-
-    #plt.show()
-
     plt.close()
 
 def truncate_colormap(cmap_name, minval=0.0, maxval=1.0, n=100):
@@ -499,16 +468,12 @@ def truncate_colormap(cmap_name, minval=0.0, maxval=1.0, n=100):
         cmap(np.linspace(minval, maxval, n)))
     return new_cmap
 
-
-
-
 # 3. Lambda evolution
-
 
 from astropy.cosmology import WMAP7, z_at_value
 
-class Merger():
-    pass
+#class Merger():
+#    pass
 
 def aexp2zred(aexp):
     return [1.0/a - 1.0 for a in aexp]
@@ -607,8 +572,6 @@ def modify_ticks2(zreds, aexps, ax2, nout_ini, nout_fi):
     ax2.set_xlabel("Age of the universe (Gyr)", family="Liberation Sans")
 
 
-
-
 def plot_lambda_evol3(mpgs, fig, axs, nout_ini, nout_fi,
                      wdir_info='./',
                      density = "none",
@@ -683,15 +646,6 @@ def plot_lambda_evol3(mpgs, fig, axs, nout_ini, nout_fi,
 
         for ax in axs:
             ax.scatter(xx, yy, c=z, s=50, edgecolor='', cmap=cmap, rasterized=True)
-#            yticks_ok=[0.0, 0.2, 0.4, 0.6, 0.8]
-#            ax.set_ylim([-0.05, 0.9])
-#            ax.set_yticks([0.0, 0.2, 0.4, 0.6, 0.8])
-#            ax.set_yticklabels([str(yy) for yy in yticks_ok])
-#            ax.set_ylabel(r"$\lambda_{R_{eff}}$", fontsize=fontsize_tick_label, family="Liberation Sans")
-#            ax.tick_params(axis='both', which='major', labelsize=fontsize_ticks)
-
-#    axs[2].tick_params(axis='x', which='major', labelsize=fontsize_ticks)
-
 
     return zreds, aexps
 
@@ -969,8 +923,6 @@ def plot_major(twogals, ax,
             if gg.merger is not None:
                 for nouti, nout, mr in zip(gg.merger.nout_ini, gg.merger.nout, gg.merger.mr):
                     if mr < 4:
-                    #im.axes.axvline(nouti - nout_ini, linestyle=':')
-                    #im.axes.axvline(nout - nout_ini, linestyle=':')
                         ypos_annotate = gg.smoothed_lambda[gg.nouts == nout] + 0.05
                         ax.plot([nout-nout_ini, nout-nout_ini],
                                      [loc[igal], ypos_annotate - 0.1 + loc[igal] * 0.1/0.75],
