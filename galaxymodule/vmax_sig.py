@@ -48,7 +48,6 @@ def get_vmax_sig(gal,
     f_a = np.tan(fit["pa_rad"])
     f_b = -1
     f_c = fit["ycen"] - f_a*fit["xcen"]
-
     distance_to_line = np.abs(f_a*xinds + f_b*yinds + f_c)/np.sqrt(f_a**2 + f_b**2)
     i_ok = np.where(distance_to_line < 1)[0]
 
