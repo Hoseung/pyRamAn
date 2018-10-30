@@ -30,7 +30,8 @@ def gen_vmap_sigmap(self,
                     voronoi=None,
                     verbose=False,
                     plot_map=False,
-                    weight="m"):
+                    weight="m",
+                    p1="x", p2="y", p3="z", v1="vx", v2="vy", v3="vz"):
     """
     generates mass, velocity, sigma map from stellar particles.
     npix = (npix_per_reff * 2 * (rsacle + 1))
@@ -84,17 +85,17 @@ def gen_vmap_sigmap(self,
     # give a cylindrical cut, not spherical cut.
     # Cappellari 2002 assumes Cylindrical velocity ellipsoid.
     # particles inside 4Reff.
-    ind = (np.square(self.star['x']) + \
-           np.square(self.star['y'])) < np.square(reff * (rscale + 1))
+    ind = (np.square(self.star[p1]) + \
+           np.square(self.star[p2])) < np.square(reff * (rscale + 1))
 
     n_frac = sum(ind)/self.meta.nstar*100.0
     if verbose :
         print("{:.2f}% of stellar particles selected".format(n_frac))
     if n_frac < 10:
         print("Too few stars are selected...")
-        print("min max x", min(self.star['x']), max(self.star['x']))
-        print("min max y", min(self.star['y']), max(self.star['y']))
-        print("min max z", min(self.star['z']), max(self.star['z']))
+        print("min max x", min(self.star[p1]), max(self.star[p1]))
+        print("min max y", min(self.star[p2]), max(self.star[p2]))
+        print("min max z", min(self.star[p3]), max(self.star[p3]))
         print("# star", len(ind))
         return [-1,-1,-1], [-1,-1,-1]
     # 100% means that the galaxy radius is smaller than 4Reff.
@@ -106,16 +107,16 @@ def gen_vmap_sigmap(self,
         # Todo
         # sig = 0.3kpc should scale with aexp.
         n_pseudo = max([round(1e6/self.meta.nstar), n_pseudo])
-        xstars, ystars, mm, vz = self._pseudo_particles(self.star['x'][ind],
-                                                  self.star['y'][ind],
+        xstars, ystars, mm, vz = self._pseudo_particles(self.star[p1][ind],
+                                                  self.star[p2][ind],
                                                   self.star[weight][ind],
-                                                  self.star['vz'][ind],
+                                                  self.star[v3][ind],
                                                   sig=0.3,
                                                   n_times=n_pseudo)
     else:
-        xstars = self.star['x'][ind]
-        ystars = self.star['y'][ind]
-        vz = self.star['vz'][ind]
+        xstars = self.star[p1][ind]
+        ystars = self.star[p2][ind]
+        vz = self.star[v3][ind]
         mm = self.star[weight][ind]
 
     if verbose: print(("\n" "Calculating rotation parameter using {} particles "

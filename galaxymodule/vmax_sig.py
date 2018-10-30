@@ -41,13 +41,11 @@ def get_vmax_sig(gal,
         sigmap = gal.sigmap
 
     ## Pixels on the major axis.
-
     # polynomial constants
     fit = gal.meta.mge_result_list[0]
     f_a = np.tan(fit["pa_rad"])
     f_b = -1
     f_c = fit["ycen"] - f_a*fit["xcen"]
-
     distance_to_line = np.abs(f_a*xinds + f_b*yinds + f_c)/np.sqrt(f_a**2 + f_b**2)
     i_ok = distance_to_line < 1
 
