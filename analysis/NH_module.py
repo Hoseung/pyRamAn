@@ -2,19 +2,35 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 
-
 msun_in_g = 1.989e33
 kpc_in_cm = 3.086e+21
-
 
 def load_components(gg, s, idlist=None,
                     load_dm=True,
                     load_cell=True,
                     load_raw=False,
-                    save_cell=False,
-                    verbose=False):
+                    save_cell=None,
+                    verbose=False,
+                    gas_radius=None):
     """
-
+    Parameters
+    ----------
+    gg : Galaxy instance
+    s  : Sim instance
+    idlist : member DM particle ID list
+        If present, member DM particles are determined accordingly.
+    load_dm :
+    load_cell :
+    load_raw : False
+        If True, read hydro cell from the raw data.
+        If False, load pickled cell.
+    save_cell : None
+        If True, pickle current cell data.
+        If load_raw is True, then save_cell is overidden to True.
+    gas_radius : None, [in code unit]
+        Specify the radisu of gas cell.
+        By default, all gas inside 1Rvir is considered,
+        but sometimes it is interesting to consider gas that are expelled out to ~3Rvir.
     """
     import pickle
     from utils import match as mtc
@@ -25,11 +41,11 @@ def load_components(gg, s, idlist=None,
     if load_dm or load_cell:
         reg = Region()
         reg.region_from_halo(gg.hcat)
-        s.set_ranges(reg.ranges)
     else:
         return
 
     if load_dm:
+        s.set_ranges(reg.ranges)
         s.add_part(ptypes=["dm id pos vel mass"])
         ind = mtc.match_list_ind(s.part.dm["id"], idlist, allow_swap=False)
         gg.dm = s.part.dm[ind]
@@ -48,46 +64,70 @@ def load_components(gg, s, idlist=None,
                 gg.cell = pickle.load(open(fn_cell, "rb"))
             except:
                 pass
-
         else:
-            rmin = 1e-5
-            if reg.radius < rmin:
-                reg.radius = rmin
-            s.set_ranges(reg.ranges)
+            if save_cell is not False:
+                save_cell = True
+
+            reg.radius = max([reg.radius, 1e-5])
+
+            if gas_radius is not None:
+                gas_reg = Region()
+                gas_reg.region_from_halo(gg.hcat)
+                gas_reg.radius = gas_radius
+                # Use region and update radius.
+
+            gg.gas_region = gas_reg # Note that gg.region is in kpc unit.
+            s.set_ranges(gg.gas_region.ranges)
             s.add_hydro(verbose=False, load=True, pure=False)
             kdtree = cKDTree(np.stack((s.hydro.cell["x"],
                                        s.hydro.cell["y"],
                                        s.hydro.cell["z"])).T)
-            get_cell(s.hydro.cell, kdtree, gg, s.info)
+            get_cell(s.hydro.cell, kdtree, gg, gas_radius=gas_radius)
             #print("Retrieving cells from sim.hydro")
             if len(gg.cell) > 1 and save_cell:
                 pickle.dump(gg.cell, open(fn_cell,"wb"))
 
 
-def ind_cell_kd(kdtree, gal, pboxsize, rscale=25.0):
+def ind_cell_kd(kdtree, gal, pboxsize, gas_radius="25Reff"):
     """
-    Extract cells within rscale * Rreff and add to the galaxy.
+    Extract cells within gas_radius and add to the galaxy.
+
+    Todo:
+    parsing part should appear earlier in load_components.
     """
     xc,yc,zc = gal.meta.xc, gal.meta.yc, gal.meta.zc
-    rgal = min([100, max([30, gal.meta.reff * rscale])]) / (pboxsize*1e3)
-    return kdtree.query_ball_point((xc,yc,zc), rgal)
+    if gas_radius is not None:
+        if isinstance(gas_radius, str):
+            if "Reff" in gas_radius:
+                rscale_reff = float(gas_radius.split("Reff")[0])
+                rgas = rscale_reff * gal.meta.reff
+            elif "kpc" in gas_radius:
+                rgas = float(gas_radius.split("kpc")[0])/pboxsize*1e3
+            elif "Mpc" in gas_radius:
+                rgas = float(gas_radius.split("Mpc")[0])/pboxsize
+        elif isinstance(gas_radius, (int, float)):
+            rgas = gas_radius
+    return kdtree.query_ball_point((xc,yc,zc), rgas)
 
 
-def get_cell(allcell, kdtree, gg, info):
+def get_cell(allcell, kdtree, gg, gas_radius="25Reff"):
+    """
+    It is non-trivial
+    """
     # Simple spherical cut.
-    gg.cell=allcell[ind_cell_kd(kdtree, gg, info.pboxsize)]
+    gg.cell=allcell[ind_cell_kd(kdtree,
+                                gg,
+                                gg.info.pboxsize,
+                                gas_radius=gas_radius)]
 
     if len(gg.cell) > 1:
-        #print(s.hydro.cell["x"].ptp())
-        # convert to kpc
-        #print("gg.center_code", gg.center_code)
-        gg.cell["x"] = (gg.cell["x"]-gg.center_code[0])*info.boxtokpc
-        gg.cell["y"] = (gg.cell["y"]-gg.center_code[1])*info.boxtokpc
-        gg.cell["z"] = (gg.cell["z"]-gg.center_code[2])*info.boxtokpc
-        gg.cell["vx"] = gg.cell["vx"]*info.kms
-        gg.cell["vy"] = gg.cell["vy"]*info.kms
-        gg.cell["vz"] = gg.cell["vz"]*info.kms
-        gg.cell["dx"] *= info.boxtokpc
+        gg.cell["x"] = (gg.cell["x"]-gg.center_code[0])*gg.info.boxtokpc
+        gg.cell["y"] = (gg.cell["y"]-gg.center_code[1])*gg.info.boxtokpc
+        gg.cell["z"] = (gg.cell["z"]-gg.center_code[2])*gg.info.boxtokpc
+        gg.cell["vx"] = gg.cell["vx"]*gg.info.kms
+        gg.cell["vy"] = gg.cell["vy"]*gg.info.kms
+        gg.cell["vz"] = gg.cell["vz"]*gg.info.kms
+        gg.cell["dx"] *= gg.info.boxtokpc
 
 def plot_2d_simple_maps(gg):
     fig, axs = plt.subplots(2,2)
@@ -142,6 +182,34 @@ def plot_2d_simple_gas_maps(gg):
     plt.savefig("{}_{}_gas.png".format(gg.nout, gg.meta.id), dpi=200)
     plt.close()
 
+def cal_radial(data, nbins=50, rmax=25,
+                surface_density=False,
+                cell_to_msun=None):
+    bins = np.linspace(0,rmax,50)
+
+    dist = np.sqrt(np.sum(np.square(data["pos"]), axis=1))
+    isort_dist = np.argsort(dist)
+
+    # star
+    try:
+        h, hbin = np.histogram(dist[isort_dist], bins=bins,
+                             weights=data["m"][isort_dist])
+    except:
+        assert cell_to_msun is not None, "Need cell_to_msun!"
+        h, hbin = np.histogram(dist[isort_dist],  bins=bins,
+                 weights=data["rho"][isort_dist]*
+                         data["dx"][isort_dist]**3 * cell_to_msun)
+
+    bin_centers = 0.5*(hbin[:-1] + hbin[1:])
+    bin_widths  = hbin[1:] - hbin[:-1]
+
+    if surface_density:
+        two_pi_r_dr = 2 * np.pi * bin_centers * bin_widths
+        h /= two_pi_r_dr
+    else:
+        four_third_pi_r_r_dr = 4/3 * np.pi * (bin_centers**2 - (bin_centers - bin_widths)**2)
+        h /= four_third_pi_r_r_dr
+    return hbin, h
 
 def plot_radial(gg, nbins=50, rmax=25, xlog=False, ylog=True,
                 surface_density=False):
@@ -151,51 +219,27 @@ def plot_radial(gg, nbins=50, rmax=25, xlog=False, ylog=True,
     surface_density : boolean
         If True, the radial profile is divided by r^2.
     """
-    cell_to_msun = gg.info.unit_d/msun_in_g * kpc_in_cm**3
-
     fig, ax = plt.subplots()
-    bins = np.linspace(0,rmax,50)
-
-    dist_star = np.sqrt(np.sum(np.square(gg.star["pos"]), axis=1))
-    isort_dist_star = np.argsort(dist_star)
-
-    # star
-    h_st, bin_st = np.histogram(dist_star[isort_dist_star], bins=bins,
-                         weights=gg.star["m"][isort_dist_star])
-    bin_centers = 0.5*(bin_st[:-1] + bin_st[1:])
-    bin_widths  = bin_st[1:] - bin_st[:-1]
-
-    if surface_density:
-        two_pi_r_dr = 2 * np.pi * bin_centers * bin_widths
-        h_st /= two_pi_r_dr
-    else:
-        four_third_pi_r_r_dr = 4/3 * np.pi * (bin_centers**2 - (bin_centers - bin_widths)**2)
-        h_st /= four_third_pi_r_r_dr
+    bins, h_st = cal_radial(gg.star,
+                             nbins=50,
+                             rmax=25,
+                             surface_density=surface_density)
     ax.plot(bins[1:], h_st, label="star")
 
     if hasattr(gg, "dm") and gg.dm is not None:
-        dist_dm = np.sqrt(np.sum(np.square(gg.dm["pos"]), axis=1))
-        isort_dist_dm = np.argsort(dist_dm)
-
-        h_dm, bin_dm = np.histogram(dist_dm[isort_dist_dm],  bins=bins,
-                                    weights=gg.dm["m"][isort_dist_dm])
-        if surface_density:
-            h_dm /= two_pi_r_dr
-        else:
-            h_dm /= four_third_pi_r_r_dr
+        bins, h_dm = cal_radial(gg.dm,
+                                 nbins=50,
+                                 rmax=25,
+                                 surface_density=surface_density)
         ax.plot(bins[1:], h_dm, label="dm")
 
     if hasattr(gg, "cell") and gg.cell is not None:
-        dist_cell = np.sqrt(np.sum(np.square(gg.cell["pos"]), axis=1))
-        isort_dist_cell = np.argsort(dist_cell)
-
-        h_cell, bin_cell = np.histogram(dist_cell[isort_dist_cell],  bins=bins,
-                 weights=gg.cell["rho"][isort_dist_cell]*
-                         gg.cell["dx"][isort_dist_cell]**3 * cell_to_msun)
-        if surface_density:
-            h_cell /= two_pi_r_dr
-        else:
-            h_cell /= four_third_pi_r_r_dr
+        cell_to_msun = gg.info.unit_d/msun_in_g * kpc_in_cm**3
+        bins, h_cell = cal_radial(gg.cell,
+                                nbins=50,
+                                rmax=25,
+                                surface_density=surface_density,
+                                cell_to_msun=cell_to_msun)
 
         ax.plot(bins[1:], h_cell, label="gas")
 
