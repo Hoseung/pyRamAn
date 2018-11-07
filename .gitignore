@@ -20,4 +20,5 @@ wheels/
 docs/_build/
 .ipynb_checkpoints
 src.linux*
-draw/ppc.c 
+draw/ppc.c
+tree/c_rd_halo.cpp

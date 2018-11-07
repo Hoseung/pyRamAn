@@ -22,7 +22,7 @@ cdef extern from "c_rd_halo.h":
         int * np;
         int * hnu;
         int * hhost;
-        long * imbp;
+        int * imbp;
         float * ang ;
         float * mass;
         float * sp;
@@ -40,7 +40,7 @@ cdef extern from "c_rd_halo.h":
         int * np;
         int * hnu;
         int * hhost;
-        long * imbp;
+        int * imbp;
         double * ang ;
         double * mass;
         double * sp;
@@ -73,7 +73,7 @@ cpdef read_file(filename, nbodies, is_gal, read_mbp):
     nump = np.asarray(<int[:ntot]> halodata.np)
     hhost = np.asarray(<int[:ntot*5]> halodata.hhost)
     if read_mbp > 0:
-        imbp = np.asarray(<long[:ntot]> halodata.imbp)
+        imbp = np.asarray(<int[:ntot]> halodata.imbp)
     ang = np.asarray(<float[:ntot*3]> halodata.ang)
     energy = np.asarray(<float[:ntot*3]> halodata.energy)
     mass = np.asarray(<float[:ntot]> halodata.mass)
@@ -129,7 +129,7 @@ cpdef read_file_double(filename, nbodies, is_gal, read_mbp):
     nump = np.asarray(<int[:ntot]> halodata.np)
     hhost = np.asarray(<int[:ntot*5]> halodata.hhost)
     if read_mbp > 0:
-        imbp = np.asarray(<long[:ntot]> halodata.imbp)
+        imbp = np.asarray(<int[:ntot]> halodata.imbp)
     ang = np.asarray(<double[:ntot*3]> halodata.ang)
     energy = np.asarray(<double[:ntot*3]> halodata.energy)
     mass = np.asarray(<double[:ntot]> halodata.mass)

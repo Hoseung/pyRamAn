@@ -20,7 +20,7 @@ struct Data{
     int * np;
     int * hnu;
     int * hhost;
-    long * imbp;
+    int * imbp;
     float * ang ;
     float * mass;
     float * sp;
@@ -40,7 +40,7 @@ struct Data2{
     int * np;
     int * hnu;
     int * hhost;
-    long * imbp;
+    int * imbp;
     double * ang;
     double * mass;
     double * sp;

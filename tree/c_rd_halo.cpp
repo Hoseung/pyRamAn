@@ -86,10 +86,7 @@ void load_data_gal(std::fstream& fin, Meta& haloinfo,  Data& halodata, int totha
         fortran_read_int(fin, halodata.hhost[i*5], 5);
         if(read_mbp>0)
       	{
-      	  fortran_read_long(fin, halodata.imbp[i], 1);
-          if (i < 100){
-            std::cout<<halodata.imbp[i]<<std::endl;
-          }
+      	  fortran_read_int(fin, halodata.imbp[i], 1);
       	}
         fortran_read_float(fin, halodata.mass[i], 1);
         fortran_read_float(fin, halodata.pos[i*3], 3);
@@ -153,7 +150,7 @@ void allocate_data(Data& halodata, int ntot, int is_gal, int read_mbp){
     halodata.np = new int [ntot];
     halodata.hnu = new int [ntot];
     halodata.hhost = new int [ntot * 5];
-    halodata.imbp = new long [ntot];
+    halodata.imbp = new int [ntot];
     halodata.ang = new float [ntot * 3];
     halodata.pos = new float [ntot * 3];
     halodata.vel = new float [ntot * 3];
@@ -175,7 +172,7 @@ void allocate_data_d(Data2& halodata, int ntot, int is_gal, int read_mbp){
     halodata.np = new int [ntot];
     halodata.hnu = new int [ntot];
     halodata.hhost = new int [ntot * 5];
-    halodata.imbp = new long [ntot];
+    halodata.imbp = new int [ntot];
     halodata.ang = new double [ntot * 3];
     halodata.pos = new double [ntot * 3];
     halodata.vel = new double [ntot * 3];
