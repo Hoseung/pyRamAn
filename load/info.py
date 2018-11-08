@@ -154,7 +154,7 @@ class Info:
         self.ol = rarr[5]
         self.ok = rarr[6]
         self.ob = rarr[7]
-        self.h = np.sqrt(self.H0**2 * ((self.om+self.ob) * (1+self.zred)**3 + self.ok * (1+self.zred)**2 + self.ol))
+        self.h = np.sqrt(self.H0**2 * ((self.om) * (1+self.zred)**3 + self.ok * (1+self.zred)**2 + self.ol)) # Om = O_(dm) + O_(baryon)
         self.msun = scale_d*scale_l**3/m_sun
         self.cboxsize = self.H0 * self.pboxsize / self.aexp * 1e-2
         if self.cosmo:
