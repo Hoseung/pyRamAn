@@ -9,7 +9,7 @@ Routines used in sampling tasks
 """
 import numpy as np
 class Region():
-    def __init__(self, halo=None, **region):
+    def __init__(self, halo=None, **region_arguments):
         if halo is not None:
             self.region_from_halo(halo)
         else:
@@ -22,8 +22,12 @@ class Region():
             self._centers = [0.5, 0.5, 0.5]
             self._radius = 0.5
             self._ranges = [[0,1]]*3
-            self.set_region(**region)
-
+            for key in region_arguments:
+                try:
+                    setattr(self, key, region_arguments[key])
+                except:
+                    continue
+            #self.set_region(**region)
 
     @property
     def xc(self):
@@ -124,103 +128,6 @@ class Region():
         self._ranges = [self._xr, self._yr, self._zr]
 
 
-    def set_region(self, **region):
-        """
-            take any of xr, yr, zr, xc, yc, zc, radius, ranges or centers
-            and calculate the others.
-            returns a dict (or defaultdict).
-
-            The priority goes as:
-            xr,yr,zr >= ranges >= centers + radius >= xr,yr,zr + radius
-
-            example
-            -------
-            >>> r1 = set_region(yr=[0.45,0.733])
-            >>> r2 = set_region(xc=0.7, radius=0.2)
-            >>> r3 = set_region(abc=123)
-            >>> c = {"centers":[0.33, 0.33, 0.64], "radius":0.1}
-            >>> r4 = set_region(*c)
-
-            To do
-            -----
-            1. Allow mix of xc and xr arguments.
-               as xr requires more effort, xr overwrites xc.
-            2. Accept both "center" and "centers"
-               Also, both "range" and "ranges"
-            3. Thanks to the "properties" update, less manual calculation is
-               required by set_region. Minimize them.
-
-            Notes
-            -----
-            It is simplist to supply ranges to update the values.
-        """
-        xxr = any([i in region for i in ["xr", "yr", "zr"]])
-        xxc = any([i in region for i in ["xc", "yc", "zc"]])
-        xrd = "radius" in region
-        xcens = "centers" in region
-        xrans = "ranges" in region
-
-        """
-        Check more annoying(to type) parameters earlier.
-        """
-
-        if xxr:
-            try:
-                xr = region.xr
-            except:
-                xr = [0,1]
-            try:
-                yr = region.yr
-            except:
-                yr = [0,1]
-            try:
-                zr = region.zr
-            except:
-                zr = [0,1]
-            # calculate the rest
-            self.ranges = [xr, yr, zr]
-        elif xxc:
-            try:
-                xc = region.xc
-            except:
-                xc = 0.5
-            try:
-                yc = region.yc
-            except:
-                yc = 0.5
-            try:
-                zc = region.zc
-            except:
-                zc = 0.5
-            try:
-                radius = region.radius
-            except:
-                radius = 0.5
-            # calculate the rest
-            # No need to update others with radius.
-            self.radius = radius
-            self.xc = xc
-            self.yc = yc
-            self.zc = zc
-        elif xrans:
-            self.ranges = region.ranges
-
-        elif xcens:
-            centers = region.centers
-            xc, yc, zc = centers
-            try:
-                radius = region.radius
-            except:
-                radius = 0.5
-            self.ranges = [[xc - radius, xc + radius],
-                           [yc - radius, yc + radius],
-                           [zc - radius, zc + radius]]
-        elif xrd:
-            self.ranges=[[0.5-region.radius,0.5+region.radius]]*3
-        else:
-            self.ranges = [[0,1]]*3
-
-
     def region_from_halo(self, halo, ind=None, rscale = 1.0):
         """
         Set a region as a halo.
@@ -229,26 +136,26 @@ class Region():
         """
         if ind is None:
             try:
-                return self.set_region(xc = halo['x'],
-                                       yc = halo['y'],
-                                       zc = halo['z'],
-                                       radius = halo['rvir'] * rscale)
+                self.centers = [halo['x'],
+                                halo['y'],
+                                halo['z']]
+                self.radius = halo['rvir'] * rscale
             except:
-                return self.set_region_multi(xc = halo.data['x'],
-                                             yc = halo.data['y'],
-                                             zc = halo.data['z'],
-                                             radius = halo.data['rvir'] * rscale)
+                self.set_region_multi(xc = halo.data['x'],
+                                      yc = halo.data['y'],
+                                      zc = halo.data['z'],
+                                      radius = halo.data['rvir'] * rscale)
         else:
             if len(ind) > 1:
-                return self.set_region_multi(xc = halo.data['x'][ind],
-                                             yc = halo.data['y'][ind],
-                                             zc = halo.data['z'][ind],
-                                       radius = halo.data['rvir'][ind] * rscale)
+                self.set_region_multi(xc = halo.data['x'][ind],
+                                      yc = halo.data['y'][ind],
+                                      zc = halo.data['z'][ind],
+                                      radius = halo.data['rvir'][ind] * rscale)
             else:
-                return self.set_region(xc = halo.data['x'][ind],
-                                       yc = halo.data['y'][ind],
-                                       zc = halo.data['z'][ind],
-                                       radius = halo.data['rvir'][ind] * rscale)
+                self.centers = [halo.data['x'][ind],
+                                halo.data['y'][ind],
+                                halo.data['z'][ind]]
+                self.radius = halo.data['rvir'][ind] * rscale
 
     def distance_to(self, xc, xx):
         return np.sqrt([(xc[0] - xx[0])**2 + (xc[1] - xx[1])**2 + (xc[2] - xx[2])**2])[0]
@@ -291,7 +198,7 @@ class Region():
         return (dd < (rvir * scale)) * (np.array(halos['m']) > Mcut)
 
 
-    def set_region_multi(self, xc=None, yc=None, zc=None, radius=None, **kwargs):
+    def set_region_multi(self, xc=None, yc=None, zc=None, radius=None):
         """
         Return region class.
 
@@ -301,16 +208,18 @@ class Region():
         If scalar variables are given, set_region is directly called.
         """
         if isinstance(xc, float):
-            return self.set_region(xc=xc, yc=yc, zc=zc, radius = radius, **kwargs)
+            self.centers = [xc, yc, zc]
+            self.radius = radius)
         else:
             ranges = self.sum_region_multi(xc=xc, yc=yc, zc=zc, radius=radius)
             rr = max([np.ptp(ranges[0:2]),
                       np.ptp(ranges[2:4]),
                       np.ptp(ranges[4:6])]) * 0.5
 
-            return self.set_region(xc=0.5 * sum(ranges[0:2]),
-                                yc=0.5 * sum(ranges[2:4]),
-                                zc=0.5 * sum(ranges[4:6]), radius = rr)
+            self.centers = [0.5 * sum(ranges[0:2]),
+                                   0.5 * sum(ranges[2:4]),
+                                   0.5 * sum(ranges[4:6])]
+            self.radius = rr
 
 
     def sum_region_multi(self, xc=[], yc=[], zc=[], radius=[]):
