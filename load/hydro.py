@@ -104,7 +104,7 @@ class Hydro(Simbase):
         self.set_info(info)
         self.header.nvarh=nvarh
         if region is not None:
-            ranges = region['ranges']
+            ranges = region.ranges
         if ranges is not None:
             self.set_ranges(ranges=ranges)
         elif hasattr(info, "ranges"):

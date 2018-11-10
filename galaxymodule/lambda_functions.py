@@ -481,7 +481,7 @@ def mk_gal(galdata, halodata, info, star_all, cell_all, dm_all,
 #        gas_map = draw.pp.pp_cell(cell, npix, info, region=region, verbose=False)
 #        im2 = plt.imshow(np.transpose(np.log10(gas_map)), cmap="CMRmap", alpha=.5, interpolation='bilinear', extent=extent)
 
-        rgal = region['radius'] * info.pboxsize * 1e3
+        rgal = region.radius * info.pboxsize * 1e3
 
         ax = plt.gca()
         ax.set_xlabel("position [kpc]")

@@ -135,7 +135,7 @@ class Part(load.sim.Simbase):
         self.set_fbase(self.base, data_dir)
 
         if region is not None:
-            ranges = region['ranges']
+            ranges = region.ranges
         if ranges is not None:
             self.set_ranges(ranges=ranges)
         else:

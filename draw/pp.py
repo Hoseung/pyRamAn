@@ -149,14 +149,14 @@ def den2d(x, y, z, m, npix, region=None, proj='z',
         #   image center = region center
         #   position, region in the same unit.
         if proj == 'z':
-            x = ((x[ind_ok] - region['xc']) / lbox + 0.5) * npix
-            y = ((y[ind_ok] - region['yc']) / lbox + 0.5) * npix
+            x = ((x[ind_ok] - region.xc) / lbox + 0.5) * npix
+            y = ((y[ind_ok] - region.yc) / lbox + 0.5) * npix
         elif proj == 'x':
-            x = ((x[ind_ok] - region['xc']) / lbox + 0.5) * npix
-            y = ((z[ind_ok] - region['zc']) / lbox + 0.5) * npix
+            x = ((x[ind_ok] - region.xc) / lbox + 0.5) * npix
+            y = ((z[ind_ok] - region.zc) / lbox + 0.5) * npix
         elif proj == 'y':
-            x = ((z[ind_ok] - region['zc']) / lbox + 0.5) * npix
-            y = ((y[ind_ok] - region['yc']) / lbox + 0.5) * npix
+            x = ((z[ind_ok] - region.zc) / lbox + 0.5) * npix
+            y = ((y[ind_ok] - region.yc) / lbox + 0.5) * npix
 
     else:
         if len(x) < 10:
@@ -239,8 +239,8 @@ def update_tick_labels(ax):
         axis2 = "y"
         xrn, yrn, zrn="xr", "yr", "zr"
 
-    axis1_range = ax.pp_hal_meta.region[xrn]
-    axis2_range = ax.pp_hal_meta.region[yrn]
+    axis1_range = getattr(ax.pp_hal_meta.region,xrn)
+    axis2_range = getattr(ax.pp_hal_meta.region,yrn)
 
     ax.set_xlabel(axis1 + " [Mpc]")
     ax.set_xticks(np.linspace(0,npix,5))
@@ -829,8 +829,8 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
 
     if (xmin is None) & (xmax is None) & (ymin is None) & (ymax is None):
         if region is not None:
-            xmi0, xma0 = getattr(egion,dim1r)#[0], region[dim1r][1]
-            ymi0, yma0 = getattr(egion,dim2r)#region[dim2r][0], region[dim2r][1]
+            xmi0, xma0 = getattr(egion,dim1r)
+            ymi0, yma0 = getattr(egion,dim2r)
         else:
             xmi0, xma0, ymi0, yma0 = min(x), max(x), min(y), max(y)
     if xmi0 is None:
@@ -862,7 +862,7 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
 
     scale_d = info.unit_d
     scale_l = info.unit_l
-    length_to_cgs = s.info.unit_l / s.info.boxtokpc
+    length_to_cgs = info.unit_l / info.boxtokpc
     # = kpc in cm = 3.08e21
     scale_nH = info.unit_nH
     scale_T2 = info.unit_T2
