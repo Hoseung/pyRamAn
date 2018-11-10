@@ -1,5 +1,5 @@
 import analysis.NH_module as nhm
-import tree.halomodule as hmo 
+import tree.halomodule as hmo
 import numpy as np
 from analysis import NH_halo_match as hmat
 import load
@@ -25,7 +25,7 @@ def load_dm_of_hal(this_halo):
 
 def gal_hal_match(gcat, hcat, mgal_min=None, mhal_min=None):
     from scipy.spatial import cKDTree
-    
+
     if mhal_min is None:
         mhal_min = mgal_min
 
@@ -53,7 +53,7 @@ def cal_purity(hcat, do_part=False):
 
     if do_part:
         reg = Region()
-    
+
         # Part alone should work!!
         ptcl = part.Part(info=hcat.info, ptypes=["dm id pos mass"])
         h_center = hcat.data[np.argmax(hcat.data["np"])]
@@ -76,13 +76,45 @@ def cal_purity(hcat, do_part=False):
             this_halo["np"] = len(dm)
     else:
         hcat.data["purity"] = 2 - hcat.data["mean_m"]/min_mean_m
-        
+
     output = np.vstack((hcat.data["id"], hcat.data["purity"],
                         hcat.data["mean_m"], hcat.data["np"])).T
-    pickle.dump(output, open("purity_{}.pickle".format(nout), "wb"))
-    np.savetxt("purity_{}.txt".format(nout), output, fmt="  %5d   %.5f   %.5e    %7d")
+    pickle.dump(output, open("purity_{}.pickle".format(hcat.nout), "wb"))
+    np.savetxt("purity_{}.txt".format(hcat.nout), output, fmt="  %5d   %.5f   %.5e    %7d")
 
     #return purity
+
+
+def make_match_gal_hal_zoom(gcat, hcat, purity_crit=0.99):
+    """
+    Match galaxy and "pure" halos.
+
+    parameters
+    ----------
+    purity_crit : {0.99}
+        Contamination of a halo must be less than 1-purity_crit.
+    """
+    # temporarily modify gcat fields
+    assert gcat.nout == hcat.nout, "galxy catalog and halo catalog are from different nout"
+    nout = hcat.nout
+    lnames = list(gcat.data.dtype.names)
+    lnames[lnames.index("sig")] = "host_purity"
+    lnames[lnames.index("sigbulge")] = "host_mean_m"
+    gcat.data.dtype.names = tuple(lnames)
+
+    # temporarily modify hcat fields
+    lnames = list(hcat.data.dtype.names)
+    lnames[lnames.index("p_rho")] = "purity"
+    lnames[lnames.index("p_c")] = "mean_m"
+    hcat.data.dtype.names = tuple(lnames)
+
+    cal_purity(hcat)
+    gals_of_interest = gal_hal_match(gcat, hcat, mgal_min=3e8)
+    good_gals = gals_of_interest[gals_of_interest["host_purity"] > purity_crit]
+
+    pickle.dump(good_gals, open("good_gals_{}.pickle".format(nout), "wb"))
+    # release memory... how?
+    gcat = None
 
 
 if __name__=='__main__':
@@ -90,32 +122,10 @@ if __name__=='__main__':
     wdir = "./"
 
     nouts = np.arange(594, 593, -1)
-
-    for nout in nouts:    
+    for nout in nouts:
         print(" \n NOUT = {}\n".format(nout))
+        # NH galaxy - Double
+        # NH halo   - Single
         gcat = hmo.Halo(nout=nout, is_gal=True, double=True)
         hcat = hmo.Halo(nout=nout, is_gal=False, double=False, return_id=True)
-        
-        # temporarily modify gcat fields 
-        lnames = list(gcat.data.dtype.names)
-        lnames[lnames.index("sig")] = "host_purity"
-        lnames[lnames.index("sigbulge")] = "host_mean_m"
-        gcat.data.dtype.names = tuple(lnames)
-        
-        # temporarily modify hcat fields
-        lnames = list(hcat.data.dtype.names)
-        lnames[lnames.index("p_rho")] = "purity"
-        lnames[lnames.index("p_c")] = "mean_m"
-        hcat.data.dtype.names = tuple(lnames)
-        
-        #
-        cal_purity(hcat)
-
-        gals_of_interest = gal_hal_match(gcat, hcat, mgal_min=3e8)
-        purity_crit = 0.995
-        good_gals = gals_of_interest[gals_of_interest["host_purity"] > purity_crit]
-        
-        pickle.dump(good_gals, open("good_gals_{}.pickle".format(nout), "wb"))
-        # release memory... how? 
-        gcat = None
-
+        make_match_gal_hal_zoom(gcat, hcat, purity_crit=0.995)
