@@ -244,7 +244,7 @@ class Sim(Simbase):
                 [[xmin,xmax],[ymiin,ymax],[zmin,zmax]]
             dmo: bool, optional
             setup: bool, optional
-            region: (region)dict, optional
+            region: (region) class, optional
 
         """
         super(Sim,self).__init__()
@@ -260,9 +260,9 @@ class Sim(Simbase):
         # set_data_dir and set_range needs info instance be exist.
         self.set_ranges(ranges)
         if region is not None:
-            ranges = [[region['xc'] - region['radius'], region['xc'] + region['radius']],
-                      [region['yc'] - region['radius'], region['yc'] + region['radius']],
-                      [region['zc'] - region['radius'], region['zc'] + region['radius']]]
+            ranges = [[region.xc - region.radius, region.xc + region.radius],
+                      [region.yc - region.radius, region.yc + region.radius],
+                      [region.zc - region.radius, region.zc + region.radius]]
         else:
             self.region=None
 

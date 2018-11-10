@@ -166,34 +166,34 @@ class Region():
 
         if xxr:
             try:
-                xr = region["xr"]
+                xr = region.xr
             except:
                 xr = [0,1]
             try:
-                yr = region["yr"]
+                yr = region.yr
             except:
                 yr = [0,1]
             try:
-                zr = region["zr"]
+                zr = region.zr
             except:
                 zr = [0,1]
             # calculate the rest
             self.ranges = [xr, yr, zr]
         elif xxc:
             try:
-                xc = region["xc"]
+                xc = region.xc
             except:
                 xc = 0.5
             try:
-                yc = region["yc"]
+                yc = region.yc
             except:
                 yc = 0.5
             try:
-                zc = region["zc"]
+                zc = region.zc
             except:
                 zc = 0.5
             try:
-                radius = region["radius"]
+                radius = region.radius
             except:
                 radius = 0.5
             # calculate the rest
@@ -203,20 +203,20 @@ class Region():
             self.yc = yc
             self.zc = zc
         elif xrans:
-            self.ranges = region["ranges"]
+            self.ranges = region.ranges
 
         elif xcens:
-            centers = region["centers"]
+            centers = region.centers
             xc, yc, zc = centers
             try:
-                radius = region["radius"]
+                radius = region.radius
             except:
                 radius = 0.5
             self.ranges = [[xc - radius, xc + radius],
                            [yc - radius, yc + radius],
                            [zc - radius, zc + radius]]
         elif xrd:
-            self.ranges=[[0.5-region["radius"],0.5+region["radius"]]]*3
+            self.ranges=[[0.5-region.radius,0.5+region.radius]]*3
         else:
             self.ranges = [[0,1]]*3
 
@@ -293,7 +293,7 @@ class Region():
 
     def set_region_multi(self, xc=None, yc=None, zc=None, radius=None, **kwargs):
         """
-        Return region dict.
+        Return region class.
 
         Note
         ----
