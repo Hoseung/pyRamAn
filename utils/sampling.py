@@ -209,7 +209,7 @@ class Region():
         """
         if isinstance(xc, float):
             self.centers = [xc, yc, zc]
-            self.radius = radius)
+            self.radius = radius
         else:
             ranges = self.sum_region_multi(xc=xc, yc=yc, zc=zc, radius=radius)
             rr = max([np.ptp(ranges[0:2]),
