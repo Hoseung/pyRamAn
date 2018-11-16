@@ -41,7 +41,7 @@ import matplotlib.colors as colors
 import matplotlib.cm as cmx
 from matplotlib.colors import LogNorm
 from sklearn.preprocessing import scale
-from sklearn.mixture import GMM
+from sklearn.mixture import GaussianMixture as GMM
 from gsf import twobody
 
 grav_const=4.302e-6
