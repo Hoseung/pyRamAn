@@ -185,7 +185,21 @@ def plot_2d_simple_gas_maps(gg):
 def cal_radial(data, nbins=50, rmax=25,
                 surface_density=False,
                 cell_to_msun=None):
-    bins = np.linspace(0,rmax,50)
+    """
+    return radial profile of the given species.
+    Assumes to be centered at [0,0,0].
+
+    parameters
+    ----------
+    nbins :
+    rmax : 25kpc.
+        Maximum extent of the galaxy in kpc unit.
+    surface_density : False
+        return 2D projected value rather than 3D density.
+    cell_to_msun : None
+        If RAMSES cell, a conversion factor is needed.
+    """
+    bins = np.linspace(0,rmax,nbins)
 
     dist = np.sqrt(np.sum(np.square(data["pos"]), axis=1))
     isort_dist = np.argsort(dist)
@@ -207,7 +221,9 @@ def cal_radial(data, nbins=50, rmax=25,
         two_pi_r_dr = 2 * np.pi * bin_centers * bin_widths
         h /= two_pi_r_dr
     else:
-        four_third_pi_r_r_dr = 4/3 * np.pi * (bin_centers**2 - (bin_centers - bin_widths)**2)
+        #print(bin_centers)
+        #print(bin_widths)
+        four_third_pi_r_r_dr = 4/3 * np.pi * (hbin[1:]**2 - hbin[:-1]**2)
         h /= four_third_pi_r_r_dr
     return hbin, h
 
