@@ -14,8 +14,8 @@ dtype_halo_ahf = np.dtype([('ID','<i4'),
                 ('Rvir','<f4'),
                 ('Rmax','<f4'),
                   ('R2','<f4'),
-             ('mbp_off','<i4'),
-             ('com_off','<i4'),
+             ('mbp_off','<f4'),
+             ('com_off','<f4'),
                 ('Vmax','<f4'),
                ('V_esc','<f4'),
                 ('sigV','<f4'),
@@ -43,7 +43,7 @@ dtype_halo_ahf = np.dtype([('ID','<i4'),
                 ('SurfP','<f4'),
                 ('Phi0','<f4'),
                 ('cNFW','<f4'),
-                ('n_gas','<f4'),
+                ('n_gas','<i4'),
                 ('M_gas','<f4'),
                 ('lambda_gas','<f4'),
                 ('lambdaE_gas','<f4'),
@@ -63,7 +63,7 @@ dtype_halo_ahf = np.dtype([('ID','<i4'),
                 ('Ecz_gas','<f4'),
                 ('Ekin_gas','<f4'),
                 ('Epot_gas','<f4'),
-                ('n_star','<f4'),
+                ('n_star','<i4'),
                 ('M_star','<f4'),
                 ('lambda_star','<f4'),
                 ('lambdaE_star','<f4'),
@@ -84,7 +84,27 @@ dtype_halo_ahf = np.dtype([('ID','<i4'),
                 ('Ekin_star','<f4'),
                 ('Epot_star','<f4')])
 
-def load_ahf_data(fn=None):
+def load_ahf_data(fn):
     return np.genfromtxt(fn,
                   dtype=dtype_halo_ahf,
                   skip_header=1)
+
+
+def load_halo_member(fn):
+    """
+    Load paticle membership from ".AHF_particles" file.
+    """
+    inds = []
+    types = []
+
+    with open(fn, "r")  as f:
+        f.readline()
+
+        for i in range(len(hal)):
+            l = f.readline()
+            nparts = int(l.split()[0])
+            mem = np.fromfile(f, dtype=int, sep=" ", count=nparts * 2).reshape(nparts, 2)
+            inds.append(mem[:, 0])
+            types.append(mem[:, 1])
+
+    return inds, types

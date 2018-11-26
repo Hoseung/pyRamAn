@@ -93,6 +93,7 @@ class TipsySim():
             self.set_fn(fn)
             self._f = open(self._fn, "rb")
             self.header.read_header(self._f)
+            self.read_param()
 
     def set_fn(self, fn):
         """
@@ -113,8 +114,8 @@ class TipsySim():
         # add ID?
 
     def read_param(self, fn_param=None):
-        fn = self._fn
         if fn_param is None:
+            fn = self._fn
             try:
                 # Default name
                 fn_param = fn.replace(fn.split(".")[-1], "param")

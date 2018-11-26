@@ -696,7 +696,7 @@ class Galaxy():
             pop["pos"] = np.matmul(pop["pos"], RM.T)# (pop['x'], pop['y'], pop['z'])))
             pop["vel"] = np.matmul(pop["vel"], RM.T)#, pop['vy'], pop['vz'])))
 
-    def cal_norm_vec(self, pop_nvec=['star'], dest=[0., 0., 1], bound_percentile=50):
+    def cal_norm_vec(self, pop_nvec=['star'], bound_percentile=100):
         """
         Determines normal vector (rotation axis) of the galaxy.
 
@@ -704,14 +704,13 @@ class Galaxy():
         ----------
         pop_nvec : ["name", "of", "species"]
             components for which normal vector is calculated.
-        dest : float array [3]
-            direction vector the normal vector will point to.
         bound_percentile :
             Top ?% bound particles are taken into calculation.
+            However, it is often too expensive to calculate the binding energy...
 
         Examples
         --------
-        >>> self.cal_norm_vec(pop_nvec=['star'], dest=[0., 0., 1.], bound_percentile=50)
+        >>> self.cal_norm_vec(pop_nvec=['star'], bound_percentile=50)
 
         Notes
         -----
@@ -731,6 +730,7 @@ class Galaxy():
             #nelements += len(pop['x'])
 
         if bound_percentile < 100:
+            # Vdiff is not a good approximation to the boundness...!
             vdiff = np.sqrt(np.sum(np.square(self.star["vel"]), axis=1))
 
             i_bound_50 = np.argsort(vdiff)[:max([1, 0.01 * bound_percentile]) * len(vdiff)]
@@ -807,7 +807,7 @@ class Galaxy():
         if lag.norm(dest) != 1.0:
             dest = dest / lag.norm(dest)
 
-        print(nvec, dest)
+        #print(nvec, dest)
         r_axis = np.cross(nvec, dest)
         angle = math.acos(np.dot(nvec, dest))
 
