@@ -1,9 +1,10 @@
 import numpy as np
+from utils.fancy_print import printw
 
-dtype_halo_ahf = np.dtype([('ID','<i4'),
+dtype_halo_ahf = np.dtype([('id','<i4'),
             ('hostHalo','<i4'),
                 ('nSub','<i4'),
-                ('Mvir','<f4'),
+                ('mvir','<f4'),
                   ('np','<i4'),
                    ('x','<f4'),
                    ('y','<f4'),
@@ -11,7 +12,7 @@ dtype_halo_ahf = np.dtype([('ID','<i4'),
                   ('vx','<f4'),
                   ('vy','<f4'),
                   ('vz','<f4'),
-                ('Rvir','<f4'),
+                ('rvir','<f4'),
                 ('Rmax','<f4'),
                   ('R2','<f4'),
              ('mbp_off','<f4'),
@@ -84,27 +85,99 @@ dtype_halo_ahf = np.dtype([('ID','<i4'),
                 ('Ekin_star','<f4'),
                 ('Epot_star','<f4')])
 
-def load_ahf_data(fn):
-    return np.genfromtxt(fn,
-                  dtype=dtype_halo_ahf,
-                  skip_header=1)
+class AHF_halo():
+    def __init__(self, fn=None, load=False, return_id=False):
+        """
+        Assumes the files follow the default AHF naming scheme.
 
+        To be merged with Tipsy class because a snapshot and a halo catalogue
+        are always closely related!
+        """
 
-def load_halo_member(fn):
-    """
-    Load paticle membership from ".AHF_particles" file.
-    """
-    inds = []
-    types = []
+        self.data = None
+        self._has_data = False
 
-    with open(fn, "r")  as f:
-        f.readline()
+        self.set_fn(fn)# = fn
 
-        for i in range(len(hal)):
-            l = f.readline()
-            nparts = int(l.split()[0])
-            mem = np.fromfile(f, dtype=int, sep=" ", count=nparts * 2).reshape(nparts, 2)
-            inds.append(mem[:, 0])
-            types.append(mem[:, 1])
+        if load: self.load_ahf_data()
 
-    return inds, types
+        if return_id is False:
+            self.return_id = False
+            self._return_id_list = None
+        else:
+            if hasattr(return_id, "__len__"):
+                # String also has __len__, but let's just ignore such cases.
+                self._return_id_list = return_id
+            else:
+                self._return_id_list = None # None = load all halo's ids.
+            self.return_id = True
+
+        if self.return_id:
+            self.load_halo_member()
+
+    def set_fn(self, fn):
+        self._fn = fn # Whatever that is...
+        last = fn.split(".")[-1]
+        if "_halos" in last:
+            self._fn_base = fn.split(last)[0]
+        else:
+            try:
+                int(last)
+                self._fn_base = fn
+            except IOError as e:
+                print("file name not understood:" + str(e))
+
+    def load_ahf_data(self, fn=None):
+        if fn is None:
+            fn = self._fn_base + "AHF_halos"
+            self._fn = fn
+
+        self.data = np.genfromtxt(fn, dtype=dtype_halo_ahf, skip_header=1)
+        self._has_data = True
+
+    def load_halo_member(self, fn=None):
+        """
+        Load paticle membership from ".AHF_particles" file.
+
+        Needs the halo catalogue, self.data.
+
+        To match is with the simulation data,
+        I need a complete particle list or the particle ID.
+        """
+        if not self._has_data:
+            printw("[AHF] Load catalog data first.")
+            return
+
+        if fn is None:
+            # always assum hcat._fn is available.
+            # Otherwise asserting npart will fail anyway.
+            fn = self._fn.replace("_halos", "_particles")
+
+        self.ind_list=[]
+
+        inds = []
+        types = []
+
+        with open(fn, "r")  as f:
+            f.readline()
+            for hid, hnp in zip(self.data["id"], self.data["np"]):
+                l = f.readline()
+                nparts = int(l.split()[0])
+                assert nparts == hnp
+
+                if self._return_id_list is not None:
+                    if hid in self._return_id_list:
+                        chunk = np.fromfile(f, dtype=int, sep=" ", count=nparts * 2).reshape(nparts, 2)
+                        self.ind_list.append(dict(hid=hid,
+                        idgas = chunk[chunk[:,1]==0,0],
+                        iddm = chunk[chunk[:,1]==1,0],
+                        idstar = chunk[chunk[:,1]==4,0]))
+                    else:
+                        # Skip n lines. This is a fast way.
+                        for nn in npart: next(f)
+                else:
+                    chunk = np.fromfile(f, dtype=int, sep=" ", count=nparts * 2).reshape(nparts, 2)
+                    self.ind_list.append(dict(hid=hid,
+                                              idgas = chunk[chunk[:,1]==0,0],
+                                              iddm = chunk[chunk[:,1]==1,0],
+                                              idstar = chunk[chunk[:,1]==4,0]))

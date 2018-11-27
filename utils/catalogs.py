@@ -8,7 +8,7 @@ Created on Sat Feb 27 00:28:40 2016
 import pickle
 import numpy as np
 import scipy.stats
-import tree.ctutils as ctu
+#import tree.ctutils as ctu
 
 def load_pickle(fname):
     with open(fname, 'rb') as f:
@@ -30,13 +30,13 @@ def lbt2aexp(lts):
 def density_map(x, y, sort=True):
     from scipy.stats import gaussian_kde
     xy = np.vstack([x,y])
-    z = gaussian_kde(xy)(xy) 
+    z = gaussian_kde(xy)(xy)
     z /= max(z)
 
-    idx = z.argsort()    
+    idx = z.argsort()
     xx, yy = x[idx], y[idx]
     z = z[idx]
-    
+
     return xx, yy, z
 
 
@@ -61,7 +61,7 @@ def mask_outlier(y, low=1.5, high=1.5):
     # extract linear fit
     yy = y - (slope * x + intercept)
 
-    # sigma clipped value = mean of the rest 
+    # sigma clipped value = mean of the rest
     i_good = sigma_clip_ind(yy, low, high)
     yy[~i_good] = np.mean(yy[i_good])
 
@@ -70,46 +70,47 @@ def mask_outlier(y, low=1.5, high=1.5):
 
 
 def smooth(x, beta=5, window_len=20, monotonic=False):
-    """ 
-    kaiser window smoothing 
+    """
+    kaiser window smoothing
     beta = 5 : Similar to a Hamming
     """
-    
+
     if monotonic:
         """
         if there is an overall slope, smoothing may result in offset.
-        compensate for that. 
+        compensate for that.
         """
         slope, intercept, r_value, p_value, std_err = scipy.stats.linregress(x, y=np.arange(len(x)))
         xx = np.arange(len(x)) * slope + intercept
         x = x - xx
-    
+
     # extending the data at beginning and at the end
     # to apply the window at the borders
     s = np.r_[x[window_len-1:0:-1], x, x[-1:-window_len:-1]]
     w = np.kaiser(window_len,beta)
     y = np.convolve(w/w.sum(), s, mode='valid')
-    if monotonic: 
+    if monotonic:
          return y[int(window_len)/2:len(y)-int(window_len/2) + 1] + xx#[x[window_len-1:0:-1],x,x[-1:-window_len:-1]]
     else:
         return y[int(window_len)/2:len(y)-int(window_len/2) + 1]
         #return y[5:len(y)-5]
 
-        
-class MainPrg():    
+
+class MainPrg():
     def __init__(self, treedata, final_gal, nout_ini=None, nout_fi=None):
 
-        temp_tree = ctu.extract_main_tree(treedata, final_gal)
+        #temp_tree = ctu.extract_main_tree(treedata, final_gal)
+        # Now the support for CT is obsolute. use other tree than CT.
         if nout_ini == None:
             nout_ini = min(temp_tree['nout'])
         if nout_fi == None:
-            nout_fi = max(temp_tree['nout'])            
-            
+            nout_fi = max(temp_tree['nout'])
+
         self.nouts = np.arange(nout_fi, nout_ini -1, -1)
         self.idxs = temp_tree['id'] # nout_ini, nout_fi consideration needed.
         self.ids = temp_tree['Orig_halo_id']
         self.data = None
-    
+
     def set_data(self, cat, nout):
         """
         compile data from catalogs.
@@ -121,14 +122,14 @@ class MainPrg():
             inow = self.nouts == nout
             a = np.where(cat['idx'] == self.idxs[inow])[0]
             if len(a) > 0:
-                self.data[inow] = cat[a]        
+                self.data[inow] = cat[a]
             else:
                 pass
                 #print(self.ids[inow],cat['id'])
         else:
             pass
             #print("No {} in the catalog".format(nout))
-            
+
     def clip_non_detection(self):
         # end of galaxy tree = last non-zero position.
         # Note that 'id' can be 0 if phantom. But phantom is a valid datapoint
@@ -140,10 +141,10 @@ class MainPrg():
         self.nouts = self.nouts[:i_first_nout].copy()
         self.ids = self.ids[:i_first_nout].copy()
         self.idxs = self.idxs[:i_first_nout].copy()
-        
+
     def fill_missing_data(self):
         assert (self.ids[-1] != 0)
-        
+
         # loop over all fields except id, index, and non-physical entries.
         i_bad = np.where(self.data['idx'] == 0)[0]
         for field in self.data.dtype.names:
@@ -183,4 +184,3 @@ def fixed_ind_Lr(gal):
         except:
             pass
     return ind_reff_fix
-
