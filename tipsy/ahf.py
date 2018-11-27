@@ -145,7 +145,7 @@ class AHF_halo():
         I need a complete particle list or the particle ID.
         """
         if not self._has_data:
-            printw("[AHF] Load catalog data first.")
+            printw("[AHF.load_halo_member] Load catalog data first.")
             return
 
         if fn is None:
@@ -181,3 +181,24 @@ class AHF_halo():
                                               idgas = chunk[chunk[:,1]==0,0],
                                               iddm = chunk[chunk[:,1]==1,0],
                                               idstar = chunk[chunk[:,1]==4,0]))
+
+    def load_subs(self, fn=None):
+        if not self._has_data:
+            printw("[AHF.load_sub] Load catalog data first.")
+            return
+
+        if fn is None:
+            # always assum hcat._fn is available.
+            # Otherwise asserting npart will fail anyway.
+            fn = self._fn.replace("_halos", "_substructure")
+
+        nsubs = []
+        sub_ids = []
+        with open(fn, "r") as f:
+            sss = f.readline().split()
+            hid, nsub = int(sss[0]), int(sss[1])
+            subs = np.array(f.readline().split()).astype(np.int32)
+            assert len(subs) == nsub
+            sub_ids.append(subs)
+
+        self.subs = sub_ids
