@@ -116,6 +116,15 @@ class AHF_halo():
             self.load_halo_member()
 
     def set_fn(self, fn):
+        """
+        TODO
+        AHF filename has redshift in it, which adds an additional layer of
+        complexity to guess the file name based on the snapshot base name.
+
+        Note that the file name consists of three parts.
+        snapshot_base + redshift + AHF_output_type
+
+        """
         self._fn = fn # Whatever that is...
         last = fn.split(".")[-1]
         if "_halos" in last:
@@ -129,11 +138,15 @@ class AHF_halo():
 
     def load_ahf_data(self, fn=None):
         if fn is None:
-            fn = self._fn_base + "AHF_halos"
-            self._fn = fn
+            self._fn = self._fn_base + "AHF_halos"
 
-        self.data = np.genfromtxt(fn, dtype=dtype_halo_ahf, skip_header=1)
+        self.data = np.genfromtxt(self._fn, dtype=dtype_halo_ahf, skip_header=1)
         self._has_data = True
+
+    def physical_unit(self):
+        """
+
+        """
 
     def load_halo_member(self, fn=None):
         """

@@ -82,6 +82,59 @@ def convert_num_if_possible(s):
         except:
             return s
 
+class Into():
+    def __init__(self, param):
+        """
+        (mass, time, density, velocity, ...) in (g, sec, g/cc and so on) converts
+        a code unit into a more familiar unit.
+
+        UnitA_in_UnitB converts a quantites in unit A into unit B.
+
+        NOTE
+        ----
+        If I want to get rid of entailing units, the target unit system must be
+        very general (for example everything in cgs like info.unit_d / unit_l of
+        RAMSES analysis)
+        What Pynbody currently does is :
+        dunit converts the code unit into kpc,
+        munit converts the code unit into Msun, and so on...
+        It makes sens when we study galaxies. But the set of (kpc, Msun, km/s)
+        is somewhat arbitrary.
+
+        Think about it.
+
+        """
+        G = 6.67408e-11 #m3 kg-1 s-2
+        G_cgs = 6.67408e-11 * 1e6 * 1e-3
+
+        Msun_in_g = 1.989e33
+
+        kpc_in_cm = 3.08567758e21
+        kpc_in_km = kpc_in_cm *1e-5
+
+        yr_in_s = 31556952 # 365.2425 days
+        Gyr_in_sec = 1e9*yr_in_s
+
+        self.cosmo = bool(param['bComove'])
+
+        mass_in_msun = np.float64(param["dMsolUnit"])
+        # assume boxsize == 1.
+        boxtokpc = np.float64(param["dKpcUnit"])
+        density_in_Msol_kpc2 = mass_in_msun/length_in_kpc**3 # Msol kpc^-3
+
+        Msolkpc2_in_cgs = Msun_in_g/kpc_in_cm**3
+        density_in_cgs = density_in_Msol_kpc2 * Msolkpc2_in_cgs
+
+        time_in_sec = 1./np.sqrt(unit_d_cgs*G_cgs)
+        vel_in_kms = length_in_kpc*kpc_in_km/time_in_sec # in km/s
+
+        time_in_gyr = time_in_sec * Gyr_in_sec**-1 # in Gyr
+
+        if self.cosmo:
+            hub = np.float64(param["dHubble0"])
+            hubble = hub * 10 * vel_in_kms / length_in_kpc # 1/100 * kms/Mpc = 10 * kms/kpc
+
+
 class TipsySim():
     def __init__(self, fn=None):
         self.param = {}
