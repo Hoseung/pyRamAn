@@ -325,6 +325,14 @@ class Halo(HaloMeta):
                 self.data["mbp"] = temp[ilast]
 
         if self.return_id:
+            """
+            TODO
+            To be compatible with AHF,
+            self.idlists.append(dict(hid=hid,
+                                     iddm = allID[iskip:iskip+hnp]))
+
+            This will break a few things in analysis pipeline, though.
+            """
             self.idlists=[]
             self.hal_idlists=[]
             iskip=0
