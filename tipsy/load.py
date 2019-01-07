@@ -222,7 +222,7 @@ class Dont_use_Info():
         return info
 
 class TipsySim():
-    def __init__(self, fn=None):
+    def __init__(self, fn=None, load=False):
         self.param = {}
         self.header = TipsyHeader()
         """
@@ -233,6 +233,9 @@ class TipsySim():
             self._f = open(self._fn, "rb")
             self.header.read_header(self._f)
             self.read_param()
+
+        if load:
+            self.load_data()
 
     def set_fn(self, fn):
         """
