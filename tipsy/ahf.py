@@ -86,7 +86,7 @@ dtype_halo_ahf = np.dtype([('id','<i4'),
                 ('Epot_star','<f4')])
 
 class AHF_halo():
-    def __init__(self, fn=None, load=False, return_id=False):
+    def __init__(self, fn=None, load=True, return_id=False):
         """
         Assumes the files follow the default AHF naming scheme.
 
