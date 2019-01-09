@@ -205,13 +205,23 @@ class AHF_halo():
             # Otherwise asserting npart will fail anyway.
             fn = self._fn.replace("_halos", "_substructure")
 
-        nsubs = []
         sub_ids = []
+        hosts = []
         with open(fn, "r") as f:
-            sss = f.readline().split()
-            hid, nsub = int(sss[0]), int(sss[1])
-            subs = np.array(f.readline().split()).astype(np.int32)
-            assert len(subs) == nsub
-            sub_ids.append(subs)
+            while True:
+                sss = f.readline().split()
+                try:
+                    hid, nsub = int(sss[0]), int(sss[1])
+                except:
+                    break
+                subs = np.array(f.readline().split()).astype(np.int32)
+                assert len(subs) == nsub
+                sub_ids.append(subs)
+                hosts.append(hid)
 
-        self.subs = sub_ids
+        self.subs = dict(zip(hosts, sub_ids))
+
+    def to_physical():
+        """
+        convert into physical units and save the state
+        """

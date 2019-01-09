@@ -1,4 +1,5 @@
 import numpy as np
+from collections import namedtuple
 
 dtype_gas = np.dtype({  'm': (('<f4', 1), 0),
              'pos': (('<f4', (3,)), 4),
@@ -82,124 +83,7 @@ def convert_num_if_possible(s):
         except:
             return s
 
-class Info():
-    def __init__(self, param):
-        """
-        (mass, time, density, velocity, ...) in (g, sec, g/cc and so on) converts
-        a code unit into a more familiar unit.
-
-        UnitA_in_UnitB converts a quantites in unit A into unit B.
-
-        NOTE
-        ----
-        If I want to get rid of entailing units, the target unit system must be
-        very general (for example everything in cgs like info.unit_d / unit_l of
-        RAMSES analysis)
-        What Pynbody currently does is :
-        dunit converts the code unit into kpc,
-        munit converts the code unit into Msun, and so on...
-        It makes sens when we study galaxies. But the set of (kpc, Msun, km/s)
-        is somewhat arbitrary.
-
-        Think about it.
-
-        """
-        G = 6.67408e-11 #m3 kg-1 s-2
-        G_cgs = 6.67408e-11 * 1e6 * 1e-3
-
-        Msun_in_g = 1.989e33
-
-        kpc_in_cm = 3.08567758e21
-        kpc_in_km = kpc_in_cm *1e-5
-
-        yr_in_s = 31556952 # 365.2425 days
-        Gyr_in_sec = 1e9*yr_in_s
-
-        self.cosmo = bool(param['bComove'])
-
-        mass_in_msun = np.float64(param["dMsolUnit"])
-        # assume boxsize == 1.
-        boxtokpc = np.float64(param["dKpcUnit"])
-        density_in_Msol_kpc2 = mass_in_msun/length_in_kpc**3 # Msol kpc^-3
-
-        Msolkpc2_in_cgs = Msun_in_g/kpc_in_cm**3
-        density_in_cgs = density_in_Msol_kpc2 * Msolkpc2_in_cgs
-
-        time_in_sec = 1./np.sqrt(unit_d_cgs*G_cgs)
-        vel_in_kms = length_in_kpc*kpc_in_km/time_in_sec # in km/s
-
-        time_in_gyr = time_in_sec * Gyr_in_sec**-1 # in Gyr
-
-        if self.cosmo:
-            hub = np.float64(param["dHubble0"])
-            hubble = hub * 10 * vel_in_kms / length_in_kpc # 1/100 * kms/Mpc = 10 * kms/kpc
-
-
-class TipsySim():
-    def __init__(self, fn=None):
-        self.param = {}
-        self.header = TipsyHeader()
-        """
-        Incomplete. Haven't decided what to do when fn == None.
-        """
-        if fn is not None:
-            self.set_fn(fn)
-            self._f = open(self._fn, "rb")
-            self.header.read_header(self._f)
-            self.read_param()
-
-    def set_fn(self, fn):
-        """
-
-        """
-        self._fn = fn
-
-    def load_data(self):
-        f = self._f
-        self.gas = np.frombuffer(f.read(np.dtype(dtype_gas).itemsize * self.header.nsph),
-                    dtype=dtype_gas).newbyteorder(">")
-
-        self.dm = np.frombuffer(f.read(np.dtype(dtype_dm).itemsize * self.header.ndark),
-                            dtype=dtype_dm).newbyteorder(">")
-
-        self.star = np.frombuffer(f.read(np.dtype(dtype_star).itemsize * self.header.nstar),
-                            dtype=dtype_star).newbyteorder(">")
-        # add ID?
-
-    def read_param(self, fn_param=None):
-        if fn_param is None:
-            fn = self._fn
-            try:
-                # Default name
-                fn_param = fn.replace(fn.split(".")[-1], "param")
-                f = open(fn_param, "r")
-            except:
-                # Look for any .param file in the directory
-                from glob import glob
-                l = glob(fn.replace(fn.split("/")[-1], "/*.param"))
-                if len(l) == 1:
-                    f = open(l[0], "r")
-                elif len(l) == 0:
-                    raise IOError("No .param file is found in the directory")
-                elif len(l) > 1:
-                    raise IOError("There are multiple .param files in the directory")
-        else:
-            f = open(fn_param, "r")
-
-        for line in f:
-            try:
-                if line[0] != "#":
-                    s = line.split("#")[0].split()
-                    self.param[s[0]] = convert_num_if_possible(" ".join(s[2:]))
-
-            except IndexError as ValueError:
-                pass
-        f.close()
-
-
-
-
-def cal_units(param):
+def cal_units(param, header):
     from collections import namedtuple
     """
     (mass, time, density, velocity, ...) in (g, sec, g/cc and so on) converts
@@ -222,6 +106,7 @@ def cal_units(param):
     Think about it.
 
     """
+    aexp = header["a"]
     G = 6.67408e-11 #m3 kg-1 s-2
     G_cgs = 6.67408e-11 * 1e6 * 1e-3
 
@@ -259,5 +144,143 @@ def cal_units(param):
                                "d_in_gcc",
                                "v_in_kms",
                                "hubble"])
-    info = Info(mass_in_msun, time_in_gyr, length_in_kpc, density_in_cgs, vel_in_kms, hubble)
+    info = Info(mass_in_msun,
+    time_in_gyr,
+    length_in_kpc * aexp,
+    density_in_cgs,
+    vel_in_kms,
+    hubble)
     return info
+
+
+class Dont_use_Info():
+    def __init__(self, param):
+        """
+        (mass, time, density, velocity, ...) in (g, sec, g/cc and so on) converts
+        a code unit into a more familiar unit.
+
+        UnitA_in_UnitB converts a quantites in unit A into unit B.
+
+        NOTE
+        ----
+        If I want to get rid of entailing units, the target unit system must be
+        very general (for example everything in cgs like info.unit_d / unit_l of
+        RAMSES analysis)
+        What Pynbody currently does is :
+        dunit converts the code unit into kpc,
+        munit converts the code unit into Msun, and so on...
+        It makes sens when we study galaxies. But the set of (kpc, Msun, km/s)
+        is somewhat arbitrary.
+
+        Think about it.
+
+        """
+        G = 6.67408e-11 #m3 kg-1 s-2
+        G_cgs = 6.67408e-11 * 1e6 * 1e-3
+
+        Msun_in_g = 1.989e33
+
+        kpc_in_cm = 3.08567758e21
+        kpc_in_km = kpc_in_cm *1e-5
+
+        yr_in_s = 31556952 # 365.2425 days
+        Gyr_in_sec = 1e9*yr_in_s
+
+        self.cosmo = bool(param['bComove'])
+
+        mass_in_msun = np.float64(param["dMsolUnit"])
+        # assume boxsize == 1.
+        length_in_kpc = np.float64(param["dKpcUnit"])
+        density_in_Msol_kpc2 = mass_in_msun/length_in_kpc**3 # Msol kpc^-3
+
+        Msolkpc2_in_cgs = Msun_in_g/kpc_in_cm**3
+        density_in_cgs = density_in_Msol_kpc2 * Msolkpc2_in_cgs
+
+        time_in_sec = 1./np.sqrt(density_in_cgs*G_cgs)
+        vel_in_kms = length_in_kpc*kpc_in_km/time_in_sec # in km/s
+
+        time_in_gyr = time_in_sec * Gyr_in_sec**-1 # in Gyr
+
+        if self.cosmo:
+            hub = np.float64(param["dHubble0"])
+            hubble = hub * 10 * vel_in_kms / length_in_kpc # 1/100 * kms/Mpc = 10 * kms/kpc
+
+        Info = namedtuple("info",
+                          ["mass_msun",
+                           "len_kpc",
+                           "den_cgs",
+                           "time_cgs",
+                           "time_gyr",
+                           "vel_kms"
+                           ])
+        info = Info(mass_in_msun,
+                    length_in_kpc,
+                    density_in_cgs,
+                    time_in_sec,
+                    time_in_gyr,
+                    vel_in_kms)
+        return info
+
+class TipsySim():
+    def __init__(self, fn=None, load=False):
+        self.param = {}
+        self.header = TipsyHeader()
+        """
+        Incomplete. Haven't decided what to do when fn == None.
+        """
+        if fn is not None:
+            self.set_fn(fn)
+            self._f = open(self._fn, "rb")
+            self.header.read_header(self._f)
+            self.read_param()
+
+        if load:
+            self.load_data()
+
+    def set_fn(self, fn):
+        """
+
+        """
+        self._fn = fn
+
+    def load_data(self):
+        f = self._f
+        self.gas = np.frombuffer(f.read(np.dtype(dtype_gas).itemsize * self.header.nsph),
+                    dtype=dtype_gas).newbyteorder(">").astype(np.float64)
+
+        self.dm = np.frombuffer(f.read(np.dtype(dtype_dm).itemsize * self.header.ndark),
+                            dtype=dtype_dm).newbyteorder(">").astype(np.float64)
+
+        self.star = np.frombuffer(f.read(np.dtype(dtype_star).itemsize * self.header.nstar),
+                            dtype=dtype_star).newbyteorder(">").astype(np.float64)
+        # add ID?
+
+    def read_param(self, fn_param=None):
+        if fn_param is None:
+            fn = self._fn
+            try:
+                # Default name
+                fn_param = fn.replace(fn.split(".")[-1], "param")
+                f = open(fn_param, "r")
+            except:
+                # Look for any .param file in the directory
+                from glob import glob
+                l = glob(fn.replace(fn.split("/")[-1], "/*.param"))
+                if len(l) == 1:
+                    f = open(l[0], "r")
+                elif len(l) == 0:
+                    raise IOError("No .param file is found in the directory")
+                elif len(l) > 1:
+                    raise IOError("There are multiple .param files in the directory")
+        else:
+            f = open(fn_param, "r")
+
+        for line in f:
+            try:
+                if line[0] != "#":
+                    s = line.split("#")[0].split()
+                    self.param[s[0]] = convert_num_if_possible(" ".join(s[2:]))
+
+            except IndexError as ValueError:
+                pass
+        f.close()

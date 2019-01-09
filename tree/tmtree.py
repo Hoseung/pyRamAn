@@ -62,7 +62,7 @@ class Tree():
             self.load_info(nout_fi=nout_fi)
 
         if fn is not None and isfile(fn):
-            self.set_fn(fn)
+            self.fn = fn
         else:
             self.get_fn()
 
