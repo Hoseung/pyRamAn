@@ -56,6 +56,15 @@ class TipsyHeader():
         if not f is None:
             self.read_header(f)
 
+    def set_from_dict(self, dic):
+        keys=dic.keys()
+        try:
+            self.aexp = dic["a"]
+        except:
+            self.aexp = dic["aexp"]
+
+
+
     def read_header(self, f):
         """
         To do
@@ -106,7 +115,7 @@ def cal_units(param, header):
     Think about it.
 
     """
-    aexp = header["a"]
+    aexp = header.aexp
     G = 6.67408e-11 #m3 kg-1 s-2
     G_cgs = 6.67408e-11 * 1e6 * 1e-3
 
@@ -228,14 +237,16 @@ class TipsySim():
         """
         Incomplete. Haven't decided what to do when fn == None.
         """
-        if fn is not None:
-            self.set_fn(fn)
-            self._f = open(self._fn, "rb")
-            self.header.read_header(self._f)
-            self.read_param()
+
+        self.set_fn(fn)
+        self._f = open(self._fn, "rb")
+        self.header.read_header(self._f)
+        self.read_param()
 
         if load:
             self.load_data()
+
+        self.info = cal_units(param=self.param, header=self.header)
 
     def set_fn(self, fn):
         """
@@ -246,13 +257,14 @@ class TipsySim():
     def load_data(self):
         f = self._f
         self.gas = np.frombuffer(f.read(np.dtype(dtype_gas).itemsize * self.header.nsph),
-                    dtype=dtype_gas).newbyteorder(">").astype(np.float64)
+                    dtype=dtype_gas).newbyteorder(">")#.astype(np.float64)
 
         self.dm = np.frombuffer(f.read(np.dtype(dtype_dm).itemsize * self.header.ndark),
-                            dtype=dtype_dm).newbyteorder(">").astype(np.float64)
+                            dtype=dtype_dm).newbyteorder(">")#.astype(np.float64)
 
         self.star = np.frombuffer(f.read(np.dtype(dtype_star).itemsize * self.header.nstar),
-                            dtype=dtype_star).newbyteorder(">").astype(np.float64)
+                            dtype=dtype_star).newbyteorder(">")#.astype(np.float64)
+        f.close()
         # add ID?
 
     def read_param(self, fn_param=None):
