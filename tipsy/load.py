@@ -51,7 +51,6 @@ class TipsyHeader():
         self.nsph = 0
         self.ndark = 0
         self.nstar = 0
-        self.pad = 0
         self._setup=False
         if not f is None:
             self.read_header(f)
@@ -62,8 +61,6 @@ class TipsyHeader():
             self.aexp = dic["a"]
         except:
             self.aexp = dic["aexp"]
-
-
 
     def read_header(self, f):
         """
@@ -78,10 +75,11 @@ class TipsyHeader():
             self.nsph = np.fromfile(f, dtype=np.int32, count=1).byteswap()[0]
             self.ndark = np.fromfile(f, dtype=np.int32, count=1).byteswap()[0]
             self.nstar = np.fromfile(f, dtype=np.int32, count=1).byteswap()[0]
-            self.pad = np.fromfile(f, dtype=np.int32, count=1).byteswap()[0]
+            # 4 Bytes of padding to make the data 8-Byte aligned.
+            np.fromfile(f, dtype=np.int32, count=1).byteswap()[0]
+
             self.zred = 1./self.aexp -1
             self._setup = True
-
 
 def convert_num_if_possible(s):
     try:
@@ -231,7 +229,7 @@ class Dont_use_Info():
         return info
 
 class TipsySim():
-    def __init__(self, fn=None, load=False):
+    def __init__(self, fn=None, load=False, ignore_param=False):
         self.param = {}
         self.header = TipsyHeader()
         """
@@ -241,12 +239,14 @@ class TipsySim():
         self.set_fn(fn)
         self._f = open(self._fn, "rb")
         self.header.read_header(self._f)
-        self.read_param()
+        if not ignore_param:
+            self.read_param()
 
         if load:
             self.load_data()
 
-        self.info = cal_units(param=self.param, header=self.header)
+        if not ignore_param:
+            self.info = cal_units(param=self.param, header=self.header)
 
     def set_fn(self, fn):
         """

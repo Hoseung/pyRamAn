@@ -69,6 +69,9 @@ class Tree():
         if load:
             self.load(nout_now=nout_fi, BIG_RUN=BIG_RUN)
         # Load nnza()
+        self._load_nnza()
+
+    def _load_nnza(self):
         try:
             self.nnza = Nnza(fname=self.fn.split(self.tree_fn)[0]+"nout_nstep_zred_aexp.txt")
         except:
@@ -78,13 +81,50 @@ class Tree():
             except:
                 print("[warning] Can not load nnza")
 
+
     def load_info(self, nout_fi=None):
+        """
+        load info.txt of the last snapshot
+        """
         from load.info import Info
         from utils import util
 
         if nout_fi is None:
             nout_fi = util.get_last_snapshot(self.wdir)
         self.info = Info(base=self.wdir, nout=nout_fi)
+
+    def cal_nnza(self):
+        """
+        Make nout_nstep_zred_aexp.txt file from the input_TreeMaker.dat file.
+        """
+        fdir = self.fn.split(self.tree_fn)[0]
+
+        fsave = fdir+"nout_nstep_zred_aexp.txt"
+        if os.path.isfile(fsave):
+            print("File {} exists".format(fsave))
+            #return
+        f_tree_input = fdir + "input_TreeMaker.dat"
+        if not os.path.isfile(f_tree_input):
+            print("[warning] {} doest not exist".format(f_tree_input))
+            #return
+
+        with open(f_tree_input, "r") as f:
+            nsteps = int(f.readline().split()[0])
+            nouts = []
+            for i,line in enumerate(f.readlines()):
+                if "tree_bricks" in line:
+                    nouts.append(int(line.split("tree_bricks")[1].split("'")[0]))
+
+        nsteps = np.unique(self.tree["nstep"])[::-1] # decending order
+        # remove nstep = 0 in an empty tree
+        nsteps = nsteps[nsteps > 0]
+        # Early snapshots in input_TreeMkaer.dat can be ignored.
+        nnsteps = len(nsteps)
+        nouts=np.array(nouts)[nnsteps::-1] # decending order
+        aexps = self.aexps[nnsteps::-1] # decending order
+        zreds = 1./aexps - 1
+        np.savetxt(fsave, np.c_[nouts, nsteps, zreds, aexps], fmt=['%d', '%d', '%.9f', '%.9f'])
+
 
     def cal_time(self, info=None):
         """
@@ -330,80 +370,6 @@ class Tree():
         return np.copy(atree[:i][::-1])
 
 
-    def extract_direct_full_tree(self, idx, return_id=False):
-        """
-        Extracts main progenitors from a TreeMaker tree.
-
-        example
-        -------
-        >>> tt = tmtree.Tree("tree.dat")
-        >>> atree = tt.extract_main_tree(12345)
-
-        TODO
-        ----
-        It works, but the try - except clause is error-prone.
-        Explicitly check the end of progenitor tree and make the function more predictable.
-
-        """
-
-        t = self.tree
-        if return_id:
-            fatherID = self.fatherID
-        fatherIDx = self.fatherIDx
-        fatherMass = self.fatherMass
-
-        t_now = t[idx]
-        nstep = t_now["nstep"]
-        nouts = [nstep]
-        atree = np.zeros(nstep + 1, dtype=t.dtype)
-        atree[0] = t_now
-
-        idx_prgs_alltime = [[idx]]
-
-        if return_id:
-            id_prgs_alltime = [[t[idx]["id"]]]
-            for i in range(1, nstep + 1):
-                id_father  =  fatherID[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]]# -1
-                try:
-                    idx_father = fatherIDx[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]]# -1
-                    if len(idx_father) > 0:
-                        idx_prgs_alltime.append(list(idx_father[idx_father>0]))
-                        id_prgs_alltime.append(list(id_father[id_father>0]))
-                        mass_father_transfer = fatherMass[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]]
-                        mass_father = t[idx_father[idx_father>0]]["m"]
-                        idx = idx_father[np.argmax(mass_father_transfer/mass_father)]
-                        if idx < 1:
-                            break
-                        t_father=t[idx]
-                        atree[i]=t_father
-                        nouts.append(nstep)
-                    else:
-                        break
-                except:
-                    break
-            return atree, idx_prgs_alltime, id_prgs_alltime
-        else:
-            for i in range(1, nstep + 1):
-                try:
-                    idx_father = fatherIDx[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]]# -1
-                    if len(idx_father) > 0:
-                        idx_prgs_alltime.append(list(idx_father[idx_father>0]))
-                        mass_father_transfer = fatherMass[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]]
-                        mass_father = t[idx_father[idx_father>0]]["m"]
-                        idx = idx_father[np.argmax(mass_father_transfer/mass_father *\
-                                                   (np.abs(np.log10(mass_father/t[idx]["m"])) < 0.2).astype(int))]
-                        if idx < 1:
-                            break
-                        t_father=t[idx]
-                        atree[i]=t_father
-                        nouts.append(nstep)
-                    else:
-                        break
-                except:
-                    break
-
-            return atree, idx_prgs_alltime
-
     def get_all_trees(self, idx_prgs_alltime,
 					 skip_main=True,
 					 filter_dup=True):
@@ -478,6 +444,11 @@ class Tree():
 
         """
 
+        try:
+            idx = int(idx)
+        except ValueError:
+            print("Cannot convert idx into an integer", idx)
+
         t = self.tree
         fatherIDx = self.fatherIDx
         fatherMass = self.fatherMass
@@ -509,39 +480,6 @@ class Tree():
                 break
 
         return np.copy(atree[:i])
-
-    def cal_nnza(self):
-        """
-        Make nout_nstep_zred_aexp.txt file from the input_TreeMaker.dat file.
-        """
-        fdir = self.fn.split(self.tree_fn)[0]
-
-        fsave = fdir+"nout_nstep_zred_aexp.txt"
-        if os.path.isfile(fsave):
-            print("File {} exists".format(fsave))
-            #return
-        f_tree_input = fdir + "input_TreeMaker.dat"
-        if not os.path.isfile(f_tree_input):
-            print("[warning] {} doest not exist".format(f_tree_input))
-            #return
-
-        with open(f_tree_input, "r") as f:
-            nsteps = int(f.readline().split()[0])
-            nouts = []
-            for i,line in enumerate(f.readlines()):
-                if "tree_bricks" in line:
-                    nouts.append(int(line.split("tree_bricks")[1].split("'")[0]))
-
-        nsteps = np.unique(self.tree["nstep"])[::-1] # decending order
-        # remove nstep = 0 in an empty tree
-        nsteps = nsteps[nsteps > 0]
-        # Early snapshots in input_TreeMkaer.dat can be ignored.
-        nnsteps = len(nsteps)
-        nouts=np.array(nouts)[nnsteps::-1] # decending order
-        aexps = self.aexps[nnsteps::-1] # decending order
-        zreds = 1./aexps - 1
-        np.savetxt(fsave, np.c_[nouts, nsteps, zreds, aexps], fmt=['%d', '%d', '%.9f', '%.9f'])
-
 
 def fix_nout(tt, nout_ini, nout_fi):
     nout_min_org = tt['NOUT'].min()
@@ -579,8 +517,6 @@ def check_tree_complete(tree, nout_fi, nout_ini, halo_list):
         complete_list[i] = complete
 
     return complete_list, idlist[complete_list]
-
-
 
 
 def check_tree_fig(tt, idx):
