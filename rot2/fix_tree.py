@@ -244,7 +244,6 @@ def fix_broken_tree(adp,
     # best match
     # In desirable cases, dist match is good.
     # But the fit can go terrible during violent interactions.
-    # Then do not conisder the dist match too much.
 
     # The following scenario is possible.
     # There are two cbs. one is long and far, the other is short and close.

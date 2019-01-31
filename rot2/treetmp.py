@@ -29,7 +29,7 @@ def remove_false_prg(tt, fidxs, macc,
                      merger_mass_frac_min = 0.5,
                      verbose=False):
     """
-    Any galaxy/halo that have gave more than none of mass to the son are listed as progenitors.
+    Any galaxy/halo that have passed some mass to the son are listed as progenitors.
     But many of them are just passers-by who left a tiny fraction of their mass in the 'main' galaxy.
     For a progenitor to be a legitimate satellite, it should give most of its mass to the main galaxy (son at the next step)
 
@@ -405,7 +405,7 @@ def plot_tree_detail(axs, tree, main=None,
     line_scatter(axs[2][4],xtime,np.log10(tree["m"]))
 
 
-def check_tree(main, adp,
+def check_tree(adp,
                out_dir="./",
                save=True,
                suffix="org",
@@ -419,7 +419,7 @@ def check_tree(main, adp,
     """
         pos_diff is not working yet.
     """
-    #main = adp[0].pop(0)
+    main = adp[0].pop(0)
     if pos_diff:
         sats = copy(adp)
         sats["x"]-=main["x"]
