@@ -36,7 +36,7 @@ def add_dtypes(old_dtypes, new_dtypes):
                   ("vy", dtype_float, 1, "vp", 8),
                   ("vz", dtype_float, 1, "vp", 16)]
 
-    >>> new_dt = add_dtypes(old_dtyes, add_dtypes)
+    >>> new_dt = add_dtypes(old_dtypes, add_dtypes)
 
     If the name of reference field is empty ("" or None),
     the entry is added to the end of the current field list and the offset is ignored.
