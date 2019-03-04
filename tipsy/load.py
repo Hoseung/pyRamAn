@@ -96,7 +96,7 @@ def cal_units(param, header):
     (mass, time, density, velocity, ...) in (g, sec, g/cc and so on) converts
     a code unit into a more familiar unit.
 
-    UnitA_in_UnitB converts a quantites in unit A into unit B.
+    UnitA_in_UnitB converts quantity A in code unit into unit B.
 
     NOTE
     ----
@@ -106,7 +106,7 @@ def cal_units(param, header):
     What Pynbody currently does is :
     dunit converts the code unit into kpc,
     munit converts the code unit into Msun, and so on...
-    It makes sens when we study galaxies. But the set of (kpc, Msun, km/s)
+    It makes sense when we study galaxies. But the set of (kpc, Msun, km/s)
     is somewhat arbitrary.
     For example, both Msun/kpc^3 and g/cc are very often used.
 
