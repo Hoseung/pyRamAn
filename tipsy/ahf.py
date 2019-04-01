@@ -1,5 +1,6 @@
 import numpy as np
 from utils.fancy_print import printw
+#from glob import glob
 
 dtype_halo_ahf = np.dtype([('id','<i4'),
             ('hostHalo','<i4'),
@@ -118,13 +119,18 @@ class AHF_halo():
     def set_fn(self, fn):
         """
         TODO
-        AHF filename has redshift in it, which adds an additional layer of
-        complexity to guess the file name based on the snapshot base name.
+        It's very annoying to give a full file name everytime.
+        Let' me just use nout!
 
-        Note that the file name consists of three parts.
+        # NOTE: The file name is split at "_halos". So, "_halos" should not appear
+        more than once in the file name.
+
+        A conventional file name consists of three parts.
         snapshot_base + redshift + AHF_output_type
 
         """
+        #file_candidates = glob(fn+"*_halos")
+
         self._fn = fn # Whatever that is...
         last = fn.split(".")[-1]
         if "_halos" in last:
