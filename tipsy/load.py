@@ -1,46 +1,9 @@
 import numpy as np
 from collections import namedtuple
+from .config import Changa_config
+from load.dtypes import add_dtypes
 
-dtype_gas = np.dtype({  'm': (('<f4', 1), 0),
-             'pos': (('<f4', (3,)), 4),
-               'x': (('<f4', 1), 4),
-               'y': (('<f4', 1), 8),
-               'z': (('<f4', 1), 12),
-             'vel': (('<f4', (3,)), 16),
-              'vx': (('<f4', 1), 16),
-              'vy': (('<f4', 1), 20),
-              'vz': (('<f4', 1), 24),
-             'rho': (('<f4', 1), 28),
-            'temp': (('<f4', 1), 32),
-             'eps': (('<f4', 1), 36),
-           'metal': (('<f4', 1), 40),
-             'phi': (('<f4', 1), 44)})
-
-dtype_dm = np.dtype({  'm': (('<f4', 1), 0),
-             'pos': (('<f4', (3,)), 4),
-               'x': (('<f4', 1), 4),
-               'y': (('<f4', 1), 8),
-               'z': (('<f4', 1), 12),
-             'vel': (('<f4', (3,)), 16),
-              'vx': (('<f4', 1), 16),
-              'vy': (('<f4', 1), 20),
-              'vz': (('<f4', 1), 24),
-             'eps': (('<f4', 1), 28),
-             'phi': (('<f4', 1), 32)})
-
-dtype_star = np.dtype({  'm': (('<f4', 1), 0),
-             'pos': (('<f4', (3,)), 4),
-               'x': (('<f4', 1), 4),
-               'y': (('<f4', 1), 8),
-               'z': (('<f4', 1), 12),
-             'vel': (('<f4', (3,)), 16),
-              'vx': (('<f4', 1), 16),
-              'vy': (('<f4', 1), 20),
-              'vz': (('<f4', 1), 24),
-           'metal': (('<f4', 1), 28),
-           'tform': (('<f4', 1), 32),
-             'eps': (('<f4', 1), 36),
-             'phi': (('<f4', 1), 40)})
+ccfg = Changa_config()
 
 class TipsyHeader():
     def __init__(self, f=None, swap=True):
@@ -211,6 +174,10 @@ class TipsySim():
         """
         Incomplete. Haven't decided what to do when fn == None.
         """
+        self._gas_aux =[]
+        self._star_aux =[]
+        self._dm_aux =[]
+
         if base is not None:
             self.base = base
         if nout is not None:
@@ -248,27 +215,80 @@ class TipsySim():
                 self._fn = fn
 
 
+    def set_aux_list(self, aux_list):
+        """
+        check if given aux file is available
+
+        Note
+        ----
+        dtype_aux_gas.append((aux,dt_aux.get(name)[0], 1, "", 0))
+        -> 1, "", 0 is needed as input to load.dtype.add_dtype()
+        """
+        dtype_aux_star = []
+        dtype_aux_gas = []
+        dtype_aux_dm = []
+        dt_aux = ccfg.dtype_aux.fields
+        for aux in aux_list:
+            if aux in ccfg.gas_properties:
+                self._gas_aux.append(aux)
+                dtype_aux_gas.append((aux,dt_aux.get(aux)[0], 1, "", 0))
+            if aux in ccfg.star_properties:
+                self._star_aux.append(aux)
+                dtype_aux_star.append((aux,dt_aux.get(aux)[0], 1, "", 0))
+            if aux in ccfg.dm_properties:
+                self._dm_aux.append(aux)
+                dtype_aux_dm.append((aux,dt_aux.get(aux)[0], 1, "", 0))
+
+        self._dtype_star = add_dtypes(ccfg.dtype_star, dtype_aux_star)
+        self._dtype_gas  = add_dtypes(ccfg.dtype_gas, dtype_aux_gas)
+        self._dtype_dm   = add_dtypes(ccfg.dtype_dm, dtype_aux_dm)
+
+
+    def _copy_each_field(dest, source, fields):
+        pass
+
     def load_data(self, only_gas=False):
         """
         Todo : skip unwanted populations.
 
-
-        frombuffer Interprets the buffer in a desired manner.
         The resulting array is read-only if a string, which is immutable, is in the buffer.
-
-
         """
         f = self._f
 
-        self.gas = np.frombuffer(f.read(np.dtype(dtype_gas).itemsize * self.header.nsph),
-                    dtype=dtype_gas).copy()
+        dtype_gas  = ccfg.dtype_gas
+        dtype_dm   = ccfg.dtype_dm
+        dtype_star = ccfg.dtype_star
+
+        gas_tmp= np.frombuffer(f.read(ccfg.dtype_gas.itemsize * self.header.nsph),
+                    dtype=ccfg.dtype_gas).copy()
+        if len(self._gas_aux) > 0:
+            self.gas = np.zeros(self.header.nsph, dtype=self._dtype_gas)
+            # Cannot use dtype.descr because it's not defined for types with overlapping or out-of-order fields
+            for (key, type) in gas_tmp.dtype.fields.items():
+                self.gas[key] = gas_tmp[key]
+        else:
+            self.gas = gas_tmp
 
         if not only_gas:
-            self.dm = np.frombuffer(f.read(np.dtype(dtype_dm).itemsize * self.header.ndark),
-                                dtype=dtype_dm).copy()
+            dm_tmp = np.frombuffer(f.read(ccfg.dtype_dm.itemsize * self.header.ndark),
+                                dtype=ccfg.dtype_dm).copy()
+            if len(self._dm_aux) > 0:
+                #dtype_dm_new = append_dtype(ccfg.dtype_star, self.list_aux)
+                self.dm = np.zeros(self.header.ndark, dtype=self._dtype_dm)
+                for (key, type) in dm_tmp.dtype.items():
+                    self.dm[key] = dm_tmp[key]
+            else:
+                self.dm = dm_tmp
 
-            self.star = np.frombuffer(f.read(np.dtype(dtype_star).itemsize * self.header.nstar),
-                                dtype=dtype_star).copy()
+            star_tmp = np.frombuffer(f.read(ccfg.dtype_star.itemsize * self.header.nstar),
+                                dtype=ccfg.dtype_star).copy()
+            if len(self._star_aux) > 0:
+                #dtype_star_new = append_dtype(ccfg.dtype_star, self.list_aux)
+                self.star = np.zeros(self.header.nstar, dtype=self._dtype_star)
+                for (key, type) in star_tmp.dtype.items():
+                    self.star[key] = star_tmp[key]
+            else:
+                self.star = star_tmp
 
         if self._BYTE_SWAP:
             self.gas = self.gas.newbyteorder(">")

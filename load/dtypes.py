@@ -41,6 +41,13 @@ def add_dtypes(old_dtypes, new_dtypes):
     If the name of reference field is empty ("" or None),
     the entry is added to the end of the current field list and the offset is ignored.
 
+    To do
+    -----
+    adapt to new_dtype with minimal information so that
+    add_dtypes =[("a1", "<f4"), ("a2", "<i4")]
+               == [("a1", "<f4", 1, "", 0), 
+                   ("a2", "<i4", 1, "", 0)]
+
     """
     if not isinstance(old_dtypes, np.dtype):
         old_dtypes = np.dtype(old_dtypes)
@@ -73,7 +80,6 @@ def add_dtypes(old_dtypes, new_dtypes):
             except:
                 print("[load/dtype error] Can't find the field ({}) in the old dtypes".format(nf[3]))
                 raise
-
 
     return dtype_new
 
