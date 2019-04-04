@@ -53,6 +53,7 @@ class TipsyHeader():
 
             self.zred = 1./self.aexp -1
             self._setup = True
+            return f.tell()
 
 def convert_num_if_possible(s):
     """
@@ -119,7 +120,9 @@ def cal_units(param, header):
 
     if cosmo:
         hub = np.float64(param["dHubble0"])
-        hubble = hub * 10 * vel_in_kms / length_in_kpc # 1/100 * kms/Mpc = 10 * kms/kpc
+        hubble = round(hub * 10 * vel_in_kms / length_in_kpc, 4) 
+        # 1/100 * kms/Mpc = 10 * kms/kpc
+        # 67.74, not 67.7403103305142
 
 
     Info = namedtuple("info", ["m_in_msun",
@@ -189,7 +192,7 @@ class TipsySim():
 
         self.set_fn(fn)
         self._f = open(self._fn, "rb")
-        self.header.read_header(self._f, self._BYTE_SWAP)
+        self._size_header = self.header.read_header(self._f, self._BYTE_SWAP)
         if not ignore_param:
             self.read_param()
 
@@ -244,10 +247,7 @@ class TipsySim():
         self._dtype_dm   = add_dtypes(ccfg.dtype_dm, dtype_aux_dm)
 
 
-    def _copy_each_field(dest, source, fields):
-        pass
-
-    def load_data(self, only_gas=False):
+    def load_data(self, gas=True, star=True, dm=True):
         """
         Todo : skip unwanted populations.
 
@@ -259,42 +259,48 @@ class TipsySim():
         dtype_dm   = ccfg.dtype_dm
         dtype_star = ccfg.dtype_star
 
-        gas_tmp= np.frombuffer(f.read(ccfg.dtype_gas.itemsize * self.header.nsph),
-                    dtype=ccfg.dtype_gas).copy()
-        if len(self._gas_aux) > 0:
-            self.gas = np.zeros(self.header.nsph, dtype=self._dtype_gas)
-            # Cannot use dtype.descr because it's not defined for types with overlapping or out-of-order fields
-            for (key, type) in gas_tmp.dtype.fields.items():
-                self.gas[key] = gas_tmp[key]
-        else:
-            self.gas = gas_tmp
+        if gas:
+            f.seek(self._size_header)
+            gas_tmp= np.frombuffer(f.read(ccfg.dtype_gas.itemsize * self.header.nsph),
+                        dtype=ccfg.dtype_gas).copy()
+            if len(self._gas_aux) > 0:
+                self.gas = np.zeros(self.header.nsph, dtype=self._dtype_gas)
+                # Cannot use dtype.descr because it's not defined for types with overlapping or out-of-order fields
+                for (key, type) in gas_tmp.dtype.fields.items():
+                    self.gas[key] = gas_tmp[key]
+            else:
+                self.gas = gas_tmp
 
-        if not only_gas:
+        if dm:
+            f.seek(self._size_header + ccfg.dtype_gas.itemsize * self.header.nsph)
             dm_tmp = np.frombuffer(f.read(ccfg.dtype_dm.itemsize * self.header.ndark),
                                 dtype=ccfg.dtype_dm).copy()
             if len(self._dm_aux) > 0:
                 #dtype_dm_new = append_dtype(ccfg.dtype_star, self.list_aux)
                 self.dm = np.zeros(self.header.ndark, dtype=self._dtype_dm)
-                for (key, type) in dm_tmp.dtype.items():
+                for (key, type) in dm_tmp.dtype.fields.items():
                     self.dm[key] = dm_tmp[key]
             else:
                 self.dm = dm_tmp
 
+        if star:
+            f.seek(self._size_header + \
+                   ccfg.dtype_gas.itemsize * self.header.nsph +\
+                   ccfg.dtype_dm.itemsize * self.header.ndark)
             star_tmp = np.frombuffer(f.read(ccfg.dtype_star.itemsize * self.header.nstar),
                                 dtype=ccfg.dtype_star).copy()
             if len(self._star_aux) > 0:
                 #dtype_star_new = append_dtype(ccfg.dtype_star, self.list_aux)
                 self.star = np.zeros(self.header.nstar, dtype=self._dtype_star)
-                for (key, type) in star_tmp.dtype.items():
+                for (key, type) in star_tmp.dtype.fields.items():
                     self.star[key] = star_tmp[key]
             else:
                 self.star = star_tmp
 
         if self._BYTE_SWAP:
-            self.gas = self.gas.newbyteorder(">")
-            if not only_gas:
-                self.dm = self.dm.newbyteorder(">")
-                self.star = self.star.newbyteorder(">")
+            if gas:  self.gas = self.gas.newbyteorder(">")
+            if dm:   self.dm = self.dm.newbyteorder(">")
+            if star: self.star = self.star.newbyteorder(">")
 
         f.close()
         # add ID?
