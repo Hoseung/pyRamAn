@@ -14,7 +14,7 @@ __pycache__/
 */*.so
 */*/*.so
 */build/*
-load/compile*.sh
+pyram/load/compile*.sh
 *linux-x86*
 wheels/
 docs/_build/

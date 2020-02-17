@@ -1,0 +1,16 @@
+Metadata-Version: 2.1
+Name: pyram
+Version: 0.0.1
+Summary: Testing
+Home-page: github.com
+Author: Hoesung Choi
+Author-email: hopung@gmail.com
+License: UNKNOWN
+Description: read me!
+        
+Platform: UNKNOWN
+Classifier: Programming Language :: Python 3
+Classifier: License ::OSI Approved :: MIT License
+Classifier: Operating System :: Linux
+Requires-Python: >=3.7
+Description-Content-Type: text/markdown
