@@ -4,9 +4,201 @@ Created on Thu Mar 26 17:44:27 2015
 
 @author: hoseung
 """
-from .sim import Simbase
 import numpy as np
 from ..utils.io_module import read_header, read_fortran, skip_fortran
+
+class Simbase():
+    """
+    base
+    """
+    def __init__(self,
+                 cosmo=True,
+                 verbose=False):
+        self.cosmo=cosmo
+        self.ranges=None
+        self.region=None
+        self.nout=None
+        self.cpu_fixed=False
+        self.cpus=None
+        self.verbose=verbose
+
+    def add_amr(self, load=False):
+        self.amr = Amr(info=self.info, cpus=self.cpus, load=load)
+        if self.verbose: print("An AMR instance is created\n", self.__class__.__name__)
+
+    def unlock_cpus(self):
+        self.cpu_fixed=False
+
+    def set_cpus(self, cpus=None, lock=False):
+        """
+        Determine the list of CPUs for the range.
+        Requires self.range.
+        """
+        if cpus is None:
+            cpus = self._hilbert_cpulist(self.info, self.ranges,
+                                         amrheader=self.amr.header)
+        if not self.cpu_fixed:
+            self.cpus = np.array(cpus)
+        # Lock, but only there is a valid list of cpus.
+        if lock and self.cpus is not None:
+            self.cpu_fixed = True
+
+    def show_cpus(self):
+        print(" ncpus : %s \n" % self.cpus)
+
+    def set_ranges(self, ranges=[[0, 1], [0, 1], [0, 1]]):
+        if ranges is not None:
+            if not hasattr(self, "amr"):
+                self.add_amr(load=False)
+
+            nr = np.asarray(ranges) # Now it is a class
+            if not(nr.shape[0] == 3 and nr.shape[1] == 2):
+                # Because actual operation on the given input(ranges)
+                # does not take place soon, it's not a good place to use
+                # try & except clause. There is nothing to try yet.
+                print(' Error!')
+                print('Shape of ranges is wrong:', nr.shape)
+                print('example : [[0.1,0.3],[0.2,0.4],[0.6,0.8]] \n')
+            else:
+                self.ranges = ranges
+                self.set_cpus()
+        else:
+            self.ranges = None
+
+    def _hilbert_cpulist(self, info, ranges, amrheader=None):
+        """
+        After determining cpus, read the cpu files and cut off data
+        that are outside ranges.
+        -> cpu files contain data points within a given ranges
+        BUT! they also contain other data points outside the ranges.
+        """
+        from .a2c import a2c
+
+        if amrheader is None:
+            if not(hasattr(self, 'amr')):
+                print("[sim._hilbert_cpulist] No AMR instance,")
+                print("[sim._hilbert_cpulist] Loading one...")
+                self.add_amr(load=False)# load only meta data
+            amrheader = self.amr.header
+
+        nlevelmax = amrheader.nlevelmax
+        #nboundary = amrheader.nboundary
+        ndim = self.info.ndim
+        ncpu = self.info.ncpu_tot  #ncpu_tot
+        # header of part output is needed (and is prepared.)
+
+        # header of amr output is needed.
+        #two2ndim = 2**ndim
+        #nx = amrheader.ng[0]
+        #ny = amrheader.ng[1]
+        #nz = amrheader.ng[2]
+
+        #xbound = [nx/2., ny/2., nz/2.]
+        #ngridfile = np.zeros(ncpu + nboundary, nlevelmax)
+        #ngridlevel = np.zeros(ncpu + nlevelmax)
+
+        #if (nboundary > 0):
+        #    ngridbound = np.zeros(nboundary, nlevelmax)
+
+        try:
+            lmax
+        except:
+            lmax = nlevelmax
+
+        xxmin = ranges[0][0]
+        xxmax = ranges[0][1]
+        yymin = ranges[1][0]
+        yymax = ranges[1][1]
+        zzmin = ranges[2][0]
+        zzmax = ranges[2][1]
+
+        dmax = max([xxmax-xxmin, yymax-yymin, zzmax-zzmin])
+#        lmin = lmax # sometimes even smallest dx is larger than the region size.
+        lmin = info.lmin # default value. But, which value should I pick?
+        for ilevel in range(1, lmax):
+            dx = 0.5**ilevel
+            if (dx < dmax):
+                lmin = ilevel
+                break
+
+        bit_length = lmin - 1
+        maxdom = 2**bit_length
+        imin, imax, jmin, jmax, kmin, kmax = 0,0,0,0,0,0
+
+        if (bit_length > 0):
+            imin = int(xxmin * maxdom)
+            imax = imin + 1
+            jmin = int(yymin * maxdom)
+            jmax = jmin + 1
+            kmin = int(zzmin * maxdom)
+            kmax = kmin + 1
+
+        dkey = (2**(nlevelmax+1)/maxdom)**(ndim)
+        ndom = 1
+        if (bit_length > 0): ndom = 8
+        idom = np.zeros(9)
+        jdom = np.zeros(9)
+        kdom = np.zeros(9)
+        idom[1] = imin; idom[2] = imax
+        idom[3] = imin; idom[4] = imax
+        idom[5] = imin; idom[6] = imax
+        idom[7] = imin; idom[8] = imax
+        jdom[1] = jmin; jdom[2] = jmin
+        jdom[3] = jmax; jdom[4] = jmax
+        jdom[5] = jmin; jdom[6] = jmin
+        jdom[7] = jmax; jdom[8] = jmax
+        kdom[1] = kmin; kdom[2] = kmin
+        kdom[3] = kmin; kdom[4] = kmin
+        kdom[5] = kmax; kdom[6] = kmax
+        kdom[7] = kmax; kdom[8] = kmax
+
+        bounding_min = np.zeros(9)
+        bounding_max = np.zeros(9)
+
+        for i in range(1, ndom + 1):
+            if bit_length > 0:
+                order_min = a2c.hilbert3d([idom[i]], [jdom[i]], [kdom[i]],
+                                            bit_length, 1)
+                # order_min, array or single variable??
+                # Will it be vectorized??
+            else:
+                order_min = 0
+
+            order_min = np.asarray(order_min)
+            bounding_min[i] = [order_min][0] * dkey
+            bounding_max[i] = ([order_min][0] + 1) * dkey
+            # [(x + 1) * dkey for x in order_min]
+
+        cpu_min = np.zeros(9, dtype=np.int)
+        cpu_max = np.zeros(9, dtype=np.int)
+        bound_key = info.hilbertkey[0]
+
+        cpu_list = np.zeros(ncpu+1, dtype=np.int)
+
+        for impi in range(1, ncpu + 1):
+            for i in range(1, ndom + 1):
+                if ((bound_key[impi - 1] <= bounding_min[i]) and
+                    (bound_key[impi    ] >  bounding_min[i])):
+                    cpu_min[i] = impi
+                if ((bound_key[impi - 1] <  bounding_max[i]) and
+                    (bound_key[impi    ] >= bounding_max[i])):
+                    cpu_max[i] = impi
+
+        ncpu_read = 0
+        cpu_read = np.zeros(ncpu + 1, dtype=np.int)
+        for i in range(1, ndom + 1):
+            for j in range(cpu_min[i], cpu_max[i] + 1):
+                # np.arange(10,10) = [], np.arange(10,11) = [10]
+                if cpu_read[j] == 0:
+                    ncpu_read += 1
+                    cpu_list[ncpu_read] = j
+                    cpu_read[j] = 1
+
+# Sort cpu_list in descending npart order for memory efficiency
+        cpu_list = cpu_list[cpu_list > 0]  # crop empty part
+
+        return np.sort(cpu_list)
+
 
 class AmrHeader():
     """
@@ -226,7 +418,6 @@ class Grid():
         self.ngridarr=ngridarr
         self.levellist=levellist
 
-
 class Amr(Simbase):
     """
     AMR class, which is required by Hydro class.
@@ -329,7 +520,7 @@ class Amr(Simbase):
             The radius of the returned sphere is scaled by 'scale'.
 
         """
-        from utils import sampling
+        from ..utils import sampling
         imin = np.where(self.dm['m'] == self.dm['m'].min())
         xr = [self.dm['px'][imin].min(), self.dm['px'][imin].max()]
         yr = [self.dm['py'][imin].min(), self.dm['py'][imin].max()]
