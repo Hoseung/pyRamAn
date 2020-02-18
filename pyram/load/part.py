@@ -172,14 +172,13 @@ class Part(load.sim.Simbase):
             if max(part["m"]) < 100:
                 part["m"] *= self.info.msun
 
-
     def set_base(self, base):
         """
             Sets Working directory.
         """
         from os import path
         self.base = path.abspath(base)
-#        self.show_base()
+        # self.show_base()
 
     def set_fbase(self, base, data_dir):
         """
@@ -205,13 +204,12 @@ class Part(load.sim.Simbase):
             self.pqset.update(pp.split()[1:])
 
         self.ptypes = Ptypes(self.pt, self.pq)
-    # Check if there is dm / star / sink in quantities list
-    # or mass, id, vel, and so on in ptype list.
-    # Only exact match (lower or upper case) works. No tolerence for errata.
+        # Check if there is dm / star / sink in quantities list
+        # or mass, id, vel, and so on in ptype list.
+        # Only exact match (lower or upper case) works. No tolerence for errata.
         quantities = set(["mass", "id", "vel", "ref", "time", "metal"])
         self.pqset.intersection_update(quantities)
         # any elements not listed in qunatities are removed.
-
 
     def setDmQuantities(self, vel=False, mass=True, ref=False):
         self.dm_with_vel = vel
@@ -239,31 +237,7 @@ class Part(load.sim.Simbase):
 
         return npart_arr  # ,nstar_this, my_mask
 
-    def search_zoomin(self, scale=1.0, load=False):
-        from utils import sampling
-        if not hasattr(self, 'dm'):
-            if load:
-                print("Let's load particle data first!")
-                self.load()
-            else:
-                print("Couldn't find dm data. \n \
-                    Make sure you load it first, \n \
-                    or use load=True option")
-
-        imin = np.where(self.dm['m'] == self.dm['m'].min())
-        xr = [self.dm['x'][imin].min(), self.dm['x'][imin].max()]
-        yr = [self.dm['y'][imin].min(), self.dm['y'][imin].max()]
-        zr = [self.dm['z'][imin].min(), self.dm['z'][imin].max()]
-
-        xc = 0.5 * sum(xr)
-        yc = 0.5 * sum(yr)
-        zc = 0.5 * sum(zr)
-
-        radius = 0.5 * max([xr[1]-xr[0], yr[1]-yr[0], zr[1]-zr[0]]) * scale
-
-        return(sampling.set_region(centers=[xc, yc, zc], radius=radius))
-
-    def help():
+    def help(self):
         print(" Add some helps later on ")
 
     def print_cpu(self, icpu):
@@ -419,7 +393,6 @@ class Part(load.sim.Simbase):
 
         return dtype
 
-
     def load_general(self, zoom=False, verbose=False, ranges=None, pq=None):
         # only xyz coordinate is useful with Hilbert space domain decomposition
         # information.
@@ -427,7 +400,7 @@ class Part(load.sim.Simbase):
             ranges = self.ranges
         print("Loading particle... \n ranges:", ranges)
         # Total particle number from selected cpus.
-#        npart_tot
+        # npart_tot
         npart_arr = self._get_npart_arr(self.cpus)
         print('npart_arr:', npart_arr)
 
@@ -502,7 +475,7 @@ class Part(load.sim.Simbase):
         # But!! nstar and nsink is for the whole simulation volume while
         # npart is for only selected cpus. hmm.
 
-#        self.ndm = sum(npart_arr) - self.nstar - self.nsink * 2109
+        # self.ndm = sum(npart_arr) - self.nstar - self.nsink * 2109
 
         # Total number of particles stored in the cpus.
         # But particles within ranges, not in cpus, are eventually returned.
@@ -599,7 +572,7 @@ class Part(load.sim.Simbase):
             # sink : t ==0, id < 0
             # tracer : t ==0, id < 0, mass = 0
 
-# Copy data to form contiguous arrays of particles.
+            # Copy data to form contiguous arrays of particles.
             if 'star' in self.pt:
                 i_star = (abs(t_temp) > 0.0000001)
                 nstar_icpu = sum(i_star)
@@ -629,9 +602,9 @@ class Part(load.sim.Simbase):
             nsink_icpu = sum(i_sink)
             # print('nDM, nSink', ndm_icpu, nsink_icpu)
 
-# Note that if it's two-division separation,
-# i_dm = t_temp == 0 and then,
-# it's faster to use ~i_dm than to generate another index array.
+            # Note that if it's two-division separation,
+            # i_dm = t_temp == 0 and then,
+            # it's faster to use ~i_dm than to generate another index array.
 
             if 'dm' in self.pt:
                 if self.ptypes.dm.pos:

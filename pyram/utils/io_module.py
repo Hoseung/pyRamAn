@@ -4,7 +4,21 @@ _head_type = np.dtype('i4')
 
 def write_fortran(f, array, dtype="I", check=True):
     """
+        Writes an array of type dtype to a fortran file f.
+
+        Parameters
+        ----------
+        f :
+            fortran file stream
+        array :
+            numpy array
+        dtype : 
+            data type code
+        check :
+            no implemented. - what was the intention??
+
         Note
+        ----
         dtype is for struct.pack.
 
         x	pad byte	no value
@@ -34,31 +48,40 @@ def write_fortran(f, array, dtype="I", check=True):
     array.tofile(f)
     f.write(struct.pack(dtype, array.nbytes))
 
-
 def skip_fortran(f, n=1, verbose=False):
-    alen = np.fromfile(f, _head_type, 1)  # == skip
+    """
+        skip one record blod of the given fortran file.
+    """
+    alen = np.fromfile(f, _head_type, 1)
     if verbose:
         print("FORTRAN block length %d!=%d" % (alen))
 
-    mod_check = alen % 4
-    if mod_check != 0:
+    # Check
+    if alen % 4 != 0:
         print("Array size is not a multiple of 4")
 
     n = int(alen/4)
-
     np.fromfile(f, _head_type, n)
-    # print('check',data)
     np.fromfile(f, _head_type, 1)
 
-
 def read_fortran(f, dtype, n=1, check=True):
+    """
+    read one record block from a fortran file.
+
+    parameters
+    ----------
+    f :
+        fortran file stream
+    dtype :
+        numpy dtype
+    n :
+        number of data elements in the record block 
+    """
     if not isinstance(dtype, np.dtype):
         dtype = np.dtype(dtype)
 
     length = n * dtype.itemsize
-
     alen = np.fromfile(f, _head_type, 1)  # == skip
-
     if alen != length:
         if check:
             raise IOError("Unexpected FORTRAN block length from"
@@ -91,14 +114,26 @@ def prettyprint(q, precise=False):
         else:
             return "{:.2f}".format(q)
 
+def read_header(f, dtypes, check=True):
+    """
+    Read multiple SINGLE entries from a fortran file
+    
+    parameters
+    ----------
+    f :
+        fortran stream
+    dtypes :
+        list of dtypes of header quantities
 
-_head_type = np.dtype('i4')
-def read_header(f, dtype, check=True):
-    q = np.empty(1, dtype=dtype)
-    for i in range(len(dtype.fields)):
-        data = read_fortran(f, dtype[i], check=check)
+    Todo
+    ----
+    Handle string 
+    """
+    q = np.empty(1, dtype=dtypes)
+    for i in range(len(dtypes.fields)):
+        data = read_fortran(f, dtypes[i], check=check)
 
-        if np.issubdtype(dtype[i], np.string_):
+        if np.issubdtype(dtypes[i], np.string_):
             q[0][i] = data
         elif hasattr(data[0], "__len__"):
             q[0][i][:] = data[0]
@@ -107,7 +142,6 @@ def read_header(f, dtype, check=True):
         # if string, return the whole array
 
     return q[0]
-
 
 def read_header_string(f, dtype):
     alen = np.fromfile(f, _head_type, 1)  # == skip

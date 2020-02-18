@@ -223,31 +223,3 @@ class Sim(Simbase):
         else:
             print("Use part.load() to load particle")
 
-
-    def search_zoomin_region(self, *args, **kwargs):
-        """
-        Determine Zoomin region.
-
-        Returns a spherical region encompassing maximally refined cells.
-
-        Notes
-        -----
-        If part is not given, load particles.
-
-        Not only part, but also hydro or amr can be used to find the zoomin region!
-        But, don't want to write a new code.
-        """
-        if hasattr(self, 'part'):
-            print("Have part")
-            self.set_zregion(self.part.search_zoomin( *args, **kwargs))
-
-        if hasattr(self, 'amr'):
-            print("Have amr")
-            self.set_zregion(self.amr.search_zoomin( *args, **kwargs))
-
-    def set_zregion(self, zregion):
-        """
-        Set zoom-in region for Zoom-in simulations.
-        """
-        self.zregion = zregion
-        self.info.zregion = zregion

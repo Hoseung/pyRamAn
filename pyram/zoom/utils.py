@@ -3,9 +3,16 @@
 Created on Mon Apr 27 13:37:22 2015
 
 @author: hoseung
+
+Tools in this module should have only minimum dependence, so that 
+even the most lowlevel modules (like simBase) can import and use this module.
+
 """
+import numpy as np
 def get_pt_id_targets2(part, h, halo_inds, r_frac=1):
-    import numpy as np
+    """
+    Any doc string? what is this for?
+    """
     assert(np.size(halo_inds) > 0)
     buffer_frac = 1.2 * np.sqrt(r_frac)
     # search radii larger than r_vir will result in more particles.
@@ -52,7 +59,6 @@ def get_pt_id_targets2(part, h, halo_inds, r_frac=1):
     return halo_range_list, idlist
 
 def get_pt_id_targets(part, h, halo_inds, r_frac=1):
-    import numpy as np
     """
     Returns id list of particles in each halo in a SINGLE array.
     Also returned is the list of range of id list for each halo.
@@ -112,7 +118,6 @@ def get_pt_id_targets(part, h, halo_inds, r_frac=1):
                 print(halo_range_list[i+1], len(idlist))
     
     return halo_range_list, idlist
-
 
 def particle_distribution(part, idlist, buffer = 0):
     from utils import match
@@ -187,8 +192,6 @@ def match_diff_arr(x1, x2, y1, y2, z1=None, z2=None, tolerance=None, window=0.1,
         xx1 = x1[sort_ind1[i]] 
         d1 = np.abs(xx2 - xx1)
         indx = np.where(d1 < tolerance)[0]
-#        print(indx, len(xx2))
-#        print("d1", d1[indx], xx2[indx], xx1)
         if len(indx) > 0:
             if z1 is not None and z2 is not None:
                 yx2 = y2[ind_1] # first N smallest elements
@@ -226,3 +229,87 @@ def match_diff_arr(x1, x2, y1, y2, z1=None, z2=None, tolerance=None, window=0.1,
 def distance3d(x1,y1,z1, x2,y2,z2):
     from numpy import sqrt
     return sqrt((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2)
+
+
+def search_zoomin_region(Asim, *args, **kwargs):
+    """
+    Moved from sim
+
+    Determine Zoomin region.
+
+    Returns a spherical region encompassing maximally refined cells.
+
+    Notes
+    -----
+    If part is not given, load particles.
+
+    Not only part, but also hydro or amr can be used to find the zoomin region!
+    But, don't want to write a new code.
+    """
+    if hasattr(Asim, 'part'):
+        print("Have part")
+        set_zregion(Asim.part.search_zoomin( *args, **kwargs))
+
+    if hasattr(Asim, 'amr'):
+        print("Have amr")
+        set_zregion(Asim.amr.search_zoomin( *args, **kwargs))
+
+def set_zregion(Asim, zregion):
+    """
+    Set zoom-in region for Zoom-in simulations.
+    """
+    Asim.zregion = zregion
+    Asim.info.zregion = zregion
+
+def get_zoomin(self, scale=1.0):
+    """
+    Returns a spherical region encompassing maximally refined cells.
+    Moved from Amr class.
+    What should it do?? 
+
+    Parameters
+    ----------
+    scale : float
+        The radius of the returned sphere is scaled by 'scale'.
+
+    """
+    from ..utils import sampling
+    imin = np.where(self.dm['m'] == self.dm['m'].min())
+    xr = [self.dm['px'][imin].min(), self.dm['px'][imin].max()]
+    yr = [self.dm['py'][imin].min(), self.dm['py'][imin].max()]
+    zr = [self.dm['pz'][imin].min(), self.dm['pz'][imin].max()]
+
+    xc = 0.5 * sum(xr)
+    yc = 0.5 * sum(yr)
+    zc = 0.5 * sum(zr)
+
+    radius = 0.5 * max([xr[1]-xr[0], yr[1]-yr[0], zr[1]-zr[0]]) * scale
+    #print(radius)
+    return sampling.set_region(centers=[xc, yc, zc], radius=radius)
+
+def search_zoomin(self, scale=1.0, load=False):
+    """
+    Moved from The Class Part.
+    """
+    from ..utils import sampling
+    if not hasattr(self, 'dm'):
+        if load:
+            print("Let's load particle data first!")
+            self.load()
+        else:
+            print("Couldn't find dm data. \n \
+                Make sure you load it first, \n \
+                or use load=True option")
+
+    imin = np.where(self.dm['m'] == self.dm['m'].min())
+    xr = [self.dm['x'][imin].min(), self.dm['x'][imin].max()]
+    yr = [self.dm['y'][imin].min(), self.dm['y'][imin].max()]
+    zr = [self.dm['z'][imin].min(), self.dm['z'][imin].max()]
+
+    xc = 0.5 * sum(xr)
+    yc = 0.5 * sum(yr)
+    zc = 0.5 * sum(zr)
+
+    radius = 0.5 * max([xr[1]-xr[0], yr[1]-yr[0], zr[1]-zr[0]]) * scale
+
+    return(sampling.set_region(centers=[xc, yc, zc], radius=radius))

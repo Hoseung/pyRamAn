@@ -9,7 +9,8 @@ from ..utils.io_module import read_header, read_fortran, skip_fortran
 
 class Simbase():
     """
-    base
+    Common class to [amr, hydro, part] classes.
+
     """
     def __init__(self,
                  cosmo=True,
@@ -24,7 +25,8 @@ class Simbase():
 
     def add_amr(self, load=False):
         self.amr = Amr(info=self.info, cpus=self.cpus, load=load)
-        if self.verbose: print("An AMR instance is created\n", self.__class__.__name__)
+        if self.verbose: 
+            print("An AMR instance is created\n", self.__class__.__name__)
 
     def unlock_cpus(self):
         self.cpu_fixed=False
@@ -39,7 +41,7 @@ class Simbase():
                                          amrheader=self.amr.header)
         if not self.cpu_fixed:
             self.cpus = np.array(cpus)
-        # Lock, but only there is a valid list of cpus.
+        # Lock, but only if there is a valid list of cpus.
         if lock and self.cpus is not None:
             self.cpu_fixed = True
 
@@ -113,7 +115,7 @@ class Simbase():
         zzmax = ranges[2][1]
 
         dmax = max([xxmax-xxmin, yymax-yymin, zzmax-zzmin])
-#        lmin = lmax # sometimes even smallest dx is larger than the region size.
+        # lmin = lmax # sometimes even smallest dx is larger than the region size.
         lmin = info.lmin # default value. But, which value should I pick?
         for ilevel in range(1, lmax):
             dx = 0.5**ilevel
@@ -194,44 +196,12 @@ class Simbase():
                     cpu_list[ncpu_read] = j
                     cpu_read[j] = 1
 
-# Sort cpu_list in descending npart order for memory efficiency
+        # Sort cpu_list in descending npart order for memory efficiency
         cpu_list = cpu_list[cpu_list > 0]  # crop empty part
 
         return np.sort(cpu_list)
 
-
 class AmrHeader():
-    """
-    Find the coefficients of a polynomial with the given sequence of roots.
-
-    Returns the coefficients of the polynomial whose leading coefficient
-    is one for the given sequence of zeros (multiple roots must be included
-    in the sequence as many times as their multiplicity; see Examples).
-    A square matrix (or array, which will be treated as a matrix) can also
-    be given, in which case the coefficients of the characteristic polynomial
-    of the matrix are returned.
-
-    Parameters
-    ----------
-    seq_of_zeros : array_like, shape (N,) or (N, N)
-        A sequence of polynomial roots, or a square array or matrix object.
-
-    Returns
-    -------
-    c : ndarray
-        1D array of polynomial coefficients from highest to lowest degree:
-
-        ``c[0] * x**(N) + c[1] * x**(N-1) + ... + c[N-1] * x + c[N]``
-        where c[0] always equals 1.
-
-    Raises
-    ------
-    ValueError
-        If input is the wrong shape (the input must be a 1-D or square
-        2-D array).
-
-    See Also
-	"""
     def __init__(self):
         pass
 
@@ -327,11 +297,11 @@ class AmrHeader():
         self.used_mem_tot = h4['htnm1m2'][4]
         self.ordering = h4['ordering']
 
-    # When reading 2D array, beware that fortran file is written in
-    # ???-major order but python will save it in ???-major order
+        # When reading 2D array, beware that fortran file is written in
+        # ???-major order but python will save it in ???-major order
 
-    # numbl is (ncpu x nlevelmax) array in fortran
-    # and is accessed by numbl[icpu,ilevel]
+        # numbl is (ncpu x nlevelmax) array in fortran
+        # and is accessed by numbl[icpu,ilevel]
 
         #h4 = read_header(f, np.dtype([('bound_key', 'f8', (ncpu+1,))]),check=False)
         # Get the data type by calculating precision from the fortran block header
@@ -345,17 +315,14 @@ class AmrHeader():
         self.bound_key = np.fromfile(f, dtype, ncpu + 1)
         np.fromfile(f, np.dtype('i4'), 1) # skip tail.
 
-
         h4 = read_header(f, np.dtype([('son', 'i4', (ncoarse,)),
                                       ('flag1', 'i4', (ncoarse,)),
                                       ('cpu_map', 'i4', (ncoarse,))]),check=True)
-# Aquarius data has 16Byte "bound_key".
-# Because of QUADHILBERT??
+        # Aquarius data has 16Byte "bound_key".
+        # Because of QUADHILBERT??
 
-# check=False => Even if user gives a wrong size,
-# it still reads based on what fortran binary says.
-        # if assign
-
+        # check=False => Even if user gives a wrong size,
+        # it still reads based on what fortran binary says.
         self.tout = h2['tout']
         self.aout = h2['aout']
         self.t = h2['t']
@@ -386,12 +353,11 @@ class AmrHeader():
         self.headl = h20['headl']
         self.taill = h20['taill']
         self.numbl = h20['numbl']
-#        self.numbot = h2['numbot'] # This value has been skipped
+        # self.numbot = h2['numbot'] # This value has been skipped
 
         self.son = h4['son']
         self.flag1 = h4['flag1']
         self.cpu_map = h4['cpu_map']
-
 
 class Grid():
     def __init__(self):
@@ -494,11 +460,6 @@ class Amr(Simbase):
         else:
             self.ranges = None
 
-    def setup(self, nout=None, base='./',
-             ranges=[[0.0,1.0],[0.0,1.0],[0.0,1.0]], dmo=False):
-
-        print('Simulation set up.')
-
     #def _load_mesh(f, ndim=3):
     #    for i in np.arange(ndim):
     #        read_fortran(f, np.dtype('f8'))
@@ -508,32 +469,6 @@ class Amr(Simbase):
             self.lmax_now = self.info.lmax
         else:
             self.lmax_now = imax_level
-
-
-    def get_zoomin(self, scale=1.0):
-        """
-        Returns a spherical region encompassing maximally refined cells.
-
-        Parameters
-        ----------
-        scale : float
-            The radius of the returned sphere is scaled by 'scale'.
-
-        """
-        from ..utils import sampling
-        imin = np.where(self.dm['m'] == self.dm['m'].min())
-        xr = [self.dm['px'][imin].min(), self.dm['px'][imin].max()]
-        yr = [self.dm['py'][imin].min(), self.dm['py'][imin].max()]
-        zr = [self.dm['pz'][imin].min(), self.dm['pz'][imin].max()]
-
-        xc = 0.5 * sum(xr)
-        yc = 0.5 * sum(yr)
-        zc = 0.5 * sum(zr)
-
-        radius = 0.5 * max([xr[1]-xr[0], yr[1]-yr[0], zr[1]-zr[0]]) * scale
-        #print(radius)
-        return sampling.set_region(centers=[xc, yc, zc], radius=radius)
-
 
     def load(self, verbose=False):
         """

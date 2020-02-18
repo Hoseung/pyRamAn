@@ -101,8 +101,8 @@ class Info:
         if verbose:
             print("Info file name: %s" % self.fn)
 
-# Weak "internal use" indicator.
-# from M import * does not import _blah_blah.
+    # Weak "internal use" indicator.
+    # from M import * does not import _blah_blah.
 
     def _cal_units(self, arr, rarr):
         # in cgs unit
@@ -174,7 +174,7 @@ class Info:
         """
             parameters: nout, base
         """
-#        print("Loading INFO")
+        # print("Loading INFO")
         if self.base is None:
             if base is None:
                 raise ValueError("Working directory is not determined")
