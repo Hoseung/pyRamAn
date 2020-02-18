@@ -1,1 +1,1 @@
-from general import defaults
+from . import defaults

@@ -8,14 +8,15 @@ Created on Sun Jun 28 18:31:23 2015
 
 @author: hoseung
 """
+from ..general import defaults
+dfl = defaults.Default()
+dir_repo = dfl.dir_repo
 
 import numpy as np
 class Timeconvert():
     def __init__(self, info=None, H0=None, om=None, ol=None, zred_now=None):
-        from general import defaults
         from astropy.io import fits
-        dfl = defaults.Default()
-        self.repodir = dfl.dir_repo
+        self.repodir = dir_repo
         self.info = info
         if info is not None:
             sh0       = str(round(info.H0))

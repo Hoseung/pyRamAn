@@ -32,7 +32,7 @@ class Info:
                  fn = None, load=True, data_dir=None,
                  cosmo=True):
         if data_dir is None:
-            from general import defaults
+            from ..general import defaults
             df = defaults.Default()
             data_dir = df.dir_snapshot
         self.data_dir = data_dir
@@ -158,7 +158,7 @@ class Info:
         self.msun = scale_d*scale_l**3/m_sun
         self.cboxsize = self.H0 * self.pboxsize / self.aexp * 1e-2
         if self.cosmo:
-            from utils.cosmology import Timeconvert
+            from ..utils.cosmology import Timeconvert
             tc = Timeconvert(self)
             self.tGyr = tc.time2gyr(rarr[1], z_now = self.zred)
 
@@ -231,7 +231,6 @@ class Nml():
             self.load(fname=self.fname)
 
     def load(self, fname=None):
-        import numpy as np
         import re
         if fname is None:
             fname = self.fname
