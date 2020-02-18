@@ -4,14 +4,13 @@ Created on Wed Apr 15 02:44:05 2015
 
 @author: hoseung
 """
-#from load import amr
-import load
+import ..load
 #from load import info
-import utils.sampling as smp
-import utils.match as mtc
+import ..utils.sampling as smp
+import ..utils.match as mtc
 import time
-import utils
-import draw
+import ..utils
+import ..draw
 base = '/home/hoseung/Work/data/Lmax/'
 nout=187
 snout = str(nout).zfill(3)

@@ -5,7 +5,7 @@ Created on Thu Mar 26 21:32:55 2015
 @author: hoseung
 """
 import numpy as np
-from .amr import Simbase
+from .sim import Simbase
 from ..utils.io_module import read_header
 import struct
 import gc

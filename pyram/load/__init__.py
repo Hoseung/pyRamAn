@@ -1,6 +1,6 @@
 from . import info
 from . import a2c
-from . import amr
+from . import sim
 from . import hydro
 from . import part
 from .part_load import part_load_module

@@ -5,7 +5,7 @@ Created on Thu Mar 26 22:15:03 2015
 @author: hoseung
 """
 import numpy as np
-from .amr import Simbase
+from .sim import Simbase
 from ..utils.io_module import read_header, read_fortran, skip_fortran
 from .info import Info
 from .part_load import part_load_module
