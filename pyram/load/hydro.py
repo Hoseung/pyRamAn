@@ -5,12 +5,12 @@ Created on Thu Mar 26 21:32:55 2015
 @author: hoseung
 """
 import numpy as np
-from .sim import Simbase
+from .amr import Simbase
 from ..utils.io_module import read_header
 import struct
 import gc
 from .info import Info
-from .pure_python import amr2cell_py
+#from .pure_python import amr2cell_py
 from .a2c import a2c
 
 def generate_fname(nout,path="",ftype="",cpuid=1,ext=""):

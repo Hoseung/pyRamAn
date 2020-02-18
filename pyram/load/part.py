@@ -5,7 +5,7 @@ Created on Thu Mar 26 22:15:03 2015
 @author: hoseung
 """
 import numpy as np
-#import load
+from .amr import Simbase
 from ..utils.io_module import read_header, read_fortran, skip_fortran
 from .info import Info
 from .part_load import part_load_module
@@ -55,7 +55,7 @@ class Ptypes():
     def _add_sink(self):
         self.sink = Ptype()
 
-class Part(load.sim.Simbase):
+class Part(Simbase):
     """
     Particle data container supports different types of particles,
     and some meta data.
