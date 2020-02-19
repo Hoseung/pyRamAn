@@ -1,7 +1,9 @@
+import setuptools
+
 from setuptools import setup, Extension, find_packages
 from Cython.Distutils import build_ext
 from Cython.Build import cythonize
-
+import numpy
 
 """
  packages=setuptools.find_packages()
@@ -17,21 +19,15 @@ def main():
     with open("README.md", "r") as fh:
         long_description = fh.read()
 
-
-    ext_modules = [Extension("pyram/tree/rd_hal",
+    ext_modules = [Extension(name="pyram/tree/rd_hal",
                             sources=["pyram/tree/c_rd_halo.cpp",
                              "pyram/tree/load_hal.pyx"],
                             libraries=["pyram/tree/c_rd_halo"],
-    #                        library_dirs=[path.join(here, 'tree/')],
-    #                        runtime_library_dirs=[path.join(here, 'tree/')],
-                            language='c++',)]
-
-    # Fortran extension
-    #ext_modules.append(Extension( 'load/part_cpu', ['load/part_cpu.f90'] ))
-
-    #ext_modules = [Extension("pyram/tree/rd_hal",
-    #["pyram/tree/c_rd_halo.cpp", "pyram/tree/load_hal.pyx"],
-    #        language='c++',)]
+                            language='c++',),
+                    Extension("pyram.draw.ppc",["pyram/draw/ppc.pyx"],
+                            include_dirs=[numpy.get_include()])]
+                #Extension( name='pyram/load/part_load',
+                #        sources= ['pyram/load/part_cpu_module.f90'] )]
 
     setup(
         name="pyram",
@@ -49,10 +45,23 @@ def main():
             "Operating System :: Linux"
         ],
         python_requires='>=3.7',
-        ext_modules = cythonize(ext_modules)
+        ext_modules = cythonize(ext_modules),
+        #extra_compile_args = ["-O3", "-ffast-math", "-march=native", "-fopenmp" ],
+        #extra_link_args=['-fopenmp']
     )
     #setup(cmdclass = {'build_ext': build_ext},
+
+    
+
         
 
 if __name__ == "__main__":
     main()
+    
+from numpy import distutils
+#from numpy.distutils.core import setup
+#from numpy.distutils.extension import Extension
+# Fortran extension
+#distutils.core.setup(cmdclass = {'build_ext': build_ext},
+#        ext_modules = ([distutils.extension.Extension( 'pyram/load/part_cpu', ['pyram/load/part_cpu_module.f90'])]))
+    
