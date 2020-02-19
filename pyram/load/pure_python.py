@@ -1,5 +1,5 @@
 import numpy as np
-import load
+import struct 
 
 def get_binary_data(fmt="",
                     ninteg=0,
@@ -20,7 +20,6 @@ def get_binary_data(fmt="",
     pack_size = mult*byte_size[fmt[-1]]
 
     return struct.unpack(fmt, content[offset:offset+pack_size])
-
 
 def amr2cell_py(self, lmax=None,
                   icpu=0, cpu=False,

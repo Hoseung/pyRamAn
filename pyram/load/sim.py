@@ -416,8 +416,6 @@ class Sim(Simbase):
         else:
             print("Use part.load() to load particle")
 
-
-
 class AmrHeader():
     def __init__(self):
         pass

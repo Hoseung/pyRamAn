@@ -756,7 +756,12 @@ class Part(Simbase):
             self.sink['m'] = part_float[ind_sink,6]
             self.sink['id'] = part_int[ind_sink]
         if 'tracer' in self.pt:
-            dtype_dm = { 'id': (('<i8', 1), 0),
+            """
+            Todo 
+
+            implement tracer reader - or is it in part?
+            """
+            dtype_tracer = { 'id': (('<i8', 1), 0),
                          'pos': (('<f8', (3,)), 8),
                             'x': (('<f8', 1), 8),
                             'y': (('<f8', 1), 16),
@@ -766,7 +771,7 @@ class Part(Simbase):
                            'vy': (('<f8', 1), 40),
                            'vz': (('<f8', 1), 48)}
             ind_tracer = np.where(is_psuedo * (part_float[:,6] == 0))[0]
-            self.tracer = np.zeros(self.ntracer, dtype=dtype_trancer)
+            self.tracer = np.zeros(self.ntracer, dtype=dtype_tracer)
             self.tracer['x'] = part_float[ind_tracer,0]
             self.tracer['y'] = part_float[ind_tracer,1]
             self.tracer['z'] = part_float[ind_tracer,2]
