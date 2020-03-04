@@ -1,3 +1,0 @@
-pyram
-pyram/tree/rd_hal
-temp

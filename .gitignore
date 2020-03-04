@@ -17,9 +17,14 @@ __pycache__/
 pyram/load/compile*.sh
 *linux-x86*
 wheels/
+pyram.egg-info/SOURCES.txt
 docs/_build/
 .ipynb_checkpoints
 src.linux*
 draw/ppc.c
 ./tree/c_rd_halo.cpp
 ./tree/load_hal.cpp
+.vscode/c_cpp_properties.json
+pyram/draw/ppc.c
+pyram/gsf/twobody.pyf
+pyram.egg-info/*
