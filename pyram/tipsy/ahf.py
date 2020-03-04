@@ -1,5 +1,4 @@
 import numpy as np
-from utils.fancy_print import printw
 #from glob import glob
 
 dtype_halo_ahf = np.dtype([('id','<i4'),
@@ -164,7 +163,7 @@ class AHF_halo():
         I need a complete particle list or the particle ID.
         """
         if not self._has_data:
-            printw("[AHF.load_halo_member] Load catalog data first.")
+            print("[AHF.load_halo_member] Load catalog data first.")
             return
 
         if fn is None:
@@ -203,7 +202,7 @@ class AHF_halo():
 
     def load_subs(self, fn=None):
         if not self._has_data:
-            printw("[AHF.load_sub] Load catalog data first.")
+            print("[AHF.load_sub] Load catalog data first.")
             return
 
         if fn is None:

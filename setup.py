@@ -20,8 +20,7 @@ def main():
         long_description = fh.read()
 
     ext_modules = [Extension(name="pyram/tree/rd_hal",
-                            sources=["pyram/tree/c_rd_halo.cpp",
-                             "pyram/tree/load_hal.pyx"],
+                            sources=["pyram/tree/load_hal.pyx"],
                             libraries=["pyram/tree/c_rd_halo"],
                             language='c++',),
                     Extension("pyram.draw.ppc",["pyram/draw/ppc.pyx"],
