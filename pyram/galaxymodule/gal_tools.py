@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import ticker
-from draw import pp
+from ..draw import pp
 from matplotlib.colors import LogNorm
 
 

@@ -1,5 +1,5 @@
 import numpy as np
-from utils.sampling import Region
+from ..utils.sampling import Region
 
 def mk_gal(gal,
             save=False,

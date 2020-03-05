@@ -4,7 +4,7 @@ Created on Fri Jul 10 17:10:10 2015
 
 @author: hoseung
 """
-from tree import treemodule
+from . import treemodule
 import numpy as np
 #%%
 

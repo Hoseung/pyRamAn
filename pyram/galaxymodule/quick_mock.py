@@ -1,5 +1,5 @@
 import numpy as np
-from galaxymodule.load_sed import *
+from .load_sed import *
 
 class Simplemock():
     """

@@ -16,7 +16,7 @@ all member particles of all member substructures as the member of the "host" gal
 
 @author: hoseung
 """
-from ..galaxy import Galaxy
+from .galaxy import Galaxy
 from ..utils.io_module import read_header, read_fortran
 import numpy as np
 import pickle

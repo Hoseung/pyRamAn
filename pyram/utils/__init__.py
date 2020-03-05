@@ -9,4 +9,3 @@ from . import sampling
 from . import prettyplot
 from . import catalogs
 from . import io_module
-from . import fancy_print

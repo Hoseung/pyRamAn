@@ -1,3 +1,3 @@
-from draw import pp
-from draw import ppc
-from draw import img_obj
+from . import pp
+from . import ppc
+from . import img_obj

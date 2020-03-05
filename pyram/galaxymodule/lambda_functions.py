@@ -36,11 +36,11 @@
 import matplotlib.pyplot as plt
 
 import numpy as np
-import utils.sampling as smp
-from galaxymodule import galaxy
-import utils.match as mtc
-import tree.ctutils as ctu
-import tree.halomodule as hmo
+from ..utils import sampling as smp
+from . import galaxy
+from ..utils import match as mtc
+from ..tree import ctutils as ctu
+from ..tree import halomodule as hmo
 
 #%%
 def extract_halos_within(halos, i_center, info, dist_in_mpc=1.0):
