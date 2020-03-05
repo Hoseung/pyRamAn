@@ -12,6 +12,9 @@ from ..load.info import Info
 import struct
 from ..load.dtypes import get_halo_dtype
 
+from ..utils.io_module import read_fortran
+import rd_hal
+
 class HaloMeta():
     """
     HaloMeta class.
@@ -144,7 +147,7 @@ class HaloMeta():
 
 
     def set_halofinder(self, halofinder):
-        from utils import util
+        from ..utils import util
         options = ['HM', 'halomaker', 'rockstar', 'rs']
         guess =  util.fuzzymatch(halofinder, answer_list=options)
         if guess in ["HM", 'halomaker']:
@@ -260,8 +263,6 @@ class Halo(HaloMeta):
                                      is_gal=self.is_gal, double=double)
             f.close()
         else:
-            from utils.io_module import read_fortran
-            import rd_hal
 
             self.nbodies = read_fortran(f, np.dtype('i4'), 1)[0]
             f.close()
