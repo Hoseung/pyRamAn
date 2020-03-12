@@ -21,7 +21,6 @@ from ..utils.io_module import read_header, read_fortran
 import numpy as np
 import pickle
 from ..load.part import Part
-from ..load.part import Part
 from ..load.hydro import Hydro
 
 
@@ -234,9 +233,9 @@ class Gal(Galaxy):
 
     def load(self, type_star="gm", type_dm="gm", type_cell="gm",
              info=None, rscale=None, radius=None,
-             rd_star_params=None,
-             rd_cell_params=None,
-             rd_dm_params=None):
+             rd_star_params={},
+             rd_cell_params={},
+             rd_dm_params={}):
         """
         Load per-galaxy data (if exists).
         Automatically skips missing components.
@@ -274,7 +273,7 @@ class Gal(Galaxy):
                      ('idx', '<i4'), ('p_rho', '<f4'), ('p_c', '<f4'),
                       ('energy', '<f8', (3,)), ('radius', '<f8', (4,))]))
         """
-        from utils.sampling import Region
+        from ..utils.sampling import Region
 
         if rscale is not None:
             self.rscale = rscale
@@ -311,7 +310,7 @@ class Gal(Galaxy):
                                               radius=self.rscale * self.rgal_code)
             elif type_star == "raw":
             # load catalog
-                import tree.halomodule as hmo
+                from ..tree import halomodule as hmo
                 gcat = hmo.Halo(nout=self.nout, base=self.base, is_gal=True)
                 thisgal = gcat.data[gcat.data["id"] == self.gid]
                 # Raw
@@ -429,7 +428,6 @@ class Gal(Galaxy):
                 self.units.cell.length = "code"
 
 
-
 def time2gyr(self, info=None):
     """
     Only stars have time.
@@ -441,20 +439,18 @@ def time2gyr(self, info=None):
             if hasattr(self, "info"):
                 info = self.info
             try:
-                import load
+                from .. import load
                 self.info = load.info.Info(nout=self.nout, base=self.base)
                 info = self.info
             except:
                 print("Failed to load info")
                 return
 
-        import utils.cosmology
+        from ..utils import cosmology
         self.star['time'] = utils.cosmology.time2gyr(self.star['time'],
                              z_now = info.zred,
                              info=info)
         self.units.time = "Gyr"
-
-
 
 
 def _rd_gal(nout, idgal, base="./", metal=True,
@@ -560,7 +556,7 @@ def rd_gm_dm_file(fname, long=True):
                  'vz': (('<f8', 1), 56)}
 
     with open(fname, "rb") as f:
-        header = read_header(f, dtype=dtype_header)
+        header = read_header(f, dtypes=dtype_header)
         header['mgal'] *= 1e11 # mass fof galaxy
 
         # data array
@@ -676,7 +672,7 @@ def rd_gm_star_file(fname, metal=True, nchem=0,
         dtype_data.update(add_f)
 
     with open(fname, "rb") as f:
-        header = read_header(f, dtype=dtype_header)
+        header = read_header(f, dtypes=dtype_header)
         header['mgal'] *= 1e11 # mass fof galaxy
 
         # data array
@@ -752,7 +748,7 @@ def rd_gm_cell_file(nout, idgal, fname, metal=True, cpu=False, ref=False, nchem=
     if ref:
         dtype_cell.update({'ref': (('bool',1),dt_off+8)})
 
-    import  utils.io_module as io
+    from ..utils import io_module as io
     with open(fname, 'rb') as f:
         nout0 = io.read_fortran(f, dtype=np.int32, check=False)[0]
 #        assert nout == nout0, "given nout ({}) and loaded nout ({}) do not match".format(nout, nout0)

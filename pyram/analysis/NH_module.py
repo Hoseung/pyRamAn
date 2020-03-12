@@ -9,7 +9,7 @@ def load_components(gg, s, idlist=None,
                     load_dm=True,
                     load_cell=True,
                     load_raw=False,
-                    save_cell=None,
+                    save_cell=False,
                     verbose=False,
                     gas_radius=None):
     """
@@ -24,7 +24,7 @@ def load_components(gg, s, idlist=None,
     load_raw : False
         If True, read hydro cell from the raw data.
         If False, load pickled cell.
-    save_cell : None
+    save_cell : False
         If True, pickle current cell data.
         If load_raw is True, then save_cell is overidden to True.
     gas_radius : None, [in code unit]
@@ -33,8 +33,8 @@ def load_components(gg, s, idlist=None,
         but sometimes it is interesting to consider gas that are expelled out to ~3Rvir.
     """
     import pickle
-    from utils import match as mtc
-    from utils.sampling import Region
+    from ..utils import match as mtc
+    from ..utils.sampling import Region
     from scipy.spatial import cKDTree
     nout = s.nout
 
@@ -65,16 +65,17 @@ def load_components(gg, s, idlist=None,
             except:
                 pass
         else:
-            if save_cell is not False:
-                save_cell = True
-
             reg.radius = max([reg.radius, 1e-5])
+            if load_raw: save_cell = True
 
             if gas_radius is not None:
                 gas_reg = Region()
                 gas_reg.region_from_halo(gg.hcat)
                 gas_reg.radius = gas_radius
                 # Use region and update radius.
+            else:
+                # Use the same region as stars
+                gas_reg = reg
 
             gg.gas_region = gas_reg # Note that gg.region is in kpc unit.
             s.set_ranges(gg.gas_region.ranges)
@@ -149,7 +150,8 @@ def plot_2d_simple_maps(gg):
     axs[1].set_aspect("equal")
     axs[2].set_aspect("equal")
     axs[3].set_aspect("equal")
-
+    plt.savefig(f"{gg.nout}_{gg.meta.id}_simple.png", dpi=200)
+    plt.close()
 
 def plot_2d_simple_gas_maps(gg):
     cell_to_msun = gg.info.unit_d/msun_in_g * kpc_in_cm**3
@@ -179,7 +181,7 @@ def plot_2d_simple_gas_maps(gg):
                   bins=100, range=[[-rgal,rgal]]*2, norm=LogNorm(), vmin=1e4)
     for ax in axs:
         ax.set_aspect("equal")
-    plt.savefig("{}_{}_gas.png".format(gg.nout, gg.meta.id), dpi=200)
+    plt.savefig(f"{gg.nout}_{gg.meta.id}_gas.png", dpi=200)
     plt.close()
 
 def cal_radial(data, nbins=50, rmax=25,
@@ -241,6 +243,7 @@ def plot_radial(gg, nbins=50, rmax=25, xlog=False, ylog=True,
                              rmax=25,
                              surface_density=surface_density)
     ax.plot(bins[1:], h_st, label="star")
+    h_all = h_st
 
     if hasattr(gg, "dm") and gg.dm is not None:
         bins, h_dm = cal_radial(gg.dm,
@@ -248,6 +251,9 @@ def plot_radial(gg, nbins=50, rmax=25, xlog=False, ylog=True,
                                  rmax=25,
                                  surface_density=surface_density)
         ax.plot(bins[1:], h_dm, label="dm")
+        h_all += h_dm
+    else:
+        h_dm = []
 
     if hasattr(gg, "cell") and gg.cell is not None:
         cell_to_msun = gg.info.unit_d/msun_in_g * kpc_in_cm**3
@@ -256,11 +262,12 @@ def plot_radial(gg, nbins=50, rmax=25, xlog=False, ylog=True,
                                 rmax=25,
                                 surface_density=surface_density,
                                 cell_to_msun=cell_to_msun)
-
         ax.plot(bins[1:], h_cell, label="gas")
+        h_all += h_cell
+    else:
+        h_cell = []
 
     # all
-    h_all = h_st + h_dm + h_cell
     ax.plot(bins[1:], h_all,
             label="all")
 

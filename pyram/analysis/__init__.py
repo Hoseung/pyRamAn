@@ -1,6 +1,6 @@
-from analysis import evol_lambda
-from analysis import evol_lambda_HM
-from analysis import cal_lambda
-from analysis import misc
-from analysis import merger
-from analysis import single_gal_module
+from . import evol_lambda
+from . import evol_lambda_HM
+from . import cal_lambda
+from . import misc
+#from . import merger  - Not unsed
+#from . import single_gal_module

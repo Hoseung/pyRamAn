@@ -68,7 +68,7 @@ def part2den(part, info, region=None, proj='z', npix=800, ptype=None,
     from draw import img_obj
 
     if region is None:
-        import utils.sampling as smp
+        from ..utils import sampling as smp
         region = smp.Region( **{"xr":(part['x'].min() + offset[0], part['x'].max() + offset[0]),
                                 "yr":(part['y'].min() + offset[1], part['y'].max() + offset[1]),
                                 "zr":(part['z'].min() + offset[2], part['z'].max() + offset[2])})
@@ -127,7 +127,7 @@ def den2d(x, y, z, m, npix, region=None, proj='z',
     causing error in assignment calculation.
     """
     #import pyximport; pyximport.install()
-    from utils import assign
+    from ..utils import assign
 #   vmax = 1e12# in solar mass / kpc^2
 
 #   range = in data unit.   # prange = in physical unit
@@ -271,6 +271,7 @@ def pp_halo(h, npix=200, rscale=1.0, region=None, ind=None, ax=None,
             **kwargs):
     """
     plot halos as circles on the current/given/new ax.
+    It is important that r, rvir, pos are all in the same unit.
 
     Parameters
     ----------
@@ -398,6 +399,7 @@ def pp_halo(h, npix=200, rscale=1.0, region=None, ind=None, ax=None,
             xspan= xmax - xmin
             yspan= ymax - ymin
             zspan= zmax - zmin
+            print("Xmin1", xmin, ymin, zmin)
 
         else:
             # If a reion is given, plot only  the halos inside the region.
@@ -420,6 +422,7 @@ def pp_halo(h, npix=200, rscale=1.0, region=None, ind=None, ax=None,
             xspan = np.ptp(getattr(region,xrn))
             yspan = np.ptp(getattr(region,yrn))
             zspan = np.ptp(getattr(region,zrn))
+            print("Xmin2", xmin, ymin, zmin)
 
     else:
         # if ind is a boolean array, convert it to an index array.
@@ -449,7 +452,7 @@ def pp_halo(h, npix=200, rscale=1.0, region=None, ind=None, ax=None,
 
 
     if ax.pp_hal_meta.region is None:
-        import utils.sampling as smp
+        from ..utils import sampling as smp
         # Keep a physical region so that I can plot multiple set of halos
         # in a ax consistently.
         ax.pp_hal_meta.region = smp.Region(**{xrn:(xmin, xmin+xspan),
@@ -579,7 +582,7 @@ def pp_cell_den(cell, info, lmax=None,
     To do: Currently only column sum is supported. maximum value along the column, or column average option are needed.
 
     """
-    from draw import ppc
+    from . import ppc
 
     sig = 1.0
     sigrange = sig * 2# what is sigrange?
@@ -783,7 +786,7 @@ def pp_cell(cell, npix, info, proj="z", verbose=False, autosize=False,
     To do: Currently only column sum is supported. maximum value along the column, or column average option are needed.
 
     """
-    from draw import ppc
+    from . import ppc
 
     sig = 1.0
     sigrange = sig * 2# what is sigrange?

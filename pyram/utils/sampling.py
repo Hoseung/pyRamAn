@@ -10,18 +10,18 @@ Routines used in sampling tasks
 import numpy as np
 class Region():
     def __init__(self, halo=None, **region_arguments):
+        self._xc = 0.5
+        self._yc = 0.5
+        self._zc = 0.5
+        self._xr = [0,1]
+        self._yr = [0,1]
+        self._zr = [0,1]
+        self._centers = [0.5, 0.5, 0.5]
+        self._radius = 0.5
+        self._ranges = [[0,1]]*3
         if halo is not None:
             self.region_from_halo(halo)
         else:
-            self._xc = 0.5
-            self._yc = 0.5
-            self._zc = 0.5
-            self._xr = [0,1]
-            self._yr = [0,1]
-            self._zr = [0,1]
-            self._centers = [0.5, 0.5, 0.5]
-            self._radius = 0.5
-            self._ranges = [[0,1]]*3
             for key in region_arguments:
                 try:
                     setattr(self, key, region_arguments[key])
@@ -128,34 +128,31 @@ class Region():
         self._ranges = [self._xr, self._yr, self._zr]
 
 
-    def region_from_halo(self, halo, ind=None, rscale = 1.0):
+    def region_from_halo(self, hdata, ind=None, rscale = 1.0):
         """
         Set a region as a halo.
 
-        If multiple halos are given, define an area encompassing all halos.
+        If multiple hdatas are given, define an area encompassing all halos.
         """
-        if ind is None:
-            try:
-                self.centers = [halo['x'],
-                                halo['y'],
-                                halo['z']]
-                self.radius = halo['rvir'] * rscale
-            except:
-                self.set_region_multi(xc = halo.data['x'],
-                                      yc = halo.data['y'],
-                                      zc = halo.data['z'],
-                                      radius = halo.data['rvir'] * rscale)
+
+        if not hdata['x'].shape:
+            self.centers = [hdata['x'],
+                            hdata['y'],
+                            hdata['z']]
+            self.radius = hdata['rvir'] * rscale
         else:
+            if ind is None:
+                ind = np.arange(len(hdata))
             if len(ind) > 1:
-                self.set_region_multi(xc = halo.data['x'][ind],
-                                      yc = halo.data['y'][ind],
-                                      zc = halo.data['z'][ind],
-                                      radius = halo.data['rvir'][ind] * rscale)
+                self.set_region_multi(xc = hdata['x'][ind],
+                                      yc = hdata['y'][ind],
+                                      zc = hdata['z'][ind],
+                                      radius = hdata['rvir'][ind] * rscale)
             else:
-                self.centers = [halo.data['x'][ind],
-                                halo.data['y'][ind],
-                                halo.data['z'][ind]]
-                self.radius = halo.data['rvir'][ind] * rscale
+                self.centers = [hdata['x'][ind],
+                                hdata['y'][ind],
+                                hdata['z'][ind]]
+                self.radius = hdata['rvir'][ind] * rscale
 
     def distance_to(self, xc, xx):
         return np.sqrt([(xc[0] - xx[0])**2 + (xc[1] - xx[1])**2 + (xc[2] - xx[2])**2])[0]

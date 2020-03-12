@@ -691,10 +691,13 @@ class Galaxy():
 
         # New coordinates
         for target in pops:
-            pop = getattr(self, target)
-            RM = self.rotation_matrix
-            pop["pos"] = np.matmul(pop["pos"], RM.T)# (pop['x'], pop['y'], pop['z'])))
-            pop["vel"] = np.matmul(pop["vel"], RM.T)#, pop['vy'], pop['vz'])))
+            try:
+                pop = getattr(self, target)
+                RM = self.rotation_matrix
+                pop["pos"] = np.matmul(pop["pos"], RM.T)# (pop['x'], pop['y'], pop['z'])))
+                pop["vel"] = np.matmul(pop["vel"], RM.T)#, pop['vy'], pop['vz'])))
+            except:
+                print(f"No {target}, skipping...")
 
     def cal_norm_vec(self, pop_nvec=['star'], bound_percentile=100):
         """

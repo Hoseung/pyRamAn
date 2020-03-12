@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
+import Cappellari
 
 def _display_pixels(x, y, counts, pixelSize):
     """
@@ -324,7 +325,8 @@ def cal_lambda_r_eps(self,
                      galaxy_plot_dir='./',
                      save_result = True,
                      recenter_v=True,
-                     iterate_mge = False):
+                     iterate_mge = False,
+                     plot_mge=False):
     """
     Calculate galaxy rotation parameter $\lambda$ following the definition of
     Emsellem 2007.
@@ -415,8 +417,6 @@ def cal_lambda_r_eps(self,
                 smi = sma*(1-self.meta.eps)
                 self.meta.sma = mjr_arr[i_reff] * 3.5
                 self.meta.smi = self.meta.sma*(1-self.meta.eps)
-                #xcen = xpos_arr[i_reff]
-                #ycen = ypos_arr[i_reff]
                 #sma=mjr_arr[i_reff] * 0.5 * 3.5 # SEMI major axis, pixel unit
         else:
             # MGE in one go.
@@ -441,7 +441,7 @@ def cal_lambda_r_eps(self,
             self.meta.lambda_r=[]
             for frac, name in zip(fracs, names):
                 if verbose: print("frac", frac)
-                f = mge.find_galaxy.find_galaxy(self.mmap, quiet=True, plot=False,
+                f = mge.find_galaxy.find_galaxy(self.mmap, quiet=True, plot=plot_mge,
                                             mask_shade=False,
                                             fraction=frac)
                 mge_now = get_mge_out(f, frac, npix_per_reff, name)

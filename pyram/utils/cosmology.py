@@ -48,7 +48,7 @@ class Timeconvert():
 
     def time2gyr(self, times, z_now=None):
         """
-        returns the age of "universe" at the given time.
+        Converts code unit times to lookback time from z_now.
         """
         if z_now is not None:
             #z_now = max([z_now,1e-10])

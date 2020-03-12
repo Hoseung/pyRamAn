@@ -120,8 +120,8 @@ class Simplemock():
         """
         if speed_check:
             from time import time
+            t0 = time()
 
-        t0 = time()
         Lum_sun = 3.826e33
         # BC2003 is in unit of L_sun Ang-1, where L_sun = Lum_sun.
 
@@ -141,7 +141,7 @@ class Simplemock():
         locate_age = np.digitize(starage, self.age_points)-1 # GOOD
         relevant_ages = self.age_points[:max(locate_age)+2]
         nages = len(relevant_ages)
-        t1 = time() #
+        if speed_check: t1 = time() #
 
         ### Filter optimization. #################################################
         # Pick one
@@ -192,7 +192,7 @@ class Simplemock():
                 else:
                     seds[i,:,:] = self.SEDs[i,:nages, i_lambda_min:i_lambda_max+1]
 
-        t2 = time() # all set up
+        if speed_check: t2 = time() # all set up
 
         # All are array calculations.
         # interpolation weight
@@ -205,7 +205,7 @@ class Simplemock():
         dr_a = (relevant_ages[locate_age+1] - starage ) / \
                                      (relevant_ages[locate_age+1] - relevant_ages[locate_age])
 
-        t3 = time() # done first easy calculation
+        if speed_check: t3 = time() # done first easy calculation
 
         # 2D linear interpolation
         # weight * SED.
@@ -214,7 +214,7 @@ class Simplemock():
                 np.multiply( (dr_m * dl_a), seds[locate_metal, locate_age + 1, :].T).T +\
                 np.multiply( (dl_m * dl_a), seds[locate_metal + 1, locate_age + 1,:].T).T
 
-        t4 = time()
+        if speed_check: t4 = time()
         # Convolve filter
         # Wavelengths at which filter function are defined are different from the SED wavelength points.
         # Interpolate filter function on SED points.
@@ -222,7 +222,7 @@ class Simplemock():
         Flux = np.multiply(filter_in_sed_wavelengths[:-1] * wavelength[-1], Flux)#\
         div = np.multiply(filter_in_sed_wavelengths[:-1], wavelength[-1])
 
-        t5 = time()
+        if speed_check: t5 = time()
         # Need to multiply stellar mass
 
         if cell is None or self.info is None or len(cell) == 0:
@@ -251,13 +251,14 @@ class Simplemock():
 
             #print("before ext", np.sum(Flux, axis=1))
             #print("After ext", np.sum(F_ext, axis=1))
-            t6 = time()
-            print("age metal digitize {:.3f}".format(t1-t0))
-            print("setup done {:.3f}".format(t2-t0))
-            print("interpolation coefficient {:.3f}".format(t3-t0))
-            print("flux {:.3f}".format(t4-t0))
-            print("filter, flux, div {:.3f}".format(t5-t0))
-            print("After dust attanuation {:.3f}".format(t6-t0))
+            if speed_check: 
+                t6 = time()
+                print("age metal digitize {:.3f}".format(t1-t0))
+                print("setup done {:.3f}".format(t2-t0))
+                print("interpolation coefficient {:.3f}".format(t3-t0))
+                print("flux {:.3f}".format(t4-t0))
+                print("filter, flux, div {:.3f}".format(t5-t0))
+                print("After dust attanuation {:.3f}".format(t6-t0))
             return np.sum(F_ext, axis=1) / np.sum(div) * Lum_sun * star["m"]
 
 ##################################################################
