@@ -1,5 +1,5 @@
-from setuptools import setup, Extension
-#from distutils.extension import Extension
+from setuptools import setup#, Extension
+from distutils.extension import Extension
 from Cython.Distutils import build_ext
 from Cython.Build import cythonize
 
