@@ -152,7 +152,6 @@ def mk_gal(gal,
         gal.meta.vxc = np.average(star["vx"][i_close])
         gal.meta.vyc = np.average(star["vy"][i_close])
         gal.meta.vzc = np.average(star["vz"][i_close])
-        print("method_COV = close_member")
     elif method_cov=="catalog":
         gal.meta.vxc, gal.meta.vyc, gal.meta.vzc = gal.header["vg"]
 
@@ -165,6 +164,7 @@ def mk_gal(gal,
     gal.star["vz"] -= gal.meta.vzc
 
     if gal.debug:
+        print(f"method_COV = {method_cov}")
         print('[galaxy.Galaxy.mk_gal] mimax vx :',
               min(gal.star['vx']),
               max(gal.star['vx']))
