@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
+import Cappellari
 
 def _display_pixels(x, y, counts, pixelSize):
     """
@@ -27,6 +28,7 @@ def gen_vmap_sigmap(self,
                     npix_per_reff=5,
                     rscale=3.0,
                     n_pseudo=1,
+                    n_pseudo_max=1e6,
                     voronoi=None,
                     verbose=False,
                     plot_map=False,
@@ -108,7 +110,7 @@ def gen_vmap_sigmap(self,
         # sig = 0.3kpc from Naab 2014.
         # Todo
         # sig = 0.3kpc should scale with aexp.
-        n_pseudo = max([round(1e6/self.meta.nstar), n_pseudo])
+        n_pseudo = min([max([1,round(n_pseudo_max/self.meta.nstar)]), n_pseudo])
         xstars, ystars, mm, vz = self._pseudo_particles(self.star[p1][ind],
                                                   self.star[p2][ind],
                                                   self.star[weight][ind],
@@ -324,7 +326,8 @@ def cal_lambda_r_eps(self,
                      galaxy_plot_dir='./',
                      save_result = True,
                      recenter_v=True,
-                     iterate_mge = False):
+                     iterate_mge = False,
+                     plot_mge=False):
     """
     Calculate galaxy rotation parameter $\lambda$ following the definition of
     Emsellem 2007.
@@ -415,8 +418,6 @@ def cal_lambda_r_eps(self,
                 smi = sma*(1-self.meta.eps)
                 self.meta.sma = mjr_arr[i_reff] * 3.5
                 self.meta.smi = self.meta.sma*(1-self.meta.eps)
-                #xcen = xpos_arr[i_reff]
-                #ycen = ypos_arr[i_reff]
                 #sma=mjr_arr[i_reff] * 0.5 * 3.5 # SEMI major axis, pixel unit
         else:
             # MGE in one go.
@@ -435,13 +436,13 @@ def cal_lambda_r_eps(self,
             frac15 = min([0.99, frac15])
 
             fracs = [frac1, frac05, frac15]
-            names = ["1Reff", "0.5Reff", "15kpc"]
+            names = ["1Reff", "0.5Reff", "2Reff"]
             self.meta.mge_result_list=[]
             self.meta.lambda_result_list=[]
             self.meta.lambda_r=[]
             for frac, name in zip(fracs, names):
                 if verbose: print("frac", frac)
-                f = mge.find_galaxy.find_galaxy(self.mmap, quiet=True, plot=False,
+                f = mge.find_galaxy.find_galaxy(self.mmap, quiet=True, plot=plot_mge,
                                             mask_shade=False,
                                             fraction=frac)
                 mge_now = get_mge_out(f, frac, npix_per_reff, name)

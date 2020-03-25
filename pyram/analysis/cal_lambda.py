@@ -1,13 +1,12 @@
 import numpy as np
-import utils.sampling as smp
+from ..utils import sampling as smp
 import collections
-from galaxymodule import galaxy
-import utils.match as mtc
-import tree.ctutils as ctu
+from ..galaxymodule import galaxy
+from ..utils import match as mtc
 import pickle
-import load
-import tree.halomodule as hmo
-import general
+from .. import load
+from ..tree import halomodule as hmo
+from  .. import general
 from ..load.part import Part
 from ..load.hydro import Hydro
 
@@ -83,7 +82,7 @@ def all_gals(treedata, final_gals, nout_ini=None, nout_fi=None):
     return treedata[inds]
 
 def halo_from_tree(tree_element, info):
-    import tree.halomodule as hmo
+    from ..tree import halomodule as hmo
 
     dtype_halo = [('id', '<i4'), ('idx', '<i4'), ('m', '<f4'), ('mvir', '<f4'),
               ('r', '<f4'), ('rvir', '<f4'),
@@ -130,8 +129,6 @@ def associate_gal_hal(allgal, allhal, plot_check=False, dir_out=""):
         associate halos with galaxies.
         Arbitrary maching parameters are used.
     """
-    import numpy as np
-
     def dist(data, center):
         return np.sqrt(np.square(center['x'] - data['x']) +
                 np.square(center['y'] - data['y']) +
@@ -197,7 +194,7 @@ def associate_gal_hal(allgal, allhal, plot_check=False, dir_out=""):
     allhal.data = newhals
 
     if plot_check:
-        from draw import pp
+        from ..draw import pp
         import matplotlib.pyplot as plt
         #plt.ioff()
         fig, ax = plt.subplots(1)
@@ -228,8 +225,8 @@ def get_sample_tree(alltrees,
     so that all information needed to make a Galaxy instance is
     contained. (2016/06/06)
     """
-    import load
-    import tree.ctutils as ctu
+    from .. import load
+    from ..tree import ctutils as ctu
 
     td = alltrees.data
 
@@ -281,7 +278,7 @@ def get_sample_gal(wdir, nout, info, prg_only_tree, mstar_min):
         Based on the progenitor-only-tree, add galaxies
         inside the zoom region above the mass cut.
     """
-    import utils.match as mtc
+    from utils import match as mtc
     import numpy.lib.recfunctions as rf
 
     gals_in_tree_now = prg_only_tree[prg_only_tree['nout'] == nout]
@@ -432,7 +429,7 @@ def load_dm_direct(halo, info, wdir, region=None):
     But unlike HaloMaker dump files, subhalos may be included.
     """
     if region is None:
-        import utils.sampling as smp
+        from ..utils import sampling as smp
         region = smp.set_region(xc=halo['x'],
                                 yc=halo['y'],
                                 zc=halo['z'],
@@ -450,7 +447,7 @@ def load_cell_direct(halo, info, wdir, region=None, rscale=1.0):
     Does not extract from a larger chunk of memory.
     """
     if region is None:
-        import utils.sampling as smp
+        from ..utils import sampling as smp
         region = smp.set_region(xc=halo['x'],
                                 yc=halo['y'],
                                 zc=halo['z'],

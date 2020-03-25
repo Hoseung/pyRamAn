@@ -1,9 +1,6 @@
-import utils.cosmology
-import tree.ctutils as ctu
-import load
+#import utils.cosmology
+from .. import load
 import numpy as np
-import matplotlib.pyplot as plt
-import pickle
 
 def gal_file_list(prg_this, galidx, GM_dir = './GalaxyMaker/'):
     """
@@ -110,6 +107,7 @@ def draw_plot(gal, cat, ax, ax_hist, smoothed_lambda=True):
 
 
 def new_old_gals(galid_at_187, prgt):
+    import tree.ctutils as ctu
     galidx = prgt["id"][(prgt["nout"] == 187) * (prgt["Orig_halo_id"] \
              == galid_at_187)][0]
     prg_this = ctu.extract_main_tree(prgt, galidx)
@@ -160,6 +158,8 @@ def load_prg_gal_data(gg, info, fname=None):
 
 def gal_from_GM(gcat, info, nout=None, idgal=None, fname=None,
                 dm=False, cell=False, **kwargs):
+    from ..utils.cosmology import Timeconvert
+    tc = Timeconvert(s.info)
     from galaxymodule import galaxy
     if fname is None:
         gm = load.rd_GM.rd_gal(nout, idgal)
@@ -171,9 +171,9 @@ def gal_from_GM(gcat, info, nout=None, idgal=None, fname=None,
         print("no stellar particles, skipping")
         return False
 
-    gm.star['time'] = utils.cosmology.time2gyr(gm.star['time'],
-                                 z_now = info.zred,
-                                 info=info)
+    gg.star['time'] = tc.time2gyr(gg.star['time'],
+                                    z_now = gg.info.zred)
+    #replace_field_name(gg.star, "time", "age")
     gcat['x'] /= info.cboxsize
     gcat['y'] /= info.cboxsize
     gcat['z'] /= info.cboxsize

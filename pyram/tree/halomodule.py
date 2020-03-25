@@ -13,7 +13,6 @@ import struct
 from ..load.dtypes import get_halo_dtype
 
 from ..utils.io_module import read_fortran
-import rd_hal
 
 class HaloMeta():
     """
@@ -182,7 +181,6 @@ class Halo(HaloMeta):
         self.convert = convert
         super(Halo, self).__init__(**kwargs)
 
-
     def _check_params(self):
         assert (self.base is not None), "No working directory given : {}".format(self.base)
         assert (self.nout is not None), "No nout given : {}".format(self.nout)
@@ -266,6 +264,8 @@ class Halo(HaloMeta):
 
             self.nbodies = read_fortran(f, np.dtype('i4'), 1)[0]
             f.close()
+            
+            from . import rd_hal
             #self.nbodies = rd_halo.read_nbodies(fn.encode())
             if double:
                 temp = rd_hal.read_file_double(fn.encode(), self.nbodies, int(self.is_gal),

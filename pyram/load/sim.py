@@ -262,22 +262,22 @@ class Sim(Simbase):
         # set_data_dir and set_range needs info instance be exist.
         self.set_ranges(ranges)
         if region is not None:
+            print("setting ranges")
             ranges = [[region.xc - region.radius, region.xc + region.radius],
                       [region.yc - region.radius, region.yc + region.radius],
                       [region.zc - region.radius, region.zc + region.radius]]
+            self.region = region
+            print(self.region)
         else:
             self.region=None
 
         if setup:
-            self.setup(nout, base, ranges, dmo)
+            self.setup(ranges, dmo)
 
     def _all_set(self):
         return (self.nout is not None) & (self.base is not None)
 
-    def setup(self, nout=None, base='./',
-                 ranges=[[0.0,1.0],[0.0,1.0],[0.0,1.0]], dmo=False):
-        self.nout = nout
-        self.base = base
+    def setup(self, ranges=[[0.0,1.0],[0.0,1.0],[0.0,1.0]], dmo=False):
         if self.nout is None:
             raise ValueError("Note that 'nout' is not set. \n use sim.Sim.set_nout(nout)")
         self.add_info()

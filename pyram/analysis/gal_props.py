@@ -61,7 +61,7 @@ def get_E(gal, nvec=None, nvec_ys=True, ptype='star', method="Abadi",
                 from utils.cosmology import Timeconvert
                 tc = Timeconvert(info = info)
                 gal.star['time'] = tc.time2gyr(gal.star['time'], z_now = info.zred)
-                from utils.util import replace_field_name
+                from ..utils.util import replace_field_name
                 replace_field_name(gg.star, "time", "age")
             nvec = sum(rv[gal.star['time']<0.01]) # younger than 10Myr
         else:

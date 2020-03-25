@@ -1,6 +1,6 @@
 import numpy as np
 from collections import Iterable
-import utils.match as mtc
+from . import match as mtc
 
 """
     NOTE
@@ -20,7 +20,6 @@ import utils.match as mtc
     ...     return "%s + %s" % (x, y)
 
 """
-
 
 class Nnza():
     def __init__(self, fname="./nout_nstep_zred_aexp.txt"):

@@ -1,9 +1,9 @@
 import pickle
 import numpy as np
-from utils import hagn
-from general import defaults
-import tree.halomodule as hmo
-import utils.match as mtc
+from ..utils import hagn
+from ..general import defaults
+from ..tree import halomodule as hmo
+from ..utils import match as mtc
 
 
 def load_idx_list(base="./", test=False):
