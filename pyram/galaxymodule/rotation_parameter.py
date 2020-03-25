@@ -28,6 +28,7 @@ def gen_vmap_sigmap(self,
                     npix_per_reff=5,
                     rscale=3.0,
                     n_pseudo=1,
+                    n_pseudo_max=1e6,
                     voronoi=None,
                     verbose=False,
                     plot_map=False,
@@ -109,7 +110,7 @@ def gen_vmap_sigmap(self,
         # sig = 0.3kpc from Naab 2014.
         # Todo
         # sig = 0.3kpc should scale with aexp.
-        n_pseudo = max([round(1e6/self.meta.nstar), n_pseudo])
+        n_pseudo = min([max([1,round(n_pseudo_max/self.meta.nstar)]), n_pseudo])
         xstars, ystars, mm, vz = self._pseudo_particles(self.star[p1][ind],
                                                   self.star[p2][ind],
                                                   self.star[weight][ind],
@@ -435,7 +436,7 @@ def cal_lambda_r_eps(self,
             frac15 = min([0.99, frac15])
 
             fracs = [frac1, frac05, frac15]
-            names = ["1Reff", "0.5Reff", "15kpc"]
+            names = ["1Reff", "0.5Reff", "2Reff"]
             self.meta.mge_result_list=[]
             self.meta.lambda_result_list=[]
             self.meta.lambda_r=[]
