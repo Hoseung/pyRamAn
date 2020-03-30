@@ -10,7 +10,7 @@ from ..utils.io_module import read_header
 import struct
 import gc
 from .info import Info
-#from .pure_python import amr2cell_py
+from .pure_python import amr2cell_py
 from .a2c import a2c
 
 def generate_fname(nout,path="",ftype="",cpuid=1,ext=""):
@@ -163,7 +163,7 @@ class Hydro(Simbase):
 
     def amr2cell(self, lmax=None, icpu=0, cpu=True, ref=False,
                  verbose=False, return_meta=False,
-                 ranges=None, nvarh=None):
+                 ranges=None, nvarh=None, additional_field=None):
         """
         Loads AMR and HYDRO and output hydro data into particle-like format(cell).
 
@@ -248,13 +248,30 @@ class Hydro(Simbase):
                 dtype_cell.update({'cpu': (('<f8',1),dt_off+8)})
                 dt_off += 8
             if ref:
-                dtype_cell.update({'ref': (('bool',1),dt_off+8)})
+                dtype_cell.update({'ref': (('bool',1),dt_off+4)})
+                dt_off += 4
+        if additional_field is not None:
+            try:
+                # if iterable of dicts
+                for af in additional_field:
+                    itemsize = np.dtype(af["dtype"]).itemsize*af["dim"]
+                    dtype_cell.update({af["name"]:((af["dtype"],af["dim"]),dt_off+itemsize)})
+                    dt_off += itemsize
+            except:
+                # if single dict
+                af = additional_field
+                itemsize = np.dtype(af["dtype"]).itemsize*af["dim"]
+                dtype_cell.update({af["name"]:((af["dtype"],af["dim"]),dt_off+itemsize)})
+                dt_off += itemsize
+            finally:
+                print("additional field is given, but can't update the dtype")
+                print("Excepted: {'name':'asdf', 'dtype':'<f8', 'dim':3}")
+                print("Or, array/list of such dicts")
+                print("Currently given : ", additional_field)
 
         self.cell = np.zeros(ngridtot, dtype=dtype_cell)
-        self.cell['pos'] = xarr# cell[0][:,0]
-        #self.cell['y'] = cell[0][:,1]
-        #self.cell['z'] = cell[0][:,2]
-        self.cell['dx'] = dxarr#cell[1]
+        self.cell['pos'] = xarr
+        self.cell['dx'] = dxarr
         # Ignore the last hydro variable, which is zoom-in flag
         for i in range(nvarh-1):
             self.cell['var' + str(i)] = varr[:,i]
