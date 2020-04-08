@@ -32,8 +32,8 @@ class Timeconvert():
             aexp_now = 1
             print("warning... Defaulting zred to 0, aexp to 1")
 
-        self.zred_now = zred_now
-        self.aexp_now = aexp_now
+        self.zred_now = max([0,zred_now])
+        self.aexp_now = min([1,aexp_now])
 
         if H0 is None: H0 = info.H0
         if Om is None: Om = info.om
@@ -76,7 +76,7 @@ class Timeconvert():
         else:
             uage  = np.interp(times, self.cosmo_table.tu, self.cosmo_table.age)
 
-        return np.interp(zred_now, self.cosmo_table.zred, self.cosmo_table.age) - uage
+        return uage - np.interp(zred_now, self.cosmo_table.zred, self.cosmo_table.age)
 
     def zred2gyr(self, zreds, zred_now=None, aexp_now=None):
         if not zred_now and not aexp_now:
@@ -93,4 +93,4 @@ class Timeconvert():
         else:
             uage  = np.interp(zreds, self.cosmo_table.zred, self.cosmo_table.age)
         
-        return np.interp(zred_now, self.cosmo_table.zred, self.cosmo_table.age) - uage
+        return uage - np.interp(zred_now, self.cosmo_table.zred, self.cosmo_table.age)
