@@ -468,7 +468,7 @@ subroutine a2c_load(xarr, dxarr, varr, cpuarr, refarr, repository &
      ! Loop over levels
      do ilevel=1,lmax
 
-        ! Geometry
+      ! Geometry
         dx=0.5**ilevel
         dx2=0.5*dx
         nx_full=2**ilevel
@@ -483,7 +483,7 @@ subroutine a2c_load(xarr, dxarr, varr, cpuarr, refarr, repository &
            xc(ind,3)=(dble(iz)-0.5D0)*dx
         end do
 
-        ! Allocate work arrays
+      ! Allocate work arrays
         ngrida=ngridfile(icpu,ilevel)
         grid(ilevel)%ngrid=ngrida
         if(ngrida>0)then

@@ -250,24 +250,25 @@ class Hydro(Simbase):
             if ref:
                 dtype_cell.update({'ref': (('bool',1),dt_off+4)})
                 dt_off += 4
-        if additional_field is not None:
-            try:
-                # if iterable of dicts
-                for af in additional_field:
-                    itemsize = np.dtype(af["dtype"]).itemsize*af["dim"]
-                    dtype_cell.update({af["name"]:((af["dtype"],af["dim"]),dt_off+itemsize)})
-                    dt_off += itemsize
-            except:
-                # if single dict
-                af = additional_field
-                itemsize = np.dtype(af["dtype"]).itemsize*af["dim"]
-                dtype_cell.update({af["name"]:((af["dtype"],af["dim"]),dt_off+itemsize)})
-                dt_off += itemsize
-            finally:
-                print("additional field is given, but can't update the dtype")
-                print("Excepted: {'name':'asdf', 'dtype':'<f8', 'dim':3}")
-                print("Or, array/list of such dicts")
-                print("Currently given : ", additional_field)
+            if additional_field is not None:
+                try:
+                    # if iterable of dicts
+                    for af in additional_field:
+                        itemsize = np.dtype(af["dtype"]).itemsize*af["dim"]
+                        dtype_cell.update({af["name"]:((af["dtype"],af["dim"]),dt_off+itemsize)})
+                        dt_off += itemsize
+                except:
+                    try:
+                        # if single dict
+                        af = additional_field
+                        itemsize = np.dtype(af["dtype"]).itemsize*af["dim"]
+                        dtype_cell.update({af["name"]:((af["dtype"],af["dim"]),dt_off+itemsize)})
+                        dt_off += itemsize
+                    except:
+                        print("additional field is given, but can't update the dtype")
+                        print("Excepted: {'name':'asdf', 'dtype':'<f8', 'dim':3}")
+                        print("Or, array/list of such dicts")
+                        print("Currently given : ", additional_field)
 
         self.cell = np.zeros(ngridtot, dtype=dtype_cell)
         self.cell['pos'] = xarr
