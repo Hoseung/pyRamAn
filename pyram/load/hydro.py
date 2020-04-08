@@ -250,8 +250,13 @@ class Hydro(Simbase):
                 dt_off += 8
             if ref:
                 dtype_cell.update({'ref': (('bool',1),dt_off+4)})
+                dtype_cell.update({'var6': (('bool',1),dt_off+4)})
                 dt_off += 4
             if additional_field is not None:
+                """
+                Additional field are reserved for 
+                """
+
                 try:
                     # if iterable of dicts
                     for af in additional_field:
