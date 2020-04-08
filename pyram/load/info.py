@@ -5,6 +5,7 @@ Created on Thu Mar 26 21:10:48 2015
 @author: hoseung
 """
 import numpy as np
+from ..constants import kpc, twopi, hplanck, eV, kB, clight, Gyr, X, Y, rhoc, mH, mu_mol, G, Msol
 
 class Dummy:
     pass
@@ -105,21 +106,7 @@ class Info:
     # from M import * does not import _blah_blah.
 
     def _cal_units(self, arr, rarr):
-        # in cgs unit
-        kpc = 3.08e21
-        twopi = 6.2831853e0
-        hplanck = 6.6262000e-27
-        eV = 1.6022000e-12
-        kB = 1.38e-16
-        clight = 2.9979250e+10
-        Gyr = 3.1536000e+16
-        X = 0.76
-        Y = 0.24
-        rhoc = 1.8800000e-29
-        mH = 1.6600000e-24
-        mu_mol = 1.2195e0
-        G = 6.67e-8
-        m_sun = 1.98892e33
+
         scale_l = rarr[8]
         scale_d = rarr[9]
         scale_t = rarr[10]
@@ -127,7 +114,7 @@ class Info:
         scale_T2 = mH/kB * scale_v**2
         scale_nH = X/mH * scale_d
         scale_Z = 1./0.02
-        scale_flux = scale_v * scale_d * kpc * kpc * Gyr/m_sun
+        scale_flux = scale_v * scale_d * kpc * kpc * Gyr/Msol
 
         self.ncpu_tot = arr[0]
         self.boxtokpc = rarr[0] * scale_l/kpc
@@ -143,8 +130,8 @@ class Info:
         self.unit_T2 = scale_T2
         self.unit_Z = scale_Z
         self.kms = scale_v/1e5
-        self.unit_flux = scale_d * scale_v * (1e-9*Gyr)*kpc/m_sun
-        self.punit_m = scale_d * scale_l**3/m_sun #convert cell mass into Msun
+        self.unit_flux = scale_d * scale_v * (1e-9*Gyr)*kpc/Msol
+        self.punit_m = scale_d * scale_l**3/Msol #convert cell mass into Msun
         self.pboxsize = rarr[0] * scale_l/(kpc*1000.)
         self.time = rarr[1]
         self.aexp = rarr[2]
@@ -155,12 +142,8 @@ class Info:
         self.ok = rarr[6]
         self.ob = rarr[7]
         self.h = np.sqrt(self.H0**2 * ((self.om) * (1+self.zred)**3 + self.ok * (1+self.zred)**2 + self.ol)) # Om = O_(dm) + O_(baryon)
-        self.msun = scale_d*scale_l**3/m_sun
+        self.msun = scale_d*scale_l**3/Msol
         self.cboxsize = self.H0 * self.pboxsize / self.aexp * 1e-2
-        if self.cosmo:
-            from ..utils.cosmology import Timeconvert
-            tc = Timeconvert(self)
-            self.tGyr = tc.time2gyr(rarr[1], z_now = self.zred)
 
     def keys(self):
         from pprint import pprint

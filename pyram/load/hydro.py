@@ -20,7 +20,8 @@ def generate_fname(nout,path="",ftype="",cpuid=1,ext=""):
             path=path+"/"
 
     if nout == -1:
-        filelist = sorted(glob.glob(path+"output*"))
+        from glob import glob
+        filelist = sorted(glob(path+"output*"))
         number = filelist[-1].split("_")[-1]
     else:
         number = str(nout).zfill(5)

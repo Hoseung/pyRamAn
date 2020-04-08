@@ -9,69 +9,88 @@ Created on Sun Jun 28 18:31:23 2015
 @author: hoseung
 """
 from ..general import defaults
-dfl = defaults.Default()
-dir_repo = dfl.dir_repo
-
+#dfl = defaults.Default()
+#dir_repo = dfl.dir_repo
+from scipy.integrate import cumtrapz
+from numpy.core.records import fromarrays as fromarrays
 import numpy as np
+from ..constants import km, Mpc, ly, Gyr
+
 class Timeconvert():
-    def __init__(self, info=None, H0=None, om=None, ol=None, zred_now=None):
-        from astropy.io import fits
-        self.repodir = dir_repo
-        self.info = info
-        if info is not None:
-            sh0       = str(round(info.H0))
-            som       = str(round(info.om*100))
-            sol       = str(round(info.ol*100))
+    def __init__(self, info=None, H0=None, Om=None, Ol=None, zred_now=None, aexp_now=None, n=5000, verbose=True):
+        if zred_now and aexp_now:
+            assert zred_now == 1-1/aexp_now, f"You gave both redshift ({zred_now:.2f}) and exapnsion factor ({aexp_now:.2f}) and they differ."
+        elif zred_now:
+            aexp_now = 1/(1+zred_now)
+        elif aexp_now:
+            zred_now = 1/aexp_now -1
+        elif info:
             zred_now = info.zred
+            aexp_now = info.aexp
         else:
-            sh0       = str(round(H0))
-            som       = str(round(om*100))
-            sol       = str(round(ol*100))
-            zred_now  = zred_now
+            zred_now = 0
+            aexp_now = 1
+            print("warning... Defaulting zred to 0, aexp to 1")
 
-        tablefile  = self.repodir+'Table_taz_H'+sh0+'_Om'+som+'_Ol'+sol+'.fits'
+        self.zred_now = zred_now
+        self.aexp_now = aexp_now
 
-        hdu = fits.open(tablefile)
-        ttable = hdu[1].data
+        if H0 is None: H0 = info.H0
+        if Om is None: Om = info.om
+        if Ol is None: Ol = info.ol
+        # Integrate manually because astropy cosmology calculation is too slow...
+        aarr = np.linspace(0, 1, n)[1:] ** 2
+        aarr_st = (aarr[:-1] + aarr[1:])/2
+        duda = 1. / (aarr_st ** 3 * np.sqrt(Om * aarr_st ** -3 + Ol))
+        dtda = 1. / (H0 * km * Gyr / Mpc * aarr_st * np.sqrt(Om * aarr_st ** -3 + Ol))
+        aarr = aarr[1:]
 
-        # Sort so that self.tu is in increasing order
-        # Because converting stellar conformal times to lookback time
-        # is the main use case.
-        # However, this sorting makes zred be a decreasing function.
-        # So is needed the [::-1] indexing.
-        isort=np.argsort(ttable['t_unit'][0])
-        self.zred     = ttable['z'][0][isort]
-        self.tu       = ttable['t_unit'][0][isort]
-        self.tlb      = ttable['t_lback'][0][isort]
-        self.aexp     = ttable['aexp'][0][isort]
-        self.t_lback_now = np.interp(zred_now, self.zred[::-1], self.tlb[::-1])  # interpolation
+        uarr = cumtrapz(duda[::-1], aarr[::-1], initial=0)[::-1]
+        tarr = cumtrapz(dtda, aarr, initial=0)
+        self.cosmo_table = fromarrays([1/aarr - 1, aarr, tarr, uarr], dtype=[('zred', 'f8'), ('aexp', 'f8'), ('age', 'f8'), ('tu', 'f8')])
+        self.age = np.interp(aexp_now, self.cosmo_table['aexp'], self.cosmo_table['tu'])
+        if verbose:
+            print('Age of the universe (now/z=0): %.3f / %.3f Gyr, z = %.5f' % (self.age, self.cosmo_table['tu'][-1], zred_now))
 
-    def time2gyr(self, times, z_now=None):
+    def time2gyr(self, times, zred_now=None, aexp_now=None):
         """
-        Converts code unit times to lookback time from z_now.
+        Converts code unit times to lookback time from zred_now.
+        age_of_star = Timeconvert.time2gyr(star["time"], zred_now=info.zred)
+
+        NOTE
+        ----
+        uage : age of the Universe
+
         """
-        if z_now is not None:
-            #z_now = max([z_now,1e-10])
-            t_lback_now = np.interp(z_now, self.zred[::-1], self.tlb[::-1])
+        if not zred_now and not aexp_now:
+            zred_now = self.zred_now
         else:
-            t_lback_now = self.t_lback_now
-
-        fd = np.where(times < min(self.tu))[0]
+            zred_now = self.zred_now
+            aexp_now = self.aexp_now
+        
+        fd = np.where(times < min(self.cosmo_table.tu))[0]
         if len(fd) > 0:
             ctime2 = times
-            ctime2[fd] = min(self.tu)
-            t_lback_in  = np.interp(ctime2, self.tu, self.tlb)
+            ctime2[fd] = min(self.cosmo_table.tu)
+            uage  = np.interp(ctime2, self.cosmo_table.tu, self.cosmo_table.age)
         else:
-            t_lback_in  = np.interp(times, self.tu, self.tlb)
+            uage  = np.interp(times, self.cosmo_table.tu, self.cosmo_table.age)
 
-        return t_lback_in - t_lback_now
+        return np.interp(zred_now, self.cosmo_table.zred, self.cosmo_table.age) - uage
 
-    def zred2gyr(self, zreds, z_now=None):
-        if z_now is not None:
-            #z_now = max([z_now,1e-10])
-            t_lback_now = np.interp(z_now, self.zred[::-1], self.tlb[::-1])
+    def zred2gyr(self, zreds, zred_now=None, aexp_now=None):
+        if not zred_now and not aexp_now:
+            zred_now = self.zred_now
         else:
-            t_lback_now = self.t_lback_now
-        #
-        t_lback_in  = np.interp(zreds, self.zred[::-1], self.tlb[::-1])
-        return t_lback_in - t_lback_now
+            zred_now = self.zred_now
+            aexp_now = self.aexp_now
+
+        fd = np.where(zreds < min(self.cosmo_table.zred))[0]
+        if len(fd) > 0:
+            ctime2 = zreds
+            ctime2[fd] = min(self.cosmo_table.zred)
+            uage  = np.interp(ctime2, self.cosmo_table.zred, self.cosmo_table.age)
+        else:
+            uage  = np.interp(zreds, self.cosmo_table.zred, self.cosmo_table.age)
+        
+        return np.interp(zred_now, self.cosmo_table.zred, self.cosmo_table.age) - uage

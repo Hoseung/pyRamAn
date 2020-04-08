@@ -6,7 +6,7 @@ Created on Thu Mar 26 17:44:27 2015
 """
 import numpy as np
 from ..utils.io_module import read_header, read_fortran, skip_fortran
-
+from ..utils.cosmology import Timeconvert
 
 class Simbase():
     """
@@ -356,10 +356,7 @@ class Sim(Simbase):
                                  cpu_fixed=self.cpu_fixed,
                                  region=region,
                                  ranges=ranges)
-        #for kwarg in kwargs:
-        #    if kwarg== "amr2cell_params":
-        #        amr2cell_params = kwarg
-        #print(amr2cell_params)
+
         if load :
             if lmax is None:
                 lmax = self.info.lmax
@@ -374,7 +371,9 @@ class Sim(Simbase):
                               load=load,
                               data_dir = self.data_dir,
                               cosmo = self.cosmo)
-#        self.info.setup()
+        if self.cosmo:
+            self.tc = Timeconvert(self.info)
+            self.info.tGyr = self.tc.time2gyr(self.info.time, zred_now = self.info.zred)
 
     def add_part(self, ptypes=[], load=True, fortran=True, dmo=False, **kwargs):
         """
