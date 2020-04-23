@@ -127,7 +127,11 @@ def get_last_snapshot(base='./'):
     """
 
     fi = glob(base+"snapshots/output_?????/info*.txt")
-    return int(np.sort(fi)[-1].split("info_")[1].split(".txt")[0])
+    try:
+        return int(np.sort(fi)[-1].split("info_")[1].split(".txt")[0])
+    except:
+        print("Warning... couldn't determine the last snapshot")
+        return None
     #return int(np.sort(os.listdir(base + "snapshots/"))[-1].split("_")[1])
 
 

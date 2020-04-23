@@ -7,14 +7,18 @@ Created on Wed Jan 21 11:45:42 2015
 @author: hoseung
 """
 import numpy as np
-from utils.io_module import read_fortran, skip_fortran
-from utils.hagn import Nnza
-from utils import cosmology
+from ..utils.io_module import read_fortran, skip_fortran
+from ..utils.hagn import Nnza
+from ..utils import cosmology
 import os
 from os.path import isfile
-from tree import halomodule
+from . import halomodule
 
 class Tree():
+    """
+        Minimum requirements: 
+        info file
+    """
     def __init__(self, fn=None,
                      double=None,
                      wdir='./',
@@ -86,8 +90,8 @@ class Tree():
         """
         load info.txt of the last snapshot
         """
-        from load.info import Info
-        from utils import util
+        from ..load.info import Info
+        from ..utils import util
 
         if nout_fi is None:
             nout_fi = util.get_last_snapshot(self.wdir)
@@ -244,9 +248,9 @@ class Tree():
             print("No tree file name is given")
             return
         if self.double:
-            from tree import cnt_tree
+            from . import cnt_tree
         else:
-            from tree import cnt_tree_sp as cnt_tree
+            from . import cnt_tree_sp as cnt_tree
 
         print("BIG_RUN", BIG_RUN)
         self.n_all_halos, self.n_all_fathers, self.n_all_sons, self.nsteps = \
@@ -308,7 +312,7 @@ class Tree():
         tt["s_ind"][1:] = i_arr[:,14] -1 #
 
 
-    def get_best_matched_desc(pids_now, gids, nout_next):
+    def get_best_matched_desc(self,pids_now, gids, nout_next):
         gcat_with_pids = halomodule.Halo(nout=nout_next, return_id=gids, is_gal=True)
         n_matched=[]
         for i, pids in enumerate(gcat_with_pids.idlists):
