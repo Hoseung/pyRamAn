@@ -76,7 +76,7 @@ hydro_names = {
 }
 
 part_family = {
-    'cloud_tracer': -3,
+    'sink_tracer': -3,
     'star_tracer': -2,
     'gas_tracer': 0,
     'dm': 1,

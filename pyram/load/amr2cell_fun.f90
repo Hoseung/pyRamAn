@@ -15,7 +15,7 @@ subroutine a2c_count(ngridtot, nvarh, repository, xmin, xmax, ymin, &
   integer     ,INTENT(IN)::lmax
   integer,dimension(:),INTENT(IN)::cpu_list
   integer     ,INTENT(OUT)::ngridtot
-! default value from python side is 0.
+  ! default value from python side is 0.
 
   integer::ndim,i,j,k,twotondim
   integer::ivar,ncpu,nboundary
@@ -144,7 +144,7 @@ subroutine a2c_count(ngridtot, nvarh, repository, xmin, xmax, ymin, &
         ngridfile(ncpu+1:ncpu+nboundary,1:nlevelmax)=ngridbound
      endif
      read(10)
-! ROM: comment the single follwing line for old stuff
+  ! ROM: comment the single follwing line for old stuff
      read(10)
      if(TRIM(ordering).eq.'bisection')then
         do i=1,5
@@ -442,7 +442,7 @@ subroutine a2c_load(xarr, dxarr, varr, cpuarr, refarr, repository &
         ngridfile(ncpu+1:ncpu+nboundary,1:nlevelmax)=ngridbound
      endif
      read(10)
-! ROM: comment the single follwing line for old stuff
+  ! ROM: comment the single follwing line for old stuff
      read(10)
      if(TRIM(ordering).eq.'bisection')then
         do i=1,5
@@ -491,7 +491,6 @@ subroutine a2c_load(xarr, dxarr, varr, cpuarr, refarr, repository &
            allocate(son(1:ngrida,1:twotondim))
            allocate(var(1:ngrida,1:twotondim,1:nvarh))
            allocate(x  (1:ngrida,1:ndim))
-           !allocate(rho(1:ngrida))
            allocate(ref(1:ngrida))
         endif
 
@@ -615,7 +614,7 @@ subroutine a2c_load_level(xarr, dxarr, varr, cpuarr, refarr, repository, &
   character(len=128)::nomfich
   real(kind=8),intent(in)::xmin,xmax,ymin,ymax,zmin,zmax
   integer     ,intent(in)::lmax,ngridtot
-! default value from python side is 0.
+  ! default value from python side is 0.
 
   real(kind=8),intent(out),dimension(ngridtot,3)::xarr
   real(kind=8),intent(out),dimension(ngridtot,nvarh)::varr
@@ -629,7 +628,7 @@ subroutine a2c_load_level(xarr, dxarr, varr, cpuarr, refarr, repository, &
   integer::nlevelmax
   integer::ind,ipos,ngrida,icnt
   integer::ngridmax,icpu,ncpu_read
-!  real::boxlen,t
+  !real::boxlen,t
 
   integer::imin,imax,jmin,jmax,kmin,kmax
   integer::nvarh, nvarh_org
@@ -663,9 +662,9 @@ subroutine a2c_load_level(xarr, dxarr, varr, cpuarr, refarr, repository, &
   type(level),dimension(1:50)::grid
 
   ! Temporary space for reading labels from the info file.
-!  character(LEN=128)::temp_label
+  !character(LEN=128)::temp_label
 
-!  call read_params
+  !  call read_params
 
   !-----------------------------------------------
   ! Lecture du fichier hydro au format RAMSES
@@ -693,8 +692,8 @@ subroutine a2c_load_level(xarr, dxarr, varr, cpuarr, refarr, repository, &
   read(10)nlevelmax
   read(10)ngridmax
   read(10)nboundary
-!  read(10)ngrid_current
-!  read(10)boxlen
+ !  read(10)ngrid_current
+ !  read(10)boxlen
   close(10)
   twotondim=2**ndim
   xbound=(/dble(nx/2),dble(ny/2),dble(nz/2)/)
@@ -703,11 +702,11 @@ subroutine a2c_load_level(xarr, dxarr, varr, cpuarr, refarr, repository, &
   allocate(ngridlevel(1:ncpu,1:nlevelmax))
   if(nboundary>0)allocate(ngridbound(1:nboundary,1:nlevelmax))
 
-!  if(ndim==2)then
-!     write(*,*)'Output file contains 2D data'
-!     write(*,*)'Aborting'
-!     stop
-!  endif
+ !  if(ndim==2)then
+ !     write(*,*)'Output file contains 2D data'
+ !     write(*,*)'Aborting'
+ !     stop
+ !  endif
 
   xxmin=xmin ; xxmax=xmax
   yymin=ymin ; yymax=ymax
@@ -748,7 +747,7 @@ subroutine a2c_load_level(xarr, dxarr, varr, cpuarr, refarr, repository, &
      ! Open AMR file and skip header
      nomfich=TRIM(repository)//'/amr_'//TRIM(nchar)//'.out'//TRIM(ncharcpu)
      open(unit=10,file=nomfich,status='old',form='unformatted')
-!     write(*,*)'Processing file '//TRIM(nomfich)
+  !     write(*,*)'Processing file '//TRIM(nomfich)
      do i=1,21
         read(10)
      end do
@@ -764,7 +763,7 @@ subroutine a2c_load_level(xarr, dxarr, varr, cpuarr, refarr, repository, &
         ngridfile(ncpu+1:ncpu+nboundary,1:nlevelmax)=ngridbound
      endif
      read(10)
-! ROM: comment the single follwing line for old stuff
+  ! ROM: comment the single follwing line for old stuff
      read(10)
      if(TRIM(ordering).eq.'bisection')then
         do i=1,5
@@ -925,7 +924,6 @@ subroutine a2c_load_level(xarr, dxarr, varr, cpuarr, refarr, repository, &
 end subroutine
 
 
-
 !=======================================================================
 subroutine title(n,nchar)
 !=======================================================================
@@ -968,7 +966,7 @@ subroutine hilbert3d(x,y,z,order,bit_length,npoint)
   integer     ,INTENT(IN)                     ::bit_length,npoint
   integer     ,INTENT(IN) ,dimension(1:npoint)::x,y,z
   real(kind=8),INTENT(OUT),dimension(1:npoint)::order
-!  real(kind=8),INTENT(OUT)::order
+  !  real(kind=8),INTENT(OUT)::order
 
   logical,dimension(0:3*bit_length-1)::i_bit_mask
   logical,dimension(0:1*bit_length-1)::x_bit_mask,y_bit_mask,z_bit_mask

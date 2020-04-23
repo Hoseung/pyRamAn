@@ -202,6 +202,18 @@ class Simbase():
 
         return np.sort(cpu_list)
 
+def empty_config():
+    conf = {'cosmo':None,
+            'sim_type':None,
+            'dmo':None,
+            'longint':None,
+            }
+    return conf
+"""
+Config templates are in config.py. But what is actually used need to be belong to a sim instance.
+"""
+
+
 class Sim(Simbase):
     """
     Defines the 'host class' of part, amr, hydro, info.
@@ -234,8 +246,8 @@ class Sim(Simbase):
     But I hope to expand it for multiple snapshots.
     """
     def __init__(self, nout, base='./', data_dir='snapshots/',
-                 ranges=[[0.0,1.0],[0.0,1.0],[0.0,1.0]], dmo=False,
-                 setup=True, region=None, cosmo=True):
+                 ranges=[[0.0,1.0],[0.0,1.0],[0.0,1.0]], setup=True, 
+                 dmo=False, region=None, cosmo=True, sim_type='none'):
         """
             Parameters
             ----------
@@ -255,8 +267,10 @@ class Sim(Simbase):
         self.nout = nout
         self.base = base
         # info appreciates nout and base (not mandatary, though)
-        self.dmo = dmo
-        self.cosmo = cosmo
+        self.config = empty_config()
+        self.config['dmo'] = dmo
+        self.config['cosmo'] = cosmo
+        self.config['sim_type'] = sim_type
         self.data_dir = data_dir
         self.add_info()
         # set_data_dir and set_range needs info instance be exist.
@@ -398,13 +412,13 @@ class Sim(Simbase):
         self.part = part.Part(info=self.info,
                               ptypes=ptypes,
                               data_dir=self.data_dir,
-                              dmo=self.dmo,
+                              config=self.config,
                               base=self.base,
                               cpus=self.cpus,
                               cpu_fixed=self.cpu_fixed,
                               region=self.region,
                               ranges=self.ranges,
-                              cosmo=self.cosmo, **kwargs)
+                              **kwargs)
         print("A particle instance is created\n")
 
         if load:
