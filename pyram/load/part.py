@@ -556,7 +556,7 @@ class Part(Simbase):
             istar = np.where(~isnt_star)[0]
             self.star = np.zeros(self.nstar, dtype=dtype_star)
             for i, tag in enumerate(['x','y','z','vx','vy','vz','m', 'time']):
-                self.sink[tag] = part_float[ind_istar,i]
+                self.star[tag] = part_float[istar,i]
             if read_metal:
                 self.star['metal'] = part_float[istar,8]
             self.star['id'] = part_int[istar]
