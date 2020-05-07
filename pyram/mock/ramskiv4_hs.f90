@@ -1759,6 +1759,7 @@ program ramski_v4
     integer,dimension(:),allocatable::find
                         !! father index
     integer::n_fathers
+    integer::bad_nouts(102)
 
     !! find maximum father mass
     integer,dimension(1:1)::tmp_ind
@@ -1774,6 +1775,12 @@ program ramski_v4
     outdir='/home/hopung/Work/NH/JP' !! output directory
     fn='/home/hopung/Work/NH/GalaxyMaker/gal/tree.dat' !! path to the tree
 
+    bad_nouts =(/106,114,119,124,130,136,141,147,159,165,172,178,184,190,197,207,213&
+               &,219,224,229,235,240,245,250,254,258,262,266,270,274,280,293,287,290&
+               &,294,297,301,305,312,319,433,435,438,440,444,447,449,452,454,457,460&
+               &,462,465,467,470,473,476,479,482,484,487,489,492,494,497,499,501,505&
+               &,508,509,511,514,517,522,525,527,530,532,535,538,540,544,547,549,552&
+               &,554,557,560,562,565,568,570,573,576,578,581,584,587,589,592,595,598/)
     lmin=12     !! minimum AMR level (must be smaller than lmax)
     lmax=21     !! maximum AMR level (must be equal to lmax in RAMSES)
     Tdust=10000 !! dust survival temperature
@@ -1797,8 +1804,8 @@ n_piece=1
     lbox=100    !! simulation box size (Mpc)
     h0=70.4     !! Hubble constant
     masscut=3d10
-    nstart=599  !! first snapshot number in the tree
-    nend=100    !! last snapshot to be considered
+    nstart=160  !! first snapshot number in the tree
+    nend=599    !! last snapshot to be considered
     z_assume=1.00
     faceon=1    !! if you want this output, set any non-zero integer
     edgeon=1    !! if you want this output, set any non-zero integer
@@ -1809,7 +1816,7 @@ n_piece=1
       read(10,*)bm(i)
     enddo
     close(10)
-
+    write(*,*)"loading LUT done"
     !! simulation time - for paticle ages
       !! path to the last RAMSES snapshot - just to read a info file
       write(nsnap_char,'(I0.5)')nend
@@ -1818,7 +1825,7 @@ n_piece=1
       call rd_info(path,info)
       omega_m=info%omega_m ; omega_l=info%omega_l ; omega_k=info%omega_k
         !! keep it simple
-
+    write(*,*)"loading info done"
     !! Allocate look-up tables
     allocate(aexp_frw(0:n_frw),hexp_frw(0:n_frw))
     allocate(tau_frw(0:n_frw),t_frw(0:n_frw))
@@ -1835,7 +1842,7 @@ n_piece=1
                   &i_arr,f_arr,aexp_arr,omega_t_arr,age_univ_arr,&
                   &n_halos_all,n_all_fathers,n_all_sons,big_run,nsteps)
       f_arr(:,1)=f_arr(:,1)*1d11 !! mass
-
+    write(*,*)"loading tree done"
     !! galaxies in the last snapshot
     ngal=0
     do i=1,n_halos_all
@@ -1875,12 +1882,15 @@ n_piece=1
     !! MAIN LOOP
     !! loop over snapshots
     do a=nend,nstart,-1
+      if ( ANY( bad_nouts==a ) .or. (a .gt. 282)) then
+      CYCLE
+      endif
       !! store the snapshot number as a string
       write(nsnap_char,'(I0.5)')a
 
       !! path to the RAMSES snapshot
       path=trim(dir)//'output_'//nsnap_char
-
+      write(*,*) "main loop: path to snapshot", path
       !! read info
       call rd_info(path,info)
         aexp=info%aexp ; H0=info%H0 ; hh=H0/100d0
@@ -1912,7 +1922,7 @@ n_piece=1
 
       !! loop over galaxies
 !!      do i=1,ngal !!- JP
-      do i=1,20
+      do i=13,13
         !! store the galaxy number as a string
         write(ngal_char,'(I0.5)')i
 
