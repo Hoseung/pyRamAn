@@ -1412,206 +1412,6 @@ end module ramski_mods
   !! ====================================================================== !!
   !! ====================================================================== !!
 
-module tree_mods
-
-  contains
-
-  subroutine count_tree(fn, n_halos_all, flist_index, slist_index, &
-                      & nsteps, big_run, n_all_fathers, n_all_sons)
-    implicit none
-    character(LEN=256), INTENT(IN)::fn
-
-    integer::nfathers, nsons
-    integer, dimension(:), allocatable::nb_of_halos, nb_of_subhalos
-    integer, INTENT(OUT)::flist_index, slist_index, n_halos_all, nsteps
-
-    integer(KIND=4)::i,j, nhals_now
-    logical, INTENT(IN)::big_run
-
-    integer,INTENT(OUT)::n_all_fathers,n_all_sons
-
-    n_all_fathers=0 ; n_all_sons=0
-
-    open(unit=1,file=fn,status='old',form='unformatted')
-
-    read(1)nsteps
-    allocate(nb_of_halos(1:nsteps))
-    allocate(nb_of_subhalos(1:nsteps))
-    read(1)nb_of_halos(1:nsteps),nb_of_subhalos(1:nsteps)
-
-    n_halos_all = sum(nb_of_halos) + sum(nb_of_subhalos)
-    read(1)!aexp_arr(1:nsteps)
-    read(1)!omega_t_arr(1:nsteps)
-    read(1)!age_univ_arr(1:nsteps)
-    flist_index=0
-    slist_index=0
-    do i=1,nsteps
-        nhals_now=nb_of_halos(i)+nb_of_subhalos(i)
-        do j=1,nhals_now
-
-            read(1)!id_tmp!i_arr(idx,2) !id!id
-            read(1)!i_arr(idx,3) !bushID
-            read(1)!i_arr(idx,4) !st
-            read(1)!i_arr(idx,5:9) ! hosts
-            read(1)!f_arr(idx,1) ! m
-            read(1)!macc ! macc alone is double
-            read(1)!f_arr(idx,3:5)!xp
-            read(1)!f_arr(idx,6:8)!vp
-            read(1)!f_arr(idx,9:11)!lp
-            read(1)!f_arr(idx,12:15)!abc
-            read(1)!f_arr(idx,16:18)!energy
-            read(1)!f_arr(idx,19)!spin
-            read(1)nfathers!nfathers
-            n_all_fathers=n_all_fathers+nfathers
-            flist_index = flist_index + nfathers
-
-            read(1)!Father ID
-            read(1)!Father Mass
-            read(1)nsons
-            n_all_sons=n_all_sons+nsons
-            if (nsons .gt. 0) then
-                read(1)!id_tmp!son ID
-                !write(*,*)id_tmp
-            endif
-            slist_index = slist_index + nsons
-            read(1)! (r,m,t)_vir, c_vel
-            read(1)! profile
-            if (.not. big_run) then
-                read(1)!id_tmp! particle ID
-            endif
-
-        enddo
-    enddo
-    deallocate(nb_of_halos, nb_of_subhalos)
-    close(1)
-
-  end subroutine
-
-  subroutine load_tree(fn, fatherID, fatherIDx, sonID, fatherMass, &
-                   & i_arr, f_arr, aexp_arr, omega_t_arr, age_univ_arr, &
-                   & n_halos_all, n_all_fathers, n_all_sons, big_run, nsteps)
-
-    implicit none
-    character(LEN=256), INTENT(IN)::fn
-    logical, INTENT(IN)::big_run
-    integer, INTENT(IN)::n_all_sons, n_all_fathers, n_halos_all, nsteps
-
-    integer(KIND=4):: nsons, flist_index, slist_index
-    integer(KIND=4):: i,j, k,nhals_now, n_fathers, idx_old, nhals_old, idx
-    real(KIND=8)::macc
-
-    integer, dimension(:), allocatable::fid_tmp, nb_of_halos, &
-                                      & nb_of_subhalos, sonID_tmp
-
-    ! +1 so that in python the array content start from index 1.
-    integer, dimension(:), allocatable, INTENT(OUT)::fatherID, fatherIDx
-    integer, dimension(:), allocatable, INTENT(OUT)::sonID
-    real(KIND=8), dimension(:), allocatable, INTENT(OUT) ::fatherMass
-    integer(KIND=4), dimension(:,:), allocatable, INTENT(OUT) ::i_arr
-    real(KIND=8), dimension(:,:), allocatable, INTENT(OUT) ::f_arr
-    real(KIND=8), dimension(1:nsteps), INTENT(OUT) ::aexp_arr, &
-                                    & omega_t_arr, age_univ_arr
-
-    integer::n_fathers_max
-
-    n_fathers_max = 5000
-    allocate(fid_tmp(1:n_fathers_max)) ! At most 100 fathers for a halo.
-    allocate(sonID_tmp(1:n_fathers_max)) ! At most 100 fathers for a halo.
-
-    open(unit=1,file=fn,status='old',form='unformatted')
-
-    read(1)
-    allocate(nb_of_halos(1:nsteps))
-    allocate(nb_of_subhalos(1:nsteps))
-    read(1)nb_of_halos(1:nsteps),nb_of_subhalos(1:nsteps)
-
-    read(1)aexp_arr(1:nsteps)
-    read(1)omega_t_arr(1:nsteps)
-    read(1)age_univ_arr(1:nsteps)
-
-    flist_index=1
-    slist_index=1
-    nhals_old = 0
-    idx=1
-
-    allocate(i_arr(1:n_halos_all,1:15))
-    allocate(f_arr(1:n_halos_all,1:25))
-    allocate(fatherID(1:n_all_fathers+1),fatherIDx(1:n_all_fathers+1))
-    allocate(sonID(1:n_all_sons))
-    allocate(fatherMass(1:n_all_fathers))
-
-    do i=1,nsteps
-        nhals_now=nb_of_halos(i)+nb_of_subhalos(i)
-        idx_old = idx - nhals_old
-        i_arr(idx:idx+nhals_now, 11) = i ! current step
-        do j=1,nhals_now
-            i_arr(idx,1) = idx
-            read(1)i_arr(idx,2) !id!id
-            read(1)i_arr(idx,3) !bushID
-            read(1)i_arr(idx,4) !st
-            read(1)i_arr(idx,5:9) ! hosts
-            read(1)f_arr(idx,1) ! m
-            read(1)macc ! macc alone is double
-            f_arr(idx,2) = real(macc)
-            read(1)f_arr(idx,3:5)!xp
-            read(1)f_arr(idx,6:8)!vp
-            read(1)f_arr(idx,9:11)!lp
-            read(1)f_arr(idx,12:15)!abc
-            read(1)f_arr(idx,16:18)!energy
-            read(1)f_arr(idx,19)!spin
-            read(1)n_fathers!nfathers
-            if (n_fathers .gt. n_fathers_max) then 
-                write(*,*) "Increase n_fathers_max above ",n_fathers
-            endif
-            read(1)fid_tmp(1:n_fathers)
-            fatherID(flist_index:flist_index+n_fathers-1)=fid_tmp(1:n_fathers)
-            read(1)fatherMass(flist_index:flist_index+n_fathers-1)
-            if (i > 0) then
-                ! from the previous step.
-                do k=1,n_fathers
-                    if (fid_tmp(k) > 0) then
-                        fid_tmp(k) = i_arr(idx_old+fid_tmp(k),1)
-                    endif
-                enddo
-            endif
-            i_arr(idx,10) = n_fathers
-            fatherIDx(flist_index:flist_index+n_fathers-1)=fid_tmp(1:n_fathers)
-            i_arr(idx,13) = flist_index
-            flist_index = flist_index + n_fathers
-
-            read(1)nsons
-            i_arr(idx,14) = nsons
-            if (nsons .gt. 0) then
-            !read(1)sonID(slist_index:slist_index+nsons-1)!sonID_tmp(1:nsons-1)
-                read(1)sonID_tmp(1:nsons-1)
-                ! id into idx.
-                if (i .lt. nsteps) then
-                    sonID(slist_index:slist_index+nsons-1)=&
-                      &sonID_tmp(1:nsons-1)+idx_old+nhals_now+nhals_old-1
-                    i_arr(idx,15) = slist_index
-                    !slist_index = slist_index+nsons
-                endif
-            endif
-            slist_index = slist_index + nsons
-            read(1)f_arr(idx,20:23) ! virial
-            read(1)f_arr(idx,24:25) ! rho
-            if (.not. big_run) then
-                read(1)i_arr(idx,12) ! np
-            endif
-            idx = idx +1
-        enddo
-        nhals_old = nhals_now
-
-
-    enddo
-    deallocate(nb_of_halos, nb_of_subhalos)
-    deallocate(fid_tmp)
-    close(1)
-
-  end subroutine
-
-end module tree_mods
-
 
 !! == MODULES ============================================================== !!
 !! ========================================================================= !!
@@ -1732,33 +1532,33 @@ program ramski_v4
       integer::nn
 
     !! TREE-related variables
-    character(len=256)::fn
+    !!character(len=256)::fn
 
     !! count_tree
-    integer::n_halos_all,nsteps,flist_index,slist_index
-    logical::big_run
-    integer::n_all_fathers,n_all_sons
+    !!integer::n_halos_all,nsteps,flist_index,slist_index
+    !!logical::big_run
+    !!integer::n_all_fathers,n_all_sons
     !! load_tree
-    integer,dimension(:),allocatable::fatherID,fatherIDx
-    integer,dimension(:),allocatable::sonID
-    real*8,dimension(:),allocatable::fatherMass
-    integer,dimension(:,:),allocatable::i_arr
-    real*8,dimension(:,:),allocatable::f_arr
-    real*8,dimension(:),allocatable::aexp_arr,omega_t_arr,age_univ_arr
+    !!integer,dimension(:),allocatable::fatherID,fatherIDx
+    !!integer,dimension(:),allocatable::sonID
+    !!real*8,dimension(:),allocatable::fatherMass
+    !!integer,dimension(:,:),allocatable::i_arr
+    !!real*8,dimension(:,:),allocatable::f_arr
+    !!real*8,dimension(:),allocatable::aexp_arr,omega_t_arr,age_univ_arr
 
     !! galaxies in the last snapshot
-    integer::nstart=40,nend=470,tstart=40
+    integer::nstart,nend,tstart
     integer::ngal !! used to read the tree
     real*8::masscut=1d10
 
     !! history of each galaxy
-    real*8,dimension(:,:,:),allocatable::gal !! mass and position
-    integer::ind,ind1,ind2,ind3,ind4
-    real*8,dimension(:),allocatable::fMass
+    !!real*8,dimension(:,:,:),allocatable::gal !! mass and position
+    !!integer::ind,ind1,ind2,ind3,ind4
+    !!real*8,dimension(:),allocatable::fMass
                         !! father mass - fine the most massive one
-    integer,dimension(:),allocatable::find
+    !!integer,dimension(:),allocatable::find
                         !! father index
-    integer::n_fathers
+    !!integer::n_fathers
     integer::bad_nouts(102)
 
     !! find maximum father mass
@@ -1769,14 +1569,30 @@ program ramski_v4
 
     !! faceon and edgeon
     integer::faceon=0,edgeon=0
+ 
+    !! NH center ill defined from the tree.
+    !! Read it from a text file
+    real(KIND=8),dimension(:,:), allocatable::gxs
+    integer::nlines
 
     !! define parameter here instead of using script
     dir='/storage1/NewHorizon/OUTPUT_DIR/' !! RAMSES snapshot
     outdir='/home/hopung/Work/NH/JP' !! output directory
-    fn='/home/hopung/Work/NH/GalaxyMaker/gal/tree.dat' !! path to the tree
+    !!fn='/home/hopung/Work/NH/GalaxyMaker/gal/tree.dat' !! path to the tree
+    !!fn_centers='centers_599_13.txt'
+
+    nlines = 560
+    allocate(gxs(1:nlines,1:3))
+    open(12, file="centers_599_13.txt", status="old")
+
+    ! read in values
+    do i=1,nlines
+        read(12,*) gxs(i,:)
+    enddo
+    close(12)
 
     bad_nouts =(/106,114,119,124,130,136,141,147,159,165,172,178,184,190,197,207,213&
-               &,219,224,229,235,240,245,250,254,258,262,266,270,274,280,293,287,290&
+               &,219,224,229,235,240,245,250,254,258,262,266,270,274,280,283,287,290&
                &,294,297,301,305,312,319,433,435,438,440,444,447,449,452,454,457,460&
                &,462,465,467,470,473,476,479,482,484,487,489,492,494,497,499,501,505&
                &,508,509,511,514,517,522,525,527,530,532,535,538,540,544,547,549,552&
@@ -1804,7 +1620,7 @@ n_piece=1
     lbox=100    !! simulation box size (Mpc)
     h0=70.4     !! Hubble constant
     masscut=3d10
-    nstart=160  !! first snapshot number in the tree
+    nstart=110  !! first snapshot number in the tree
     nend=599    !! last snapshot to be considered
     z_assume=1.00
     faceon=1    !! if you want this output, set any non-zero integer
@@ -1835,58 +1651,59 @@ n_piece=1
 
     !! READ the TREE
     !! count_tree
-    call count_tree(fn,n_halos_all,flist_index,slist_index,nsteps,big_run,&
-                   &n_all_fathers,n_all_sons)
+    !!call count_tree(fn,n_halos_all,flist_index,slist_index,nsteps,big_run,&
+    !!               &n_all_fathers,n_all_sons)
     !! load_tree
-    call load_tree(fn,fatherID,fatherIDx,sonID,fatherMass,&
-                  &i_arr,f_arr,aexp_arr,omega_t_arr,age_univ_arr,&
-                  &n_halos_all,n_all_fathers,n_all_sons,big_run,nsteps)
-      f_arr(:,1)=f_arr(:,1)*1d11 !! mass
-    write(*,*)"loading tree done"
+    !!call load_tree(fn,fatherID,fatherIDx,sonID,fatherMass,&
+    !!              &i_arr,f_arr,aexp_arr,omega_t_arr,age_univ_arr,&
+    !!              &n_halos_all,n_all_fathers,n_all_sons,big_run,nsteps)
+    !!  f_arr(:,1)=f_arr(:,1)*1d11 !! mass
+    !!write(*,*)"loading tree done"
     !! galaxies in the last snapshot
-    ngal=0
-    do i=1,n_halos_all
-      if( i_arr(i,11).eq.(nend-tstart+1) .and. f_arr(i,1).ge.masscut)then
-        ngal=ngal+1
-        if(ngal.eq.1)ind1=i
-        ind2=i
-      endif
-    enddo
-    allocate(gal(ngal,nstart:nend,1:4)) ; gal=0
+    !!ngal=0
+    !!do i=1,n_halos_all
+    !!  if( i_arr(i,11).eq.(nend-tstart+1) .and. f_arr(i,1).ge.masscut)then
+    !!    ngal=ngal+1
+    !!    if(ngal.eq.1)ind1=i
+    !!    ind2=i
+    !!  endif
+    !!enddo
+    !!allocate(gal(ngal,nstart:nend,1:4)) ; gal=0
 
-    ngal=0
-    do i=ind1,ind2 !! do not need to run over the all haloes in the tree
-      if( i_arr(i,11).eq.nend-tstart+1 .and. f_arr(i,1).ge.masscut )then
-        ngal=ngal+1
-        ind=i
-        do j=nend,nstart,-1
-          gal(ngal,j,1)=f_arr(ind,1)     !! mass
-          gal(ngal,j,2:4)=f_arr(ind,3:5) !! position - physical Mpc
-
-          n_fathers=i_arr(ind,10)      !! number of fathers
-          ind3=i_arr(ind,13)           !! flist_index
-          ind4=ind3+n_fathers-1        !! note the subtraction
-
-          allocate(fMass(1:n_fathers),find(1:n_fathers))
-          fMass(1:n_fathers)=fatherMass(ind3:ind4)               
-          find(1:n_fathers)=fatherIDx(ind3:ind4)
-
-          tmp_ind=maxloc(fMass)
-          ind=find(tmp_ind(1))-1
-
-          deallocate(fMass,find)
-        enddo
-      endif
-    enddo
+    !!ngal=0
+    !!do i=ind1,ind2 !! do not need to run over the all haloes in the tree
+    !!  if( i_arr(i,11).eq.nend-tstart+1 .and. f_arr(i,1).ge.masscut )then
+    !!    ngal=ngal+1
+    !!    ind=i
+    !!    do j=nend,nstart,-1
+    !!      gal(ngal,j,1)=f_arr(ind,1)     !! mass
+    !!      gal(ngal,j,2:4)=f_arr(ind,3:5) !! position - physical Mpc
+    !!
+    !!      n_fathers=i_arr(ind,10)      !! number of fathers
+    !!      ind3=i_arr(ind,13)           !! flist_index
+    !!      ind4=ind3+n_fathers-1        !! note the subtraction
+    !!
+    !!      allocate(fMass(1:n_fathers),find(1:n_fathers))
+    !!      fMass(1:n_fathers)=fatherMass(ind3:ind4)               
+    !!      find(1:n_fathers)=fatherIDx(ind3:ind4)
+    !!
+    !!      tmp_ind=maxloc(fMass)
+    !!      ind=find(tmp_ind(1))-1
+    !!
+    !!      deallocate(fMass,find)
+    !!    enddo
+    !!  endif
+    !!enddo
 
     !! MAIN LOOP
     !! loop over snapshots
     do a=nend,nstart,-1
-      if ( ANY( bad_nouts==a ) .or. (a .gt. 282)) then
+      if ( ANY( bad_nouts==a ) .or. (a .gt. 160)) then
       CYCLE
       endif
       !! store the snapshot number as a string
       write(nsnap_char,'(I0.5)')a
+      gx(1:3)=gxs(nend-a+1,:)
 
       !! path to the RAMSES snapshot
       path=trim(dir)//'output_'//nsnap_char
@@ -1922,11 +1739,11 @@ n_piece=1
 
       !! loop over galaxies
 !!      do i=1,ngal !!- JP
-      do i=13,13
+      !!do i=13,13
         !! store the galaxy number as a string
         write(ngal_char,'(I0.5)')i
-
-        gx(1:3)=gal(i,a,2:4)*3.086d24/unit_l+0.5
+        !gx(1:3)=gal(i,a,2:4)*3.086d24/unit_l+0.5
+        write(*,*)gx
         !! coordinate of a galaxy on the grid
         xmin=int(gx(1)*2**lmin)/real(2**lmin,8) ; xmax=xmin+1./2**lmin
         ymin=int(gx(2)*2**lmin)/real(2**lmin,8) ; ymax=ymin+1./2**lmin
@@ -2175,7 +1992,7 @@ n_piece=1
         inputfov=inputfov/1d3 !! pc
         fov_assume=fov_assume/1d3
 
-      enddo !! loop over galaxies
+      !!enddo !! loop over galaxies
     enddo !! loop over snapshots
 
 end program ramski_v4
