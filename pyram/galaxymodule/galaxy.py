@@ -699,7 +699,7 @@ class Galaxy():
             except:
                 print(f"No {target}, skipping...")
 
-    def cal_norm_vec(self, pop_nvec=['star'], bound_percentile=100):
+    def cal_norm_vec(self, pop_nvec=['star'], bound_percentile=100, verbose=False):
         """
         Determines normal vector (rotation axis) of the galaxy.
 
@@ -734,11 +734,12 @@ class Galaxy():
 
         if bound_percentile < 100:
             # Vdiff is not a good approximation to the boundness...!
-            vdiff = np.sqrt(np.sum(np.square(self.star["vel"]), axis=1))
+            vdiff = np.sum(np.square(self.star["vel"]), axis=1)
 
-            i_bound_50 = np.argsort(vdiff)[:max([1, 0.01 * bound_percentile]) * len(vdiff)]
+            i_bound_50 = np.argsort(vdiff)[:int(0.01 * bound_percentile * len(vdiff))]
 
             #pop = getattr(self, target)
+            if verbose: print("calculating nvec... choosing {} ptcls".format(len(i_bound_50)))
             #nn = len(pop['x'])
             pos = self.star['pos'][i_bound_50]
             vel = self.star["vel"][i_bound_50]
