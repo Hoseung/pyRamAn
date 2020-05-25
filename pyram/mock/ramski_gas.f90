@@ -264,21 +264,6 @@ subroutine ramski_v4(dir, outdir, gx, nout, fov, gid)
         inquire(file=write_file,exist=mkdir)
         if(.not.mkdir)call system('mkdir '//trim(write_file))
 
-        write_file=trim(outdir)//'/'//ngal_char//'/'//nsnap_char//'/xy'
-        inquire(file=write_file,exist=mkdir)
-        if(.not.mkdir)call system('mkdir '//trim(write_file))
-
-        if(faceon.ne.0)then
-        write_file=trim(outdir)//'/'//ngal_char//'/'//nsnap_char//'/faceon'
-          inquire(file=write_file,exist=mkdir)
-          if(.not.mkdir)call system('mkdir '//trim(write_file))
-        endif
-
-        if(edgeon.ne.0)then
-        write_file=trim(outdir)//'/'//ngal_char//'/'//nsnap_char//'/edgeon'
-          inquire(file=write_file,exist=mkdir)
-          if(.not.mkdir)call system('mkdir '//trim(write_file))
-        endif
         print *, "writing..."
        !! cell
         write_file=trim(outdir)//'/'//ngal_char//'/'//nsnap_char//&

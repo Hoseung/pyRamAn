@@ -15,13 +15,6 @@ module ramski_mods
 
   !! define structures
 
-  !! catalog
-  type catalog
-    integer::np,id,level,host,sub,nsub,nextsub
-    real*8::m,mvir,r,rvir,tvir,cvel,ax,ay,az,sp
-    real*8,dimension(1:3)::xx,vv
-  end type catalog
-
   !! information
   type info_struct
     real*8::unit_l,unit_d,unit_t,unit_m,t,aexp,H0,boxlen
@@ -36,12 +29,6 @@ module ramski_mods
     logical::refinement !! refinement
     real*8::dx          !! cell size
   end type cell_struct
-
-  !! part
-  type part_struct
-    real*8,dimension(1:3)::xp,vp
-    real*8::mp,ap,zp
-  end type part_struct
 
   !! morton
   type morton_struct
@@ -757,139 +744,6 @@ module ramski_mods
   !! ===================================================================== !!
   !! ===================================================================== !!
 
-  subroutine rd_catalog(path,gal,ngal)
-
-    implicit none
-
-    integer::i
-    character(len=200)::path
-    integer::eof,nline,ngal
-
-    type(catalog),dimension(:),allocatable::gal
-
-    !! count the number of lines at first
-    nline=0
-    open(unit=10,file=path,action='read',status='old')
-    do
-      read(10,*,iostat=eof)
-      if(eof<0)goto 101
-      nline=nline+1
-    enddo
-    101 continue
-
-    rewind 10
-
-    !! read the file
-    allocate(gal(1:nline-1)) !! rule out the header
-    read(10,*) !! skip
-    do i=1,nline-1
-      read(10,*)gal(i)%np,gal(i)%id,gal(i)%level,gal(i)%host,gal(i)%sub,  &
-              & gal(i)%nsub,gal(i)%nextsub,gal(i)%m,gal(i)%mvir,gal(i)%r, &
-              & gal(i)%rvir,gal(i)%tvir,gal(i)%cvel,gal(i)%xx(1:3),       &
-              & gal(i)%vv(1:3),gal(i)%ax,gal(i)%ay,gal(i)%az,gal(i)%sp
-    enddo
-
-    ngal=nline-1
-    close(10)
-
-  end subroutine rd_catalog
-
-  !! ===================================================================== !!
-  !! ===================================================================== !!
-
-  subroutine friedman(O_mat_0,O_vac_0,O_k_0,alpha,axp_min, &
-       & axp_out,hexp_out,tau_out,t_out,ntable,age_tot)
-
-    implicit none
-    integer::ntable
-    real(kind=8)::O_mat_0, O_vac_0, O_k_0
-    real(kind=8)::alpha,axp_min,age_tot
-    real(kind=8),dimension(0:ntable)::axp_out,hexp_out,tau_out,t_out
-    ! ######################################################!
-    ! This subroutine assumes that axp = 1 at z = 0 (today) !
-    ! and that t and tau = 0 at z = 0 (today).              !
-    ! axp is the expansion factor, hexp the Hubble constant !
-    ! defined as hexp=1/axp*daxp/dtau, tau the conformal    !
-    ! time, and t the look-back time, both in unit of 1/H0. !
-    ! alpha is the required accuracy and axp_min is the     !
-    ! starting expansion factor of the look-up table.       !
-    ! ntable is the required size of the look-up table.     !
-    ! ######################################################!
-    real(kind=8)::axp_tau, axp_t
-    real(kind=8)::axp_tau_pre, axp_t_pre
-    real(kind=8)::dadtau, dadt
-    real(kind=8)::dtau,dt
-    real(kind=8)::tau,t
-    integer::nstep,nout,nskip
-
-    axp_tau = 1.0D0
-    axp_t = 1.0D0
-    tau = 0.0D0
-    t = 0.0D0
-    nstep = 0
-  
-    do while ( (axp_tau .ge. axp_min) .or. (axp_t .ge. axp_min) ) 
-     
-       nstep = nstep + 1
-       dtau = alpha * axp_tau / dadtau(axp_tau,O_mat_0,O_vac_0,O_k_0)
-       axp_tau_pre = axp_tau - dadtau(axp_tau,O_mat_0,O_vac_0,O_k_0)*dtau/2.d0
-       axp_tau = axp_tau - dadtau(axp_tau_pre,O_mat_0,O_vac_0,O_k_0)*dtau
-       tau = tau - dtau
-     
-       dt = alpha * axp_t / dadt(axp_t,O_mat_0,O_vac_0,O_k_0)
-       axp_t_pre = axp_t - dadt(axp_t,O_mat_0,O_vac_0,O_k_0)*dt/2.d0
-       axp_t = axp_t - dadt(axp_t_pre,O_mat_0,O_vac_0,O_k_0)*dt
-       t = t - dt
-     
-    end do
-
-    age_tot=-t
-
-    nskip=nstep/ntable
-  
-    axp_t = 1.d0
-    t = 0.d0
-    axp_tau = 1.d0
-    tau = 0.d0
-    nstep = 0
-    nout=0
-    t_out(nout)=t
-    tau_out(nout)=tau
-    axp_out(nout)=axp_tau
-    hexp_out(nout)=dadtau(axp_tau,O_mat_0,O_vac_0,O_k_0)/axp_tau
-
-    do while ( (axp_tau .ge. axp_min) .or. (axp_t .ge. axp_min) ) 
-     
-       nstep = nstep + 1
-       dtau = alpha * axp_tau / dadtau(axp_tau,O_mat_0,O_vac_0,O_k_0)
-       axp_tau_pre = axp_tau - dadtau(axp_tau,O_mat_0,O_vac_0,O_k_0)*dtau/2.d0
-       axp_tau = axp_tau - dadtau(axp_tau_pre,O_mat_0,O_vac_0,O_k_0)*dtau
-       tau = tau - dtau
-
-       dt = alpha * axp_t / dadt(axp_t,O_mat_0,O_vac_0,O_k_0)
-       axp_t_pre = axp_t - dadt(axp_t,O_mat_0,O_vac_0,O_k_0)*dt/2.d0
-       axp_t = axp_t - dadt(axp_t_pre,O_mat_0,O_vac_0,O_k_0)*dt
-       t = t - dt
-     
-       if(mod(nstep,nskip)==0)then
-          nout=nout+1
-          t_out(nout)=t
-          tau_out(nout)=tau
-          axp_out(nout)=axp_tau
-          hexp_out(nout)=dadtau(axp_tau,O_mat_0,O_vac_0,O_k_0)/axp_tau
-       end if
-
-    end do
-    t_out(ntable)=t
-    tau_out(ntable)=tau
-    axp_out(ntable)=axp_tau
-    hexp_out(ntable)=dadtau(axp_tau,O_mat_0,O_vac_0,O_k_0)/axp_tau
-
-  end subroutine friedman
-
-  !! ===================================================================== !!
-  !! ===================================================================== !!
-
   subroutine ext_cell(cell,ntotal,cellout,rr,ll,ncount)
     !! variables
     implicit none
@@ -927,167 +781,6 @@ module ramski_mods
     enddo
 
   end subroutine ext_cell
-
-  !! ====================================================================== !!
-  !! ====================================================================== !!
-
-  subroutine decompose(xp,vp,mp,npart,theta,phi)
-    !! This routine decompse the galaxy into two components: bulge and disk.
-    !! Then it determines two rotation angles required in the SKIRT simulation.
-
-    !! variables
-    implicit none
-
-    integer::i,j,k
-    !! input
-    real(kind=8)::xp(1:npart,1:3),vp(1:npart,1:3)
-    real(kind=8)::mp(1:npart)
-    integer::npart
-
-    real(kind=8)::jj(1:npart,1:3) !! angular momentum
-    real(kind=8)::totjx,totjy,totjz,normj,norjx,norjy,norjz
-      !! total and normalized angular momentum
-    real(kind=8)::jproj(1:npart),cosa(1:npart),eps(1:npart)
-      !! projected angular momentum,
-      !! angle between total J and individual js, circularity parameter
-
-    real(kind=8)::GG=6.67408d-11 !! gravitational constant
-    real(kind=8)::Msun=1.98855d30 !! mass of the sun
-    real(kind=8)::rr(1:npart),jcir(1:npart)
-      !! distance to individual particle, circular angular momentum
-    real(kind=8)::minside(1:npart) !! mass inside a particle
-
-    integer::nbulge,ndisk,ncount
-
-    !! disk component
-    real(kind=8),dimension(:,:),allocatable::jdisk
-
-    !! angles to the line of sight in SKIRT
-    real(kind=8)::theta,phi
-
-    !! angular momentum in the net z-direction
-    xp=xp*3.08567757144d19 !! m
-    vp=vp*1d3              !! m/s
-    mp=mp/1d11             !! divide mass for a while
-    jj(:,1) = mp * ( xp(:,2)*vp(:,3) - xp(:,3)*vp(:,2) )
-    jj(:,2) = mp * ( xp(:,3)*vp(:,1) - xp(:,1)*vp(:,3) )
-    jj(:,3) = mp * ( xp(:,1)*vp(:,2) - xp(:,2)*vp(:,1) )
-    !! net angular momentum
-    totjx=sum(jj(:,1)) ; totjy=sum(jj(:,2)) ; totjz=sum(jj(:,3))
-    !! normalization
-    normj=sqrt(totjx**2+totjy**2+totjz**2)
-    norjx=totjx/normj ; norjy=totjy/normj ; norjz=totjz/normj
-    !! projection to the net angular momentum vector
-    jproj=( jj(:,1)*norjx + jj(:,2)*norjy + jj(:,3)*norjz ) / mp
-
-    !! cosine angle between net J and individual j vectors
-    cosa=jproj/sqrt(jj(:,1)**2+jj(:,2)**2+jj(:,3)**2)
-
-    !! circular angular momentum
-    mp=mp*1d11 !! return to its original value
-    rr=sqrt(xp(:,1)**2+xp(:,2)**2+xp(:,3)**2)
-    minside=0
-
-    !! sort the data in the order of distance
-    call quicksort3(rr,mp,cosa,jproj,jcir,1,size(rr))
-
-    do i=2,npart
-      minside(i)=minside(i-1)+mp(i-1)
-      jcir(i)=rr(i)*sqrt(GG*minside(i)*Msun/rr(i))
-    enddo
-
-    !! orbital circularity parameter
-    eps=jproj/jcir
-
-    !! decompose bulge and disk
-    ndisk=0
-    do i=1,npart
-      !! Scannapieco et al. 2009
-      if( (eps(i).gt.0.5) .and. (cosa(i).gt.0.7) )ndisk=ndisk+1
-    enddo
-    nbulge=npart-ndisk
-    !! angular momenta of disk particles
-    allocate(jdisk(1:ndisk,1:3)) ; ncount=0
-    do i=1,ndisk
-      if( (eps(i).gt.0.5) .and. (cosa(i).gt.0.7) )then
-        ncount=ncount+1
-        jdisk(ncount,1:3)=jj(i,1:3)
-      endif
-    enddo
-    totjx=sum(jdisk(:,1)) ; totjy=sum(jdisk(:,2)) ; totjz=sum(jdisk(:,3))
-    normj=sqrt(totjx**2+totjy**2+totjz**2)
-    norjx=totjx/normj ; norjy=totjy/normj ; norjz=totjz/normj
-
-    theta=acos(norjz)
-    if(norjy.ge.0)phi= acos(norjx/sqrt(norjx**2+norjy**2))
-    if(norjy.lt.0)phi=-acos(norjx/sqrt(norjx**2+norjy**2))
-
-    !! radian to degree
-    !theta=theta*180./3.14159265359
-    !phi=phi*180./3.14159265359
-
-    !! return to the original units
-    xp=xp/3.08567757144d19
-
-  end subroutine decompose
-
-  !! ====================================================================== !!
-  !! ====================================================================== !!
-
-  subroutine nodecompose(xp,vp,mp,npart,theta,phi)
-    !! Determines the orientation of the galaxy without decomposing its component.
-
-    !! variables
-    implicit none
-
-    integer::i,j,k
-    !! input
-    real(kind=8)::xp(1:npart,1:3),vp(1:npart,1:3)
-    real(kind=8)::mp(1:npart)
-    integer::npart
-
-    real(kind=8)::jj(1:npart,1:3) !! angular momentum
-    real(kind=8)::totjx,totjy,totjz,normj,norjx,norjy,norjz
-      !! total and normalized angular momentum
-    real(kind=8)::jproj(1:npart),cosa(1:npart),eps(1:npart)
-      !! projected angular momentum,
-      !! angle between total J and individual js, circularity parameter
-
-    real(kind=8)::GG=6.67408d-11 !! gravitational constant
-    real(kind=8)::Msun=1.98855d30 !! mass of the sun
-    real(kind=8)::rr(1:npart),jcir(1:npart)
-      !! distance to individual particle, circular angular momentum
-    real(kind=8)::minside(1:npart) !! mass inside a particle
-
-    integer::nbulge,ndisk,ncount
-
-    !! disk component
-    real(kind=8),dimension(:,:),allocatable::jdisk
-
-    !! angles to the line of sight in SKIRT
-    real(kind=8)::theta,phi
-
-    !! angular momentum in the net z-direction
-    xp=xp*3.08567757144d19 !! m
-    vp=vp*1d3              !! m/s
-    mp=mp/1d11             !! divide mass for a while
-    jj(:,1) = mp * ( xp(:,2)*vp(:,3) - xp(:,3)*vp(:,2) )
-    jj(:,2) = mp * ( xp(:,3)*vp(:,1) - xp(:,1)*vp(:,3) )
-    jj(:,3) = mp * ( xp(:,1)*vp(:,2) - xp(:,2)*vp(:,1) )
-    !! net angular momentum
-    totjx=sum(jj(:,1)) ; totjy=sum(jj(:,2)) ; totjz=sum(jj(:,3))
-    !! normalization
-    normj=sqrt(totjx**2+totjy**2+totjz**2)
-    norjx=totjx/normj ; norjy=totjy/normj ; norjz=totjz/normj
-
-    theta=acos(norjz)
-    if(norjy.ge.0)phi= acos(norjx/sqrt(norjx**2+norjy**2))
-    if(norjy.lt.0)phi=-acos(norjx/sqrt(norjx**2+norjy**2))
-
-    !! return to the original units
-    xp=xp/3.08567757144d19
-
-  end subroutine nodecompose
 
   !! ====================================================================== !!
   !! ====================================================================== !!
@@ -1322,7 +1015,7 @@ end module tree_mods
       !! bit manipulation
       integer::i,j
       integer::ncount,lmin,lmax
-      integer::nx,ny,nz,mindx,mindy,mindz
+      integer::nx,ny,nz!,mindx,mindy,mindz
       real(kind=8),dimension(1:ncount,1:5)::cell
       real(kind=8),dimension(1:ncount)::xx,yy,zz,dd,pp
       integer*8,dimension(1:ncount)::intx,inty,intz !! converted from x, y and z
@@ -1343,7 +1036,7 @@ end module tree_mods
         real(kind=8),dimension(:),allocatable::xref,yref,zref !! cell position
 
     !! 
-      real(kind=8)::minx,miny,minz
+      !real(kind=8)::minx,miny,minz
 
     !! cell center
       xx(:)=cell(:,2) ; yy(:)=cell(:,3) ; zz(:)=cell(:,4)

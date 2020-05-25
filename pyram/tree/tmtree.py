@@ -28,6 +28,7 @@ class Tree():
                      BIG_RUN=True,
                      is_gal=False,
                      load_info=True,
+                     verbose=False,
                      tree_fn="tree.dat"):
         """
         NH tree => BIG_RUN == False
@@ -248,7 +249,7 @@ class Tree():
             print("No tree file name is given")
             return
         if self.double:
-            from . import cnt_tree
+            from . import cnt_tree_dp as cnt_tree
         else:
             from . import cnt_tree_sp as cnt_tree
 
@@ -266,7 +267,7 @@ class Tree():
 
         self.fatherIDx -=1
         # zred is omitted to reduce memory usage
-        from load import dtypes
+        from ..load import dtypes
         dtype_tree = dtypes.get_tree_dtypes(BIG_RUN=BIG_RUN)
 
         tt = np.recarray(self.n_all_halos +1, dtype = dtype_tree)
@@ -289,6 +290,7 @@ class Tree():
         tt["cvel"][1:] = f_arr[:,22]
         tt["rho_0"][1:] = f_arr[:,23]
         tt["rs"][1:] = f_arr[:,24]
+        f_arr = None
 
         tt["idx"][1:] = i_arr[:,0]
         tt["id"][1:] = i_arr[:,1]
@@ -310,6 +312,7 @@ class Tree():
         tt["f_ind"][1:] = i_arr[:,12] -1 #
         tt["nsons"][1:] = i_arr[:,13] #
         tt["s_ind"][1:] = i_arr[:,14] -1 #
+        
 
 
     def get_best_matched_desc(self,pids_now, gids, nout_next):

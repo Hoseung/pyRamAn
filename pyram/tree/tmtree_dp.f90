@@ -7,7 +7,7 @@ subroutine count_tree(fn, n_halos_all,  flist_index, slist_index, nsteps, big_ru
     integer, INTENT(OUT)::nsteps, n_halos_all
     integer(KIND=8), INTENT(OUT)::flist_index, slist_index
 
-    integer(KIND=4)::i,j, nhals_now
+    integer(KIND=4)::i,j, nhals_now, id_tmp
     logical, INTENT(IN)::big_run
 
     open(unit=1,file=fn,status='old',form='unformatted')
@@ -15,47 +15,48 @@ subroutine count_tree(fn, n_halos_all,  flist_index, slist_index, nsteps, big_ru
     read(1)nsteps
     allocate(nb_of_halos(1:nsteps))
     allocate(nb_of_subhalos(1:nsteps))
-    read(1)nb_of_halos(1:nsteps),nb_of_subhalos(1:nsteps)
+    read(1)nb_of_halos(1:nsteps),nb_of_subhalos(1:nsteps)!4,4
 
     n_halos_all = sum(nb_of_halos) + sum(nb_of_subhalos)
-    read(1)!aexp_arr(1:nsteps)
-    read(1)!omega_t_arr(1:nsteps)
-    read(1)!age_univ_arr(1:nsteps)
+    read(1)!aexp_arr(1:nsteps)!8
+    read(1)!omega_t_arr(1:nsteps)!8
+    read(1)!age_univ_arr(1:nsteps)!8
     flist_index=0
     slist_index=0
     do i=1,nsteps
         nhals_now=nb_of_halos(i)+nb_of_subhalos(i)
         do j=1,nhals_now
 
-            read(1)!id_tmp!i_arr(idx,2) !id!id
-            read(1)!i_arr(idx,3) !bushID
-            read(1)!i_arr(idx,4) !st
-            read(1)!i_arr(idx,5:9) ! hosts
-            read(1)!f_arr(idx,1) ! m
-            read(1)!macc ! macc alone is double
-            read(1)!f_arr(idx,3:5)!xp
-            read(1)!f_arr(idx,6:8)!vp
-            read(1)!f_arr(idx,9:11)!lp
-            read(1)!f_arr(idx,12:15)!abc
-            read(1)!f_arr(idx,16:18)!energy
-            read(1)!f_arr(idx,19)!spin
-            read(1)nfathers!nfathers
+            read(1)id_tmp!i_arr(idx,2) !4
+            read(1)!i_arr(idx,3) !bushID ! 4
+            read(1)!i_arr(idx,4) !st ! 4
+            read(1)!i_arr(idx,5:9) ! hosts ! 4*5
+            read(1)!f_arr(idx,1) ! m !8
+            read(1)!macc ! macc alone is double !8
+            read(1)!f_arr(idx,3:5)!xp !8*3
+            read(1)!f_arr(idx,6:8)!vp !8*3
+            read(1)!f_arr(idx,9:11)!lp !8*3
+            read(1)!f_arr(idx,12:15)!abc !8*4
+            read(1)!f_arr(idx,16:18)!energy !8*3
+            read(1)!f_arr(idx,19)!spin !8
+            read(1)nfathers!nfathers !4
             flist_index = flist_index + nfathers
 
-            read(1)!Father ID
-            read(1)!Father Mass
-            read(1)nsons
+            read(1)!Father ID !4
+            read(1)!Father Mass !8
+            read(1)nsons !4
             if (nsons .gt. 0) then
-                read(1)!id_tmp!son ID
+                read(1)!id_tmp!son ID !4*nson
             endif
             slist_index = slist_index + nsons
-            read(1)! (r,m,t)_vir, c_vel
-            read(1)! profile
+            read(1)! (r,m,t)_vir, c_vel !8*4
+            read(1)! profile !8*2
             if (.not. big_run) then
-                read(1)!id_tmp! particle ID
+                read(1)!id_tmp! particle ID (4*nptcl) Or, # contam in NH (4).
             endif
-
         enddo
+        !print *, "lasst id", id_tmp
+        !print *, "nsons",nsons
     enddo
     deallocate(nb_of_halos, nb_of_subhalos)
     close(1)
@@ -177,7 +178,7 @@ subroutine load_tree(fn, fatherID, fatherIDx, sonID, fatherMass, &
 
     enddo
     deallocate(nb_of_halos, nb_of_subhalos)
-    deallocate(fid_tmp)
+    deallocate(fid_tmp, sonID_tmp)
     close(1)
 
 end subroutine
