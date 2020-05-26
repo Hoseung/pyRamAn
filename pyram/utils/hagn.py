@@ -44,18 +44,21 @@ class Nnza():
         NOTE
         ----
             This function works only when the given value exactly match the nnza array.
-            I need to add a functionality to find the closest vaue and return interpolated answer.
-            Even interpolated nout/nstep are useful if nout/nstep serve as xtick positions, for example.
-    
+            I need to add a functionality to find the closest value and return interpolated answer.
+            Even interpolated nout/nstep are useful if nout/nstep serve as xtick positionsa, for example.
+
+            Programming note:
+            assert is similar to if not (), but assert can be easily turned off by environmental switch.
+            So, use assert only for debugging purpose.
         """
         if not (field_a in self.nnza.dtype.names  and  field_b in self.nnza.dtype.names):
             raise ValueError("One or both of {} {} not found".format(field_a, field_b))
-        if isinstance(vals, np.integer):
+        if isinstance(vals, int):
             return int(self.nnza[field_b][np.where(self.nnza[field_a] == vals)[0]])
         elif not isinstance(vals, str) and isinstance(vals, Iterable):
             return self.nnza[field_b][mtc.match_list_ind(self.nnza[field_a], vals)]
         else:
-            NotImplementedError()
+            NotImplementedError('vals is neither int nor Iterable... nothing can be done')
 
     def step2out(self, nstep):
         """
