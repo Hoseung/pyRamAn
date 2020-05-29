@@ -630,7 +630,7 @@ class Amr(Simbase):
             self.info = info
         else:
             assert nout is not None, "either info or nout is required"
-            from info import Info
+            from .info import Info
             print("[Amr.__init__] Loading info")
             self.info = Info(nout=nout)
 
