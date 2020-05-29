@@ -240,7 +240,7 @@ def get_colden(theta_xy, theta_xz, theta_yz,
 
     print(base_grid)
 
-    if save == True:
+    if save:
         save_route = directory#"/home/jangjk/PycharmProjects/PP/week3/base_grid/"
         #file_name = "first_try_basegrid.npy"
         route_name = save_route+file_name
@@ -250,7 +250,7 @@ def get_colden(theta_xy, theta_xz, theta_yz,
     return len(dsort[0]), base_grid  # /grid/grid/1000
 
 
-def smoothing(theta_xy,theta_xz,theta_yz, directory, file_name, quick, gridrate=0.5, shift=[0, 0, 0], plt=False, save=False):
+def smoothing(theta_xy,theta_xz,theta_yz, directory=None, file_name=None, quick=None, gridrate=0.5, shift=[0, 0, 0], plt=False, save=False):
     A = []
     Base_grid = []
     i = 0
@@ -666,7 +666,7 @@ def load_gal(nout, idgal,theta_xz_1, theta_yz_1, save_directory,fixed_idgal,
     plts = False
     quick = True
     save = False
-    directories = "/home/jangjk816/Project/Mock/week7/base_grid/"
+    directories = "/home/jangjk816/Project/Mock/week7/base_grid/" # ignored
 
     ######################################################
 
