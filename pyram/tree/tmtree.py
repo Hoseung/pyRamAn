@@ -86,7 +86,6 @@ class Tree():
             except:
                 print("[warning] Can not load nnza")
 
-
     def load_info(self, nout_fi=None):
         """
         load info.txt of the last snapshot
@@ -130,7 +129,6 @@ class Tree():
         zreds = 1./aexps - 1
         np.savetxt(fsave, np.c_[nouts, nsteps, zreds, aexps], fmt=['%d', '%d', '%.9f', '%.9f'])
 
-
     def cal_time(self, info=None):
         """
             Calculate look back time and update nnza["lbt"].
@@ -153,7 +151,6 @@ class Tree():
         self.nnza.nnza["lbt"] = tc.zred2gyr(self.nnza.nnza["zred"], z_now=z_now)
         print("Look back time calculation done")
         print("Current time : z={:.2f}".format(z_now))
-
 
     def dump(self, suffix="", force=False, protocol=-1):
         """
@@ -225,7 +222,6 @@ class Tree():
         else:
             #self.set_fn(None)
             print(fn, "is not found")
-
 
     def load(self, BIG_RUN=True, nout_now = None):
         """
@@ -313,17 +309,14 @@ class Tree():
         tt["nsons"][1:] = i_arr[:,13] #
         tt["s_ind"][1:] = i_arr[:,14] -1 #
         
-
-
     def get_best_matched_desc(self,pids_now, gids, nout_next):
         gcat_with_pids = halomodule.Halo(nout=nout_next, return_id=gids, is_gal=True)
         n_matched=[]
-        for i, pids in enumerate(gcat_with_pids.idlists):
+        for pids in gcat_with_pids.idlists:
             # pids = most_bound_partcles(pids)
-            n_machted.append(np.len(np.intersect1d(pids, pids_now)))
+            n_matched.append(np.len(np.intersect1d(pids, pids_now)))
 
-        return np.argmax(n_matched), gcat_with_pids.idlists[np.argmax(n_matcehd)]
-
+        return np.argmax(n_matched), gcat_with_pids.idlists[np.argmax(n_matched)]
 
     def extract_main_tree_reverse(self, idx):
         """
@@ -366,7 +359,7 @@ class Tree():
                 ind_next_step = np.searchsorted(np.cumsum(t_next["nprgs"]), ind_matched)
                 all_desc = t_next[ind_next_step]
                 i_best, pids_now = get_best_matched_desc(pids_now, all_desc["id"], nout_next = \
-                                                         self.nnza.step2out(nstep+1))
+                                                         self.nnza.a2b(nstep+1, 'nstep', 'nout'))
                 idx = all_desc["idx"][i_best]
                 t_now = t[idx]
 
@@ -389,8 +382,8 @@ class Tree():
         However, I don't see a reason it can't be a secondary progenitor of
         another host halo. Let's just keep that in mind.
 
-        Parameteres
-        -----------
+        Parameters
+        ----------
         skip_main : True
             skip main progenitor tree.
 
@@ -434,96 +427,127 @@ class Tree():
 
         return all_main_prgs
 
+    def get_main_father_idx(self, idx, return_score=False):
+        t = self.tree
+        idx_father = self.fatherIDx[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]]
+        if len(idx_father) > 0:
+            mass_father = self.fatherMass[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]]
+            idx = idx_father[np.argmax(mass_father)]# -1
+            if idx < 1:
+                return
+            else:
+                if return_score:
+                    return idx, mass_father.max()
+                else:
+                    return idx
+        else:
+            return 
+
     def extract_main_tree(self, idx):
         """
-        Extracts main progenitors from a TreeMaker tree.
+            Extracts main progenitors from a TreeMaker tree.
 
 
-        example
-        -------
-        >>> tt = tmtree.Tree("tree.dat")
-        >>> atree = tt.extract_main_tree(12345)
+            example
+            -------
+            >>> tt = tmtree.Tree("tree.dat")
+            >>> atree = tt.extract_main_tree(12345)
 
-        TODO
-        ----
-        It works, but the try - except clause is error-prone.
-        Explicitly check the end of progenitor tree and make the function more predictable.
+            TODO
+            ----
+            It works, but the try - except clause is error-prone.
+            Explicitly check the end of progenitor tree and make the function more predictable.
 
         """
-
         try:
             idx = int(idx)
         except ValueError:
             print("Cannot convert idx into an integer", idx)
 
         t = self.tree
-        fatherIDx = self.fatherIDx
-        fatherMass = self.fatherMass
 
         t_now = t[idx]
         nstep = t_now["nstep"]
-        nouts = [nstep]
         atree = np.zeros(nstep + 1, dtype=t.dtype)
         atree[0] = t_now
 
         if nstep <= 1:
-            return
+            print("??")
 
         for i in range(1, nstep + 1):
             try:
-                idx_father = fatherIDx[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]]
-                if len(idx_father) > 0:
-                    mass_father = fatherMass[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]]
-                    idx = idx_father[np.argmax(mass_father)]# -1
-                    if idx < 1:
-                        break
-                    t_father=t[idx]
-                    #idx = t_father["idx"]
-                    atree[i]=t_father
-                    nouts.append(nstep)
-                else:
-                    break
+                idx_father = self.get_main_father_idx(idx)
+                atree[i]=t[idx_father]
+                idx = idx_father
             except:
                 break
 
         return np.copy(atree[:i])
 
-def fix_nout(tt, nout_ini, nout_fi):
-    nout_min_org = tt['NOUT'].min()
-    nout_max_org = tt['NOUT'].max()
+    # Reverse
+    def extract_main_tree_rev(self, idx, verbose=False):
+        t = self.tree
+        nstep_max = self.tree['nstep'].max()
+        nstep = self.tree['nstep'][idx]
 
-    nnout_org = nout_max_org - nout_min_org + 1
-    nnout_new = nout_fi - nout_ini + 1
+        atree = np.zeros(nstep_max - nstep + 1, dtype=t.dtype)
+        atree[0] = self.tree[idx]
 
-    assert (nnout_org == nnout_new), "number of nouts does not match"
+        for i in range(1, nstep_max-nstep+1):
+            idx_sons=[]
+            idx_others_sons=[]
+            scores=[]
+            sons = self.sonIDx[self.tree[idx]['s_ind']:self.tree[idx]['s_ind']+self.tree[idx]['nsons']]
+            #print("sons", sons)
+            if len(sons) > 2: # [idx_son, 0] Why do I have 0?? 
+                for son in sons:
+                    tmp = self.get_main_father_idx(son, return_score=True)
+                    if tmp is not None:
+                        idx_father, mass_father = tmp
+                    else:
+                        continue
+                    if idx_father == idx:
+                        idx_sons.append(son)
+                        scores.append(mass_father)
+                    else:
+                        idx_others_sons.append(son)
+                        continue
+                        print("other's son")
+                # Determine the 'main' son
+                # Think about this once again... 
+                # what metric should I check?
+                if len(idx_sons) > 0:
+                    idx = idx_sons[np.argmax(self.tree[idx_sons]['m'] * np.array(scores))]
+                    atree[i]=t[idx]
+                else:
+                    if verbose:
+                        print(f"{idx} tree truncated... merged into another object?")
+                        print("you may want to inspect these other's sons:",idx_others_sons)
+                        print("Or, all son list :", sons)
+                    return atree[i-1::-1]
+            elif len(sons) == 2:
+                idx = sons[0]
+            else:
+                if verbose:
+                    print("tree truncated... merged into another object?")
+                return atree[i-1::-1]
+        return atree[::-1]
 
-    i_z_max = np.where(tt["Z"] == tt["Z"].max())[0]
-    assert (tt["NOUT"][np.where(tt["Z"] == tt["Z"].max())[0]][0] == nout_max_org),\
-     "The snapshot number of highest redshift snapshot is not 0. Maybe you've already fixed nouts?"
+    def extract_full_tree(self, idx):
+        """
+        construct main prg tree throughout all steps.
+        """
+        nstep_max = self.tree['nstep'].max()
+        nstep = self.tree['nstep'][idx]
+        if nstep == nstep_max:
+            return self.extract_main_tree(idx)
+        if nstep == 1:
+            return self.extract_main_tree_rev(idx)
 
-    # OK. It's safe.
-    tt["NOUT"] = nout_fi - tt["NOUT"]
+        prg_tree = self.extract_main_tree(idx)
+        des_tree = self.extract_main_tree_rev(idx)
 
-
-def check_tree_complete(tree, nout_fi, nout_ini, halo_list):
-    import numpy as np
-    '''
-    returns a list of halo IDs at nout_fi that with trees fully linked
-    from nout_ini to nout_fi.
-
-    '''
-    # Make sure all parameters are given
-    complete_list=np.zeros(len(halo_list), dtype=bool)
-    #for ihal,halo in enumerate(halo_list):
-    idxlist, idlist=get_main_prg(tree, halo_list, nout_fi=0, nout_ini=nout_ini)
-    for i in range(len(halo_list)):
-        if len(np.where(idxlist[i] == 0)[0]) > 1:
-            complete = False
-        elif len(np.where(idxlist[i] == 0)[0]) == 0:
-            complete = True
-        complete_list[i] = complete
-
-    return complete_list, idlist[complete_list]
+        return np.concatenate((des_tree[:-1], prg_tree))
 
 
 def check_tree_fig(tt, idx):
@@ -548,93 +572,38 @@ def check_tree_fig(tt, idx):
     plt.savefig("tree_{}.png".format(idx))
     plt.close()
 
-def extract_direct_full_tree(self, idx, return_id=False):
-    """
-    Extracts main progenitors from a TreeMaker tree.
+def fix_nout(tt, nout_ini, nout_fi):
+    nout_min_org = tt['NOUT'].min()
+    nout_max_org = tt['NOUT'].max()
 
-    example
-    -------
-    >>> tt = tmtree.Tree("tree.dat")
-    >>> atree = tt.extract_main_tree(12345)
+    nnout_org = nout_max_org - nout_min_org + 1
+    nnout_new = nout_fi - nout_ini + 1
 
-    TODO
-    ----
-    It works, but the try - except clause is error-prone.
-    Explicitly check the end of progenitor tree and make the function more predictable.
+    assert (nnout_org == nnout_new), "number of nouts does not match"
 
-    """
+    i_z_max = np.where(tt["Z"] == tt["Z"].max())[0]
+    assert (tt["NOUT"][np.where(tt["Z"] == tt["Z"].max())[0]][0] == nout_max_org),\
+     "The snapshot number of highest redshift snapshot is not 0. Maybe you've already fixed nouts?"
 
-    t = self.tree
-    if return_id:
-        fatherID = self.fatherID
-    fatherIDx = self.fatherIDx
-    fatherMass = self.fatherMass
+    # OK. It's safe.
+    tt["NOUT"] = nout_fi - tt["NOUT"]
 
-    t_now = t[idx]
-    nstep = t_now["nstep"]
-    nouts = [nstep]
-    atree = np.zeros(nstep + 1, dtype=t.dtype)
-    atree[0] = t_now
 
-    idx_prgs_alltime = [[idx]]
+def check_tree_complete(tree, nout_fi, nout_ini, halo_list):
+    '''
+    returns a list of halo IDs at nout_fi that with trees fully linked
+    from nout_ini to nout_fi.
 
-    if return_id:
-        id_prgs_alltime = [[t[idx]["id"]]]
-        for i in range(1, nstep + 1):
-            id_father  =  fatherID[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]]# -1
-            try:
-                idx_father = fatherIDx[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]]# -1
-                if len(idx_father) > 0:
-                    idx_prgs_alltime.append(list(idx_father[idx_father>0]))
-                    id_prgs_alltime.append(list(id_father[id_father>0]))
-                    mass_father_transfer = fatherMass[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]]
-                    mass_father = t[idx_father[idx_father>0]]["m"]
-                    idx = idx_father[np.argmax(mass_father_transfer/mass_father)]
-                    if idx < 1:
-                        break
-                    t_father=t[idx]
-                    atree[i]=t_father
-                    nouts.append(nstep)
-                else:
-                    break
-            except:
-                break
-        return atree, idx_prgs_alltime, id_prgs_alltime
-    else:
-        m_now = t["m"][idx]
-        for i in range(1, nstep + 1):
-            print("\n step {}".format(i))
-            print("m_now = ", np.log10(m_now))
-            if True:
-                idx_father = fatherIDx[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]]# -1
-                if len(idx_father) > 0:
-                    idx_prgs_alltime.append(list(idx_father[idx_father>0]))
-                    idx_ok = idx_father>0
-                    mass_father_transfer = fatherMass[t["f_ind"][idx]:t["f_ind"][idx]+t["nprgs"][idx]][idx_ok]*m_now
-                    print("mass_father_transfer", mass_father_transfer)
-                    mass_father = t[idx_father[idx_ok]]["m"]
-                    mass_ratio = mass_father_transfer/mass_father
-                    #is_ok_mass = np.abs(np.log10(mass_father_transfer/t[idx]["m"])-2) < 0.2
-                    is_ok_mass = np.abs(np.log10(mass_ratio)-2) < 0.2
-                    print("mass_ratio", mass_ratio)
-                    print("ok_mass", is_ok_mass)
-                    print("product",mass_ratio * is_ok_mass)
-                    if sum(is_ok_mass) == 0:
-                        break
-                    idx = idx_father[np.argmax(mass_ratio * is_ok_mass)]
-                    print(np.argmax(mass_ratio * is_ok_mass), idx)
-                    if idx < 1:
-                        break
-                    t_father=t[idx]
-                    atree[i]=t_father
-                    nouts.append(nstep)
-                    m_now = 10**np.mean(np.log10(atree["m"][:i]))
-                    print(atree["m"])
-                else:
-                    print("break 2")
-                    break
-            else:
-                print("break 3")
-                break
+    '''
+    # Make sure all parameters are given
+    complete_list=np.zeros(len(halo_list), dtype=bool)
+    #for ihal,halo in enumerate(halo_list):
+    idxlist, idlist=get_main_prg(tree, halo_list, nout_fi=0, nout_ini=nout_ini)
+    for i in range(len(halo_list)):
+        if len(np.where(idxlist[i] == 0)[0]) > 1:
+            complete = False
+        elif len(np.where(idxlist[i] == 0)[0]) == 0:
+            complete = True
+        complete_list[i] = complete
 
-        return atree, idx_prgs_alltime
+    return complete_list, idlist[complete_list]
