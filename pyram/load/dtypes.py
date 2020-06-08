@@ -84,7 +84,7 @@ def add_dtypes(old_dtypes, new_dtypes):
     return dtype_new
 
 
-def get_halo_dtype(is_gal=False, double=False, read_mbp=False, new_fields=None):
+def get_halo_dtype(is_gal=False, double=False, read_mbp=False, new_fields=None, auto_add_field=True):
     """
     Returns dtypes needed for halo catalog.
 
@@ -115,36 +115,44 @@ def get_halo_dtype(is_gal=False, double=False, read_mbp=False, new_fields=None):
         df=4
 
     dtype_halo = [('np', '<i4'), ('id', '<i4'), ('level', '<i4'),
-                  ('host', '<i4'), ('sub', '<i4'), ('nsub', '<i4'),
-                  ('nextsub', '<i4'),
-                  ('m', dtype_float), ('mvir', dtype_float),
-                  ('r', dtype_float), ('rvir', dtype_float),
-                  ('tvir', dtype_float), ('cvel', dtype_float),
+                  ('host', '<i4'), ('sub', '<i4'), ('nsub', '<i4'),('nextsub', '<i4'), 
+                  #('aexp', dtype_float),
+                  ('m', dtype_float), 
                   ('x', dtype_float), ('y', dtype_float), ('z', dtype_float),
                   ('vx', dtype_float), ('vy', dtype_float), ('vz', dtype_float),
                   ('ax', dtype_float), ('ay', dtype_float), ('az', dtype_float),
-                  ('sp', dtype_float), ('idx', '<i4'),
+                  ('r', dtype_float), ('a', '<f8'),('b', '<f8'),('c', '<f8'),
+                  ('ek', '<f8'),('ep', '<f8'),('et', '<f8'),
+                  ('sp', dtype_float), 
+                  ('rvir', dtype_float),('mvir', dtype_float),
+                  ('tvir', dtype_float),('cvel', dtype_float),
                   ('p_rho', dtype_float),('p_c', dtype_float),
-                  ('energy', '<f8', (3,)), ('abc', '<f8', (3,))]
+                  ]
                   # always 8bytes??
 
     if is_gal:
-        dtype_halo += [('sig', dtype_float), ('sigbulge', dtype_float),
-                       ('mbulge', dtype_float), ('hosthalo', '<i4'),
-                       ('g_nbin', '<i4'), ('g_rr', dtype_float, (100,)),
-                       ('g_rho', dtype_float, (100,))]
+        dtype_halo.insert(25, ('mbulge', dtype_float))
+        dtype_halo.insert(25, ('sigbulge', dtype_float))
+        dtype_halo.insert(25, ('sig', dtype_float))
+        dtype_halo[3] = ('hosthalo', '<i4') # Substitute 
+                       #('g_nbin', '<i4'), ('g_rr', dtype_float, (100,)),
+                       #('g_rho', dtype_float, (100,))]
 
     if read_mbp:
         dtype_halo += [('mbp', '<i8')]
 
-    add_dtype = [("pos", dtype_float, (3,), "x", 0),
+    # Doesn't work with readthm.
+    if auto_add_field:
+        add_dtype = [("pos", dtype_float, (3,), "x", 0),
                  ("vel", dtype_float, (3,), "vx", 0),
                  ("lvec", dtype_float, (3,), "ax", 0)]
 
-    if new_fields is not None:
-        add_dtype += new_fields
+        if new_fields is not None:
+            add_dtype += new_fields
 
-    return add_dtypes(dtype_halo, add_dtype)
+        return add_dtypes(dtype_halo, add_dtype)
+    else:
+        return dtype_halo
 
 
 def get_tree_dtypes(BIG_RUN=False, double=True):
