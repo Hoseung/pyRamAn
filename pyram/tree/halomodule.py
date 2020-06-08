@@ -10,7 +10,7 @@ halo / galaxy calss including basic data load functionality.
 import numpy as np
 from ..load.info import Info
 import struct
-from ..load.dtypes import get_halo_dtype
+from ..load.dtypes import get_halo_dtype, add_dtypes
 
 from ..utils.io_module import read_fortran
 
@@ -223,7 +223,7 @@ class Halo(HaloMeta):
 
                 snout = str(self.nout).zfill(3)
                 if self.is_gal:
-                    self.fn = base + self.gal_find_dir + 'tree_bricks' + snout
+                    self.fn = base + self.gal_find_dir# + 'tree_bricks' + snout
                 else:
                     self.fn = base + self.dm_find_dir + 'tree_bricks' + snout
 
@@ -246,16 +246,19 @@ class Halo(HaloMeta):
         if pure_python == None:
             pure_python = self.pure_python
 
-        f = open(fn, "rb")
+        f = open(fn+ f'tree_bricks{self.nout:03d}', "rb")
         dtypes_halo = get_halo_dtype(is_gal=self.is_gal,
                                     double=double,
                                     read_mbp=self.read_mbp,
-                                    new_fields=add_fields)
+                                    new_fields=add_fields,
+                                    auto_add_field=False)
         if pure_python:
             brick_data = f.read()
-            offset, halnum, subnum = load_header(brick_data, double=double)
-            self.data = np.zeros(halnum+subnum,
-                                 dtype=dtypes_halo)
+            offset, header_info = load_header(brick_data, double=double)
+            nbodies, aexp, omegat, age, halnum, subnum = header_info
+
+            #self.data = np.zeros(halnum+subnum,
+            #                     dtype=dtypes_halo)
             for i in range(halnum+subnum):
                 offset = load_a_halo(brick_data, offset, self.data[i],
                                      is_gal=self.is_gal, double=double)
@@ -265,65 +268,35 @@ class Halo(HaloMeta):
             self.nbodies = read_fortran(f, np.dtype('i4'), 1)[0]
             f.close()
             
-            from . import rd_hal
+            #from . import rd_hal
             #self.nbodies = rd_halo.read_nbodies(fn.encode())
-            if double:
-                temp = rd_hal.read_file_double(fn.encode(), self.nbodies, int(self.is_gal),
-                                               int(self.read_mbp))# as a byte str.
+            from .readhtm import readhtm as readh
+            from numpy.core.records import fromarrays
+
+            ###############################
+            # Read header
+            with open(fn+ f'tree_bricks{self.nout:03d}', "rb") as f:
+                brick_data = f.read()
+                offset, header_info = load_header(brick_data, double=double)
+                self.nbodies, self.aexp, self.omegat, self.age, self.nhalo, self.nsub = header_info
+            
+            readh.read_bricks(fn, self.is_gal, self.nout, self.nout+1, self.return_id, double)
+            
+            if(not double):
+                self.data = fromarrays([*readh.integer_table.T, *readh.real_table.T], dtype=dtypes_halo)
+                dtype_float = "<f4"
             else:
-                temp = rd_hal.read_file(fn.encode(), self.nbodies, int(self.is_gal),
-                                        int(self.read_mbp))# as a byte str.
+                self.data = fromarrays([*readh.integer_table.T, *readh.real_table_dp.T], dtype=dtypes_halo)
+                dtype_float = "<f8"
+            #array = HaloMaker.unit_conversion(array, snap)
+            add_dtype = [("pos", dtype_float, (3,), "x", 0),
+                        ("vel", dtype_float, (3,), "vx", 0),
+                        ("lvec", dtype_float, (3,), "ax", 0)]
+            newdt = add_dtypes(self.data.dtype, add_dtype)
+            self.data.dtype = np.dtype(newdt)
 
-            allID, __, self.halnum, self.subnum,\
-                self.massp, self.aexp, self.omegat, self.age = temp[0:8]
-            ntot = self.halnum + self.subnum
-            self.data = np.recarray(ntot, dtype=dtypes_halo)
-            self.data['np'], self.data['id'],\
-            levels, ang, energy, \
-            self.data['m'],\
-            radius, pos,\
-            self.data['sp'], vel = temp[8:18]
-            vir, profile = temp[18:20]
-            ilast = 19
-            if self.is_gal:
-                ilast += 1
-                temp_gal = temp[ilast]
-
-            self.data['energy'] = energy.reshape((ntot,3))
-            levels = levels.reshape((ntot,5))
-            self.data['level'], self.data['host'], \
-            self.data['sub'], self.data['nsub'], \
-            self.data['nextsub'] = levels[:,0], \
-                levels[:,1], levels[:,2],levels[:,3], levels[:,4]
-            self.data['pos'] = pos.reshape((ntot,3))
-            self.data['vel']= vel.reshape((ntot,3))
-            self.data['lvec'] = ang.reshape((ntot,3))
-            radius = radius.reshape((ntot,4))
-            self.data['r'] = radius[:,0]
-            self.data["abc"] = radius[:,1:4]
-
-#           copy so that memory is continuous. (Not tested!)
-            self.data['rvir'],self.data['mvir'], \
-                    self.data['tvir'],self.data['cvel'] = vir[::4].copy(),\
-                vir[1::4].copy(),vir[2::4].copy(),vir[3::4].copy()
-            self.data['p_rho'], self.data['p_c'] =\
-                    profile[::2].copy(),profile[1::2].copy() # profile rho and concentration
-            if self.is_gal:
-                self.data['sig'], self.data['sigbulge'], self.data['mbulge'] =\
-                        temp_gal[::3].copy(), temp_gal[1::3].copy(), temp_gal[2::3].copy()
-                self.data['g_nbin'] = temp[ilast+1]
-                self.data['g_rr'] = temp[ilast+2].reshape(ntot,100)
-                self.data['g_rho']= temp[ilast+3].reshape(ntot,100)
-                ilast += 3
-            if self.read_mbp:
-                """
-                it does not make sense to get the index of particles
-                if the member id list is not read.
-                Should I force reading them? or ignore read_mbp if member IDs are not read?
-                """
-                ilast += 1
-                #imbp = temp[ilast]
-                self.data["mbp"] = temp[ilast]
+            if(self.data.size==0):
+                print("No tree_brick file found, or no halo found in %s" % fn)
 
         if self.return_id:
             """
@@ -337,16 +310,21 @@ class Halo(HaloMeta):
             self.idlists=[]
             self.hal_idlists=[]
             iskip=0
+            #######################
+            All_ID = np.array(readh.part_ids)
             for hid, hnp in zip(self.data["id"],self.data["np"]):
                 if self._return_id_list is not None:
                     if hid in self._return_id_list:
-                        self.idlists.append(allID[iskip:iskip+hnp])
+                        self.idlists.append(All_ID[iskip:iskip+hnp])
                         self.hal_idlists.append(hid)
                 else:
                     # for every halo.
-                    self.idlists.append(allID[iskip:iskip+hnp])
+                    self.idlists.append(All_ID[iskip:iskip+hnp])
                     self.hal_idlists.append(hid)
                 iskip += hnp
+
+        #############################
+        readh.close()
 
 
     def refactor_hm(self):
@@ -434,8 +412,8 @@ class Halo(HaloMeta):
             base = self.base
         fname = base + "rockstar_halos/" + "halos_" + str(nout) + "."
         self.data = rshalo.read_halo_all(fname, sort=True)
-        if pickle:
-            self.pickle_halo(fname=fname)
+        #if pickle:
+        #    self.pickle_halo(fname=fname)
 
     def load_rs(self, nout=None, base=None, info=None):
         import pickle
@@ -451,11 +429,6 @@ class Halo(HaloMeta):
             self._boxsize = 199.632011
             # Temporarly, to wrap the data in recarray.
         self.normalize_rs()
-
-    def pickle_halo(self, fname=None):
-        import pickle
-        with open(fname, mode='rw'):
-            pickle.dump(self, fname)
 
     def derive_from(self, old_halo, ind=None):
         """
@@ -512,7 +485,7 @@ def load_header(brick_data, double=False):
     offset += 8 + nbytes
     halnum = struct.unpack("i", brick_data[offset:offset+4])[0]
     subnum = struct.unpack("i", brick_data[offset+4:offset+8])[0]
-    return offset+16, halnum, subnum
+    return offset+16, (nbodies, aexp, omegat, age, halnum, subnum)
 
 
 
