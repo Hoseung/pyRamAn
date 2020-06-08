@@ -75,7 +75,6 @@ contains
             read(unitfile) real_table_dp(ihalo,19:22) ! rvir, mvir, tvir, cvel
             read(unitfile) real_table_dp(ihalo,23:24) ! rho0, rc
          end if
-         write(*,*) "reading read_table_dp done"
       end if
 
       return
