@@ -7,6 +7,7 @@ cd gsf
 cd ../tree
 f2py -c tmtree.f90 -m cnt_tree
 f2py -c tmtree_dp.f90 -m cnt_tree_dp
+f2py -c readhtm.f90 -m readhtm
 
 cd ../load
 f2py -c amr2cell_fun.f90 -m a2c
