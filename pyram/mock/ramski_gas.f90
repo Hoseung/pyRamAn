@@ -6,7 +6,7 @@
 
 !! ========================================================================= !!
 !! == MAIN PROGRAM ========================================================= !!
-subroutine ramski_v4(dir, outdir, gx, nout, fov, gid)
+subroutine ramski_v4(dir, outdir, gx, nout, fov, gid, output_arr)
 
 
   !! call modules
@@ -52,6 +52,7 @@ subroutine ramski_v4(dir, outdir, gx, nout, fov, gid)
     type(cell_struct),dimension(:),allocatable::cell !! cell data
     integer::ncell                                   !! the number of cells
     real*8,dimension(1:6)::arr_range                 !! input to amr2cell
+    real*8,dimension(11), INTENT(OUT)::output_arr    !! values needed for .ski
 
     !! lookup table
     integer*8,dimension(0:2**20-1)::bm
@@ -217,7 +218,6 @@ subroutine ramski_v4(dir, outdir, gx, nout, fov, gid)
           arr_mort(j)%cc=rr1(:)
           deallocate(cell1,rr1)
         enddo
-        print *, "morton done"
         !! link the cells of all levels
         j=lmin
         allocate(dd1(1:ncell_lev(j)),rr1(1:ncell_lev(j)),cc1(1:ncell_lev(j)))
@@ -247,7 +247,6 @@ subroutine ramski_v4(dir, outdir, gx, nout, fov, gid)
             deallocate(dd2,rr2,cc2,dd3,rr3,cc3)
           endif
         enddo
-        print *, "mlink done"
 
        !! write the files
         !! mkdir
@@ -276,12 +275,24 @@ subroutine ramski_v4(dir, outdir, gx, nout, fov, gid)
           enddo
         close(10)
 
-
+        
           !! non-rotated
           inputang=(/ 0d0 , 0d0 , 90d0 /)
           arr_range(1:2)=(arr_range(1:2)-gx(1))*unit_l/3.086d18 !! pc
           arr_range(3:4)=(arr_range(3:4)-gx(2))*unit_l/3.086d18 !! pc
           arr_range(5:6)=(arr_range(5:6)-gx(3))*unit_l/3.086d18 !! pc
+        output_arr(1) = inputang(1) ! inclination 
+        output_arr(2) = inputang(2) ! azimuth
+        output_arr(3) = inputang(3) ! roll
+        output_arr(4) = fov!_assume(1)!/real(n_piece), FoVx
+        output_arr(5) = fov!_assume(2)!/real(n_piece), FoVy
+        output_arr(6) = arr_range(1) ! minX
+        output_arr(7) = arr_range(2) ! maxX
+        output_arr(8) = arr_range(3) ! minY
+        output_arr(9) = arr_range(4) ! maxY
+        output_arr(10) = arr_range(5) ! minZ
+        output_arr(11) = arr_range(6) ! maxZ
+        
 
         deallocate(cell,arr_mort,ncell_lev)
         deallocate(dd1,dd2,dd3,rr1,rr2,rr3,cc1,cc2,cc3)
