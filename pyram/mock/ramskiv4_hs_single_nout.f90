@@ -1206,6 +1206,65 @@ module ramski_mods
   !! ====================================================================== !!
   !! ====================================================================== !!
 
+
+  subroutine nodecompose(xp,vp,mp,npart,theta,phi)
+    !! Determines the orientation of the galaxy without decomposing its
+    !component.
+
+    !! variables
+    implicit none
+
+    integer::i,j,k
+    !! input
+    real(kind=8)::xp(1:npart,1:3),vp(1:npart,1:3)
+    real(kind=8)::mp(1:npart)
+    integer::npart
+
+    real(kind=8)::jj(1:npart,1:3) !! angular momentum
+    real(kind=8)::totjx,totjy,totjz,normj,norjx,norjy,norjz
+      !! total and normalized angular momentum
+    real(kind=8)::jproj(1:npart),cosa(1:npart),eps(1:npart)
+      !! projected angular momentum,
+      !! angle between total J and individual js, circularity parameter
+
+    real(kind=8)::GG=6.67408d-11 !! gravitational constant
+    real(kind=8)::Msun=1.98855d30 !! mass of the sun
+    real(kind=8)::rr(1:npart),jcir(1:npart)
+      !! distance to individual particle, circular angular momentum
+    real(kind=8)::minside(1:npart) !! mass inside a particle
+
+    integer::nbulge,ndisk,ncount
+
+    !! disk component
+    real(kind=8),dimension(:,:),allocatable::jdisk
+
+    !! angles to the line of sight in SKIRT
+    real(kind=8)::theta,phi
+
+    !! angular momentum in the net z-direction
+    xp=xp*3.08567757144d19 !! m
+    vp=vp*1d3              !! m/s
+    mp=mp/1d11             !! divide mass for a while
+    jj(:,1) = mp * ( xp(:,2)*vp(:,3) - xp(:,3)*vp(:,2) )
+    jj(:,2) = mp * ( xp(:,3)*vp(:,1) - xp(:,1)*vp(:,3) )
+    jj(:,3) = mp * ( xp(:,1)*vp(:,2) - xp(:,2)*vp(:,1) )
+    !! net angular momentum
+    totjx=sum(jj(:,1)) ; totjy=sum(jj(:,2)) ; totjz=sum(jj(:,3))
+    !! normalization
+    normj=sqrt(totjx**2+totjy**2+totjz**2)
+    norjx=totjx/normj ; norjy=totjy/normj ; norjz=totjz/normj
+
+    theta=acos(norjz)
+    if(norjy.ge.0)phi= acos(norjx/sqrt(norjx**2+norjy**2))
+    if(norjy.lt.0)phi=-acos(norjx/sqrt(norjx**2+norjy**2))
+
+    !! return to the original units
+    xp=xp/3.08567757144d19
+
+  end subroutine nodecompose
+
+
+
 end module ramski_mods
 
   !! ====================================================================== !!
@@ -1352,7 +1411,7 @@ program ramski_v4
     dir='./snapshots/' !! RAMSES snapshot
     outdir='./' !! output directory
 
-    nlines = 150
+    nlines = 100
     allocate(gxs(1:nlines,1:3))
     allocate(gids(1:nlines))
     open(12, file="centers.txt", status="old")
@@ -1375,17 +1434,16 @@ program ramski_v4
     minw=0.1    !! SED minimum wavelength (micron)
     maxw=1.4    !! SED maximum wavelength (micron)
     npoint=120  !! number of points in SED
-    fov=20      !! field of view (kpc)
+    fov=10      !! field of view (kpc)
                 !! This will be slightly adjusted according to place scale.
       inputfov(1)=fov ; inputfov(2)=fov
-    n_piece=5   !! divide the field of view into n_piece x n_piece equivalent
+    n_piece=1   !! divide the field of view into n_piece x n_piece equivalent
                 !! regions (if n_piece=4, FoV splits into 4x4=16 aread)
                 !! (Use this for high quality image.)
-    n_piece=1
     lbox=100    !! simulation box size (Mpc)
     h0=70.4     !! Hubble constant
     masscut=3d10
-    nend=874    !! last snapshot to be considered
+    nend=251    !! last snapshot to be considered
     z_assume=1.00
     faceon=1    !! if you want this output, set any non-zero integer
     edgeon=1    !! if you want this output, set any non-zero integer
