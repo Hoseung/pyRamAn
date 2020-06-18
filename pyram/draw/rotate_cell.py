@@ -12,33 +12,27 @@ from pyram import galaxymodule as gmo
 
 import pts.simulation as sm
 
-#from PIL import Image
 
 ######################################################
 def cos(theta):
     # return np.cos( theta * np.pi / 180 )
     return np.cos(theta)
 
-
 def sin(theta):
     # return np.sin( theta * np.pi / 180 )
     return np.sin(theta)
 
-
 #### Rotation ####
 ## you don't have to seperate each planes. Just for convenience ##
-
 def rotation_xy(theta, xarray, yarray):
     x = cos(theta) * xarray - sin(theta) * yarray
     y = sin(theta) * xarray + cos(theta) * yarray
     return x, y
 
-
 def rotation_xz(theta, xarray, zarray):
     x = cos(theta) * xarray - sin(theta) * zarray
     z = sin(theta) * xarray + cos(theta) * zarray
     return x, z
-
 
 def rotation_yz(theta, yarray, zarray):
     y = cos(theta) * yarray - sin(theta) * zarray
@@ -47,8 +41,6 @@ def rotation_yz(theta, yarray, zarray):
 
 
 #### Axis Transformation ####
-
-
 def cartesian_to_cylinder(xarray, yarray, zarray, vxarray, vyarray, vzarray):
     r = (xarray ** 2 + yarray ** 2) ** 0.5
     phi = np.arctan2(yarray, xarray)
@@ -59,7 +51,6 @@ def cartesian_to_cylinder(xarray, yarray, zarray, vxarray, vyarray, vzarray):
     v_z = vzarray
 
     return r, phi, z, v_r, v_phi, v_z
-
 
 def plane_fit(x, a, b, c):
     return a * x[0] + b * x[1] + c
@@ -86,12 +77,13 @@ def get_colden(theta_xy, theta_xz, theta_yz, n_sample_factor=1.0,
     Rotate gas into arbitrary direction
     """
 
-    if gridrate < 2**(-6):
-        boxsize=3*10**2
-    elif gridrate < 2**(-7):
+    if gridrate < 2**(-7):
         boxsize=10**2
+    elif gridrate < 2**(-6):
+        boxsize=3*10**2
     else:
         boxsize = 10**4
+
     x = np.random.randint(1000, size=boxsize*n_sample_factor)
     y = np.random.randint(1000, size=boxsize*n_sample_factor)
     z = np.random.randint(1000, size=boxsize*n_sample_factor)
@@ -107,13 +99,12 @@ def get_colden(theta_xy, theta_xz, theta_yz, n_sample_factor=1.0,
     dsort = np.where((np.sqrt(np.square(x) + np.square(y)) < gridsize * np.sqrt(2))
                      & (abs(x) <= gridsize) & (abs(y) <= gridsize))
 
-
-    if draw == True:
+    if draw:
         plt.show()
     else:
         pass
 
-    z_sort = np.where( (abs(z) <= gridsize) )
+    z_sort = np.where( abs(z) <= gridsize )[0]
     X_zsorted = x[z_sort]
     Y_zsorted = y[z_sort]
 
@@ -130,7 +121,7 @@ def get_colden(theta_xy, theta_xz, theta_yz, n_sample_factor=1.0,
     base_grid_ddz = int(max(max_zshi, abs(min_zshi)))+1
     print("\n","######################","\n","base_grid_ddx is ",base_grid_ddx,"\n","#####################","\n")
 
-    base_grid = np.zeros([2*base_grid_ddz+2+1 ,2*base_grid_ddy+1,2*base_grid_ddx+1])
+    base_grid = np.zeros([2*base_grid_ddz+2+1, 2*base_grid_ddy+1, 2*base_grid_ddx+1])
 
     i = -base_grid_ddx
     while i <= base_grid_ddx:
@@ -162,7 +153,10 @@ def get_colden(theta_xy, theta_xz, theta_yz, n_sample_factor=1.0,
     return len(dsort[0]), base_grid  # /grid/grid/1000
 
 
-def smoothing(theta_xy,theta_xz,theta_yz, directory=None, file_name=None, quick=None, gridrate=0.5, shift=[0, 0, 0], plt=False, save=False, n_sample_factor=1):
+def smoothing(theta_xy,theta_xz,theta_yz, 
+            directory=None, file_name=None, quick=None, 
+            gridrate=0.5, shift=[0, 0, 0], plt=False, 
+            save=False, n_sample_factor=1):
     A = []
     Base_grid = []
     i = 0
@@ -315,6 +309,7 @@ def make_gasmap(nout, gal_cat, theta_xz_1=[0], theta_yz_1=[0],
         cell["x"], cell["y"], cell["z"], theta_xy_0, theta_yz_0 = auto_rotation_np(params_ang,
                                                                cell["x"], cell["y"], cell["z"],thetype=1)
     else:
+        print("taking angles from .ski")
         print("Reading",  skirt_out_dir+f'{gid:05d}/{nout:05d}/g{gid}_{nout}.ski')
         # get theta from .ski
         skifile = sm.SkiFile(skirt_out_dir+f'{gid:05d}/{nout:05d}/g{gid}_{nout}.ski')
@@ -535,6 +530,7 @@ def make_gasmap(nout, gal_cat, theta_xz_1=[0], theta_yz_1=[0],
     grid_prj = np.sum(Grid, axis=0)
     np.save("./%s_prj" %(file_name_grid),grid_prj)
     if plotting == "pil":
+        from PIL import Image
         im = Image.fromarray(np.uint8(cm.viridis(grid_prj)*255))
         im.save(fn_png)
     elif plotting == "plt":
