@@ -547,34 +547,3 @@ def make_gasmap(nout, gal_cat, theta_xz_1=[0], theta_yz_1=[0],
     print("Grid Saved")
 
 
-
-kpc_in_cm = 3.0857e21
-msun_in_g = 1.989e33
-G = 6.674e-8  # gravitational constant ; [cm^3 g^-1 s^-2]
-
-#nout=251
-nout=874
-#gal_cat = np.array([13, 6.854e+10, 0.48733889, 0.47836283, 0.49842872, 1.5930e-04])
-gcats = np.genfromtxt(f"./centers_{nout}.txt",
-                       dtype=[('id','int'), ('x','float'),('y','float'),('z','float')])
-print(gcats["id"])
-
-with open("rot_angels.txt", "w") as fsave:
-    for gcat in gcats[:2]:
-        print(gcat)
-        make_gasmap(nout, np.array(gcat), theta_xz_1=[0], theta_yz_1=[0],
-                    wdir='./', 
-                    fn_png=None, 
-                    nvec_frac=0.18,
-                    radius=3e-4,
-                    n_sample_factor=5,
-                    save = True,
-                    temp_cut = 1e8, # All cells
-                    Nvec_gas = False,
-                    plts = False,
-                    quick = True,
-                    do_star=True,
-                    fsave_angle=fsave,
-                    smoothing_save_dir= "./")
-
-
