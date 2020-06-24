@@ -121,7 +121,7 @@ def match_halo_gal(ids, gcdata, hcdata, masscut=None):
     hdata = hcdata[np.where(hcdata["mvir"] > mcut)[0]]
     hdata = periodic_bc(hdata)
     hkdt = cKDTree(np.stack((hdata["x"], hdata["y"], hdata["z"]),axis=1))
-    gkdt = cKDTree(np.stack((gdata["x"], gdata["y"], gdata["z"]),axis=1))
+    #gkdt = cKDTree(np.stack((gdata["x"], gdata["y"], gdata["z"]),axis=1))
 
     direct_halos = find_direct_halo(gdata, hdata, hkdt, n_match=500)
     halos = find_top_host_halo(gdata, hdata, hkdt, n_match=2000)

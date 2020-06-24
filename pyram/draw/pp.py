@@ -268,6 +268,7 @@ def pp_halo(h, npix=200, rscale=1.0, region=None, ind=None, ax=None,
             keep_clim=True,
             cmap="RdYlBu_r",
             proj="z",
+            name_pos="center",
             **kwargs):
     """
     plot halos as circles on the current/given/new ax.
@@ -351,7 +352,6 @@ def pp_halo(h, npix=200, rscale=1.0, region=None, ind=None, ax=None,
         hd = h
 
     # both x and xc are fine.
-    posname=0
     try:
         hd["x"]
         xn_org, yn_org, zn_org = "x", "y", "z"
@@ -399,7 +399,8 @@ def pp_halo(h, npix=200, rscale=1.0, region=None, ind=None, ax=None,
             xspan= xmax - xmin
             yspan= ymax - ymin
             zspan= zmax - zmin
-            print("Xmin1", xmin, ymin, zmin)
+            print("Xmin", xmin, ymin, zmin)
+            print("Xmax", xmax, ymax, zmax)
 
         else:
             # If a reion is given, plot only  the halos inside the region.
@@ -422,7 +423,9 @@ def pp_halo(h, npix=200, rscale=1.0, region=None, ind=None, ax=None,
             xspan = np.ptp(getattr(region,xrn))
             yspan = np.ptp(getattr(region,yrn))
             zspan = np.ptp(getattr(region,zrn))
-            print("Xmin2", xmin, ymin, zmin)
+            #print("ind", ind)
+            #print("Xmin", xmin, ymin, zmin)
+            #print("Xmax", xspan, yspan, zspan)
 
     else:
         # if ind is a boolean array, convert it to an index array.
@@ -494,7 +497,6 @@ def pp_halo(h, npix=200, rscale=1.0, region=None, ind=None, ax=None,
     circle_scatter(ax, x, y, r, facecolors='none',
                       linewidth=linewidth, cmap=cmap, **kwargs)
 
-
     #if hasattr(ax,"pp_hal_meta"):
     #    if ax.pp_hal_meta.xrange is None:
     #        ax.pp_hal_meta.xrange = [min(x), max(x)]
@@ -513,7 +515,20 @@ def pp_halo(h, npix=200, rscale=1.0, region=None, ind=None, ax=None,
 
     if name:
         for i, ii in enumerate(ind):
-            ax.annotate(str(hd[ii]["id"]), (x[i],y[i]),
+            if name_pos == "center":
+                ax.annotate(str(hd[ii]["id"]), (x[i],y[i]),
+                              fontsize=fontsize)
+            elif name_pos == "right":
+                ax.annotate(str(hd[ii]["id"]), (x[i]+r[i],y[i]),
+                              fontsize=fontsize)
+            elif name_pos == "left":
+                ax.annotate(str(hd[ii]["id"]), (x[i]-r[i],y[i]),
+                              fontsize=fontsize)
+            elif name_pos == "top":
+                ax.annotate(str(hd[ii]["id"]), (x[i],y[i]+r[i]),
+                              fontsize=fontsize)
+            elif name_pos == "bottom":
+                ax.annotate(str(hd[ii]["id"]), (x[i][i],y[i]-r[i]),
                               fontsize=fontsize)
     return ax
 
