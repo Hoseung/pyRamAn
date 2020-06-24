@@ -29,7 +29,9 @@ class Tree():
                      is_gal=False,
                      load_info=True,
                      verbose=False,
-                     tree_fn="tree.dat"):
+                     tree_fn="tree.dat",
+                     fn_nnza_input="input_TreeMaker.dat",
+                     fn_nnza_output="nout_nstep_zred_aexp.txt"):
         """
         NH tree => BIG_RUN == False
         NH Galaxy -> double == True
@@ -62,6 +64,8 @@ class Tree():
         self.info = info
         self.verbose=False
         self.nout_fi=nout_fi
+        self._fn_nnza_input = fn_nnza_input
+        self._fn_nnza_output = fn_nnza_output
 
         if self.info is None and load_info:
             self.load_info(nout_fi=nout_fi)
@@ -78,11 +82,12 @@ class Tree():
 
     def _load_nnza(self):
         try:
-            self.nnza = Nnza(fname=self.fn.split(self.tree_fn)[0]+"nout_nstep_zred_aexp.txt")
+            self.nnza = Nnza(fname=self.fn.split(self.tree_fn)[0]+self._fn_nnza_output)
+            print("Found {}, loding this one...".format(self._fn_nnza_output))
         except:
             try:
-                self.cal_nnza()
-                self.nnza = Nnza(fname=self.fn.split(self.tree_fn)[0]+"nout_nstep_zred_aexp.txt")
+                self.cal_nnza(fn_input=self._fn_nnza_input, fn_out=self._fn_nnza_output)
+                self.nnza = Nnza(fname=self.fn.split(self.tree_fn)[0]+self._fn_nnza_output)
             except:
                 print("[warning] Can not load nnza")
 
@@ -97,17 +102,18 @@ class Tree():
             nout_fi = util.get_last_snapshot(self.wdir)
         self.info = Info(base=self.wdir, nout=nout_fi)
 
-    def cal_nnza(self):
+    def cal_nnza(self, fn_input="input_TreeMaker.dat",
+                       fn_out="nout_nstep_zred_aexp.txt"):
         """
         Make nout_nstep_zred_aexp.txt file from the input_TreeMaker.dat file.
         """
         fdir = self.fn.split(self.tree_fn)[0]
 
-        fsave = fdir+"nout_nstep_zred_aexp.txt"
+        fsave = fdir+fn_out
         if os.path.isfile(fsave):
             print("File {} exists".format(fsave))
             #return
-        f_tree_input = fdir + "input_TreeMaker.dat"
+        f_tree_input = fdir + fn_input
         if not os.path.isfile(f_tree_input):
             print("[warning] {} doest not exist".format(f_tree_input))
             #return
@@ -116,8 +122,10 @@ class Tree():
             nsteps = int(f.readline().split()[0])
             nouts = []
             for i,line in enumerate(f.readlines()):
-                if "tree_bricks" in line:
-                    nouts.append(int(line.split("tree_bricks")[1].split("'")[0]))
+                if "tree_brick" in line:
+                    # 
+                    #
+                    nouts.append(int(line.split("tree_brick")[1][1:].split("'")[0]))
 
         nsteps = np.unique(self.tree["nstep"])[::-1] # decending order
         # remove nstep = 0 in an empty tree
