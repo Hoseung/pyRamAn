@@ -135,7 +135,7 @@ contains
    subroutine read_tree_brick(halofile)
 !#########################################################
       implicit none
-      integer(kind=4)  :: unitfile,ierr,nhalo_snap,nmem=0,i
+      integer(kind=4)  :: unitfile,nhalo_snap,nmem=0,i
       real(kind=4)    :: aexp, massp, omega_t, age_univ
       integer(kind=4) :: nbodies, nb_of_halos, nb_of_subhalos!, nhalo
       character(len=128):: halofile
@@ -150,13 +150,7 @@ contains
       read(unitfile) age_univ
       read(unitfile) nb_of_halos, nb_of_subhalos
       nhalo_snap = nb_of_subhalos + nb_of_halos
-      ! write(*,*) '---> No. of halos (subhalos):', nb_of_halos, nb_of_subhalos
-
-      !allocate(haloinfo(1:nhalo), stat=ierr)
-      if (ierr /= 0) then
-         write(*,*) '> not enough memory'
-         stop
-      endif
+      !print *, '---> No. of halos (subhalos):', nb_of_halos, nb_of_subhalos
 
       do i=1, nhalo_snap
          call read_halo_brick(unitfile)!, aexp)
@@ -164,7 +158,7 @@ contains
       enddo
       close(unitfile)
 
-      ! write(*,*) '---> read tree_bricks: ok'
+      !print *, '---> read tree_bricks: ok'
       return
    end subroutine read_tree_brick
 
@@ -220,10 +214,9 @@ contains
 
       iout_format='(I0.3)'
 
-
       do iout=start,end-1
          write(snout,TRIM(iout_format)) iout
-         halofile = TRIM(repository)//'/tree_bricks'//snout
+         halofile = TRIM(repository)//snout
          inquire(file=halofile,exist=ok_exist)
          if(ok_exist)then
             open(unit=55, file=halofile, form='unformatted', status='old')
@@ -246,7 +239,7 @@ contains
 
       do iout=start,end-1
          write(snout,TRIM(iout_format)) iout
-         halofile = TRIM(repository)//'/tree_bricks'//snout
+         halofile = TRIM(repository)//snout
          inquire(file=halofile,exist=ok_exist)
          if(ok_exist)then
             call read_tree_brick(halofile)
@@ -258,7 +251,7 @@ contains
          allocate(part_ids(1:npart_tot))
          do iout=start,end-1
             write(snout,TRIM(iout_format)) iout
-            halofile = TRIM(repository)//'/tree_bricks'//snout
+            halofile = TRIM(repository)//snout
             inquire(file=halofile,exist=ok_exist)
             if(ok_exist)then
                call read_member_brick(halofile)

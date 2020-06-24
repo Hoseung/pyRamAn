@@ -14,6 +14,22 @@ from ..load.dtypes import get_halo_dtype, add_dtypes
 
 from ..utils.io_module import read_fortran
 
+AdaptaHOP_params=dict(
+    gdir='GalaxyMaker/gal/',
+    gfn = lambda nout : f'tree_bricks{nout:03d}',
+    ddir='halo/DM/',
+    dfn = lambda nout : f'tree_bricks{nout:03d}',
+)
+
+HOP_params=dict(
+    gdir='GalaxyMaker/gal_HOP/',
+    gfn = lambda nout : f'tree_brick_{nout:03d}',
+    ddir='halo/DM_HOP/',
+    dfn = lambda nout : f'tree_brick_{nout:03d}',
+)
+
+
+
 class HaloMeta():
     """
     HaloMeta class.
@@ -33,7 +49,7 @@ class HaloMeta():
     def __init__(self, nout=None, base='./', info=None, halofinder='HM',
                  load=True, is_gal=False, return_id=False, outdir=None, fn=None,
                  verbose=False, double=False, pure_python=False, read_mbp=False,
-                 add_fields=None):
+                 HOP=False, add_fields=None):
         """
 
         Parameters
@@ -76,6 +92,8 @@ class HaloMeta():
         self.double = double
         self.pure_python = pure_python
         self.base = base
+        self.HOP = HOP
+        self.hal_param = HOP_params if self.HOP else AdaptaHOP_params
         self.info = None
         self.set_info(info=info)
         self.run_params = {"none":None}
@@ -104,12 +122,12 @@ class HaloMeta():
 
         if outdir is None:
             if is_gal:
-                self.gal_find_dir = 'GalaxyMaker/gal/'
+                self.gal_find_dir = self.hal_param['gdir']
             else:
                 if self.read_mbp:
                     self.dm_find_dir = 'halo/DM_mbp'
                 else:
-                    self.dm_find_dir= 'halo/DM/'
+                    self.dm_find_dir= self.hal_param['ddir']
         else:
             if is_gal:
                 self.gal_find_dir = outdir
@@ -206,9 +224,9 @@ class Halo(HaloMeta):
 
         if self.fn is None:
             self._check_params()
-        if self.halofinder is 'Rockstar':
+        if self.halofinder == 'Rockstar':
             self.load_rs()
-        elif self.halofinder is 'HaloMaker':
+        elif self.halofinder == 'HaloMaker':
             # Get the filename
             if self.fn is None:
                 if nout is None:
@@ -225,7 +243,7 @@ class Halo(HaloMeta):
                 if self.is_gal:
                     self.fn = base + self.gal_find_dir# + 'tree_bricks' + snout
                 else:
-                    self.fn = base + self.dm_find_dir + 'tree_bricks' + snout
+                    self.fn = base + self.dm_find_dir + self.hal_param['gfn'](self.nout)
 
             if self.verbose:
                 print(self.fn)
@@ -245,8 +263,9 @@ class Halo(HaloMeta):
             double = self.double
         if pure_python == None:
             pure_python = self.pure_python
-
-        f = open(fn+ f'tree_bricks{self.nout:03d}', "rb")
+        fname = fn+ self.hal_param['gfn'](self.nout)
+        print("FNAME:", fname)
+        f = open(fname, "rb")
         dtypes_halo = get_halo_dtype(is_gal=self.is_gal,
                                     double=double,
                                     read_mbp=self.read_mbp,
@@ -266,21 +285,21 @@ class Halo(HaloMeta):
         else:
 
             self.nbodies = read_fortran(f, np.dtype('i4'), 1)[0]
-            f.close()
+            f.seek(0)
             
-            #from . import rd_hal
-            #self.nbodies = rd_halo.read_nbodies(fn.encode())
             from .readhtm import readhtm as readh
             from numpy.core.records import fromarrays
 
             ###############################
             # Read header
-            with open(fn+ f'tree_bricks{self.nout:03d}', "rb") as f:
-                brick_data = f.read()
-                offset, header_info = load_header(brick_data, double=double)
-                self.nbodies, self.aexp, self.omegat, self.age, self.nhalo, self.nsub = header_info
+            #with open(fname, "rb") as f:
+            brick_data = f.read()
             
-            readh.read_bricks(fn, self.is_gal, self.nout, self.nout+1, self.return_id, double)
+            offset, header_info = load_header(brick_data, double=double)
+            self.nbodies, self.aexp, self.omegat, self.age, self.nhalo, self.nsub = header_info
+            f.close()
+            
+            readh.read_bricks(fname[:-3], self.is_gal, self.nout, self.nout+1, self.return_id, double)
             
             if(not double):
                 self.data = fromarrays([*readh.integer_table.T, *readh.real_table.T], dtype=dtypes_halo)
@@ -362,9 +381,9 @@ class Halo(HaloMeta):
         normalize qunatities in comoving scale.
         Works only with internal info. So set Halo.info first.
         """
-        if self.halofinder is 'Rockstar':
+        if self.halofinder == 'Rockstar':
             self.normalize_rs()
-        elif self.halofinder is 'HaloMaker':
+        elif self.halofinder == 'HaloMaker':
             self.normalize_hm()
             # modify units
             # All in comoving scale. (But mass.. hmm..)
