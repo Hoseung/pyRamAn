@@ -243,7 +243,7 @@ class Halo(HaloMeta):
                 if self.is_gal:
                     self.fn = base + self.gal_find_dir# + 'tree_bricks' + snout
                 else:
-                    self.fn = base + self.dm_find_dir + self.hal_param['gfn'](self.nout)
+                    self.fn = base + self.dm_find_dir# + self.hal_param['gfn'](self.nout)
 
             if self.verbose:
                 print(self.fn)
