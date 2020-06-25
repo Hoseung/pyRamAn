@@ -112,6 +112,7 @@ def get_halo_dtype(is_gal=False, double=False, read_mbp=False, new_fields=None, 
         df=8
     else:
         dtype_float = "<f4"
+        dtype_float2 = dtype_float # Did sp version have a few dp value?
         df=4
 
     dtype_halo = [('np', '<i4'), ('id', '<i4'), ('level', '<i4'),
@@ -121,8 +122,8 @@ def get_halo_dtype(is_gal=False, double=False, read_mbp=False, new_fields=None, 
                   ('x', dtype_float), ('y', dtype_float), ('z', dtype_float),
                   ('vx', dtype_float), ('vy', dtype_float), ('vz', dtype_float),
                   ('ax', dtype_float), ('ay', dtype_float), ('az', dtype_float),
-                  ('r', dtype_float), ('a', '<f8'),('b', '<f8'),('c', '<f8'),
-                  ('ek', '<f8'),('ep', '<f8'),('et', '<f8'),
+                  ('r', dtype_float), ('a', dtype_float2),('b', dtype_float2),('c', dtype_float2),
+                  ('ek', dtype_float2),('ep', dtype_float2),('et', dtype_float2),
                   ('sp', dtype_float), 
                   ('rvir', dtype_float),('mvir', dtype_float),
                   ('tvir', dtype_float),('cvel', dtype_float),
