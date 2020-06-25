@@ -275,7 +275,7 @@ def make_gasmap(nout, gal_cat, theta_xz_1=[0], theta_yz_1=[0],
 
         dist = np.sqrt(np.einsum("...i,...i", gal.star["pos"],gal.star["pos"]))
         ind_close = np.argsort(dist)[:int(nvec_frac*len(gal.star))]
-        close_stars = star[ind_close]
+        close_stars = gal.star[ind_close]
 
         params_ang = np.mean(close_stars['m'] * np.cross(close_stars["pos"], close_stars["vel"]).T, axis=1)
         close_stars = None
