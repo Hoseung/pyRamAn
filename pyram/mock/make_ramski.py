@@ -10,7 +10,7 @@ import pts.simulation as sm
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 
-def write_ski(repo, gid, nout, skifile, arr):
+def write_ski(repo, gid, nout, skifile, arr, pixel_scale=35):
     inclination, azimuth, roll, fovx, fovy, minX, maxX, minY, maxY, minZ, maxZ = arr
 
     # load values from JP's value
@@ -31,6 +31,13 @@ def write_ski(repo, gid, nout, skifile, arr):
     inst_fc.set('azimuth', f'{azimuth:.5f} deg')
     inst_fc.set('roll', f'{roll:.5f} deg')
 
+    inst_fc.set('fieldOfViewX', f'{fovx} pc')
+    inst_fc.set('fieldOfViewY', f'{fovy} pc')
+
+    npixx = npixy = int(fovx / pixel_scale)
+    inst_fc.set('numPixelsX', f'{npixx}')
+    inst_fc.set('numPixelsY', f'{npixy}')
+
     #edge-on
     if inclination < 90: 
         #print("Warning... inclination =", inclination)
@@ -39,7 +46,7 @@ def write_ski(repo, gid, nout, skifile, arr):
         inclination0 = inclination - 90
         #azimuth
     for i, inst_ed in enumerate(elems[1:]):
-        inclination = inclination0 - 9 + 3*i 
+        inclination = inclination0 - 20 + 10*i 
         if inclination < 0 or inclination > 180:
             continue
         inst_ed.set('instrumentName', f'edgeon{i}')
@@ -50,34 +57,38 @@ def write_ski(repo, gid, nout, skifile, arr):
 
         inst_ed.set('fieldOfViewX', f'{fovx} pc')
         inst_ed.set('fieldOfViewY', f'{fovy} pc')
+        inst_ed.set('numPixelsX', f'{npixx}')
+        inst_ed.set('numPixelsY', f'{npixy}')
 
     skifile.saveTo(repo+f"g{gid}_{nout}.ski")
     print(f"Done {gid}")
 
 
-
-
-def make_ram_input(wdir, nout, gal, dir_out='./', fov=40, smooth = 25, nvec_frac=-1, fsave_angle=None, plot_stellar=False):
+def make_ram_input(wdir, nout, gcat, dir_out='./', fov=40, smooth = 25, nvec_frac=-1, fsave_angle=None, plot_stellar=False):
     """
     fov in kpc. 
 
     """
-    centers, radius, gid=  (gal['x'],gal['y'],gal['z']), gal['r'], gal['id']
-    
+    centers, radius, gid=  (gcat['x'],gcat['y'],gcat['z']), gcat['r'], gcat['id']
+
+    s=pyram.load.sim.Sim(nout, base=wdir)
+    radius_in_kpc = radius*s.info.boxtokpc
+
     arr=ramski.ramski_v4(wdir+'snapshots/',
                     dir_out,
                     centers,
                     nout,
-                    radius,
+                    radius_in_kpc,
                     gid)
-
+    # fov in kpc -> in pc
+    arr[3:5] *= 1e3
     incl, azim, roll, fovx, fovy, minx, maxx, miny, maxy, minz, maxz = arr
     # Note that I will not use incl, azim from this measurement.
     print("min, max", minx, maxx, miny, maxy, minz, maxz)
     print("radius", radius)
+    print("FoV", fovx, fovy)
 
     ## Particle
-    s=pyram.load.sim.Sim(nout, base=wdir)
 
     s.set_ranges([[centers[0]-radius, centers[0]+radius],
                   [centers[1]-radius, centers[1]+radius],
@@ -102,6 +113,8 @@ def make_ram_input(wdir, nout, gal, dir_out='./', fov=40, smooth = 25, nvec_frac
     a description that does not contain parenthesis (optional)
     a unit string between parenthesis (may be "(1)" or "()" for dimensionless quantities)
     """
+    centers = np.mean(star['pos'], axis=0)
+    print("new center", centers)
     pos_pc = (star["pos"] - centers) *s.info.boxtokpc * 1e3
 
     ### Write particles
@@ -124,9 +137,10 @@ def make_ram_input(wdir, nout, gal, dir_out='./', fov=40, smooth = 25, nvec_frac
 
         vcen = np.mean(gal.star['vel'], axis=0)
         gal.star['vel'] -= vcen
-
+        gal.star['pos'] -=centers
+        gal.star['pos'] *= gal.info.boxtokpc
         print("# {} stars in total".format(len(gal.star)))
-
+        print("pos min max", np.min(gal.star['pos'], axis=0), np.max(gal.star['pos'],axis=0))
         dist = np.sqrt(np.einsum("...i,...i", gal.star["pos"],gal.star["pos"]))
         ind_close = np.argsort(dist)[:int(nvec_frac*len(gal.star))]
         #close_stars = gal.star[ind_close]
@@ -151,7 +165,8 @@ def make_ram_input(wdir, nout, gal, dir_out='./', fov=40, smooth = 25, nvec_frac
 
         if plot_stellar:
             fig, axs = plt.subplots(2,2)
-            fig.set_size_inches(8,8)
+            fig.set_size_inches(6,6)
+            fig.suptitle(f"nout={nout}, ID={gid}")
             axs[0,0].hist2d(gal.star["x"], gal.star["y"], bins=400, norm=LogNorm())
             gal.meta.nvec = nvec
             gal.reorient(dest=[0,0,1]) 
@@ -159,6 +174,7 @@ def make_ram_input(wdir, nout, gal, dir_out='./', fov=40, smooth = 25, nvec_frac
             axs[1,0].hist2d(gal.star["x"], gal.star["z"], bins=400, norm=LogNorm())
             for ax in axs.ravel():
                 ax.set_aspect("equal")
+            axs[1,1].text(0.1,0.1,'{:.2f} Msun'.format(np.log10(gcat['m'])), transform=ax.transAxes)
             plt.savefig(dir_out+ f"{gid:05d}_stellar_maps.png", dpi=200)
     
     # update .ski immediately
@@ -182,6 +198,6 @@ if __name__ == "__main__":
         for gal in gcats:
             print(gal)
             make_ram_input("./", nout, gal,
-                        dir_out=f'./gals_{nout}/', nvec_frac=0.4, fsave_angle=fsave)
+                        dir_out=f'./gals_{nout}/', nvec_frac=0.3, fsave_angle=fsave)
 
 
