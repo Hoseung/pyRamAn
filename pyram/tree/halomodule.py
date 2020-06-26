@@ -8,11 +8,13 @@ halo / galaxy calss including basic data load functionality.
 """
 
 import numpy as np
-from ..load.info import Info
+from numpy.core.records import fromarrays
 import struct
-from ..load.dtypes import get_halo_dtype, add_dtypes
 
+from ..load.info import Info
+from ..load.dtypes import get_halo_dtype, add_dtypes
 from ..utils.io_module import read_fortran
+from .readhtm import readhtm as readh
 
 AdaptaHOP_params=dict(
     gdir='GalaxyMaker/gal/',
@@ -286,9 +288,6 @@ class Halo(HaloMeta):
 
             self.nbodies = read_fortran(f, np.dtype('i4'), 1)[0]
             f.seek(0)
-            
-            from .readhtm import readhtm as readh
-            from numpy.core.records import fromarrays
 
             ###############################
             # Read header
@@ -298,15 +297,16 @@ class Halo(HaloMeta):
             offset, header_info = load_header(brick_data, double=double)
             self.nbodies, self.aexp, self.omegat, self.age, self.nhalo, self.nsub = header_info
             f.close()
-            
+            self.return_id=0
             readh.read_bricks(fname[:-3], self.is_gal, self.nout, self.nout+1, self.return_id, double)
-            
+
             if(not double):
                 self.data = fromarrays([*readh.integer_table.T, *readh.real_table.T], dtype=dtypes_halo)
                 dtype_float = "<f4"
             else:
                 self.data = fromarrays([*readh.integer_table.T, *readh.real_table_dp.T], dtype=dtypes_halo)
                 dtype_float = "<f8"
+
             #array = HaloMaker.unit_conversion(array, snap)
             add_dtype = [("pos", dtype_float, (3,), "x", 0),
                         ("vel", dtype_float, (3,), "vx", 0),

@@ -36,6 +36,7 @@ contains
       if(integer_table(ihalo,4).le.0) integer_table(ihalo,4) = integer_table(ihalo,1)
       if(integer_table(ihalo,3).le.0) integer_table(ihalo,3) = 1
       if(.not. dp) then
+         !print *, "Float"
          !real_table(ihalo,1) = aexp ! aexp
          read(unitfile) real_table(ihalo,1) ! m
          read(unitfile) real_table(ihalo,2:4) ! x
@@ -54,6 +55,7 @@ contains
          else
             read(unitfile) real_table(ihalo,20:23) ! rvir, mvir, tvir, cvel
             read(unitfile) real_table(ihalo,24:25) ! rho0, rc
+            
          end if
       else
          !real_table_dp(ihalo,1) = aexp ! aexp
@@ -76,6 +78,7 @@ contains
             read(unitfile) real_table_dp(ihalo,23:24) ! rho0, rc
          end if
       end if
+      !print *, "ID", integer_table(ihalo,2)
 
       return
    end subroutine read_halo_brick
@@ -188,7 +191,7 @@ contains
 
 
 !#########################################################
-   subroutine read_bricks(repository,galaxy_ini,start,end,read_members,dp_ini)
+   subroutine read_bricks(repository,is_gal,start,end,read_members,dp_ini)
 !#########################################################
       implicit none
       integer(kind=4)::iout,nout, nb_of_halos, nb_of_subhalos
@@ -198,7 +201,7 @@ contains
       character(len=10)::iout_format
 
       character(len=128),intent(in)::repository
-      logical,intent(in)::galaxy_ini,read_members
+      logical,intent(in)::is_gal,read_members
       integer(kind=4),intent(in):: start, end
       logical,intent(in):: dp_ini
 
@@ -209,7 +212,7 @@ contains
       ihalo = 1
       ipart = 1
 
-      galaxy = galaxy_ini
+      galaxy = is_gal
       dp = dp_ini
 
       iout_format='(I0.3)'
@@ -228,13 +231,13 @@ contains
          end if
       end do
 
-      !write(*,*)'Number of bricks found:', nout
-      !write(*,*)'Total number of halos:', nhalo
+      !print *,'Number of bricks found:', nout
+      !print *,'Total number of halos:', nhalo
 
       if(galaxy)then
          call allocate_table(nhalo, 7, 27, dp)
       else
-         call allocate_table(nhalo, 7, 23, dp)
+         call allocate_table(nhalo, 7, 24, dp)
       end if
 
       do iout=start,end-1
@@ -245,8 +248,7 @@ contains
             call read_tree_brick(halofile)
          end if
       end do
-
-
+      
       if(read_members)then
          allocate(part_ids(1:npart_tot))
          do iout=start,end-1
@@ -258,11 +260,12 @@ contains
             end if
          end do
       end if
+      print *, "Done"
 
    end subroutine read_bricks
 
 !#########################################################
-   subroutine read_single_tree(treefile,galaxy_ini, dp_ini)
+   subroutine read_single_tree(treefile,is_gal, dp_ini)
 !#########################################################
       implicit none
       integer(kind=4) :: unitfile, nsteps, st, j
@@ -273,10 +276,10 @@ contains
       real(kind=4),    dimension(:), allocatable :: aexp, omega_t, age_univ
 
       character(len=128),intent(in) :: treefile
-      logical,intent(in) :: galaxy_ini, dp_ini
+      logical,intent(in) :: is_gal, dp_ini
 
       ihalo = 1
-      galaxy = galaxy_ini
+      galaxy = is_gal
       dp = dp_ini
       unitfile = 55
 
