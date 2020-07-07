@@ -1,6 +1,5 @@
 #/bin/bash
 
-hspy
 cd gsf
 ./setup
 

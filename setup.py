@@ -20,12 +20,7 @@ def main():
     with open("README.md", "r") as fh:
         long_description = fh.read()
 
-    ext_modules = [Extension(name="pyram.tree.rd_hal",
-                            sources=["pyram/tree/rd_hal.pyx"],
-                            libraries=["pyram/tree/c_rd_halo"],
-                            language='c++',
-                            include_dirs=[numpy.get_include()]),
-                    Extension("pyram.draw.ppc",["pyram/draw/ppc.pyx"],
+    ext_modules = [Extension("pyram.draw.ppc",["pyram/draw/ppc.pyx"],
                             include_dirs=[numpy.get_include()])]
                 #Extension( name='pyram/load/part_load',
                 #        sources= ['pyram/load/part_cpu_module.f90'] )]
