@@ -473,11 +473,8 @@ class Part(Simbase):
             #timer.record()
             
             # If outsdie ROI, byte_table(:,1)=-128
-            #print(*readr.byte_table[:10,0])
             bt = fromarrays([*readr.byte_table.T], dtype=[("family",'i1'),('tag','i1')])
             
-            print(bt['family'].min(),
-                  bt['family'].max())  
             ind_ok = np.where(bt['family'] > -128)[0]
             
             if(self.config['longint']):
@@ -498,16 +495,16 @@ class Part(Simbase):
             
             # copy memory
             for (pt, fam) in zip(self.pt, self.family_keys):
-                print('family', fam)
+                #print('family', fam)
                 tmp = part[part['family']==fam]
-                print("FORNAX dtype", fornax_dtypes[pt])
+                #print("FORNAX dtype", fornax_dtypes[pt])
                 to_store = np.zeros(len(tmp), dtype=fornax_dtypes[pt])
                 for dt in fornax_dtypes[pt]:
                     try:
                         to_store[dt] = tmp[dt]
                     except:
                         print("skipping", dt)
-                print("setting attributes:", pt)
+                #print("setting attributes:", pt)
                 setattr(self, pt, to_store)
 
     def load_fortran(self,
