@@ -489,6 +489,8 @@ class Part(Simbase):
 
             #timer.start('Building table for %d particles... ' % readr.integer_table.shape[0], 1)
             #part = fromarrays(arr, dtype=fornax_dtypes['raw_dtype'])[ind_ok]
+
+            print("aaaaaaaa", self.rur_dtype)
             part = fromarrays(arr, dtype=self.rur_dtype)[ind_ok]
             # deallocate fortran memory
             readr.close()
