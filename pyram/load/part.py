@@ -12,6 +12,8 @@ from .part_load import part_load_module
 from .readr import readr
 from numpy.core.records import fromarrays as fromarrays
 from ..config import part_dtype
+from os.path import join, exists
+from ..config import sinkprop_format, sink_prop_dtype_drag, sink_prop_dtype, sink_prop_dtype_drag_fornax
 
 
 # Check if there is dm / star / sink in quantities list
@@ -65,7 +67,6 @@ class Ptypes():
 
     def _add_sink(self):
         self.sink = Ptype()
-
 class Part(Simbase):
     """
     Particle data container supports different types of particles,
@@ -118,8 +119,8 @@ class Part(Simbase):
         self.config=config # {'part':'2017', 'cosmo':True}
         self.longint = False
         self.dtype = part_dtype[self.config['sim_type']]
-        if info is None:
-            assert nout is not None, "either info or nout is required"
+        if info == None:
+            assert not nout == None, "either info or nout is required"
             info = Info(base=base,nout=nout, cosmo=self.config['cosmo'])
         self.info = info
         self.nout = info.nout
@@ -142,7 +143,7 @@ class Part(Simbase):
         
         self.data_dir = data_dir
         
-        if ptypes is not None: self.setwhattoread(ptypes)
+        if not ptypes == None: self.setwhattoread(ptypes)
         self.part_dtype = []
         self.dmo = config['dmo']
         self.dm_with_ref = dmref
@@ -490,10 +491,9 @@ class Part(Simbase):
             #timer.start('Building table for %d particles... ' % readr.integer_table.shape[0], 1)
             #part = fromarrays(arr, dtype=fornax_dtypes['raw_dtype'])[ind_ok]
 
-            print("aaaaaaaa", self.rur_dtype)
             part = fromarrays(arr, dtype=self.rur_dtype)[ind_ok]
             # deallocate fortran memory
-            readr.close()
+            readr.clear_all()
             
             # copy memory
             for (pt, fam) in zip(self.pt, self.family_keys):
@@ -542,7 +542,7 @@ class Part(Simbase):
         >>> m.x # returns the content of x as array
         >>> m.x = None # deallocate F90 x array
 
-        Or, Like what San did -- readr.close() --,
+        Or, Like what San did -- readr.clear_all() --,
         make a Fortran subroutine to deallocate all allocated arrays in Fortran.
 
         """
@@ -628,3 +628,70 @@ class Part(Simbase):
         pass
         # fancy indexing returns view to array.
         # BUT indexing to multiple fields does not return a view, but copies memory.
+
+    def load_sink(self, icoarse=None, read_props=True, read_raw=True):
+        self._sink = Sink(self.info, self.config)
+        if read_props:
+            self.sinkp = self._sink.read_sinkprop( self._sink._path, icoarse=icoarse)
+        if read_raw:
+            self.sinkr = self._sink.read_sink_raw(1)
+
+class Sink(Simbase):
+    def __init__(self, info, config, path='./'):
+        self.info = info
+        self.config = config
+        try:
+            path = self.config['sink_path']
+        except:
+            pass
+        self._path = path
+
+    def read_sinkprop(self, 
+                    path_in_repo='', 
+                    icoarse=None, 
+                    drag_part=True, 
+                    raw_data=False, 
+                    return_aexp=False
+                    ):
+        if(icoarse is None):
+            icoarse = self.info.nstep_coarse-1
+        
+        path = join(self.info.base, path_in_repo)
+        check = join(path, sinkprop_format.format(icoarse=icoarse))
+        if(not exists(check)):
+            raise FileNotFoundError('Sinkprop file not found: %s' % check)
+        
+
+        readr.read_sinkprop(path, icoarse, drag_part, self.config['sim_type'])
+        arr = [*readr.integer_table.T, *readr.real_table.T]
+
+        #timer.start('Building table for %d smbhs... ' % readr.integer_table.shape[0], 1)
+        if(raw_data):
+            return arr
+        if(drag_part):
+            dtype = sink_prop_dtype_drag
+        else:
+            dtype = sink_prop_dtype
+        if(self.config['sim_type'] == 'fornax'):
+            dtype = sink_prop_dtype_drag_fornax
+        if(len(arr) != len(dtype)):
+            readr.clear_all()
+            raise ValueError('Number of fields mismatch\n'
+                            'Recieved: %d, Allocated: %d' % (len(arr), len(dtype)))
+        sink = fromarrays(arr, dtype=dtype)
+        #timer.record()
+        aexp = np.copy(readr.aexp)
+        readr.clear_all()
+
+        if(return_aexp):
+            return sink, aexp
+        else:
+            return sink
+
+    def read_sink_raw(self, icpu, path_in_repo=''):
+        path = join(self.info.base, path_in_repo)
+        readr.read_sink(path, self.info.nout, icpu, self.info.lmin, self.info.lmax)
+        arr = [*readr.integer_table.T, *readr.real_table.T]
+        sink = fromarrays(arr)
+        readr.clear_all()
+        return sink

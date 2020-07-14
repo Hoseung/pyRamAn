@@ -1,6 +1,5 @@
 module readr
     implicit none
-
     ! Tables, used for communication with Pyhton
     ! cell: x(3), varh(5~7)
     ! part: x(3), v(3), m, (age, metal)
@@ -110,7 +109,7 @@ contains
             nlong = 0
         end if
 
-        call close()
+        call clear_all()
 
         ! Allocate space for particle data
         allocate(real_table(1:npart_tot, 1:nreal))
@@ -204,7 +203,7 @@ contains
         character(len=10),     intent(in) :: mode
 
         sink_n = 40
-        call close()
+        call clear_all()
 
         open(unit=sink_n, file=sinkprop_filename(repo, iprop), status='old', form='unformatted')
         read(sink_n) nsink
@@ -267,13 +266,14 @@ contains
 
         ndim = 3
         sink_n = 50
-        call close()
+        call clear_all()
 
         open(unit=sink_n, file=sink_filename(repo, iout, icpu), form='unformatted')
         rewind(sink_n)
+                
         read(sink_n) nsink
         read(sink_n) nindsink
-
+        
         nstat = (ndim*2+1)*(nlevelmax-levelmin+1)
         nreal = 20+nstat
         nint = 1
@@ -295,7 +295,7 @@ contains
     end subroutine read_sink
 
 !#####################################################################
-    subroutine close()
+    subroutine clear_all()
 !#####################################################################
         ! Clean old data table is used more then once
         implicit none
@@ -303,7 +303,7 @@ contains
         if(allocated(integer_table)) deallocate(integer_table)
         if(allocated(byte_table)) deallocate(byte_table)
         if(allocated(long_table)) deallocate(long_table)
-    end subroutine close
+    end subroutine clear_all
 
 !#####################################################################
     subroutine skip_read(unit,nskip)

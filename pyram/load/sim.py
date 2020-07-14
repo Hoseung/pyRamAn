@@ -207,10 +207,11 @@ def empty_config():
             'sim_type':None,
             'dmo':None,
             'longint':None,
+            'sink_path':'./',
             }
     return conf
 """
-Config templates are in config.py. But what is actually used need to be belong to a sim instance.
+Config templates are in config.py. But what is actually used need to belong to a sim instance.
 """
 
 
@@ -822,3 +823,4 @@ class Amr(Simbase):
         self.levellist = levellist
 
         return
+
