@@ -10,11 +10,19 @@ import pts.simulation as sm
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 
-def write_ski(repo, gid, nout, skifile, arr, pixel_scale=35):
+def write_ski(repo, gid, nout, skifile, arr, params, pixel_scale=35):
+
     inclination, azimuth, roll, fovx, fovy, minX, maxX, minY, maxY, minZ, maxZ = arr
-
+    if np.sum(arr[:3]) > 0:
+    # so that rotated stars all in the FoV. 
+        fovx *= 1.7
+        fovy *= 1.7 
+    else:
+        fovx*=2
+        fovy*=2
+        print("No need to increase FoV")
     # load values from JP's value
-
+    skifile.setIntAttribute('//MonteCarloSimulation', 'numPackets', params[0]['nphoton'])
     skifile.setFloatAttribute('//MonteCarloSimulation/mediumSystem/MediumSystem/media/AdaptiveMeshMedium', 'minX', minX)
     skifile.setFloatAttribute('//MonteCarloSimulation/mediumSystem/MediumSystem/media/AdaptiveMeshMedium', 'maxX', maxX)
     skifile.setFloatAttribute('//MonteCarloSimulation/mediumSystem/MediumSystem/media/AdaptiveMeshMedium', 'minY', minY)
@@ -25,54 +33,46 @@ def write_ski(repo, gid, nout, skifile, arr, pixel_scale=35):
     # PTS doesn't support modifying values if attribute has multiple elments.
     elems = skifile._tree.xpath('//MonteCarloSimulation/instrumentSystem/InstrumentSystem/instruments/FullInstrument')
 
-    inst_fc = elems[0] # Instrument "faceon"
-    inst_fc.set('instrumentName', 'faceon')
-    inst_fc.set('inclination', f'{inclination:.5f} deg')
-    inst_fc.set('azimuth', f'{azimuth:.5f} deg')
-    inst_fc.set('roll', f'{roll:.5f} deg')
+    #print("length of params,", len(params))
+    for param, inst in zip(params, elems[:len(params)]):
+        inst.set('instrumentName', param['name'])
+        inst.set('inclination', '{:.5f} deg'.format(inclination + param['incli_off']))
+        inst.set('azimuth', '{:.5f} deg'.format(azimuth + param['azim_off']))
+        inst.set('roll', '{:.5f} deg'.format(roll + param['roll_off']))
+    
+        inst.set('fieldOfViewX', f'{fovx} pc')
+        inst.set('fieldOfViewY', f'{fovy} pc')
 
-    inst_fc.set('fieldOfViewX', f'{fovx} pc')
-    inst_fc.set('fieldOfViewY', f'{fovy} pc')
-
-    npixx = npixy = int(fovx / pixel_scale)
-    inst_fc.set('numPixelsX', f'{npixx}')
-    inst_fc.set('numPixelsY', f'{npixy}')
-
-    #edge-on
-    if inclination < 90: 
-        #print("Warning... inclination =", inclination)
-        inclination0 = inclination + 90
-    else:
-        inclination0 = inclination - 90
-        #azimuth
-    for i, inst_ed in enumerate(elems[1:]):
-        inclination = inclination0 - 20 + 10*i 
-        if inclination < 0 or inclination > 180:
-            continue
-        inst_ed.set('instrumentName', f'edgeon{i}')
-
-        inst_ed.set('inclination', f'{inclination:.5f}')
-        inst_ed.set('azimuth', f'{azimuth:.5f}')
-        inst_ed.set('roll', f'{roll:.5f}')
-
-        inst_ed.set('fieldOfViewX', f'{fovx} pc')
-        inst_ed.set('fieldOfViewY', f'{fovy} pc')
-        inst_ed.set('numPixelsX', f'{npixx}')
-        inst_ed.set('numPixelsY', f'{npixy}')
+        npixx = npixy = int(fovx / param['pixel_scale'])
+        inst.set('numPixelsX', f'{npixx}')
+        inst.set('numPixelsY', f'{npixy}')
 
     skifile.saveTo(repo+f"g{gid}_{nout}.ski")
     print(f"Done {gid}")
 
 
-def make_ram_input(wdir, nout, gcat, dir_out='./', fov=40, smooth = 25, nvec_frac=-1, fsave_angle=None, plot_stellar=False):
+def make_ram_input(wdir, nout, gcat, fsave,
+                          dir_out='./',
+                          ski_params=None,
+                          smooth = 50,
+                          nvec_frac=-1,
+                          plot_stellar=False,
+                          more_props=False,
+                          r_fixed=None):
     """
     fov in kpc. 
 
     """
-    centers, radius, gid=  (gcat['x'],gcat['y'],gcat['z']), gcat['r'], gcat['id']
+    if ski_params == None:
+        ski_params=[dict(name='face_on',  pixel_scale=50, nphoton=5e7, incli_off = 0),
+                dict(name='edge_on',  pixel_scale=50, nphoton=5e7, incli_off = 90)]
+
+    centers, radius, gid = (gcat['x'],gcat['y'],gcat['z']), gcat['r'], gcat['id']
 
     s=pyram.load.sim.Sim(nout, base=wdir)
     radius_in_kpc = radius*s.info.boxtokpc
+    if r_fixed is not None:
+        radius_in_kpc = r_fixed
 
     arr=ramski.ramski_v4(wdir+'snapshots/',
                     dir_out,
@@ -85,36 +85,41 @@ def make_ram_input(wdir, nout, gcat, dir_out='./', fov=40, smooth = 25, nvec_fra
     incl, azim, roll, fovx, fovy, minx, maxx, miny, maxy, minz, maxz = arr
     # Note that I will not use incl, azim from this measurement.
     print("min, max", minx, maxx, miny, maxy, minz, maxz)
-    print("radius", radius)
+    print("radius", radius_in_kpc)
     print("FoV", fovx, fovy)
+    print(minx, maxx, miny, maxy, minz, maxz)
 
+    print("Xrange", centers[0]-radius, centers[0]+radius)
     ## Particle
-
     s.set_ranges([[centers[0]-radius, centers[0]+radius],
                   [centers[1]-radius, centers[1]+radius],
                   [centers[2]-radius, centers[2]+radius]])
 
     s.add_part(ptypes=["star id pos mass vel metal age"])
     star = s.part.star
+    star['m'] *= s.info.msun
     tc = TC(s.info)
     age = tc.time2gyr(times = star["time"], zred_now = s.info.zred)
-    age = -1*age*1e9
+    age = s.info.tGyr - age
+    age[age<0] = 1e-7
+    age *= 1e9
+    print("Age min, max", min(age), max(age))
     # Make gal out of part 
 
     # write part.ski
     """
     http://www.skirt.ugent.be/skirt9/class_text_in_file.html
     There must be a header line for each column with the following contents from left to right:
-
-    the hash character indicating a header line
+    hash character indicating a header line
     the word "column" (case insensitive)
     the one-based column number (optional)
     a colon
     a description that does not contain parenthesis (optional)
     a unit string between parenthesis (may be "(1)" or "()" for dimensionless quantities)
     """
-    centers = np.mean(star['pos'], axis=0)
-    print("new center", centers)
+    # Why do I need a new center when GalaxyMaker's center is precise enough? 
+    #centers = np.mean(star['pos'], axis=0)
+    #print("new center", centers)
     pos_pc = (star["pos"] - centers) *s.info.boxtokpc * 1e3
 
     ### Write particles
@@ -125,22 +130,23 @@ def make_ram_input(wdir, nout, gcat, dir_out='./', fov=40, smooth = 25, nvec_fra
     # Column 4: smoothing length (pc)
     # Column 5: mass (Msun)
     # Column 6: metallicity (1)
-    # Column 7: age (Gyr)\n
+    # Column 7: age (yr)\n
     """)
-        for (pos, m, z, a) in zip(pos_pc, star["m"] * s.info.msun, star["metal"], age):
+        for (pos, m, z, a) in zip(pos_pc, star["m"], star["metal"], age):
             fpart.write("{} {} {} {} {} {} {}\n".format(pos[0], pos[1], pos[2], smooth, m, z, a))
 
-    if nvec_frac > 0:
-        gal = gmo.galaxy.Galaxy()
-        gal.info = s.info
-        gal.star = s.part.star
+    gal = gmo.galaxy.Galaxy()
+    gal.info = s.info
+    gal.star = s.part.star
+    vcen = np.mean(gal.star['vel'], axis=0)
+    gal.star['vel'] -= vcen
+    gal.star['pos'] -=centers
+    gal.star['pos'] *= gal.info.boxtokpc
 
-        vcen = np.mean(gal.star['vel'], axis=0)
-        gal.star['vel'] -= vcen
-        gal.star['pos'] -=centers
-        gal.star['pos'] *= gal.info.boxtokpc
-        print("# {} stars in total".format(len(gal.star)))
-        print("pos min max", np.min(gal.star['pos'], axis=0), np.max(gal.star['pos'],axis=0))
+    print("# {} stars in total".format(len(gal.star)))
+    print("pos min max", np.min(gal.star['pos'], axis=0), np.max(gal.star['pos'],axis=0))
+
+    if nvec_frac > 0:
         dist = np.sqrt(np.einsum("...i,...i", gal.star["pos"],gal.star["pos"]))
         ind_close = np.argsort(dist)[:int(nvec_frac*len(gal.star))]
         #close_stars = gal.star[ind_close]
@@ -158,46 +164,51 @@ def make_ram_input(wdir, nout, gcat, dir_out='./', fov=40, smooth = 25, nvec_fra
             phi = np.degrees(np.arccos(nvec[0]/np.sqrt(nvec[0]**2 + nvec[1]**2)))
         else:
             phi = np.degrees(-np.arccos(nvec[0]/np.sqrt(nvec[0]**2 + nvec[1]**2)))
-        if fsave_angle is not None: fsave_angle.write(f"{nout} {gid} {theta:.3f}  phi={phi:.3f} \n")
-        arr[:3] = theta, phi, 0
-        print(f"inclination after {theta:.3f}")
-        print(f"azimuth after {phi:.3f}")
+        alpha = 0
 
-        if plot_stellar:
-            fig, axs = plt.subplots(2,2)
-            fig.set_size_inches(6,6)
-            fig.suptitle(f"nout={nout}, ID={gid}")
-            axs[0,0].hist2d(gal.star["x"], gal.star["y"], bins=400, norm=LogNorm())
-            gal.meta.nvec = nvec
+    else:
+        nvec = np.array([0,0,1])
+        theta, phi, alpha = 0,0,0
+
+    if not more_props:
+        fsave.write(f"{nout} {gid} {theta:.6f}  {phi:.6f} {centers[0]:.6f} {centers[1]:.6f} {centers[2]:.6f} {nvec[0]:.6f} {nvec[1]:.6f} {nvec[2]:.6f} \n")
+    else:
+        new_star = np.sum(gal.star['m'][age < 1e8])
+        fsave.write(f"{nout} {gid} {theta:.4f}  {phi:.4f} {centers[0]:.5f} {centers[1]:.5f} {centers[2]:.5f} {nvec[0]:.5f} {nvec[1]:.5f} {nvec[2]:.5f} " + 
+                    "{:.5f} {:.5f} {:.5f} {:.5f} \n".format(np.log10(np.sum(gal.star['m'])), np.mean(age), np.mean(gal.star['metal']), np.log10(new_star)))
+        
+    arr[:3] = theta, phi, alpha
+    print(f"new inclination and azimuth: {theta:.3f}, {phi:.3f}")
+
+    if plot_stellar:
+        fig, axs = plt.subplots(2,2)
+        fig.set_size_inches(6,6)
+        fig.suptitle(f"nout={nout}, ID={gid}")
+        axs[0,0].hist2d(gal.star["x"], gal.star["y"], bins=256, norm=LogNorm())
+        gal.meta.nvec = nvec
+        # if it's already along an intrinsic axis, don't bother to rotate it.
+        if 1 not in gal.meta.nvec:
             gal.reorient(dest=[0,0,1]) 
-            axs[0,1].hist2d(gal.star["x"], gal.star["y"], bins=400, norm=LogNorm())
-            axs[1,0].hist2d(gal.star["x"], gal.star["z"], bins=400, norm=LogNorm())
-            for ax in axs.ravel():
-                ax.set_aspect("equal")
-            axs[1,1].text(0.1,0.1,'{:.2f} Msun'.format(np.log10(gcat['m'])), transform=ax.transAxes)
-            plt.savefig(dir_out+ f"{gid:05d}_stellar_maps.png", dpi=200)
+        axs[0,1].hist2d(gal.star["x"], gal.star["y"], bins=256, norm=LogNorm())
+        axs[1,0].hist2d(gal.star["x"], gal.star["z"], bins=256, norm=LogNorm())
+        for ax in axs.ravel():
+            ax.set_aspect("equal")
+        axs[1,1].text(0.1,0.1,'{:.2f} Msun'.format(np.log10(gcat['m'])), transform=ax.transAxes)
+        plt.savefig(dir_out+ f"{gid:05d}_stellar_maps.png", dpi=200)
     
     # update .ski immediately
     fn_template = './template_zubko.ski'
     skifile = sm.SkiFile(fn_template)
     repo = dir_out+ f"{gid:05d}/{nout:05d}/"#faceon_redshift_"
-    write_ski(repo, gid, nout, skifile, arr)
+    """
+    if inclination + param['incli_off'] < 0:
+        off = param['incli_off'] + 180
+    elif inclination + param['incli_off'] > 180:
+        off = param['incli_off'] - 180
+    else:
+        off = param['incli_off']
+    """
+    write_ski(repo, gid, nout, skifile, arr, ski_params)
 
 
     print("done") 
-
-
-if __name__ == "__main__":
-    nout=906
-    gal_cat = np.array([13, 6.854e+10, 0.48733889, 0.47836283, 0.49842872, 1.5930e-04])
-    #gcats = np.genfromtxt(f"./centers_{nout}.txt",
-    #                       dtype=[('id','int'), ('x','float'),('y','float'),('z','float')])
-
-    radius = 20/(100*1e3/0.704)
-    with open(f"rot_angles_{nout}.txt", "w") as fsave:
-        for gal in gcats:
-            print(gal)
-            make_ram_input("./", nout, gal,
-                        dir_out=f'./gals_{nout}/', nvec_frac=0.3, fsave_angle=fsave)
-
-
