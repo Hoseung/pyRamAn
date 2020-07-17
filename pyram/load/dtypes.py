@@ -109,6 +109,7 @@ def get_halo_dtype(is_gal=False, double=False, read_mbp=False, new_fields=None, 
     """
     if double:
         dtype_float = "<f8"
+        dtype_float2 = dtype_float # Did sp version have a few dp value?
         df=8
     else:
         dtype_float = "<f4"
