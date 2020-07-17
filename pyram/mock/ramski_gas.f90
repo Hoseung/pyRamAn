@@ -100,7 +100,7 @@ subroutine ramski_v4(dir, outdir, gx, nout, fov, gid, output_arr)
     !fn='/storage1/NewHorizon/GalaxyMaker/gal/tree.dat' !! path to the tree
 
     lmin=12     !! minimum AMR level (must be smaller than lmax)
-    lmax=21     !! maximum AMR level (must be equal to lmax in RAMSES)
+    lmax=22     !! maximum AMR level (must be equal to lmax in RAMSES)
     Tdust=10000 !! dust survival temperature
     fdust=0.4   !! dust fraction - 0.4 from Saftly et al. 2015
     platescale=0.04     !! plate scale - arcsec/pixel
