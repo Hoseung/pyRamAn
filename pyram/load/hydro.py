@@ -53,6 +53,7 @@ class Hydro(Simbase):
                  cosmo=True,
                  cpus=None,
                  cpu_fixed=None,
+                 fields=None,
                  nvarh=6,
                  amr2cell_params={}):
         """
@@ -91,6 +92,7 @@ class Hydro(Simbase):
         self.nout = info.nout
         self.cpus = cpus
         self.cpu_fixed=cpu_fixed
+        self.fields=fields
         try:
             self.ncpu = len(self.cpus)
         except:
@@ -163,7 +165,7 @@ class Hydro(Simbase):
             self.amr2cell(**kwargs)
 
     def amr2cell(self, lmax=None, icpu=0, cpu=True, ref=False,
-                 verbose=False, return_meta=False,
+                 verbose=False, return_meta=False, fields=None,
                  ranges=None, nvarh=None, additional_field=None):
         """
         Loads AMR and HYDRO and output hydro data into particle-like format(cell).
@@ -247,39 +249,37 @@ class Hydro(Simbase):
             dt_off = 72
             if cpu:
                 dtype_cell.update({'cpu': (('<f8',1),dt_off+8)})
-                dt_off += 8
+                dt_off += 8 
             if ref:
                 dtype_cell.update({'ref': (('bool',1),dt_off+4)})
                 dtype_cell.update({'var6': (('bool',1),dt_off+4)})
                 dt_off += 4
             if additional_field is not None:
                 """
-                Additional field are reserved for 
+                Todo: Make last_var_now a managed attribute
                 """
-
+                last_var_now = [s for s in dtype_cell.keys() if 'var' in s][-1]
+                last_var_now = int(last_var_now.split('var')[1])
+                if isinstance(additional_field, dict):
+                    additional_field = [additional_field]
                 try:
-                    # if iterable of dicts
                     for af in additional_field:
                         itemsize = np.dtype(af["dtype"]).itemsize*af["dim"]
+                        last_var_now += 1
+                        dtype_cell.update({f'var{last_var_now}':((af["dtype"],af["dim"]),dt_off+itemsize)})
                         dtype_cell.update({af["name"]:((af["dtype"],af["dim"]),dt_off+itemsize)})
                         dt_off += itemsize
                 except:
-                    try:
-                        # if single dict
-                        af = additional_field
-                        itemsize = np.dtype(af["dtype"]).itemsize*af["dim"]
-                        dtype_cell.update({af["name"]:((af["dtype"],af["dim"]),dt_off+itemsize)})
-                        dt_off += itemsize
-                    except:
-                        print("additional field is given, but can't update the dtype")
-                        print("Excepted: {'name':'asdf', 'dtype':'<f8', 'dim':3}")
-                        print("Or, array/list of such dicts")
-                        print("Currently given : ", additional_field)
+                    print("additional field is given, but can't update the dtype")
+                    print("Excepted: {'name':'asdf', 'dtype':'<f8', 'dim':3}")
+                    print("Or, array/list of such dicts")
+                    print("Currently given : ", additional_field)
 
         self.cell = np.zeros(ngridtot, dtype=dtype_cell)
         self.cell['pos'] = xarr
         self.cell['dx'] = dxarr
         # Ignore the last hydro variable, which is zoom-in flag
+
         for i in range(nvarh-1):
             self.cell['var' + str(i)] = varr[:,i]
         if cpu:

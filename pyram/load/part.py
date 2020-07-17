@@ -116,6 +116,7 @@ class Part(Simbase):
         """
         super(Part, self).__init__()
         self.config=config # {'part':'2017', 'cosmo':True}
+        self.longint = False
         self.dtype = part_dtype[self.config['sim_type']]
         if info is None:
             assert nout is not None, "either info or nout is required"
@@ -176,6 +177,20 @@ class Part(Simbase):
             self._get_basic_info()
             # Depending on user's choice, generate dm, star, sink classes
 
+        classic_format = False
+        if classic_format:
+            # check if star particle exists
+            if('star' in self.pt):
+                # This only applies to old RAMSES particle format
+                if(self.config['sim_type'] == 'nh'):
+                    self.rur_dtype = part_dtype['nh_dm_only']
+                elif (self.config['sim_type'] == 'yzics'):
+                    self.rur_dtype = part_dtype['yzics_dm_only']
+            if(self.longint):
+                if(self.config['sim_type'] == 'iap' or self.config['sim_type'] == 'gem' or self.config['sim_type'] == 'fornax'):
+                    self.rur_dtype = part_dtype['gem_longint']
+        else:
+            self.rur_dtype = part_dtype[self.config['sim_type']]
         if ptypes is not None and load:
             self.load(fortran=fortran)
 
@@ -216,8 +231,14 @@ class Part(Simbase):
         self.pt = []
         self.pq = []
         self.pqset = set([])
+        self.family_keys = []
         for pp in ptypes:
             pp = pp.lower()
+            try:
+                self.family_keys.append(int(pp.split()[0]))
+                pp = " ".join(pp.split()[1:])
+            except:
+                pass
             self.pt.append(pp.split()[0])
             self.pq.append(pp.split()[1:])
             self.pqset.update(pp.split()[1:])
@@ -276,11 +297,10 @@ class Part(Simbase):
             if self.dmo:
                 self.load_dmo(self, **kwargs)
             else:
-                if fortran:
-                    return self.load_fortran(self, read_metal=read_metal, **kwargs)
-                else:
-                    #self.load_2017(self, **kwargs)
-                    return self.load_general(self, **kwargs)
+                #if fortran:
+                return self.load_fortran(self, read_metal=read_metal, **kwargs)
+                #else:
+                #    return self.load_general(self, **kwargs)
 
     def get_dmo_ntot(self):
         ranges = self.ranges
@@ -439,7 +459,8 @@ class Part(Simbase):
         #from ..config import part_family
         # Move to config. -- There's already all the dicts needed. 
         
-        family_keys = [0,1,2,-2,3]
+        #family_keys = [0,1,2,-2,3]
+
         #(xmi, xma), (ymi, yma), (zmi, zma) = self.ranges
 
         if(cpulist is None):
@@ -447,12 +468,13 @@ class Part(Simbase):
         
         if (cpulist.size > 0):
             wdir = self.base + '/snapshots/'
-            readr.read_part(wdir, self.nout, cpulist, self.config['sim_type'], np.array(self.ranges).ravel(), True, self.config['longint'])
+            readr.read_part(wdir, self.nout, cpulist, self.config['sim_type'], 
+                            np.array(self.ranges).ravel(), True, self.config['longint'])
             #timer.record()
             
             # If outsdie ROI, byte_table(:,1)=-128
-            #print(*readr.byte_table[:10,0])
             bt = fromarrays([*readr.byte_table.T], dtype=[("family",'i1'),('tag','i1')])
+            
             ind_ok = np.where(bt['family'] > -128)[0]
             
             if(self.config['longint']):
@@ -466,19 +488,25 @@ class Part(Simbase):
                        *readr.byte_table.T]
 
             #timer.start('Building table for %d particles... ' % readr.integer_table.shape[0], 1)
-            part = fromarrays(arr, dtype=fornax_dtypes['raw_dtype'])[ind_ok]
+            #part = fromarrays(arr, dtype=fornax_dtypes['raw_dtype'])[ind_ok]
+
+            print("aaaaaaaa", self.rur_dtype)
+            part = fromarrays(arr, dtype=self.rur_dtype)[ind_ok]
             # deallocate fortran memory
             readr.close()
             
             # copy memory
-            for (pt, fam) in zip(self.pt, family_keys):
+            for (pt, fam) in zip(self.pt, self.family_keys):
+                #print('family', fam)
                 tmp = part[part['family']==fam]
+                #print("FORNAX dtype", fornax_dtypes[pt])
                 to_store = np.zeros(len(tmp), dtype=fornax_dtypes[pt])
                 for dt in fornax_dtypes[pt]:
                     try:
                         to_store[dt] = tmp[dt]
                     except:
                         print("skipping", dt)
+                #print("setting attributes:", pt)
                 setattr(self, pt, to_store)
 
     def load_fortran(self,
@@ -487,10 +515,7 @@ class Part(Simbase):
                      return_whole=False,
                      verbose=False):
         """
-
         # parameters:
-
-
 
         # NOTE:
         part_load_module.load_part returns only two types of particles: star and DM.
