@@ -271,7 +271,7 @@ class Sim(Simbase):
         self.config = empty_config()
         self.config['dmo'] = dmo
         self.config['cosmo'] = cosmo
-        self.config['sim_type'] = sim_type
+        self.config['sim_type'] = sim_type.lower()
         self.data_dir = data_dir
         self.add_info()
         # set_data_dir and set_range needs info instance be exist.
