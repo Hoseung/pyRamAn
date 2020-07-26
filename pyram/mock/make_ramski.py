@@ -20,8 +20,8 @@ def write_ski(repo, gid, nout, skifile, arr, params, pixel_scale=35):
     else:
         fovx*=2
         fovy*=2
-        print("No need to increase FoV")
-    # load values from JP's value
+
+    print("FoV", fovx, fovy)
     skifile.setIntAttribute('//MonteCarloSimulation', 'numPackets', params[0]['nphoton'])
     skifile.setFloatAttribute('//MonteCarloSimulation/mediumSystem/MediumSystem/media/AdaptiveMeshMedium', 'minX', minX)
     skifile.setFloatAttribute('//MonteCarloSimulation/mediumSystem/MediumSystem/media/AdaptiveMeshMedium', 'maxX', maxX)
@@ -86,7 +86,6 @@ def make_ram_input(wdir, nout, gcat, fsave,
     # Note that I will not use incl, azim from this measurement.
     print("min, max", minx, maxx, miny, maxy, minz, maxz)
     print("radius", radius_in_kpc)
-    print("FoV", fovx, fovy)
     print(minx, maxx, miny, maxy, minz, maxz)
 
     print("Xrange", centers[0]-radius, centers[0]+radius)
@@ -195,6 +194,7 @@ def make_ram_input(wdir, nout, gcat, fsave,
             ax.set_aspect("equal")
         axs[1,1].text(0.1,0.1,'{:.2f} Msun'.format(np.log10(gcat['m'])), transform=ax.transAxes)
         plt.savefig(dir_out+ f"{gid:05d}_stellar_maps.png", dpi=200)
+        plt.close('all')
     
     # update .ski immediately
     fn_template = './template_zubko.ski'
