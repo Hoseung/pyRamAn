@@ -390,7 +390,7 @@ class Sim(Simbase):
             self.tc = Timeconvert(self.info)
             self.info.tGyr = self.tc.time2gyr(self.info.time, zred_now = self.info.zred)
 
-    def add_part(self, ptypes=[], load=True, fortran=True, dmo=False, **kwargs):
+    def add_part(self, ptypes=None, load=True, fortran=True, dmo=False, **kwargs):
         """
         Add a particle instance to the simulation instance.
         Requires types of particles and particle data.
