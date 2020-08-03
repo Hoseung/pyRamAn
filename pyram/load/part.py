@@ -187,13 +187,14 @@ class Part(Simbase):
         if load: self.load(fortran=fortran)
 
     def set_dtype(self, ptypes):
+        self.setwhattoread(ptypes)
         if self.classic_format:
             # check if star particle exists
             dtype_name = self.config['sim_type']
             if self.nstar == 0: #NOPE, has_star_this_snapshot
                 dtype_name += '_dm_only'
             self.rur_dtype = part_dtype[dtype_name]
-            self.setwhattoread(ptypes)
+            
         elif(self.longint):
             if(self.config['sim_type'] in ['iap', 'gem', 'nh']):
                 self.rur_dtype = part_dtype['gem_longint']
@@ -558,7 +559,6 @@ class Part(Simbase):
                     for i, tag in enumerate(['x','y','z','vx','vy','vz']):
                         self.tracer[tag] = part_float[ind_tracer,i]
                     self.tracer['id'] = part_int[ind_tracer]
-
             else:
                 bt = fromarrays([*readr.byte_table.T], dtype=[("family",'i1'),('tag','i1')])
                 ind_ok = np.where(bt['family'] > -128)[0]
