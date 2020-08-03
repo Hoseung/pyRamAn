@@ -402,8 +402,9 @@ class Sim(Simbase):
                 ["dm id pos"] or ["dm id pos", "star mass vel"]
 
         """
-        if dmo:
-            self.dmo = True
+        # Overwrite
+        self.dmo = True
+        
         from . import part
         print("Types of particles you want to load are: ", ptypes)
 
@@ -423,9 +424,7 @@ class Sim(Simbase):
         print("A particle instance is created\n")
 
         if load:
-            read_metal=False
-            if "metal" in ptypes:
-                read_metal=True
+            read_metal="metal" in ptypes
             self.part.load(fortran=fortran, read_metal=read_metal)
         else:
             print("Use part.load() to load particle")

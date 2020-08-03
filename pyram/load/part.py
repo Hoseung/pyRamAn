@@ -67,9 +67,10 @@ class Ptypes():
 
     def _add_sink(self):
         self.sink = Ptype()
+
 class Part(Simbase):
     """
-    Particle data container supports different types of particles,
+    Particle data container supports different types of particles
     and some meta data.
 
     DM, star, sink
@@ -83,24 +84,23 @@ class Part(Simbase):
     # (Think about it, that's very strange).
     # Instead, Simbase.__init__ is overridden.
 
-    def __init__(self, config, parent=None, nout=None, info=None, ptypes=None, base='./',
-                 region=None, ranges=[[0,1]]*3, cpus=None,
-                 cpu_fixed=False,
-                 data_dir='snapshots/',
-                 dmref=False,
-                 dmvel=False,
-                 dmmass=True,
-                 load=False,
-                 fortran=True,
-                 verbose=False):
+    def __init__(self, config, nout=None, info=None, 
+                ptypes=None, base='./',
+                region=None, ranges=[[0,1]]*3, cpus=None,
+                cpu_fixed=False,
+                data_dir='snapshots/',
+                dmref=False,
+                dmvel=False,
+                dmmass=True,
+                load=False,
+                fortran=True,
+                verbose=False):
         """
         parameters
         ----------
         config : Dict with simulation type information.
             ['cosmo':[True, False], 'part':['yzics', 'nh', 'fornax', ...]
-        parent : a super class.
-            If given, all the values of (non callable) attributes from the parent are inherited.
-        ptypes : list of particle type and information.
+        ptypes : list of particle types and quantities.
                 ["dm id pos"] or ["dm id pos", "star mass vel"]
         dmo : logical
             If True, a faster, DMO read routine invoked (NOT distingushing particle types).
@@ -110,6 +110,9 @@ class Part(Simbase):
             Set True if the snapshot has DM ref information.
         dmvel : logical
 
+        fortran : logical
+            use fortran function to load data. True by Default
+        verbose : logical
         Notes
         -----
         info is required for domain decomposition.
@@ -127,6 +130,7 @@ class Part(Simbase):
         # To do: Need to work out cpu list mechanism
         self.cpus = cpus
         self.cpu_fixed=cpu_fixed
+        self.classic_format = self.config['sim_type'] not in (['fornax', 'ng'])
         try:
             self.ncpu = len(self.cpus)
         except:
@@ -143,8 +147,9 @@ class Part(Simbase):
         
         self.data_dir = data_dir
         
-        if not ptypes == None: self.setwhattoread(ptypes)
-        self.part_dtype = []
+        self.pt = []
+        self.pq = []
+        self.pqset = set([])
         self.dmo = config['dmo']
         self.dm_with_ref = dmref
         self.dm_with_vel = dmvel
@@ -178,22 +183,34 @@ class Part(Simbase):
             self._get_basic_info()
             # Depending on user's choice, generate dm, star, sink classes
 
-        classic_format = False
-        if classic_format:
+        if ptypes is not None: self.set_dtype(ptypes)
+        if load: self.load(fortran=fortran)
+
+    def set_dtype(self, ptypes):
+        if self.classic_format:
             # check if star particle exists
-            if('star' in self.pt):
-                # This only applies to old RAMSES particle format
-                if(self.config['sim_type'] == 'nh'):
-                    self.rur_dtype = part_dtype['nh_dm_only']
-                elif (self.config['sim_type'] == 'yzics'):
-                    self.rur_dtype = part_dtype['yzics_dm_only']
-            if(self.longint):
-                if(self.config['sim_type'] == 'iap' or self.config['sim_type'] == 'gem' or self.config['sim_type'] == 'fornax'):
-                    self.rur_dtype = part_dtype['gem_longint']
+            dtype_name = self.config['sim_type']
+            if self.nstar == 0: #NOPE, has_star_this_snapshot
+                dtype_name += '_dm_only'
+            self.rur_dtype = part_dtype[dtype_name]
+            self.setwhattoread(ptypes)
+        elif(self.longint):
+            if(self.config['sim_type'] in ['iap', 'gem', 'nh']):
+                self.rur_dtype = part_dtype['gem_longint']
         else:
-            self.rur_dtype = part_dtype[self.config['sim_type']]
-        if ptypes is not None and load:
-            self.load(fortran=fortran)
+            self.rur_dtype = part_dtype[self.config['sim_type']]        
+
+    def _read_nstar(self):
+        """
+        use _get_basic_info instead.
+        """
+        fn = self.base + f'/snapshots/output_{self.nout:05d}/part_{self.nout:05d}.out00001'
+        with open(fn, 'rb') as part_file:
+            part_file.skip_records(4)
+            if(not self.longint):
+                return part_file.read_ints()
+            else:
+                return part_file.read_longs()
 
     def mass2msun(self):
         """
@@ -229,9 +246,7 @@ class Part(Simbase):
         Because there is no distinction b/w particles in old format, you need to read all ID
         even if you want only DM IDs.
         """
-        self.pt = []
-        self.pq = []
-        self.pqset = set([])
+
         self.family_keys = []
         for pp in ptypes:
             pp = pp.lower()
@@ -289,10 +304,13 @@ class Part(Simbase):
             print("Loading particles in {}-th cpu output out of {} cpus.\r"
             .format(icpu, len(self.cpus)))
 
-    def load(self, fortran=True, read_metal=True, **kwargs):
+    def load(self, fortran=True, read_metal=True, verbose=False, ptypes=None, **kwargs):
         """ tests whether the files exist, and then calls load() or load_dmo()
         """
-        if self.config['sim_type'] == "fornax":
+        if verbose:
+            self.print_cpu()
+        if ptypes is not None: self.set_dtype(ptypes)
+        if self.config['sim_type'] in ["fornax", "nh"]:
             self.load_fortran_new(self, **kwargs)
         else:
             if self.dmo:
@@ -469,45 +487,100 @@ class Part(Simbase):
         
         if (cpulist.size > 0):
             wdir = self.base + '/snapshots/'
+
             readr.read_part(wdir, self.nout, cpulist, self.config['sim_type'], 
                             np.array(self.ranges).ravel(), True, self.config['longint'])
-            #timer.record()
             
-            # If outsdie ROI, byte_table(:,1)=-128
-            bt = fromarrays([*readr.byte_table.T], dtype=[("family",'i1'),('tag','i1')])
-            
-            ind_ok = np.where(bt['family'] > -128)[0]
-            
-            if(self.config['longint']):
-                arr = [*readr.real_table.T, 
-                       *readr.long_table.T 
-                       *readr.integer_table.T, 
-                       *readr.byte_table.T]
+            if self.config['sim_type'] == 'nh':
+                part_float = fromarrays([*readr.real_table.T],
+                 dtype=[ii for ii in self.rur_dtype if ii[1] == 'f8'])
+                part_int = fromarrays([*readr.integer_table.T],
+                 dtype=[('id', 'i4'), ('level', 'u1'), ('cpu', 'i4')])
             else:
-                arr = [*readr.real_table.T, 
-                       *readr.integer_table.T, 
-                       *readr.byte_table.T]
+                #timer.record()
+                # If outsdie ROI, byte_table(:,1)=-128
+                if(self.config['longint']):
+                    arr = [*readr.real_table.T, 
+                        *readr.long_table.T 
+                        *readr.integer_table.T, 
+                        *readr.byte_table.T]
+                else:
+                    arr = [*readr.real_table.T, 
+                        *readr.integer_table.T, 
+                        *readr.byte_table.T]
 
             #timer.start('Building table for %d particles... ' % readr.integer_table.shape[0], 1)
             #part = fromarrays(arr, dtype=fornax_dtypes['raw_dtype'])[ind_ok]
+            if self.config['sim_type'] == 'nh':
+                from .dtypes import nh_dtypes
+                #print(part_float.dtype)
+                if self.nstar > 0:
+                    isnt_star = part_float['time'] == 0
+                    
+                    if 'star' in self.pt:
+                        dtype_star = nh_dtypes['dtype_star']
 
-            part = fromarrays(arr, dtype=self.rur_dtype)[ind_ok]
+                        #if read_metal:
+                        dtype_star.update({'metal': (('<f8', 1), 72)})
+                        istar = np.where(~isnt_star)[0]
+                        self.star = np.zeros(len(istar), dtype=dtype_star)
+                        for i, tag in enumerate(['x','y','z','vx','vy','vz','m', 'time', 'metal']):
+                            self.star[tag] = part_float[tag][istar]
+                        #if read_metal:
+                        #self.star['metal'] = part_float[tag][istar]
+                        self.star['id'] = part_int['id'][istar]
+                    if 'sink' in self.pt:
+                        dtype_sink = dtype_dm
+                        is_psuedo = isnt_star * (part_int < 0)
+                        ind_sink = np.where(is_psuedo*(part_float[:,6] > 0))[0]
+                        self.sink = np.zeros(self.nsink, dtype=dtype_sink)
+                        for i, tag in enumerate(['x','y','z','vx','vy','vz','m']):
+                            self.sink[tag] = part_float[ind_sink,i]
+                        self.sink['id'] = part_int['id'][ind_sink]
+                else:
+                    isnt_star = np.arange(len(part_float))
+                if 'dm' in self.pt:
+                    dtype_dm = nh_dtypes['dtype_dm']
+                    ind_dm = np.where(isnt_star * part_int['id'] > 0)[0]
+                    self.dm = np.zeros(len(ind_dm), dtype=dtype_dm)
+                    for i, tag in enumerate(['x','y','z','vx','vy','vz','m']):
+                        self.dm[tag] = part_float[tag][ind_dm]
+                    self.dm['id'] = part_int['id'][ind_dm]
+                if 'tracer' in self.pt:
+                    """
+                    Todo 
+
+                    implement tracer reader - or is it in part?
+                    """
+                    dtype_tracer = nh_dtypes["dtype_tracer"]
+                    ind_tracer = np.where(is_psuedo * (part_float[:,6] == 0))[0]
+                    self.tracer = np.zeros(self.ntracer, dtype=dtype_tracer)
+                    for i, tag in enumerate(['x','y','z','vx','vy','vz']):
+                        self.tracer[tag] = part_float[ind_tracer,i]
+                    self.tracer['id'] = part_int[ind_tracer]
+
+            else:
+                bt = fromarrays([*readr.byte_table.T], dtype=[("family",'i1'),('tag','i1')])
+                ind_ok = np.where(bt['family'] > -128)[0]
+                part = fromarrays(arr, dtype=self.rur_dtype)[ind_ok]
+                
+                # copy memory
+                for (pt, fam) in zip(self.pt, self.family_keys):
+                    #print('family', fam)
+                    tmp = part[part['family']==fam]
+                    #print("FORNAX dtype", fornax_dtypes[pt])
+                    to_store = np.zeros(len(tmp), dtype=fornax_dtypes[pt])
+                    for dt in fornax_dtypes[pt]:
+                        try:
+                            to_store[dt] = tmp[dt]
+                        except:
+                            print("skipping", dt)
+                    #print("setting attributes:", pt)
+                    setattr(self, pt, to_store)
+            
             # deallocate fortran memory
             readr.clear_all()
             
-            # copy memory
-            for (pt, fam) in zip(self.pt, self.family_keys):
-                #print('family', fam)
-                tmp = part[part['family']==fam]
-                #print("FORNAX dtype", fornax_dtypes[pt])
-                to_store = np.zeros(len(tmp), dtype=fornax_dtypes[pt])
-                for dt in fornax_dtypes[pt]:
-                    try:
-                        to_store[dt] = tmp[dt]
-                    except:
-                        print("skipping", dt)
-                #print("setting attributes:", pt)
-                setattr(self, pt, to_store)
 
     def load_fortran(self,
                      return_meta=False,
