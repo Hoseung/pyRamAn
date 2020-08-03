@@ -129,6 +129,9 @@ def read_header(f, dtypes, check=True):
     ----
     Handle string 
     """
+    if not isinstance(dtypes, np.dtype):
+        dtypes = np.dtype(dtypes)
+
     q = np.empty(1, dtype=dtypes)
     for i in range(len(dtypes.fields)):
         data = read_fortran(f, dtypes[i], check=check)
