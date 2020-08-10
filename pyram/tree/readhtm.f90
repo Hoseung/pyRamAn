@@ -36,7 +36,6 @@ contains
       if(integer_table(ihalo,4).le.0) integer_table(ihalo,4) = integer_table(ihalo,1)
       if(integer_table(ihalo,3).le.0) integer_table(ihalo,3) = 1
       if(.not. dp) then
-         !print *, "Float"
          !real_table(ihalo,1) = aexp ! aexp
          read(unitfile) real_table(ihalo,1) ! m
          read(unitfile) real_table(ihalo,2:4) ! x
@@ -53,8 +52,8 @@ contains
             read(unitfile)
             read(unitfile)
          else
-            read(unitfile) real_table(ihalo,20:23) ! rvir, mvir, tvir, cvel
-            read(unitfile) real_table(ihalo,24:25) ! rho0, rc
+            read(unitfile) real_table(ihalo,19:22) ! rvir, mvir, tvir, cvel
+            read(unitfile) real_table(ihalo,23:24) ! rho0, rc
             
          end if
       else
@@ -78,7 +77,6 @@ contains
             read(unitfile) real_table_dp(ihalo,23:24) ! rho0, rc
          end if
       end if
-      !print *, "ID", integer_table(ihalo,2)
 
       return
    end subroutine read_halo_brick
@@ -106,14 +104,14 @@ contains
    end subroutine read_halo_member
 
 !#########################################################
-   subroutine allocate_table(nhalo, nint, nreal, dp)
+   subroutine allocate_table(nhalo, ninteger, nreal, dp)
 !#########################################################
       implicit none
-      integer(kind=4) :: nhalo, nint, nreal
+      integer(kind=4) :: nhalo, ninteger, nreal
       logical :: dp
 
-      call close()
-      allocate(integer_table(1:nhalo, 1:nint))
+      call clear_all()
+      allocate(integer_table(1:nhalo, 1:ninteger))
       if(dp) then
          allocate(real_table_dp(1:nhalo, 1:nreal))
       else
@@ -123,22 +121,22 @@ contains
    end subroutine allocate_table
 
 !#########################################################
-   subroutine close()
+   subroutine clear_all()
 !#########################################################
       implicit none
-      if(allocated(integer_table))deallocate(integer_table)
-      if(allocated(real_table))deallocate(real_table)
-      if(allocated(real_table_dp))deallocate(real_table_dp)
-      if(allocated(part_ids))deallocate(part_ids)
-
-   end subroutine close
+      if(allocated(integer_table)) deallocate(integer_table)
+      if(allocated(real_table)) deallocate(real_table)
+      if(allocated(real_table_dp)) deallocate(real_table_dp)
+      if(allocated(part_ids)) deallocate(part_ids)
+      
+   end subroutine clear_all
 
 
 !#########################################################
    subroutine read_tree_brick(halofile)
 !#########################################################
       implicit none
-      integer(kind=4)  :: unitfile,nhalo_snap,nmem=0,i
+      integer(kind=4)  :: unitfile,nhalo_snap,i
       real(kind=4)    :: aexp, massp, omega_t, age_univ
       integer(kind=4) :: nbodies, nb_of_halos, nb_of_subhalos!, nhalo
       character(len=128):: halofile
@@ -169,9 +167,9 @@ contains
    subroutine read_member_brick(halofile)
 !#########################################################
       implicit none
-      integer(kind=4)  :: unitfile,ierr,nhalo_snap,nmem=0,i
+      integer(kind=4)  :: unitfile,nhalo_snap,i
       !real(kind=4)    :: aexp, massp, omega_t, age_univ
-      integer(kind=4) :: nbodies, nb_of_halos, nb_of_subhalos!, nhalo
+      integer(kind=4) :: nb_of_halos, nb_of_subhalos!, nhalo
       character(len=128):: halofile
 
       unitfile = 55
@@ -260,81 +258,16 @@ contains
             end if
          end do
       end if
-      print *, "Done"
 
    end subroutine read_bricks
 
 !#########################################################
-   subroutine read_single_tree(treefile,is_gal, dp_ini)
+   subroutine read_halo(unitfile)!, aexp, age_univ)
 !#########################################################
       implicit none
-      integer(kind=4) :: unitfile, nsteps, st, j
-      character(len=10) :: iout_format
-      logical :: ok_exist
-
-      integer(kind=4), dimension(:), allocatable :: nb_of_halos, nb_of_subhalos
-      real(kind=4),    dimension(:), allocatable :: aexp, omega_t, age_univ
-
-      character(len=128),intent(in) :: treefile
-      logical,intent(in) :: is_gal, dp_ini
-
-      ihalo = 1
-      galaxy = is_gal
-      dp = dp_ini
-      unitfile = 55
-
-      inquire(file=treefile, exist=ok_exist)
-      if(ok_exist)then
-         open(unit=unitfile,file=treefile, form='unformatted', status='old')
-         read(unitfile) nsteps
-
-         write(*,*)'Number of steps found:', nsteps
-
-         allocate(nb_of_halos(1:nsteps))
-         allocate(nb_of_subhalos(1:nsteps))
-
-         allocate(aexp(1:nsteps))
-         allocate(omega_t(1:nsteps))
-         allocate(age_univ(1:nsteps))
-
-         read(unitfile) nb_of_halos, nb_of_subhalos
-
-         nhalo = 0
-         do st = 1, nsteps
-            nhalo = nhalo + nb_of_halos(st) + nb_of_subhalos(st)
-         end do
-
-         write(*,*)'Total number of halos:', nhalo
-         call allocate_table(nhalo, 18, 30, dp)
-
-         read(unitfile) aexp
-         read(unitfile) omega_t
-         read(unitfile) age_univ
-
-         write(6, '(a)', advance='no') 'Progress: '
-
-         do st = 1, nsteps
-            call progress_bar(st, nsteps)
-            do j = 1, nb_of_halos(st)+nb_of_subhalos(st)
-               call read_halo(unitfile, st, aexp(st), age_univ(st))
-               ihalo = ihalo + 1
-            end do
-         end do
-         close(unitfile)
-      else
-         write(*,*) "ERROR: Tree file not found."
-      end if
-
-   end subroutine read_single_tree
-
-
-!#########################################################
-   subroutine read_halo(unitfile, st, aexp, age_univ)
-!#########################################################
-      implicit none
-      integer(kind=4) :: st, nb_fathers, nb_sons, temp_space, i, max_ind
+      integer(kind=4) :: nb_fathers, nb_sons, temp_space, i, max_ind
       integer(kind=4) :: unitfile
-      real(kind=4)    :: aexp, age_univ
+      !real(kind=4)    :: aexp, age_univ
       real(kind=8)    :: macc
       integer(kind=4), dimension(:), allocatable :: integer_temp
       real(kind=4),    dimension(:), allocatable :: real_temp

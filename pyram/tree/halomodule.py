@@ -144,7 +144,6 @@ class HaloMeta():
         if load:
             self.load(add_fields=add_fields)
 
-
     def set_info(self, info):
         if info is None:
             try:
@@ -155,7 +154,6 @@ class HaloMeta():
         else:
             self.info = info
 
-
     def _load_info(self):
         #if self.verbose:
         if True:
@@ -163,7 +161,6 @@ class HaloMeta():
             print("[Halo.load_info] nout = {}, base ={}".format(self.nout, self.base))
         self.info = Info(nout=self.nout, base=self.base, load=True)
         if self.verbose : print("[Halo.load_info] info is loaded")
-
 
     def set_halofinder(self, halofinder):
         from ..utils import util
@@ -177,7 +174,6 @@ class HaloMeta():
             print("Don't understand what you mean:" + halofinder)
             answer = None
         self.halofinder = answer
-
 
     def set_nout(self, nout):
         self.nout = nout
@@ -250,8 +246,15 @@ class Halo(HaloMeta):
             if self.verbose:
                 print(self.fn)
                 print("Loading file:", self.fn)
-                print("double :", double, "Pure Python:", pure_python, "read_mbp",self.read_mbp)
-            self.load_hm(self.fn, double=double, pure_python=pure_python, add_fields=add_fields)
+                print("double :", double,
+                      "Pure Python:", pure_python, 
+                      "read_mbp",self.read_mbp,
+                      "add_fields", add_fields)
+            self.load_hm(self.fn,
+                        double=double,
+                        pure_python=pure_python,
+                        add_fields=add_fields,
+                        debug=False)
             if self.info is None:
                 info = Info(base = self.base, nout = self.nout, load=True)
                 self.set_info(info)
@@ -260,7 +263,7 @@ class Halo(HaloMeta):
         else:
             print("Not converting unit!")
 
-    def load_hm(self, fn, double=None, pure_python=None, add_fields=None):
+    def load_hm(self, fn, double=None, pure_python=None, add_fields=None, debug=False):
         if double == None:
             double = self.double
         if pure_python == None:
@@ -273,6 +276,7 @@ class Halo(HaloMeta):
                                     read_mbp=self.read_mbp,
                                     new_fields=add_fields,
                                     auto_add_field=False)
+
         if pure_python:
             brick_data = f.read()
             offset, header_info = load_header(brick_data, double=double)
@@ -285,28 +289,32 @@ class Halo(HaloMeta):
                                      is_gal=self.is_gal, double=double)
             f.close()
         else:
-
+            self.return_id=0
             self.nbodies = read_fortran(f, np.dtype('i4'), 1)[0]
             f.seek(0)
 
             ###############################
             # Read header
             #with open(fname, "rb") as f:
-            brick_data = f.read()
-            
+            brick_data = f.read()  
+            if debug:
+                print("data brick is read")
             offset, header_info = load_header(brick_data, double=double)
+            if debug:
+                print("header_info", header_info)
             self.nbodies, self.aexp, self.omegat, self.age, self.nhalo, self.nsub = header_info
             f.close()
-            self.return_id=0
             readh.read_bricks(fname[:-3], self.is_gal, self.nout, self.nout+1, self.return_id, double)
-
+            if debug:
+                print("readh.read_bricks done")
             if(not double):
                 self.data = fromarrays([*readh.integer_table.T, *readh.real_table.T], dtype=dtypes_halo)
                 dtype_float = "<f4"
             else:
                 self.data = fromarrays([*readh.integer_table.T, *readh.real_table_dp.T], dtype=dtypes_halo)
                 dtype_float = "<f8"
-
+            if debug:
+                print("fromarrays done")
             #array = HaloMaker.unit_conversion(array, snap)
             add_dtype = [("pos", dtype_float, (3,), "x", 0),
                         ("vel", dtype_float, (3,), "vx", 0),
@@ -343,7 +351,7 @@ class Halo(HaloMeta):
                 iskip += hnp
 
         #############################
-        readh.close()
+        readh.clear_all()
 
 
     def refactor_hm(self):
