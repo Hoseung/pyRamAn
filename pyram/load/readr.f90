@@ -163,7 +163,6 @@ contains
                 read(part_n) byte_table(npart_c:npart_c+npart-1, 1)
                 read(part_n) byte_table(npart_c:npart_c+npart-1, 2)
 
-
                 ! If star or sink particles are activated, RAMSES adds epoch, metallicity information for particles.
                 if(nstar > 0 .or. nsink > 0) then
                     read(part_n) real_table(npart_c:npart_c+npart-1, 2*ndim+2)
@@ -270,7 +269,6 @@ contains
 
         open(unit=sink_n, file=sink_filename(repo, iout, icpu), form='unformatted')
         rewind(sink_n)
-                
         read(sink_n) nsink
         read(sink_n) nindsink
         
