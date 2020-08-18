@@ -29,6 +29,9 @@ def get_minimal_info(info):
 
 
 class Info:
+    """
+    info.ranges is first priority.
+    """
     def __init__(self, nout = None, base = './',
                  fn = None, load=True, data_dir=None,
                  cosmo=True):
@@ -41,20 +44,52 @@ class Info:
         self.cosmo=cosmo
         if fn is not None:
             nout = int(fn.split("info_")[1].split(".txt")[0])
-
+        self.ranges=None 
         if nout is not None or base is not None or fn is not None:
             self.setup(nout=nout, base=base, fn=fn)
         if load:
             self.read_info()
 
+    @property
+    def base(self):
+        return self._base
+    @base.setter
+    def base(self, base):
+        from os import path
+        self._base = path.abspath(base)
+
+    @property
+    def nout(self):
+        return self._nout
+    @nout.setter
+    def nout(self, nout):
+        """
+            Sets output number.
+            a list of nouts will be supported in the future, soon, I hope.
+        """
+        self._nout = nout
+        self.snout = str(self.nout).zfill(5)
+
+    @property
+    def data_dir(self):
+        return self._data_dir
+    @data_dir.setter
+    def data_dir(self, data_dir):
+        """
+        By default, simulation outputs are in simulation_base/snapshots/
+        """
+        from os import path
+        #self.data_dir =  path.join(self.base, '', data_dir, '')
+        self._data_dir = path.join('', data_dir, '')
+        
     def setup(self, nout = None, base = './', fn = None):
         try:  # set nout
-            self._set_nout(nout)
+            self.nout = nout
         except:
             print("info: NOUT is not given")
 
         try: # set base directory
-            self._set_base(base)
+            self.base = base
         except:
             print("info: BASE is not given")
 
@@ -84,13 +119,12 @@ class Info:
                     print("Info file name is not given. ")
                     print("Current value is :", self.fn)
 
-    def _set_base(self, base):
-        self.base = base
+    #def _set_base(self, base):
+    #    self.base = base
 
-    def _set_nout(self, nout):
-        self.nout = nout
-        self.snout = str(self.nout).zfill(5)
-
+    #def _set_nout(self, nout):
+    #    self.nout = nout
+    #    self.snout = str(self.nout).zfill(5)
     def _set_ranges(self, ranges):
         self.ranges = ranges
 
@@ -162,7 +196,7 @@ class Info:
             if base is None:
                 raise ValueError("Working directory is not determined")
             else:
-                self._set_base(base)
+                self.base = base
 
         if self.nout is None:
             if nout is None:

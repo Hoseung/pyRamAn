@@ -7,6 +7,7 @@ Created on Thu Mar 26 17:44:27 2015
 import numpy as np
 from ..utils.io_module import read_header, read_fortran, skip_fortran
 from ..utils.cosmology import Timeconvert
+from .config import Config
 
 class Simbase():
     """
@@ -23,11 +24,76 @@ class Simbase():
         self.cpu_fixed=False
         self.cpus=None
         self.verbose=verbose
+        self.base='./'
+        self.nout=None
+        self.data_dir='./snapshots/'
+    """
+    Programming note.
+    No need to use .gettter and .setter always.
+    Just make values public if they need to be accessed.
+    If an additional operation is needed on setting a variable,
+    use @property macro like this.
 
-    def set_ranges(self, ranges=[[0, 1], [0, 1], [0, 1]]):
+    Here, _base is encapsulated.
+    """
+    @property
+    def base(self):
+        return self._base
+    @base.setter
+    def base(self, base):
+        from os import path
+        self._base = path.abspath(base)
+
+    @property
+    def nout(self):
+        return self._nout
+    @nout.setter
+    def nout(self, nout):
+        """
+            Sets output number.
+            a list of nouts will be supported in the future, soon, I hope.
+        """
+        self._nout = nout
+
+    @property
+    def data_dir(self):
+        return self._data_dir
+    @data_dir.setter
+    def data_dir(self, data_dir):
+        """
+        By default, simulation outputs are in simulation_base/snapshots/
+        """
+        from os import path
+        #self.data_dir =  path.join(self.base, '', data_dir, '')
+        self._data_dir = path.join('', data_dir, '')
+
+    
+    #def set_base(self, base):
+    #    """
+    #        Sets Working directory.
+    #    """
+    #    from os import path
+    #    self.base = path.abspath(base)
+    #    # self.show_base()
+
+    #def show_base(self):
+    #    print("setting the base(working) directory to :", self.base)
+    
+    def set_fnbase(self, base, data_dir, out_type):
+        """
+            Sets snapshot directory.
+        """
+        from os import path
+        snout = str(self.nout).zfill(5)
+        self._fnbase = path.abspath(path.join(base, data_dir +'output_' + snout + f'/{out_type}_' + snout + '.out'))
+    
+    def set_ranges(self, ranges=[[0, 1], [0, 1], [0, 1]], **kwargs):
+        """
+        update ranges and cpulist
+        """
         if ranges is not None:
-            if not hasattr(self, "amr"):
-                self.add_amr(load=False)
+            #if not hasattr(self, "amr"):
+            #    self.add_amr(load=False)
 
             nr = np.asarray(ranges) # Now it is a class
             if not(nr.shape[0] == 3 and nr.shape[1] == 2):
@@ -39,23 +105,18 @@ class Simbase():
                 print('example : [[0.1,0.3],[0.2,0.4],[0.6,0.8]] \n')
             else:
                 self.ranges = ranges
-                self.set_cpus()
+                self.set_cpus(**kwargs)
         else:
             self.ranges = None
 
-    def add_amr(self, load=False):
-        self.amr = Amr(info=self.info, cpus=self.cpus, load=load)
-        if self.verbose: 
-            print("An AMR instance is created\n", self.__class__.__name__)
-
-    def set_cpus(self, cpus=None, lock=False):
+    def set_cpus(self, cpus=None, lock=False, amrheader=None):
         """
         Determine the list of CPUs for the range.
         Requires self.range.
         """
         if cpus is None:
             cpus = self._hilbert_cpulist(self.info, self.ranges,
-                                         amrheader=self.amr.header)
+                                         amrheader=amrheader)
         if not self.cpu_fixed:
             self.cpus = np.array(cpus)
         # Lock, but only if there is a valid list of cpus.
@@ -202,18 +263,6 @@ class Simbase():
 
         return np.sort(cpu_list)
 
-def empty_config():
-    conf = {'cosmo':None,
-            'sim_type':None,
-            'dmo':None,
-            'longint':None,
-            'sink_path':'./',
-            }
-    return conf
-"""
-Config templates are in config.py. But what is actually used need to belong to a sim instance.
-"""
-
 
 class Sim(Simbase):
     """
@@ -268,11 +317,9 @@ class Sim(Simbase):
         self.nout = nout
         self.base = base
         # info appreciates nout and base (not mandatary, though)
-        self.config = empty_config()
-        self.config['dmo'] = dmo
-        self.config['cosmo'] = cosmo
-        self.config['sim_type'] = sim_type.lower()
+        self.config = Config(dmo=dmo, cosmo=cosmo, sim_type=sim_type.lower())
         self.data_dir = data_dir
+        self.config.data_dir = data_dir
         self.add_info()
         # set_data_dir and set_range needs info instance be exist.
         self.set_ranges(ranges)
@@ -298,58 +345,21 @@ class Sim(Simbase):
         self.add_info()
         # set_data_dir and set_range needs an info instance.
         self.set_ranges(ranges)
+        self.info.ranges = self.ranges
+        self.info.cpus = self.cpus
 
         if self._all_set():
-            #self.add_amr()
+            self.add_amr(self.info)
             if self.ranges is not None:
                 self.set_cpus(self._hilbert_cpulist(self.info, self.ranges))
         print('Simulation set up.')
 
-    """
-    Programming note.
-    No need to use .gettter and .setter always.
-    Just make values public if they need to be accessed.
-    If an additional operation is needed on setting a variable,
-    use @property macro like this.
+    def add_amr(self, load=False):
+        self.amr = Amr(info=self.info, cpus=self.cpus, load=load)
+        if self.verbose: 
+            print("An AMR instance is created\n", self.__class__.__name__)
 
-    Here, _base is encapsulated.
-    """
-    @property
-    def base(self):
-        return self._base
-    @base.setter
-    def base(self, base):
-        from os import path
-        self._base = path.abspath(base)
-
-    @property
-    def nout(self):
-        return self._nout
-    @nout.setter
-    def nout(self, nout):
-        """
-            Sets output number.
-            a list of nouts will be supported in the future, soon, I hope.
-        """
-        self._nout = nout
-
-    @property
-    def data_dir(self):
-        return self._data_dir
-    @data_dir.setter
-    def data_dir(self, data_dir):
-        """
-        By default, simulation outputs are in simulation_base/snapshots/
-        """
-        from os import path
-        #self.data_dir =  path.join(self.base, '', data_dir, '')
-        self._data_dir = path.join('', data_dir, '')
-
-    def show_base(self):
-        print("setting the base(working) directory to :", self.base)
-
-    def add_hydro(self, load=True, lmax=None, region=None, ranges=None,
-                  cpu=False, **kwargs):
+    def add_hydro(self, load=True, lmax=None, **kwargs):
         """
         Add a hydro instance to the simulation instance.
 
@@ -361,21 +371,19 @@ class Sim(Simbase):
             If false, an hydro instance is added without cell data.
         """
         from . import hydro
-        if region is None:
-            region = self.region
-        if ranges is None:
-            ranges = self.ranges
 
-        self.hydro = hydro.Hydro(info=self.info,
-                                 cpus=self.cpus,
-                                 cpu_fixed=self.cpu_fixed,
-                                 region=region,
-                                 ranges=ranges)
+        # don't pass ranges or region. 
+        # Any value other than None will make the Hydro instance add its own amr
+        # and try to update the cpulist.
+        # Those values should only be given when Hydro class is used standalone.
+        self.hydro = hydro.Hydro(self.config, 
+                                 info=self.info,
+                                 cpu_fixed=self.cpu_fixed, **kwargs)
 
         if load :
             if lmax is None:
                 lmax = self.info.lmax
-            self.hydro.load(lmax=lmax, cpu=cpu, **kwargs)
+            self.hydro.load(lmax=lmax)
         else:
             print("Use hydro.amr2cell() to load hydro variables")
 
@@ -411,15 +419,10 @@ class Sim(Simbase):
         # To do. instead of specifying every variables,
         # make the Part object inherit common variables from the father class instance, sim.
         # use inspect module??
-        self.part = part.Part(info=self.info,
+        self.part = part.Part(self.config,
+                              info=self.info,
                               ptypes=ptypes,
-                              data_dir=self.data_dir,
-                              config=self.config,
-                              base=self.base,
-                              cpus=self.cpus,
                               cpu_fixed=self.cpu_fixed,
-                              region=self.region,
-                              ranges=self.ranges,
                               **kwargs)
         print("A particle instance is created\n")
 
@@ -617,7 +620,7 @@ class Amr(Simbase):
     AMR class, which is required by Hydro class.
     """
 
-    def __init__(self, nout=None, info=None, cpus=None, load=True):
+    def __init__(self, base='./', nout=None, info=None, cpus=None, load=True):
         import os
         """
         Parameters
@@ -628,20 +631,23 @@ class Amr(Simbase):
         super(Amr, self).__init__()
         if info is not None:
             self.info = info
+            self.nout = info.nout
         else:
             assert nout is not None, "either info or nout is required"
             from .info import Info
             print("[Amr.__init__] Loading info")
             self.info = Info(nout=nout)
-
-        snout = str(self.info.nout).zfill(5)
+        try:
+            self.base = self.info.base
+        except:
+            self.base = base
+        #snout = str(self.info.nout).zfill(5)
 
         # Update attributes
         if cpus is not None:
             self.cpus = cpus
 
-        self._fnbase = os.path.join(self.info.base, self.info.data_dir) +\
-                    'output_' + snout + '/amr_' + snout + '.out'
+        self.set_fnbase(self.base, self.info.data_dir, 'amr')
         try:
             f = open(self._fnbase + '00001', "rb")
         except:
@@ -655,12 +661,6 @@ class Amr(Simbase):
 
         # set_data_dir and set_range needs an info instance.
         self.set_ranges()
-
-        #if self._all_set():
-            #self.add_amr()
-        #if self.ranges is not None:
-        #    self.set_cpus(self._hilbert_cpulist(self.info, self.ranges,
-        #                                        amrheader=self.header))
 
         if load:
             self.load()

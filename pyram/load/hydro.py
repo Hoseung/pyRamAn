@@ -45,12 +45,13 @@ class Dummy():
 
 class Hydro(Simbase):
     def __init__(self,
+                 config,
                  nout=None,
                  info=None,
                  region=None,
                  ranges=None,
                  load=False,
-                 cosmo=True,
+                 #cosmo=True,
                  cpus=None,
                  cpu_fixed=None,
                  fields=None,
@@ -83,11 +84,16 @@ class Hydro(Simbase):
 
         """
         super(Hydro, self).__init__()
-        self.cosmo = cosmo
+        self.config=config
+        #self.cosmo = cosmo
         if info is None:
             assert nout is not None, "either info or nout is required"
             print("[Hydro.__init__] Loading info")
-            info = Info(nout=nout, cosmo=cosmo)
+            #info = Info(nout=nout, cosmo=cosmo)
+            info = Info(base=base,
+                        nout=nout, 
+                        cosmo=self.config.cosmo, 
+                        data_dir=data_dir)
         self.info = info
         self.nout = info.nout
         self.cpus = cpus
@@ -98,13 +104,19 @@ class Hydro(Simbase):
         except:
             self.ncpu = 0
 
+        try:
+            self.base = self.info.base
+        except:
+            self.base = base
+
         snout = str(info.nout).zfill(5)
         # file name
-        self.out_dir = 'snapshots/'
-        self._fnbase = info.base + '/' + self.out_dir \
-                                 + 'output_' + snout \
-                                 + '/hydro_' + snout \
-                                 + '.out'
+        #self.out_dir = 'snapshots/'
+        self.set_fnbase(self.base, self.info.data_dir, 'hydro')
+        #self.data_dir = info.base + '/' + self.out_dir \
+        #                         + 'output_' + snout \
+        #                         + '/hydro_' + snout \
+        #                         + '.out'
         self._get_basic_info()
         self.set_info(info)
         self.header.nvarh=nvarh
@@ -114,7 +126,8 @@ class Hydro(Simbase):
             self.set_ranges(ranges=ranges)
         elif hasattr(info, "ranges"):
             if info.ranges is not None:
-                self.set_ranges(ranges=info.ranges)
+                self.ranges=info.ranges
+                self.cpus = info.cpus
         else:
             self.set_ranges([[-9e9,9e9]] * 3)
 
@@ -124,7 +137,7 @@ class Hydro(Simbase):
 
     def _get_basic_info(self):
         try:
-            f = open(self._fbase + '00001', "rb")
+            f = open(self._fnbase + '00001', "rb")
         except:
             from glob import glob
             hydros = glob(self._fnbase + "*")
@@ -133,9 +146,60 @@ class Hydro(Simbase):
         self.header = Dummy()
         self._read_hydro_header(f)
 
+    def read_hydro_dscr(self):
+        def shorten(name):
+            if 'density' in name:
+                return name.replace('density', 'rho')
+            elif 'velocity_' in name:
+                return name.replace('velocity_', 'v')
+            elif 'pressure' in name:
+                return name.replace('pressure', 'temp')
+            elif 'metallicity' in name:
+                return name.replace('metallicity', 'metal')
+            elif 'refinement_scalar' in name:
+                return name.replace('refinement_scalar', 'ref')
+            else:
+                return name
+            
+        def to_dtype(dt):
+            """
+            I have seen 'd' only so far.
+            Others are just a guess ;)
+            """
+            dt=dt.replace(" ","")
+            if dt == 'd':
+                return 'f8'
+            if dt == 'f':
+                return 'f4'
+            if dt == 'i':
+                return 'i4'
+            if dt == 'l':
+                return 'i8'
+
+        dt = []
+        with open(self.base + '/output_00001/hydro_file_descriptor.txt', 'r') as f:
+            for l in f.readlines():
+                if not l.startswith("#"):
+                    ivar, varname, vartype = l.split(",")
+                    # No whitespace allowed in a field name
+                    varname = shorten(varname.replace(" ",""))
+                    # detach '\n' and indicate 1-element
+                    dt.append((varname, to_dtype(vartype.split()[0]), 1))
+        
+        from . import dtypes
+        self.config.dtype_c = dtypes.add_dtypes(dtypes.hydro_dtypes_default, dt)
+
     def set_info(self, info):
         self.info = info
 
+    def set_cell_dtype(self, dtype):
+        new_ver = self.config.sim_type in ['fornax']
+        if new_ver:
+            self.read_hydro_dscr()
+        else:
+            pass
+            # refer to original dtype in amr2cell() 
+        
     def _read_hydro_header(self, f, verbose=False):
         # Global
         h1 = read_header(f,
@@ -203,7 +267,7 @@ class Hydro(Simbase):
         ymi, yma = self.ranges[1]
         zmi, zma = self.ranges[2]
 
-        work_dir = self.info.base + '/' + self.out_dir + 'output_' + str(self.info.nout).zfill(5)
+        work_dir = self.info.base + '/' + self.info.data_dir + 'output_' + str(self.info.nout).zfill(5)
         if verbose:
             print("[hydro.amr2cell] Ranges", xmi, xma, ymi, yma)
             print("[hydro.amr2cell] Ranges", xmi, xma, zmi,zma)

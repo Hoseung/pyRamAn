@@ -121,16 +121,16 @@ class Part(Simbase):
         super(Part, self).__init__()
         self.config=config # {'part':'2017', 'cosmo':True}
         self.longint = False
-        self.dtype = part_dtype[self.config['sim_type']]
+        self.dtype = part_dtype[self.config.sim_type]
         if info == None:
             assert not nout == None, "either info or nout is required"
-            info = Info(base=base,nout=nout, cosmo=self.config['cosmo'])
+            info = Info(base=base,nout=nout, cosmo=self.config.cosmo, data_dir=data_dir)
         self.info = info
         self.nout = info.nout
         # To do: Need to work out cpu list mechanism
         self.cpus = cpus
         self.cpu_fixed=cpu_fixed
-        self.classic_format = self.config['sim_type'] not in (['fornax', 'ng'])
+        self.classic_format = self.config.sim_type not in (['fornax', 'ng'])
         try:
             self.ncpu = len(self.cpus)
         except:
@@ -140,22 +140,22 @@ class Part(Simbase):
 
         if verbose: print("Part", base)
         try:
-            self.set_base(info.base)
-            if verbose: print(info.base)
+            self.base = self.info.base
+            if verbose: print(self.info.base)
         except:
-            self.set_base(base)
+            self.base = base
         
-        self.data_dir = data_dir
+        #self.data_dir = data_dir
         
         self.pt = []
         self.pq = []
         self.pqset = set([])
-        self.dmo = config['dmo']
+        self.dmo = config.dmo
         self.dm_with_ref = dmref
         self.dm_with_vel = dmvel
         self.dm_with_mass = dmmass
 
-        self.set_fbase(self.base, data_dir)
+        self.set_fnbase(self.base, self.info.data_dir, 'part')
 
         if region is not None:
             ranges = region.ranges
@@ -171,7 +171,7 @@ class Part(Simbase):
                 # probably icpu=[1,2,3] option is used.
 
         # header structure
-        if self.config["sim_type"] != "fornax":
+        if self.config.sim_type != "fornax":
             self._ramses_particle_header = np.dtype([('ncpu', 'i4'),
                                                     ('ndim', 'i4'),
                                                     ('npart', 'i4'),
@@ -190,16 +190,16 @@ class Part(Simbase):
         self.setwhattoread(ptypes)
         if self.classic_format:
             # check if star particle exists
-            dtype_name = self.config['sim_type']
+            dtype_name = self.config.sim_type
             if self.nstar == 0: #NOPE, has_star_this_snapshot
                 dtype_name += '_dm_only'
             self.rur_dtype = part_dtype[dtype_name]
             
         elif(self.longint):
-            if(self.config['sim_type'] in ['iap', 'gem', 'nh']):
+            if(self.config.sim_type in ['iap', 'gem', 'nh']):
                 self.rur_dtype = part_dtype['gem_longint']
         else:
-            self.rur_dtype = part_dtype[self.config['sim_type']]        
+            self.rur_dtype = part_dtype[self.config.sim_type]        
 
     def _read_nstar(self):
         """
@@ -221,22 +221,6 @@ class Part(Simbase):
             part = getattr(self, ptype)
             if max(part["m"]) < 100:
                 part["m"] *= self.info.msun
-
-    def set_base(self, base):
-        """
-            Sets Working directory.
-        """
-        from os import path
-        self.base = path.abspath(base)
-        # self.show_base()
-
-    def set_fbase(self, base, data_dir):
-        """
-            Sets Working directory.
-        """
-        from os import path
-        snout = str(self.nout).zfill(5)
-        self._fbase = path.abspath(path.join(self.base, data_dir +'output_' + snout + '/part_' + snout + '.out'))
 
     def setwhattoread(self, ptypes):
         """
@@ -311,7 +295,7 @@ class Part(Simbase):
         if verbose:
             self.print_cpu()
         if ptypes is not None: self.set_dtype(ptypes)
-        if self.config['sim_type'] in ["fornax", "nh"]:
+        if self.config.sim_type in ["fornax", "nh"]:
             self.load_fortran_new(self, **kwargs)
         else:
             if self.dmo:
@@ -489,10 +473,10 @@ class Part(Simbase):
         if (cpulist.size > 0):
             wdir = self.base + '/snapshots/'
 
-            readr.read_part(wdir, self.nout, cpulist, self.config['sim_type'], 
-                            np.array(self.ranges).ravel(), True, self.config['longint'])
+            readr.read_part(wdir, self.nout, cpulist, self.config.sim_type, 
+                            np.array(self.ranges).ravel(), True, self.config.longint)
             
-            if self.config['sim_type'] == 'nh':
+            if self.config.sim_type == 'nh':
                 part_float = fromarrays([*readr.real_table.T],
                  dtype=[ii for ii in self.rur_dtype if ii[1] == 'f8'])
                 part_int = fromarrays([*readr.integer_table.T],
@@ -500,7 +484,7 @@ class Part(Simbase):
             else:
                 #timer.record()
                 # If outsdie ROI, byte_table(:,1)=-128
-                if(self.config['longint']):
+                if(self.config.longint):
                     arr = [*readr.real_table.T, 
                         *readr.long_table.T 
                         *readr.integer_table.T, 
@@ -512,7 +496,7 @@ class Part(Simbase):
 
             #timer.start('Building table for %d particles... ' % readr.integer_table.shape[0], 1)
             #part = fromarrays(arr, dtype=fornax_dtypes['raw_dtype'])[ind_ok]
-            if self.config['sim_type'] == 'nh':
+            if self.config.sim_type == 'nh':
                 from .dtypes import nh_dtypes
                 #print(part_float.dtype)
                 if self.nstar > 0:
@@ -714,7 +698,7 @@ class Sink(Simbase):
         self.info = info
         self.config = config
         try:
-            path = self.config['sink_path']
+            path = self.config.sink_path
         except:
             pass
         self._path = path
@@ -745,7 +729,7 @@ class Sink(Simbase):
             dtype = sink_prop_dtype_drag
         else:
             dtype = sink_prop_dtype
-        if(self.config['sim_type'] == 'fornax'):
+        if(self.config.sim_type == 'fornax'):
             dtype = sink_prop_dtype_drag_fornax
         if(len(arr) != len(dtype)):
             readr.clear_all()

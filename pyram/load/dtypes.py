@@ -41,19 +41,41 @@ def add_dtypes(old_dtypes, new_dtypes):
     If the name of reference field is empty ("" or None),
     the entry is added to the end of the current field list and the offset is ignored.
 
-    To do
-    -----
-    adapt to new_dtype with minimal information so that
-    add_dtypes =[("a1", "<f4"), ("a2", "<i4")]
-               == [("a1", "<f4", 1, "", 0), 
-                   ("a2", "<i4", 1, "", 0)]
 
     """
+    def fill_default(dtypes):
+        """
+        add default values of dtypes 
+        e.g.,
+        ('name', 'f8') -> ('name', 'f8', 1, "", 0),
+        where (1, "", 0) are (size, alias, offset).
+
+        takes list of lists or list of tuples, 
+        returns list of lists.
+
+        """
+        # convert to list if tuple
+        newdt=[]
+        for nf in dtypes:
+            if isinstance(nf, tuple): nf = list(nf)
+            newdt.append(nf)
+        # fill up
+        for nf in newdt:
+            if len(nf) == 2:
+                nf.append(1)
+            if len(nf) == 3:
+                nf.append("")
+            if len(nf) == 4:
+                nf.append(0)
+        return newdt
+    
+
     if not isinstance(old_dtypes, np.dtype):
         old_dtypes = np.dtype(old_dtypes)
 
     dtype_new =dict(old_dtypes.fields)
-
+    new_dtypes = fill_default(new_dtypes)
+    print("after fill default", new_dtypes)
     # reorder so that the un-referenced fields appear at last.
     i=0
     simply_add=[]
@@ -64,7 +86,10 @@ def add_dtypes(old_dtypes, new_dtypes):
             i +=1
     new_dtypes += simply_add
 
+    # add fields
     for nf in new_dtypes:
+        if nf[0] in old_dtypes.fields.keys():
+            continue
         if nf[3] in old_dtypes.fields.keys():
             # If the reference field is found.
             offset = old_dtypes.fields.get(nf[3])[1]
@@ -80,9 +105,8 @@ def add_dtypes(old_dtypes, new_dtypes):
             except:
                 print("[load/dtype error] Can't find the field ({}) in the old dtypes".format(nf[3]))
                 raise
-
+        print("dtype_new each step", dtype_new)
     return dtype_new
-
 
 def get_halo_dtype(is_gal=False, double=False, read_mbp=False, new_fields=None, auto_add_field=True):
     """
@@ -234,9 +258,6 @@ part_dtype = {
     'ng': default + [('id', 'i4'), ('level', 'u1'), ('cpu', 'i4')],
 }
 
-
-
-
 fornax_dtypes={"tracer":{'id': (('<i8', 1), 0),
                'pos': (('<f8', (3,)), 8),
                  'x': (('<f8', 1), 8),
@@ -348,3 +369,19 @@ nh_dtypes={'dtype_star' : { 'id': (('<i8', 1), 0),
                            'vz': (('<f8', 1), 48)}
                          }
                     
+hydro_dtypes_default =  {'pos': (('<f8', (3,)), 0),
+                            'x': (('<f8', 1), 0),
+                            'y': (('<f8', 1), 8),
+                            'z': (('<f8', 1), 16),
+                           'dx': (('<f8', 1), 24),
+                         'var0': (('<f8', 1), 32),
+                          'rho': (('<f8', 1), 32),
+                          'vel': (('<f8', (3,)), 40),
+                           'vx': (('<f8', 1), 40),
+                           'vy': (('<f8', 1), 48),
+                           'vz': (('<f8', 1), 56),
+                         'var1': (('<f8', 1), 40),
+                         'var2': (('<f8', 1), 48),
+                         'var3': (('<f8', 1), 56),
+                         'var4': (('<f8', 1), 64),
+                         'temp': (('<f8', 1), 64)}
