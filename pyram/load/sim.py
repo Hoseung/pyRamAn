@@ -349,7 +349,7 @@ class Sim(Simbase):
         self.info.cpus = self.cpus
 
         if self._all_set():
-            self.add_amr(self.info)
+            self.add_amr(load=False)
             if self.ranges is not None:
                 self.set_cpus(self._hilbert_cpulist(self.info, self.ranges))
         print('Simulation set up.')
