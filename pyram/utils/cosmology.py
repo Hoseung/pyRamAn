@@ -48,7 +48,7 @@ class Timeconvert():
         uarr = cumtrapz(duda[::-1], aarr[::-1], initial=0)[::-1]
         tarr = cumtrapz(dtda, aarr, initial=0)
         self.cosmo_table = fromarrays([1/aarr - 1, aarr, tarr, uarr], dtype=[('zred', 'f8'), ('aexp', 'f8'), ('age', 'f8'), ('tu', 'f8')])
-        self.age = np.interp(aexp_now, self.cosmo_table['aexp'], self.cosmo_table['tu'])
+        self.age = np.interp(aexp_now, self.cosmo_table['aexp'], self.cosmo_table['age'])
         if verbose:
             print('Age of the universe (now/z=0): %.3f / %.3f Gyr, z = %.5f' % (self.age, self.cosmo_table['tu'][-1], zred_now))
 
@@ -76,7 +76,7 @@ class Timeconvert():
         else:
             uage  = np.interp(times, self.cosmo_table.tu, self.cosmo_table.age)
 
-        return uage - np.interp(zred_now, self.cosmo_table.zred, self.cosmo_table.age)
+        return uage# - np.interp(zred_now, self.cosmo_table.zred, self.cosmo_table.age)
 
     def zred2gyr(self, zreds, zred_now=None, aexp_now=None):
         if not zred_now and not aexp_now:
