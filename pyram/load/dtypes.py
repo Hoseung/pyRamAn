@@ -75,7 +75,7 @@ def add_dtypes(old_dtypes, new_dtypes):
 
     dtype_new =dict(old_dtypes.fields)
     new_dtypes = fill_default(new_dtypes)
-    print("after fill default", new_dtypes)
+    #print("after fill default", new_dtypes)
     # reorder so that the un-referenced fields appear at last.
     i=0
     simply_add=[]
@@ -105,7 +105,7 @@ def add_dtypes(old_dtypes, new_dtypes):
             except:
                 print("[load/dtype error] Can't find the field ({}) in the old dtypes".format(nf[3]))
                 raise
-        print("dtype_new each step", dtype_new)
+        #print("dtype_new each step", dtype_new)
     return dtype_new
 
 def get_halo_dtype(is_gal=False, double=False, read_mbp=False, new_fields=None, auto_add_field=True):
