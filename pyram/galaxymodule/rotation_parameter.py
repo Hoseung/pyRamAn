@@ -24,7 +24,7 @@ def _display_pixels(x, y, counts, pixelSize):
                        ymin - pixelSize/2, ymax + pixelSize/2])
 
 
-def gen_vmap_sigmap(self,
+def gen_vmap_sigmap(gal,
                     npix_per_reff=5,
                     rscale=3.0,
                     n_pseudo=1,
@@ -72,10 +72,10 @@ def gen_vmap_sigmap(self,
 
     """
     local_var = locals()
-    local_var.pop("self")
-    self.params.vmap_sigmap = local_var.copy()
+    local_var.pop("gal")
+    gal.params.vmap_sigmap = local_var.copy()
     # already centered.
-    reff = self.meta.reff
+    reff = gal.meta.reff
     # reff restriction must be given at earlier stage, radial_profile_cut()
     r_img_kpc = reff * (rscale+1) # in kpc
     # Some margin makes mmap and vmap look better.
@@ -89,17 +89,17 @@ def gen_vmap_sigmap(self,
     # give a cylindrical cut, not spherical cut.
     # Cappellari 2002 assumes Cylindrical velocity ellipsoid.
     # particles inside 4Reff.
-    ind = (np.square(self.star[p1]) + \
-           np.square(self.star[p2])) < np.square(reff * (rscale + 1))
+    ind = (np.square(gal.star[p1]) + \
+           np.square(gal.star[p2])) < np.square(reff * (rscale + 1))
 
-    n_frac = sum(ind)/self.meta.nstar*100.0
+    n_frac = sum(ind)/gal.meta.nstar*100.0
     if verbose :
         print("{:.2f}% of stellar particles selected".format(n_frac))
     if n_frac < 10:
         print("Too few stars are selected...")
-        print("min max x", min(self.star[p1]), max(self.star[p1]))
-        print("min max y", min(self.star[p2]), max(self.star[p2]))
-        print("min max z", min(self.star[p3]), max(self.star[p3]))
+        print("min max x", min(gal.star[p1]), max(gal.star[p1]))
+        print("min max y", min(gal.star[p2]), max(gal.star[p2]))
+        print("min max z", min(gal.star[p3]), max(gal.star[p3]))
         print("# star", len(ind))
         return [-1,-1,-1], [-1,-1,-1]
     # 100% means that the galaxy radius is smaller than 4Reff.
@@ -110,24 +110,24 @@ def gen_vmap_sigmap(self,
         # sig = 0.3kpc from Naab 2014.
         # Todo
         # sig = 0.3kpc should scale with aexp.
-        n_pseudo = min([max([1,round(n_pseudo_max/self.meta.nstar)]), n_pseudo])
-        xstars, ystars, mm, vz = self._pseudo_particles(self.star[p1][ind],
-                                                  self.star[p2][ind],
-                                                  self.star[weight][ind],
-                                                  self.star[v3][ind],
+        n_pseudo = min([max([1,round(n_pseudo_max/gal.meta.nstar)]), n_pseudo])
+        xstars, ystars, mm, vz = gal._pseudo_particles(gal.star[p1][ind],
+                                                  gal.star[p2][ind],
+                                                  gal.star[weight][ind],
+                                                  gal.star[v3][ind],
                                                   sig=0.3,
                                                   n_times=n_pseudo)
     else:
-        xstars = self.star[p1][ind]
-        ystars = self.star[p2][ind]
-        vz = self.star[v3][ind]
-        mm = self.star[weight][ind]
-        if self.star[weight][0] ==0:
+        xstars = gal.star[p1][ind]
+        ystars = gal.star[p2][ind]
+        vz = gal.star[v3][ind]
+        mm = gal.star[weight][ind]
+        if gal.star[weight][0] ==0:
             print("[galaxymodule.rotation_parameter] warning... \n"+
                   "the weight {} is zero! Fall back to mass".format(weight))
-            mm = self.star["m"][ind]
+            mm = gal.star["m"][ind]
         else:
-            mm = self.star[weight][ind]
+            mm = gal.star[weight][ind]
 
     if verbose: print(("\n" "Calculating rotation parameter using {} particles "
     "inside {:.3f}kpc, or {}Reff".format(len(ind), r_img_kpc, rscale + 1)))
@@ -157,7 +157,7 @@ def gen_vmap_sigmap(self,
             mmap[ind] += mm[i]
 
     mmap = mmap / (dx*dx)
-    self.mmap = mmap.reshape(nx, ny)
+    gal.mmap = mmap.reshape(nx, ny)
 
     if voronoi is not None:
         noise_map = np.sqrt(count_map)
@@ -177,9 +177,9 @@ def gen_vmap_sigmap(self,
                              noise_map, pixelsize=1, targetSN=voronoi["targetSN"],
                              plot=voronoi["plot"], quiet=voronoi["quiet"])
 
-        self.xNode = xNode
-        self.yNode = yNode
-        self.binNum = binNum
+        gal.xNode = xNode
+        gal.yNode = yNode
+        gal.binNum = binNum
         mmap_v = np.zeros(len(xNode))
         vmap_v = np.zeros(len(xNode)) # Not actually maps, but 1-D arrays.
         sigmap_v = np.zeros(len(xNode))
@@ -198,14 +198,14 @@ def gen_vmap_sigmap(self,
                  continue #
 
             # mass-weighted sigma
-            sigmap_v[ibin] = self.weighted_std(vz[i_part], weights=mm[i_part])
+            sigmap_v[ibin] = gal.weighted_std(vz[i_part], weights=mm[i_part])
 
             # update original map too.
             #vmap[ind] = vmap_v[ibin]
             #sigmap[ind] = sigmap_v[ibin]
-        self.mmap_v = mmap_v
-        self.vmap_v = vmap_v
-        self.sigmap_v = sigmap_v
+        gal.mmap_v = mmap_v
+        gal.vmap_v = vmap_v
+        gal.sigmap_v = sigmap_v
 
         # Always make 2D maps.
         vmap_plot = np.empty_like(count_map).ravel()
@@ -216,9 +216,9 @@ def gen_vmap_sigmap(self,
             vmap_plot[ind] = vmap_v[ibin]
             sigmap_plot[ind] = sigmap_v[ibin]
         # Stellar particle density map
-        self.mmap = mmap.reshape(nx,ny)
-        self.vmap = vmap_plot.reshape(nx,ny)
-        self.sigmap = sigmap_plot.reshape(nx,ny)
+        gal.mmap = mmap.reshape(nx,ny)
+        gal.vmap = vmap_plot.reshape(nx,ny)
+        gal.sigmap = sigmap_plot.reshape(nx,ny)
 
     else:
         # Velocity and dispersion map
@@ -230,24 +230,24 @@ def gen_vmap_sigmap(self,
             ind = np.where(indices == i)[0]
             if len(ind) > 0:
                 # mass-weighted sigma
-                sigmap[i] = self.weighted_std(vz[ind], mm[ind])
+                sigmap[i] = gal.weighted_std(vz[ind], mm[ind])
                 # mass-weighted velocity
                 vmap[i] = np.average(vz[ind], weights=mm[ind])
             else:
                 sigmap[i] = 0
                 vmap[i] = 0
-        #self.xNode = np.tile(np.arange(nx),ny) # x = tile? or repeat?
-        #self.yNode = np.repeat(np.arange(ny),nx)
-        self.sigmap = sigmap.reshape(nx, ny)
-        self.vmap = vmap.reshape(nx,ny)
+        #gal.xNode = np.tile(np.arange(nx),ny) # x = tile? or repeat?
+        #gal.yNode = np.repeat(np.arange(ny),nx)
+        gal.sigmap = sigmap.reshape(nx, ny)
+        gal.vmap = vmap.reshape(nx,ny)
 
     if plot_map:
         fig, axs = plt.subplots(2,2)
-        axs[0,0].imshow(self.mmap,interpolation='nearest', norm=LogNorm())
-        axs[0,1].imshow(self.vmap,interpolation='nearest')
-        axs[1,0].imshow(self.sigmap,interpolation='nearest')
+        axs[0,0].imshow(gal.mmap,interpolation='nearest', norm=LogNorm())
+        axs[0,1].imshow(gal.vmap,interpolation='nearest')
+        axs[1,0].imshow(gal.sigmap,interpolation='nearest')
         axs[1,1].set_ylim(0,1)
-        plt.savefig("vsigmaps_{}.png".format(self.meta.id))
+        plt.savefig("vsigmaps_{}.png".format(gal.meta.id))
         plt.close()
 
 
@@ -320,7 +320,7 @@ def interpol(x, x0, arrays):
     return [y[ind -1]*fr + y[ind]*fl for y in arrays]
 
 
-def cal_lambda_r_eps(self,
+def cal_lambda_r_eps(gal,
                      method='ellip',
                      verbose=False,
                      galaxy_plot_dir='./',
@@ -337,12 +337,12 @@ def cal_lambda_r_eps(self,
     in gen_vmap_sigmap() method.
     """
     local_var = locals()
-    local_var.pop("self")
-    self.params.cal_lambda = local_var.copy()
+    local_var.pop("gal")
+    gal.params.cal_lambda = local_var.copy()
 
-    npix_per_reff=self.params.vmap_sigmap["npix_per_reff"]
-    rscale=self.params.vmap_sigmap["rscale"]
-    voronoi=self.params.vmap_sigmap["voronoi"]
+    npix_per_reff=gal.params.vmap_sigmap["npix_per_reff"]
+    rscale=gal.params.vmap_sigmap["rscale"]
+    voronoi=gal.params.vmap_sigmap["voronoi"]
 
     is_voronoi = lambda x : x is not None
 
@@ -351,7 +351,7 @@ def cal_lambda_r_eps(self,
     #               to find out half light radius.
     # mge_interpol : from iterative measruements of MGE,
     #                interpolate quantities at the half light radius.
-    mmap = np.ravel(self.mmap)
+    mmap = np.ravel(gal.mmap)
 
     nx = round(npix_per_reff * 2 * (rscale + 1))
     ny = nx
@@ -359,10 +359,10 @@ def cal_lambda_r_eps(self,
     xpos = np.tile(np.arange(nx),ny)
     ypos = np.repeat(np.arange(ny),nx)
 
-    #xNode = self.xNode
-    #yNode = self.yNode
-    reff = self.meta.reff
-    self.npix_per_reff = npix_per_reff
+    #xNode = gal.xNode
+    #yNode = gal.yNode
+    reff = gal.meta.reff
+    gal.npix_per_reff = npix_per_reff
 
     mmap_tot = sum(mmap)
     dist = np.sqrt(np.square(xpos- nx/2) \
@@ -378,8 +378,8 @@ def cal_lambda_r_eps(self,
             ypos_arr= []
             f_light_arr=[]
             for i in range(6):
-                # mmap = 1D, self.mmap = mmap.reshap(nx,ny)
-                f = mge.find_galaxy.find_galaxy(self.mmap, quiet=True, plot=False,
+                # mmap = 1D, gal.mmap = mmap.reshap(nx,ny)
+                f = mge.find_galaxy.find_galaxy(gal.mmap, quiet=True, plot=False,
                                                 mask_shade=True,
                                                 fraction=0.04*(i+1)**1.5)
                 mjr_arr.append(f.majoraxis)#f.majoraxis * 3.5 / npix * l_img
@@ -402,26 +402,26 @@ def cal_lambda_r_eps(self,
             # Determine eps, pa, sma, xcen, ycen
             if mge_interpol:
 
-                self.meta.eps, self.meta.pa, self.meta.sma, self.meta.xcen, self.meta.ycen = \
+                gal.meta.eps, gal.meta.pa, gal.meta.sma, gal.meta.xcen, gal.meta.ycen = \
                     interpol(np.array(f_light_arr), 0.5, (eps_arr, pa_arr, mjr_arr, xpos_arr, ypos_arr))
                 print('eps array', eps_arr)
                 print("interpolated eps, pa, sma, xcen, ycen", \
-                      self.meta.eps, self.meta.pa, self.meta.sma, self.meta.xcen, self.meta.ycen)
-                self.meta.smi = self.meta.sma * (1 - self.meta.eps)
+                      gal.meta.eps, gal.meta.pa, gal.meta.sma, gal.meta.xcen, gal.meta.ycen)
+                gal.meta.smi = gal.meta.sma * (1 - gal.meta.eps)
 
             else:
                 i_reff = np.argmax(np.array(f_light_arr) > 0.5) -1# first element > 0.5 -1
-                self.meta.eps = eps_arr[i_reff] # eps at 1 * R_half(=eff)
-                self.meta.pa  = pa_arr[i_reff]
-                sma = reff# / np.sqrt(1-self.meta.eps) / dx
+                gal.meta.eps = eps_arr[i_reff] # eps at 1 * R_half(=eff)
+                gal.meta.pa  = pa_arr[i_reff]
+                sma = reff# / np.sqrt(1-gal.meta.eps) / dx
                 # sma becomes too large with large e, (when e = 0.9, sma = 10 * reff).
-                smi = sma*(1-self.meta.eps)
-                self.meta.sma = mjr_arr[i_reff] * 3.5
-                self.meta.smi = self.meta.sma*(1-self.meta.eps)
+                smi = sma*(1-gal.meta.eps)
+                gal.meta.sma = mjr_arr[i_reff] * 3.5
+                gal.meta.smi = gal.meta.sma*(1-gal.meta.eps)
                 #sma=mjr_arr[i_reff] * 0.5 * 3.5 # SEMI major axis, pixel unit
         else:
             # MGE in one go.
-            # mmap = 1D, self.mmap = mmap.reshap(nx,ny)
+            # mmap = 1D, gal.mmap = mmap.reshap(nx,ny)
             # No iteration, 50% light in one shot.
             dsort = np.argsort(dist)
             # level = pixel value at cumsum = 50%.
@@ -431,18 +431,22 @@ def cal_lambda_r_eps(self,
             d_05reff = np.argmax(dsort > 0.5*dsort[i_reff]) # dsort[d_05reff] = 0.5Reff
             frac05 = d_05reff/len(mmap)
 
-            frac15 = np.pi / self.params.vmap_sigmap["rscale"]**2 * (10/(2*reff))**2
+            frac15 = np.pi / gal.params.vmap_sigmap["rscale"]**2 * (10/(2*reff))**2
             # fraction of 15kpc in the mmap.
             frac15 = min([0.99, frac15])
 
             fracs = [frac1, frac05, frac15]
             names = ["1Reff", "0.5Reff", "2Reff"]
-            self.meta.mge_result_list=[]
-            self.meta.lambda_result_list=[]
-            self.meta.lambda_r=[]
+            # Outputs 
+            output = {'mge_result_list':[], 
+                      'lambda_result_list':[],
+                      'lambda_r':[]}
+            #gal.meta.mge_result_list=[]
+            #gal.meta.lambda_result_list=[]
+            #gal.meta.lambda_r=[]
             for frac, name in zip(fracs, names):
                 if verbose: print("frac", frac)
-                f = mge.find_galaxy.find_galaxy(self.mmap, quiet=True, plot=plot_mge,
+                f = mge.find_galaxy.find_galaxy(gal.mmap, quiet=True, plot=plot_mge,
                                             mask_shade=False,
                                             fraction=frac)
                 mge_now = get_mge_out(f, frac, npix_per_reff, name)
@@ -451,35 +455,36 @@ def cal_lambda_r_eps(self,
                     xcen=mge_now["xcen"]
                     ycen=mge_now["ycen"]
                     if is_voronoi(voronoi):
-                        dist1d = np.sqrt(np.square(self.xNode - xcen) + np.square(self.yNode - ycen))
+                        dist1d = np.sqrt(np.square(gal.xNode - xcen) + np.square(gal.yNode - ycen))
                         i_very_cen = np.where(dist1d < 1.5)[0] # within 0.2 Reff
                         #print("{:1f} % are very close to the center".format(100*len(i_very_cen)/len(dist1d)))
-                        new_vc = np.mean(self.vmap_v[i_very_cen])
-                        self.vmap_v = self.vmap_v - new_vc
+                        new_vc = np.mean(gal.vmap_v[i_very_cen])
+                        gal.vmap_v = gal.vmap_v - new_vc
                     else:
                         dist = np.sqrt(np.square(xpos- xcen) \
                                        + np.square(ypos- ycen))
                         i_very_cen = np.where(dist < 1.5)[0] # within 0.2 Reff
-                        new_vc = np.mean(self.vmap.ravel()[i_very_cen])
-                        self.vmap = self.vmap - new_vc
+                        new_vc = np.mean(gal.vmap.ravel()[i_very_cen])
+                        gal.vmap = gal.vmap - new_vc
 
-                self.meta.mge_result_list.append(mge_now)
+                output['mge_result_list'].append(mge_now)
 
                 if is_voronoi(voronoi):
                     larr = _measure_lambda(mge_now,
-                                       self.mmap_v, self.vmap_v, self.sigmap_v,
-                                       self.xNode, self.yNode,
+                                       gal.mmap_v, gal.vmap_v, gal.sigmap_v,
+                                       gal.xNode, gal.yNode,
                                        npix_per_reff,
                                        rscale,
                                        voronoi=True,
                                        verbose=verbose)
                 else:
                     larr = _measure_lambda(mge_now,
-                                       mmap.ravel(), self.vmap.ravel(), self.sigmap.ravel(),
+                                       mmap.ravel(), gal.vmap.ravel(), gal.sigmap.ravel(),
                                        xpos, ypos,
                                        npix_per_reff,
                                        rscale,
                                        voronoi=False,
                                        verbose=verbose)
-                self.meta.lambda_result_list.append(larr)
-                self.meta.lambda_r.append(np.average(larr[npix_per_reff - 1 : npix_per_reff + 2]))
+                output['lambda_result_list'].append(larr)
+                output['lambda_r'].append(np.average(larr[npix_per_reff - 1 : npix_per_reff + 2]))
+    return output
