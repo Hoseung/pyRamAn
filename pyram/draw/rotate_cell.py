@@ -12,6 +12,10 @@ from pyram import galaxymodule as gmo
 
 import pts.simulation as sm
 
+msun_in_g = 1.989e33
+kpc_in_cm = 3.0857e21
+G = 6.674e-8
+
 
 ######################################################
 def cos(theta):
