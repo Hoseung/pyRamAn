@@ -114,6 +114,10 @@ def make_ram_input(sim_dir,
         s.part.load(verbose=True)
         
         star = s.part.star
+        i_ok = np.where((star['x'] - centers[0])**2 + 
+                        (star['y'] - centers[1])**2 + 
+                        (star['z'] - centers[2])**2 < radius**2)[0]
+        star = star[i_ok]
         star['m'] *= s.info.msun
         if verbose:
             print("total stellar mass", np.log10(np.sum(star['m'])))
@@ -158,7 +162,7 @@ def make_ram_input(sim_dir,
         # Calculate orientation
         gal = gmo.galaxy.Galaxy()
         gal.info = s.info
-        gal.star = s.part.star
+        gal.star = star
         vcen = np.mean(gal.star['vel'], axis=0)
         gal.star['vel'] -= vcen
         gal.star['pos'] -=centers
