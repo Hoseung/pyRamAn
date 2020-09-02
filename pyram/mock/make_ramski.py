@@ -77,7 +77,7 @@ def make_ram_input(sim_dir,
     nvec_frac : if positive, use nvec_frac of central stars to determine rotation axis of the galaxy
     """
 
-    s=pyram.load.sim.Sim(nout, base=sim_dir)
+    s=pyram.load.sim.Sim(nout, base=sim_dir, sim_type='nh')
     tc = TC(s.info)
 
     for gdat in gcats:
@@ -98,9 +98,9 @@ def make_ram_input(sim_dir,
         incl, azim, roll, fovx, fovy, minx, maxx, miny, maxy, minz, maxz = arr
         # Note that I will not use incl, azim from this measurement.
         if verbose:
-            print("min, max", minx, maxx, miny, maxy, minz, maxz)
-            print("radius", radius_in_kpc)
-            print(minx, maxx, miny, maxy, minz, maxz)
+            print("gid", gid, "centers", centers)
+            print("min, max x,y,z in pc", minx, maxx, miny, maxy, minz, maxz)
+            print("radius in pc", radius_in_kpc * 1e3)
             print("Xrange", centers[0]-radius, centers[0]+radius)
 
         ## Load stellar Particle
@@ -111,11 +111,15 @@ def make_ram_input(sim_dir,
         s.add_part(ptypes=["star id pos mass vel metal age"])
         star = s.part.star
         star['m'] *= s.info.msun
+        if verbose:
+            print("total stellar mass", np.log10(np.sum(star['m'])))
+            print("Calculating ages...")
         age = tc.time2gyr(times = star["time"], zred_now = s.info.zred)
         age = s.info.tGyr - age
         age[age<0] = 1e-7
         age *= 1e9
-        print("Age min, max", min(age), max(age))
+        if verbose:
+            print('min max mean age', min(age), max(age), np.mean(age))
         # Make gal out of part 
 
         # write part.ski
@@ -224,8 +228,8 @@ def make_ram_input(sim_dir,
         """
         if ski_params == None:
             ski_params=[dict(name='face_on',  pixel_scale=50, nphoton=5e7, incli_off = 0),
-                        dict(name='d30',      pixel_scale=50, nphoton=5e7, incli_off = 30)]
-                        dict(name='d60',      pixel_scale=50, nphoton=5e7, incli_off = 60)]
+                        dict(name='d30',      pixel_scale=50, nphoton=5e7, incli_off = 30),
+                        dict(name='d60',      pixel_scale=50, nphoton=5e7, incli_off = 60),
                         dict(name='edge_on',  pixel_scale=50, nphoton=5e7, incli_off = 90)]
 
         write_ski(repo, gid, nout, skifile, arr, ski_params)
