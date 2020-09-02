@@ -54,7 +54,7 @@ def main():
 if __name__ == "__main__":
     main()
     
-from numpy import distutils
+#from numpy import distutils
 #from numpy.distutils.core import setup
 #from numpy.distutils.extension import Extension
 # Fortran extension
