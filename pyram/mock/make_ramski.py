@@ -107,8 +107,12 @@ def make_ram_input(sim_dir,
         s.set_ranges([[centers[0]-radius, centers[0]+radius],
                       [centers[1]-radius, centers[1]+radius],
                       [centers[2]-radius, centers[2]+radius]])
-
-        s.add_part(ptypes=["star id pos mass vel metal age"])
+        
+        s.add_part(ptypes=["star id pos mass vel metal age"], load=False)
+        s.part.info.cpus = s.cpus
+        print("CPU list", s.part.info.cpus)
+        s.part.load(verbose=True)
+        
         star = s.part.star
         star['m'] *= s.info.msun
         if verbose:

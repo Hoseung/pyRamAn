@@ -292,11 +292,9 @@ class Part(Simbase):
     def load(self, fortran=True, read_metal=True, verbose=False, ptypes=None, **kwargs):
         """ tests whether the files exist, and then calls load() or load_dmo()
         """
-        if verbose:
-            self.print_cpu()
         if ptypes is not None: self.set_dtype(ptypes)
         if self.config.sim_type in ["fornax", "nh"]:
-            self.load_fortran_new(**kwargs)
+            self.load_fortran_new(verbose=verbose, **kwargs)
         else:
             if self.dmo:
                 self.load_dmo(**kwargs)
@@ -439,7 +437,7 @@ class Part(Simbase):
 
         return dtype
 
-    def load_fortran_new(self, target_fields=None, cpulist=None):
+    def load_fortran_new(self, target_fields=None, cpulist=None, verbose=True):
         """Reads particle data from current box.
 
         Parameters
@@ -469,6 +467,8 @@ class Part(Simbase):
 
         if(cpulist is None):
             cpulist = self.info.cpus
+        if verbose:
+            print("cpu list:", cpulist)
         
         if (cpulist.size > 0):
             wdir = self.base + '/snapshots/'
