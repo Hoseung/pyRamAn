@@ -110,7 +110,6 @@ def make_ram_input(sim_dir,
         
         s.add_part(ptypes=["star id pos mass vel metal age"], load=False)
         s.part.info.cpus = s.cpus
-        print("CPU list", s.part.info.cpus)
         s.part.load(verbose=True)
         
         star = s.part.star
@@ -235,10 +234,10 @@ def make_ram_input(sim_dir,
             off = param['incli_off']
         """
         if ski_params == None:
-            ski_params=[dict(name='face_on',  pixel_scale=50, nphoton=5e7, incli_off = 0),
-                        dict(name='d30',      pixel_scale=50, nphoton=5e7, incli_off = 30),
-                        dict(name='d60',      pixel_scale=50, nphoton=5e7, incli_off = 60),
-                        dict(name='edge_on',  pixel_scale=50, nphoton=5e7, incli_off = 90)]
+            ski_params=[dict(name='face_on',  pixel_scale=50, nphoton=5e7, incli_off = 0,  azim_off = 0, roll_off = 0),
+                        dict(name='d30',      pixel_scale=50, nphoton=5e7, incli_off = 30, azim_off = 0, roll_off = 0),
+                        dict(name='d60',      pixel_scale=50, nphoton=5e7, incli_off = 60, azim_off = 0, roll_off = 0),
+                        dict(name='edge_on',  pixel_scale=50, nphoton=5e7, incli_off = 90, azim_off = 0, roll_off = 0)]
 
         write_ski(repo, gid, nout, skifile, arr, ski_params)
 
