@@ -109,6 +109,85 @@ def get_vmax_sig(gal,
 
 
 def get_vmax_sig_Cappellari2007(gal,
+                                mge_results='',
+                                voronoi=None,
+                                make_plot=False,
+                                rscale=1,
+                                out_dir="./"):
+
+    results = getattr(gal.meta, mge_results)
+    try:
+        fit = results['mge_result_list'][0]
+    except:
+        print(f"Error... Can't find gal.meta.{mge_results}['mge_result_list']")
+        return False
+
+    mge_params = results['mge_result_list'][0]
+    #print('mge_params', mge_params)
+    # mge_params should have ['xcen', 'ycen', 'cos', 'sin', 'sma', 'smi']
+    npix_per_reff = gal.npix_per_reff
+
+    if voronoi is not None:
+        return _measure_vmax_sig_Cappellari2007(mge_params,
+                       gal.mmap_v, gal.vmap_v, gal.sigmap_v,
+                       gal.xNode, gal.yNode,
+                       npix_per_reff,
+                       rscale,
+                       voronoi=True)
+    else:
+        xpos = None
+        ypos = None
+        return _measure_vmax_sig_Cappellari2007(mge_params,
+                            gal.mmap.ravel(), gal.vmap.ravel(), gal.sigmap.ravel(),
+                            xpos, ypos,
+                            npix_per_reff,
+                            rscale,
+                            voronoi=False)
+
+
+def _measure_vmax_sig_Cappellari2007(mge_par,
+                    mmap, vmap, sigmap,
+                    xNode, yNode,
+                    npix_per_reff,
+                    rscale,
+                    voronoi=False,
+                    do_plot=False,
+                    verbose=False,
+                    ):
+
+    xcen=mge_par["xcen"]
+    ycen=mge_par["ycen"]
+    cos=mge_par["cos"]
+    sin=mge_par["sin"]
+    sma=mge_par["sma"]
+    smi=mge_par["smi"]
+
+    dd = np.sqrt(((xNode-xcen)*cos + (yNode-ycen)*sin)**2/sma**2 + \
+                 ((yNode-ycen)*cos - (xNode-xcen)*sin)**2/smi**2) * \
+                 npix_per_reff
+
+    npix = round(npix_per_reff * rscale)
+    #points = np.zeros(npix)
+
+    if verbose: print("Reff = half light?1", sum(mmap[dd < 1.0])/ sum(mmap))
+    dist1d = np.sqrt(np.square(xNode - xcen) + np.square(yNode - ycen))
+
+    #for i in range(len(points)):
+    #ind = np.where( (dd > i) & (dd < (i+1)))[0]
+    ind = np.where(dd < (npix))[0]
+
+    if len(ind) > 0:
+        V = np.sum(mmap[ind] * vmap[ind]**2)
+        if V > 0:
+            ind2 = np.where(sigmap[ind] > 0)[0]
+            Sig = np.sum(mmap[ind[ind2]] * sigmap[ind[ind2]]**2)
+
+            return dict(Vmax=None, sigma=None, V_sig=V/Sig)
+    return False
+
+
+
+def _deprecated_get_vmax_sig_Cappellari2007(gal,
                  mge_results='',
                  voronoi=False,
                  make_plot=False,
