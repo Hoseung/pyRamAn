@@ -13,6 +13,11 @@ from pyram import galaxymodule as gmo
 import pts.simulation as sm
 
 
+kpc_in_cm = 3.0857e21
+msun_in_g = 1.989e33
+G = 6.674e-8  # gravitational constant ; [cm^3 g^-1 s^-2]
+
+
 ######################################################
 def cos(theta):
     # return np.cos( theta * np.pi / 180 )
@@ -236,14 +241,15 @@ def make_gasmap(nout, gal_cat, theta_xz_1=[0], theta_yz_1=[0],
                 plotting="plt",
                 fsave_angle=None,
                 do_star=False,
-                radius = 2e-4):
+                radius = 2e-4,
+                shrink=False):
 
     centers = np.array([gal_cat['x'],gal_cat['y'],gal_cat['z']])
     gid=gal_cat['id']
     idgal=gal_cat['id']
     mingrid = 2.38418579e-07
     cell_ddx_grid_size = [2**i*mingrid for i in range(8)]
-    if skirt_out_dir == None: skirt_out_dir = wdir + f"nout_{nout}/"
+    if skirt_out_dir == None: skirt_out_dir = wdir + f"gal_{nout:05d}/"
 
     if fn_png == None: fn_png = f"{nout}_{idgal}_faceon_gasmap.png"
     s=pyram.load.sim.Sim(nout, base=wdir)
@@ -252,8 +258,6 @@ def make_gasmap(nout, gal_cat, theta_xz_1=[0], theta_yz_1=[0],
                   [centers[1]-radius, centers[1]+radius],
                   [centers[2]-radius, centers[2]+radius]])
     print(f"Galaxy {gid}, centers:{centers}, radius:{radius:.6f}")
-    s.add_hydro()
-    cell = s.hydro.cell
     if do_star:
         print("loading particles")
         s.add_part(ptypes=["star id pos mass vel metal age"])
@@ -293,9 +297,31 @@ def make_gasmap(nout, gal_cat, theta_xz_1=[0], theta_yz_1=[0],
             phi = np.degrees(-np.arccos(nvec[0]/np.sqrt(nvec[0]**2 + nvec[1]**2)))
         if fsave_angle is not None: fsave_angle.write(f"{nout} {gid} {theta:.3f}  phi={phi:.3f} \n")
         print(f"theta={theta:.3f},  phi={phi:.3f}")
+
+        if shrink:
+            radius1 = radius * shrink
+            s.set_ranges([[centers[0]-radius1, centers[0]+radius1],
+                          [centers[1]-radius1, centers[1]+radius1],
+                          [centers[2]-radius1, centers[2]+radius1]])
+            print(f"Loading again... Galaxy {gid}, centers:{centers}, radius:{radius1:.6f}")
+            s.add_hydro()
+            cell = s.hydro.cell
+            
+            #gal.star = gal.star[np.where(dist < np.max(dist) * shrink)[0]]
+            #print("N stellar particle reduced to", len(gal.star))
+
     else:
+        if shrink:
+            radius1 = radius * shrink
+            s.set_ranges([[centers[0]-radius1, centers[0]+radius1],
+                          [centers[1]-radius1, centers[1]+radius1],
+                          [centers[2]-radius1, centers[2]+radius1]])
+            s.add_hydro()
+            cell = s.hydro.cell
+
         xcen = centers
         vcen = np.mean(cell["vel"], axis=0)
+
 
     cell["pos"] -= xcen
     cell['vel'] -= vcen
