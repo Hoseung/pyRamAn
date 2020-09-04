@@ -304,8 +304,8 @@ def make_gasmap(nout, gal_cat, theta_xz_1=[0], theta_yz_1=[0],
                           [centers[1]-radius1, centers[1]+radius1],
                           [centers[2]-radius1, centers[2]+radius1]])
             print(f"Loading again... Galaxy {gid}, centers:{centers}, radius:{radius1:.6f}")
-            s.add_hydro()
-            cell = s.hydro.cell
+        s.add_hydro()
+        cell = s.hydro.cell
             
             #gal.star = gal.star[np.where(dist < np.max(dist) * shrink)[0]]
             #print("N stellar particle reduced to", len(gal.star))
@@ -316,8 +316,8 @@ def make_gasmap(nout, gal_cat, theta_xz_1=[0], theta_yz_1=[0],
             s.set_ranges([[centers[0]-radius1, centers[0]+radius1],
                           [centers[1]-radius1, centers[1]+radius1],
                           [centers[2]-radius1, centers[2]+radius1]])
-            s.add_hydro()
-            cell = s.hydro.cell
+        s.add_hydro()
+        cell = s.hydro.cell
 
         xcen = centers
         vcen = np.mean(cell["vel"], axis=0)
