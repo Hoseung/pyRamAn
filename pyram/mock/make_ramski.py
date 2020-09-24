@@ -144,6 +144,29 @@ def make_ram_input(sim_dir,
         #centers = np.mean(star['pos'], axis=0)
         #print("new center", centers)
         pos_pc = (star["pos"] - centers) *s.info.boxtokpc * 1e3
+        PDR = False
+        if PDR:
+            i_young = np.where(age < 1e7)[0]
+            ### Write particles
+            with open(dir_out+ f"{gid:05d}/{nout:05d}/youngstar_ramski.txt", "w") as fpart:
+                fpart.write("""# Column 1: position x (pc)
+            # Column 2: position y (pc)
+            # Column 3: position z (pc)
+            # Column 4: smoothing length (pc)
+            # Column 5: mass (Msun)
+            # Column 6: metallicity (1)
+            # Column 7: age (yr)\n
+            # Column 4: size h (pc)
+            # Column 5: star formation rate (Msun/yr)
+            # Column 7: compactness (1)
+            # Column 8: pressure (Pa)
+            # Column 9: covering factor (1)
+            """)
+                for (pos, m, z, a) in zip(pos_pc[i_young], star["m"][i_young], star["metal"][i_young], age[i_young]):
+                    fpart.write("{} {} {} {} {} {} {}\n".format(pos[0], pos[1], pos[2], smooth, m, z, a))
+            i_rest = np.where(age > 1e7)[0]
+        else:
+            i_rest = np.arange(len(star))
 
         ### Write particles
         with open(dir_out+ f"{gid:05d}/{nout:05d}/part_ramski.txt", "w") as fpart:
@@ -155,7 +178,7 @@ def make_ram_input(sim_dir,
         # Column 6: metallicity (1)
         # Column 7: age (yr)\n
         """)
-            for (pos, m, z, a) in zip(pos_pc, star["m"], star["metal"], age):
+            for (pos, m, z, a) in zip(pos_pc[i_rest], star["m"][i_rest], star["metal"][i_rest], age[i_rest]):
                 fpart.write("{} {} {} {} {} {} {}\n".format(pos[0], pos[1], pos[2], smooth, m, z, a))
         
         # Calculate orientation
@@ -234,15 +257,19 @@ def make_ram_input(sim_dir,
             off = param['incli_off']
         """
         if ski_params == None:
-            ski_params=[dict(name='face_on',  pixel_scale=50, nphoton=5e7, incli_off = 0,  azim_off = 0, roll_off = 0),
-                        dict(name='d30',      pixel_scale=50, nphoton=5e7, incli_off = 30, azim_off = 0, roll_off = 0),
-                        dict(name='d60',      pixel_scale=50, nphoton=5e7, incli_off = 60, azim_off = 0, roll_off = 0),
-                        dict(name='edge_on',  pixel_scale=50, nphoton=5e7, incli_off = 90, azim_off = 0, roll_off = 0)]
-
+            ski_params=[dict(name='face_on',  pixel_scale=50, nphoton=1e8, incli_off = 0,  azim_off = 0, roll_off = 0),
+                        dict(name='d30',      pixel_scale=50, nphoton=1e8, incli_off = 30, azim_off = 0, roll_off = 0),
+                        dict(name='d60',      pixel_scale=50, nphoton=1e8, incli_off = 60, azim_off = 0, roll_off = 0),
+                        dict(name='edge_on',  pixel_scale=50, nphoton=1e8, incli_off = 90, azim_off = 0, roll_off = 0),
+                        dict(name='z',        pixel_scale=50, nphoton=1e8, incli_off = 0, azim_off = 0, roll_off = 0),
+                        dict(name='y',        pixel_scale=50, nphoton=1e8, incli_off = 0, azim_off = 0, roll_off = 0)]
+        else:
+            # set angles to zero
+            arr[:3] = 0
         write_ski(repo, gid, nout, skifile, arr, ski_params)
 
     print("done") 
-
+    return {'inc':theta, 'azim':phi, 'roll':alpha}
 
 
 
