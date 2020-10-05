@@ -352,8 +352,6 @@ class Sim(Simbase):
         self.info.cpus = self.cpus
 
         if self._all_set():
-            print("DEBUG_ adding amr")
-            self.add_amr(load=False)
             if self.ranges is not None:
                 self.set_cpus(self._hilbert_cpulist(self.info, self.ranges))
         print('Simulation set up.')
@@ -756,7 +754,6 @@ class Amr(Simbase):
         llist = 0
         self.header.ngridtot = 0
         for jcpu in cpus:
-            print(jcpu)
             #if(verbose):
             #    #self.print_cpu(icpu)
 

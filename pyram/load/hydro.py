@@ -132,8 +132,9 @@ class Hydro(Simbase):
             self.set_ranges([[-9e9,9e9]] * 3)
 
         if load:
-            print("amr2cell_params", amr2cell_params)
-            self.amr2cell(**amr2cell_params)
+            #print("amr2cell_params", amr2cell_params)
+            self.load()
+            #self.amr2cell(**amr2cell_params)
 
     def _get_basic_info(self):
         try:
@@ -177,7 +178,7 @@ class Hydro(Simbase):
                 return 'i8'
 
         dt = []
-        with open(self.base + '/output_00001/hydro_file_descriptor.txt', 'r') as f:
+        with open("".join([self.info.fn.split("info_")[0], 'hydro_file_descriptor.txt']), 'r') as f:
             for l in f.readlines():
                 if not l.startswith("#"):
                     ivar, varname, vartype = l.split(",")
@@ -222,11 +223,46 @@ class Hydro(Simbase):
         self.header.gamma = h1['gamma']
         self.header.nvarh_org = h1['nvarh']
 
-    def load(self, pure=False, **kwargs):
-        if pure:
+    def load(self, method='a2c', **kwargs):
+        if method=='py':
             amr2cell_py(self, **kwargs)
-        else:
+        elif method=='a2c':
             self.amr2cell(**kwargs)
+        elif method=='rur':
+            self.read_cell()
+
+
+    def read_cell(self, lmax=None, icpu=0, cpu=True, ref=False,
+                 verbose=True, return_meta=False, fields=None,
+                 ranges=None):
+        print("read_cell...", flush=True)
+        nvarh = self.header.nvarh
+        lmax = self.header.nlevelmax
+        if ranges is not None: self.set_ranges(ranges=ranges)
+        xmi, xma = self.ranges[0]
+        ymi, yma = self.ranges[1]
+        zmi, zma = self.ranges[2]
+
+        work_dir = self.info.base + '/' + self.info.data_dir + 'output_' + str(self.info.nout).zfill(5)
+        if verbose:
+            print("[hydro.amr2cell] Ranges", xmi, xma, ymi, yma)
+            print("[hydro.amr2cell] Ranges", xmi, xma, zmi,zma)
+            print("[hydro.amr2cell] cpus", self.cpus)
+
+        if verbose: print("[hydro.amr2cell] before a2c_count..  lmax =", lmax, flush=True)
+
+        ngridtot, nvarh = a2c.a2c_count(work_dir, xmi, xma, ymi, yma, zmi, zma, lmax, self.cpus)
+        if verbose: print("[hydro.amr2ell] a2c_count done", flush=True)
+        if verbose: print("[hydro.amr2cell]ranges", xmi, xma, ymi, yma, zmi, zma, flush=True)
+        print("ngridtot", ngridtot, nvarh, flush=True)
+        #return
+        a2c.a2c_load(work_dir, xmi, xma, ymi, yma, zmi, zma,\
+                    lmax, ngridtot, nvarh, self.cpus)
+        print("Loading Done", flush=True)
+        #arr = [*readr.real_table.T, *readr.integer_table.T]
+        # Ignore integer values at the moment
+        self.cell = fromarrays([*a2c.real_table.T], dtype=self.config.dtype_c)
+        a2c.close()
 
     def amr2cell(self, lmax=None, icpu=0, cpu=True, ref=False,
                  verbose=False, return_meta=False, fields=None,
@@ -273,10 +309,10 @@ class Hydro(Simbase):
             print("[hydro.amr2cell] Ranges", xmi, xma, zmi,zma)
             print("[hydro.amr2cell] cpus", self.cpus)
 
-        if verbose: print("[hydro.amr2cell] before a2c_count..  lmax =", lmax)
+        if verbose: print("[hydro.amr2cell] before a2c_count..  lmax =", lmax, flush=True)
 
         ngridtot, nvarh = a2c.a2c_count(work_dir, xmi, xma, ymi, yma, zmi, zma, lmax, self.cpus)
-        if verbose: print("[hydro.amr2ell] a2c_count done")
+        if verbose: print("[hydro.amr2ell] a2c_count done", flush=True)
         if verbose: print("[hydro.amr2cell]ranges", xmi, xma, ymi, yma, zmi, zma)
         #return
         if return_meta:
@@ -292,54 +328,7 @@ class Hydro(Simbase):
             # nvarh + 2 because fortran counts from 1, and nvarh=5 means 0,1,2,3,4,5.
             # nvarh_org of NH = 7 : rho, u,v,w, T, metal, zoomin_tag
 
-            dtype_cell = {'pos': (('<f8', (3,)), 0),
-                            'x': (('<f8', 1), 0),
-                            'y': (('<f8', 1), 8),
-                            'z': (('<f8', 1), 16),
-                           'dx': (('<f8', 1), 24),
-                         'var0': (('<f8', 1), 32),
-                          'rho': (('<f8', 1), 32),
-                          'vel': (('<f8', (3,)), 40),
-                           'vx': (('<f8', 1), 40),
-                           'vy': (('<f8', 1), 48),
-                           'vz': (('<f8', 1), 56),
-                         'var1': (('<f8', 1), 40),
-                         'var2': (('<f8', 1), 48),
-                         'var3': (('<f8', 1), 56),
-                         'var4': (('<f8', 1), 64),
-                         'temp': (('<f8', 1), 64),
-                         'var5': (('<f8', 1), 72),
-                        'metal': (('<f8', 1), 72)}
-            dt_off = 72
-            if cpu:
-                dtype_cell.update({'cpu': (('<f8',1),dt_off+8)})
-                dt_off += 8 
-            if ref:
-                dtype_cell.update({'ref': (('bool',1),dt_off+4)})
-                dtype_cell.update({'var6': (('bool',1),dt_off+4)})
-                dt_off += 4
-            if additional_field is not None:
-                """
-                Todo: Make last_var_now a managed attribute
-                """
-                last_var_now = [s for s in dtype_cell.keys() if 'var' in s][-1]
-                last_var_now = int(last_var_now.split('var')[1])
-                if isinstance(additional_field, dict):
-                    additional_field = [additional_field]
-                try:
-                    for af in additional_field:
-                        itemsize = np.dtype(af["dtype"]).itemsize*af["dim"]
-                        last_var_now += 1
-                        dtype_cell.update({f'var{last_var_now}':((af["dtype"],af["dim"]),dt_off+itemsize)})
-                        dtype_cell.update({af["name"]:((af["dtype"],af["dim"]),dt_off+itemsize)})
-                        dt_off += itemsize
-                except:
-                    print("additional field is given, but can't update the dtype")
-                    print("Excepted: {'name':'asdf', 'dtype':'<f8', 'dim':3}")
-                    print("Or, array/list of such dicts")
-                    print("Currently given : ", additional_field)
-
-        self.cell = np.zeros(ngridtot, dtype=dtype_cell)
+        self.cell = np.zeros(ngridtot, dtype=self.config.dtype_c)
         self.cell['pos'] = xarr
         self.cell['dx'] = dxarr
         # Ignore the last hydro variable, which is zoom-in flag

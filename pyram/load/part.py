@@ -86,7 +86,7 @@ class Part(Simbase):
 
     def __init__(self, config, nout=None, info=None, 
                 ptypes=None, base='./',
-                region=None, ranges=[[0,1]]*3, cpus=None,
+                region=None, ranges=None, cpus=None,
                 cpu_fixed=False,
                 data_dir='snapshots/',
                 dmref=False,
@@ -258,10 +258,10 @@ class Part(Simbase):
 
     def _get_basic_info(self):
         try:
-            f = open(self._fbase + '00001', "rb")
+            f = open(self._fnbase + '00001', "rb")
         except:
             from glob import glob
-            parts = glob(self._fbase + "*")
+            parts = glob(self._fnbase + "*")
             f = open(parts[0], "rb")
 
         header = read_header(f, self._ramses_particle_header)
@@ -272,7 +272,7 @@ class Part(Simbase):
     def _get_npart_arr(self, cpus):
         npart_arr = []
         for icpu in cpus:
-            with open(self._fbase + str(icpu).zfill(5), "rb") as f:
+            with open(self._fnbase + str(icpu).zfill(5), "rb") as f:
                 header = read_header(f, self._ramses_particle_header)
                 npart_arr.append(header['npart'])
 
@@ -292,17 +292,15 @@ class Part(Simbase):
     def load(self, fortran=True, read_metal=True, verbose=False, ptypes=None, **kwargs):
         """ tests whether the files exist, and then calls load() or load_dmo()
         """
-        if verbose:
-            self.print_cpu()
         if ptypes is not None: self.set_dtype(ptypes)
         if self.config.sim_type in ["fornax", "nh"]:
-            self.load_fortran_new(self, **kwargs)
+            self.load_fortran_new(verbose=verbose, **kwargs)
         else:
             if self.dmo:
-                self.load_dmo(self, **kwargs)
+                self.load_dmo(**kwargs)
             else:
                 #if fortran:
-                return self.load_fortran(self, read_metal=read_metal, **kwargs)
+                return self.load_fortran(read_metal=read_metal, **kwargs)
                 #else:
                 #    return self.load_general(self, **kwargs)
 
@@ -310,7 +308,7 @@ class Part(Simbase):
         ranges = self.ranges
         ndm_tot = 0
         for icpu in self.cpus:
-            with open(self._fbase + str(icpu).zfill(5), "rb") as f:
+            with open(self._fnbase + str(icpu).zfill(5), "rb") as f:
             # skip header
                 header_icpu = read_header(f, self._ramses_particle_header)
 
@@ -355,7 +353,7 @@ class Part(Simbase):
             if verbose:
                 self.print_cpu(icpu)
 
-            with open(self._fbase + str(icpu).zfill(5), "rb") as f: # +1
+            with open(self._fnbase + str(icpu).zfill(5), "rb") as f: # +1
 
                 # skip header
                 header_icpu = read_header(f, self._ramses_particle_header)
@@ -439,7 +437,7 @@ class Part(Simbase):
 
         return dtype
 
-    def load_fortran_new(self, target_fields=None, cpulist=None):
+    def load_fortran_new(self, target_fields=None, cpulist=None, verbose=True):
         """Reads particle data from current box.
 
         Parameters
@@ -468,13 +466,15 @@ class Part(Simbase):
         #(xmi, xma), (ymi, yma), (zmi, zma) = self.ranges
 
         if(cpulist is None):
-            cpulist = self.cpus
+            cpulist = self.info.cpus
+        if verbose:
+            print("cpu list:", cpulist)
         
         if (cpulist.size > 0):
             wdir = self.base + '/snapshots/'
 
             readr.read_part(wdir, self.nout, cpulist, self.config.sim_type, 
-                            np.array(self.ranges).ravel(), True, self.config.longint)
+                            np.array(self.info.ranges).ravel(), True, self.config.longint)
             
             if self.config.sim_type == 'nh':
                 part_float = fromarrays([*readr.real_table.T],
