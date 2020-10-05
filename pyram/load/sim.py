@@ -322,6 +322,7 @@ class Sim(Simbase):
         self.config.data_dir = data_dir
         self.add_info()
         # set_data_dir and set_range needs info instance be exist.
+        print("DEBUG_ entering set_range")
         self.set_ranges(ranges)
         if region is not None:
             print("setting ranges")
@@ -340,16 +341,19 @@ class Sim(Simbase):
         return (self.nout is not None) & (self.base is not None)
 
     def setup(self, ranges=[[0.0,1.0],[0.0,1.0],[0.0,1.0]], dmo=False):
+        print("DEBUG_ inside setup")
         if self.nout is None:
             raise ValueError("Note that 'nout' is not set. \n use sim.Sim.set_nout(nout)")
         self.add_info()
         # set_data_dir and set_range needs an info instance.
+        print("DEBUG_ set_range")
         self.set_ranges(ranges)
         self.info.ranges = self.ranges
         self.info.cpus = self.cpus
 
         if self._all_set():
-            self.add_amr(self.info)
+            print("DEBUG_ adding amr")
+            self.add_amr(load=False)
             if self.ranges is not None:
                 self.set_cpus(self._hilbert_cpulist(self.info, self.ranges))
         print('Simulation set up.')
@@ -397,6 +401,7 @@ class Sim(Simbase):
         if self.cosmo:
             self.tc = Timeconvert(self.info)
             self.info.tGyr = self.tc.time2gyr(self.info.time, zred_now = self.info.zred)
+        print("DEBUG_add_info done")
 
     def add_part(self, ptypes=None, load=True, fortran=True, dmo=False, **kwargs):
         """
@@ -628,6 +633,7 @@ class Amr(Simbase):
         info : load.info.Info class
 
         """
+        print("DEBUG_ Initiating AMR instance")
         super(Amr, self).__init__()
         if info is not None:
             self.info = info
@@ -647,6 +653,7 @@ class Amr(Simbase):
         if cpus is not None:
             self.cpus = cpus
 
+        print("DEBUG_ reading 00001 file")
         self.set_fnbase(self.base, self.info.data_dir, 'amr')
         try:
             f = open(self._fnbase + '00001', "rb")
@@ -662,8 +669,10 @@ class Amr(Simbase):
         # set_data_dir and set_range needs an info instance.
         self.set_ranges()
 
+        print("DEBUG_ reading 00001 file almost done")
+
         if load:
-            self.load()
+            self.load(verbose=False)
         f.close()
 
     def set_ranges(self, ranges=[[0, 1], [0, 1], [0, 1]]):
@@ -697,6 +706,14 @@ class Amr(Simbase):
             self.lmax_now = self.info.lmax
         else:
             self.lmax_now = imax_level
+   
+    def print_cpu(self, icpu):
+        if icpu == max(self.cpus):
+            print("Loading particles in {}-th cpu output out of {} cpus.\n"
+            .format(icpu, len(self.cpus)))
+        else:
+            print("Loading particles in {}-th cpu output out of {} cpus.\r"
+            .format(icpu, len(self.cpus)))
 
     def load(self, verbose=False):
         """
@@ -739,8 +756,9 @@ class Amr(Simbase):
         llist = 0
         self.header.ngridtot = 0
         for jcpu in cpus:
-            if(verbose):
-                self.print_cpu(self, icpu)
+            print(jcpu)
+            #if(verbose):
+            #    #self.print_cpu(icpu)
 
             f = open(self._fnbase + str(jcpu).zfill(5), "rb")  # +1
 
