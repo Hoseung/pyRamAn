@@ -25,6 +25,7 @@ def _display_pixels(x, y, counts, pixelSize):
 
 
 def gen_vmap_sigmap(gal,
+                    fixed_pixel=0,
                     npix_per_reff=5,
                     rscale=3.0,
                     n_pseudo=1,
@@ -77,14 +78,18 @@ def gen_vmap_sigmap(gal,
     # already centered.
     reff = gal.meta.reff
     # reff restriction must be given at earlier stage, radial_profile_cut()
-    r_img_kpc = reff * (rscale+1) # in kpc
-    # Some margin makes mmap and vmap look better.
-    # If rscale = 3 is given, calculate inside 3Reff,
-    # but plot a map of 4Reff.
+    if fixed_pixel > 0:
+        r_img_kpc = fixed_pixel
+        
+    else:
+        r_img_kpc = reff * (rscale+1) # in kpc
+        # Some margin makes mmap and vmap look better.
+        # If rscale = 3 is given, calculate inside 3Reff,
+        # but plot a map of 4Reff.
 
-    dx = reff / npix_per_reff # kpc/pixel
-    npix = round(npix_per_reff * 2 * (rscale+1))
-    nx, ny = npix, npix
+        dx = reff / npix_per_reff # kpc/pixel
+        npix = round(npix_per_reff * 2 * (rscale+1))
+        nx, ny = npix, npix
     # to suppress contamination from tidal tail,
     # give a cylindrical cut, not spherical cut.
     # Cappellari 2002 assumes Cylindrical velocity ellipsoid.
@@ -111,6 +116,9 @@ def gen_vmap_sigmap(gal,
         # Todo
         # sig = 0.3kpc should scale with aexp.
         n_pseudo = min([max([1,round(n_pseudo_max/gal.meta.nstar)]), n_pseudo])
+        if verbose:
+            print("[rotation_parameter.gen_vmap_sigmap] n_pseudo", n_pseudo)
+            print("[rotation_parameter.gen_vmap_sigmap] p1, p2, weight, v3", p1, p2, weight, v3)
         xstars, ystars, mm, vz = gal._pseudo_particles(gal.star[p1][ind],
                                                   gal.star[p2][ind],
                                                   gal.star[weight][ind],
@@ -189,7 +197,7 @@ def gen_vmap_sigmap(gal,
             ind = np.where(binNum == ibin)[0] # pixels in this Voronoi bin
             i_part = np.empty((0,0), dtype=int)
             for j in ind:
-                i_part = np.append(i_part, np.where(indices == j)[0])
+                i_part = np.append(i_part, np.where(indices == j)[0]) # indices = pixel index of each particle
             # all particles belonging to one Voronoi cell
             mmap_v[ibin] = sum(mm[i_part])
             try:

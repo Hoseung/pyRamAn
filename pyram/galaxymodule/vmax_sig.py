@@ -111,10 +111,10 @@ def get_vmax_sig(gal,
 def get_vmax_sig_Cappellari2007(gal,
                                 mge_results='',
                                 voronoi=None,
-                                make_plot=False,
                                 rscale=1,
-                                out_dir="./"):
+                                ):
 
+    # Get mge measurements -- name of the container not fixed.
     results = getattr(gal.meta, mge_results)
     try:
         fit = results['mge_result_list'][0]
@@ -135,14 +135,18 @@ def get_vmax_sig_Cappellari2007(gal,
                        rscale,
                        voronoi=True)
     else:
-        xpos = None
-        ypos = None
+        vmap = gal.vmap
+        sigmap = gal.sigmap
+        mmap = gal.mmap
+
+        img_size = vmap.shape[0]
+        xpos = np.tile(np.arange(img_size) + 0.5, img_size)
+        ypos = np.repeat(np.arange(img_size) + 0.5, img_size)
         return _measure_vmax_sig_Cappellari2007(mge_params,
                             gal.mmap.ravel(), gal.vmap.ravel(), gal.sigmap.ravel(),
                             xpos, ypos,
                             npix_per_reff,
-                            rscale,
-                            voronoi=False)
+                            rscale)
 
 
 def _measure_vmax_sig_Cappellari2007(mge_par,
@@ -150,8 +154,6 @@ def _measure_vmax_sig_Cappellari2007(mge_par,
                     xNode, yNode,
                     npix_per_reff,
                     rscale,
-                    voronoi=False,
-                    do_plot=False,
                     verbose=False,
                     ):
 
@@ -177,19 +179,17 @@ def _measure_vmax_sig_Cappellari2007(mge_par,
     ind = np.where(dd < (npix))[0]
 
     if len(ind) > 0:
-        V = np.sum(mmap[ind] * vmap[ind]**2)
-        if V > 0:
-            ind2 = np.where(sigmap[ind] > 0)[0]
+        ind2 = np.where(sigmap[ind] > 0)[0]    
+        if len(ind2) > 0:
+            V = np.sum(mmap[ind[ind2]] * vmap[ind[ind2]]**2)
             Sig = np.sum(mmap[ind[ind2]] * sigmap[ind[ind2]]**2)
 
-            return dict(Vmax=None, sigma=None, V_sig=V/Sig)
+            return dict(Vmax=None, sigma=None, V_sig=np.sqrt(V/Sig))
     return False
 
 
-
-def _deprecated_get_vmax_sig_Cappellari2007(gal,
+def _get_vmax_sig_Cappellari2007_novoro(gal,
                  mge_results='',
-                 voronoi=False,
                  make_plot=False,
                  out_dir="./"):
     """
@@ -211,14 +211,9 @@ def _deprecated_get_vmax_sig_Cappellari2007(gal,
         print(f"Error... Can't find gal.meta.{mge_results}['mge_result_list']")
         return False
 
-    if voronoi:
-        vmap = gal.vmap_v
-        sigmap = gal.sigmap_v
-        mmap = gal.mmap_v
-    else:
-        vmap = gal.vmap
-        sigmap = gal.sigmap
-        mmap = gal.mmap
+    vmap = gal.vmap
+    sigmap = gal.sigmap
+    mmap = gal.mmap
 
     img_size = vmap.shape[0]
     xinds = np.tile(np.arange(img_size) + 0.5, img_size)

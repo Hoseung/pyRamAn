@@ -131,7 +131,7 @@ def mk_gal(gal,
         print("gal.debug",gal.debug)
     dense_enough = radial_profile_cut(gal, star['x'], star['y'], star['m'],
                          den_lim=den_lim, den_lim2=den_lim2,
-                         mag_lim=25,
+                         mag_lim=25, # this has no effect!
                          nbins=int(rgal_tmp/0.5),
                          dr=0.5 * gal.info.aexp,
                          rmax=rgal_tmp,
@@ -411,7 +411,8 @@ def radial_profile_cut(gal, xx, yy, mm,
         print("ibins", ibins)
         print("bin centers", bin_centers)
         print("m_radial", m_radial)
-
+    
+    # What do I want to check here??? Why inverse??
     den_radial_inverse = m_radial[::-1]/(2 * np.pi * bin_centers[::-1] * dr)
     if debug: print("den_radial_inverse", den_radial_inverse)
     if max(den_radial_inverse) < 2 * den_lim2:

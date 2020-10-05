@@ -289,7 +289,7 @@ class Halo(HaloMeta):
                                      is_gal=self.is_gal, double=double)
             f.close()
         else:
-            self.return_id=0
+            self.return_id=self.return_id is not False
             self.nbodies = read_fortran(f, np.dtype('i4'), 1)[0]
             f.seek(0)
 
