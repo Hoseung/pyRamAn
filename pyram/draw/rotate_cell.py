@@ -242,8 +242,13 @@ def make_gasmap(nout, gal_cat, theta_xz_1=[0], theta_yz_1=[0],
                 fsave_angle=None,
                 do_star=False,
                 radius = 2e-4,
-                shrink=False):
-
+                shrink=False,
+                lmax=None,
+                fn_suffix=''):
+    """
+    ChangeLog
+    to have denser array, reduced x(y,z)_padding_layer from max_length/2 -> max_length/8
+    """
     centers = np.array([gal_cat['x'],gal_cat['y'],gal_cat['z']])
     gid=gal_cat['id']
     idgal=gal_cat['id']
@@ -253,7 +258,7 @@ def make_gasmap(nout, gal_cat, theta_xz_1=[0], theta_yz_1=[0],
 
     if fn_png == None: fn_png = f"{nout}_{idgal}_faceon_gasmap.png"
     s=pyram.load.sim.Sim(nout, base=wdir)
-   # #radius = 30/(100*1e3/0.704)
+    # #radius = 30/(100*1e3/0.704)
     s.set_ranges([[centers[0]-radius, centers[0]+radius],
                   [centers[1]-radius, centers[1]+radius],
                   [centers[2]-radius, centers[2]+radius]])
@@ -304,7 +309,7 @@ def make_gasmap(nout, gal_cat, theta_xz_1=[0], theta_yz_1=[0],
                           [centers[1]-radius1, centers[1]+radius1],
                           [centers[2]-radius1, centers[2]+radius1]])
             print(f"Loading again... Galaxy {gid}, centers:{centers}, radius:{radius1:.6f}")
-        s.add_hydro()
+        s.add_hydro(lmax=lmax)
         cell = s.hydro.cell
             
             #gal.star = gal.star[np.where(dist < np.max(dist) * shrink)[0]]
@@ -491,9 +496,9 @@ def make_gasmap(nout, gal_cat, theta_xz_1=[0], theta_yz_1=[0],
 
     print(rot_cell_length)
 
-    x_padding_layer = int(max(rot_cell_length)/2)
-    y_padding_layer = int(max(rot_cell_length)/2)
-    z_padding_layer = int(max(rot_cell_length)/2) 
+    x_padding_layer = int(max(rot_cell_length)/8)
+    y_padding_layer = int(max(rot_cell_length)/8)
+    z_padding_layer = int(max(rot_cell_length)/8) 
 
     print("... Preparing for stacking column density of cells ...")
 
@@ -551,7 +556,7 @@ def make_gasmap(nout, gal_cat, theta_xz_1=[0], theta_yz_1=[0],
         if (sc*100) % n_subcell == 0:
             print("{:.1f} % \r".format(np.round(100*sc/len(sub_cell),2) ))
 
-    file_name_grid = str(nout) + '_' +str(idgal) + '_' + str(theta_xz_1[0])+ '_' + str(theta_yz_1[0]) + '_test_grid.npy'
+    file_name_grid = str(nout) + '_' +str(idgal) + '_' + str(theta_xz_1[0])+ '_' + str(theta_yz_1[0]) + '_test_grid'+fn_suffix+'.npy'
     np.save("./%s_small" %(file_name_grid),Grid)
     grid_prj = np.sum(Grid, axis=0)
     np.save("./%s_prj" %(file_name_grid),grid_prj)
