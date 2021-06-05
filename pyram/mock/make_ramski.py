@@ -9,13 +9,6 @@ import pts.simulation as sm
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 
-def fix_angle(angle):
-    if angle > 0:
-        return angle - 180
-    if angle <= 0:
-        return angle + 180
-
-
 def write_ski(repo, gid, nout, skifile, arr, params, pixel_scale=35):
 
     inclination, azimuth, roll, fovx, fovy, minX, maxX, minY, maxY, minZ, maxZ = arr
@@ -48,11 +41,11 @@ def write_ski(repo, gid, nout, skifile, arr, params, pixel_scale=35):
         inc = inclination + param['incli_off']
         azi = azimuth + param['azim_off']
         rol = roll + param['roll_off']
-        if (abs(inc) > 180) or (abs(azi) > 180) or (abs(rol) > 180):
-            inc = fix_angle(inc)
-            azi = fix_angle(azi)
-            rol = fix_angle(rol)
-        print("fixed values", inc, azi, rol)
+        #if (abs(inc) > 180) or (abs(azi) > 180) or (abs(rol) > 180):
+        inc = inc % 180 # [0,180]
+        azi = (azi+180) % 360 - 180 # [-180,180]
+        rol = (rol+180) % 360 - 180 # [-180,180]
+        #print("fixed values", inc, azi, rol)
             
         inst.set('inclination', '{:.5f} deg'.format(inc))
         inst.set('azimuth', '{:.5f} deg'.format(azi))

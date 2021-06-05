@@ -227,6 +227,8 @@ def auto_rotation_np(param, xarray, yarray, zarray,thetype=0):
 
 
 def make_gasmap(nout, gal_cat, theta_xz_1=[0], theta_yz_1=[0],
+     #           theta=None,
+     #           phi=None,
                 wdir='./', 
                 skirt_out_dir=None,
                 fn_png=None, 
@@ -263,6 +265,9 @@ def make_gasmap(nout, gal_cat, theta_xz_1=[0], theta_yz_1=[0],
                   [centers[1]-radius, centers[1]+radius],
                   [centers[2]-radius, centers[2]+radius]])
     print(f"Galaxy {gid}, centers:{centers}, radius:{radius:.6f}")
+
+    #if theta is not None and phi is not None:
+    #    do_star = False
     if do_star:
         print("loading particles")
         s.add_part(ptypes=["star id pos mass vel metal age"])
